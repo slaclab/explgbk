@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+    <title>Experiments</title>
+
+    <link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap.min.css">
+	<link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap-theme.min.css">
+    <link rel=stylesheet type=text/css href="../static/experiments.css">
+
+
+    <script type="text/javascript" src="../js/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/mustache/mustache.min.js"></script>
+
+    <script type="text/javascript" src="../js/jquery.noty.packaged.js/jquery.noty.packaged.js"></script>
+    <script type="text/javascript" src="../js/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../static/experiments.js"></script>
+
+    <script type="text/javascript">
+    	var experiments_for_instrument_url = "{{ '../ws/business/' + instrument_id + '/experiments' }}";
+    	
+    	var instrument_id = "{{ instrument_id }}";
+    </script>
+</head>
+
+<body>
+<div class="container-fluid">
+<div class="row">
+
+<div id="experimentsdiv" class="table-responsive">
+<table id="experimentstbl" class="table table-condensed table-striped table-bordered">
+    <thead>
+    <tr>
+        <th> Id</th>
+        <th> Name</th>
+    </tr>
+    </thead>
+        <tbody id="experiments">
+        </tbody>
+</table>
+</div>
+
+</div>
+</div>
+
+</body>
+</html>

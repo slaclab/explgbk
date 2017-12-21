@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+    <title>Experiments</title>
+
+    <link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap.min.css">
+	  <link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap-theme.min.css">
+    <link rel=stylesheet type=text/css href="../static/elog.css">
+
+
+    <script type="text/javascript" src="../js/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/mustache/mustache.min.js"></script>
+    <script type="text/javascript" src="../js/socket.io/node_modules/socket.io-client/dist/socket.io.js"></script>
+
+    <script type="text/javascript" src="../js/jquery.noty.packaged.js/jquery.noty.packaged.js"></script>
+    <script type="text/javascript" src="../js/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="../js/python/flask_socket_util/websocket_client.js"></script>
+    <script type="text/javascript" src="../static/elog.js"></script>
+
+    <script type="text/javascript">
+		  var elog_for_experiment_url = "{{ '../ws/business/' + experiment_name + '/elog' }}";
+    	var experiment_name = "{{ experiment_name }}";
+    </script>
+</head>
+
+<body>
+<div class="container-fluid">
+<div class="row">
+
+<div id="elogdiv" class="table-responsive">
+<table id="elogtbl" class="table table-condensed table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Run</th>
+            <th>Subject</th>
+            <th>Author</th>
+        </tr>
+    </thead>
+    <tbody id="elogs">
+    </tbody>
+</table>
+</div>
+
+</div>
+</div>
+
+</body>
+</html>
