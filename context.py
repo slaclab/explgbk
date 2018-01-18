@@ -40,3 +40,16 @@ imagestoreurl = "http://localhost:9333/"
 if not imagestoreurl.endswith("/"):
     imagestoreurl = imagestoreurl + "/"
 
+# Instrument scientist run table definitions/descriptions/categoris are typically defined in a JSON file external to this project
+# We load this from the file if it exists and create a reverse mapping from PV -> Category/Description
+# There is a per instrument breakdown in this file and a all-instrument section called "HEADER" which I presume we add to all instruments
+instrument_scientists_run_table_defintions = {}
+if os.path.exists("/reg/g/psdm/web/ws/prod/appdata/runtablePVs/sections.json"):
+    def reverse_mapping_for_section(section):
+        return { x["name"]: {"section" : section["SECTION"], "title": section["TITLE"], "pv": x["name"], "description": x["descr"]} for x in section["PARAMS"] }
+    with open("/reg/g/psdm/web/ws/prod/appdata/runtablePVs/sections.json", 'r') as f:
+        isdefs = json.load(f)
+        for instrument, sections in isdefs.items():
+            instrument_scientists_run_table_defintions[instrument] = {}
+            for section in sections:
+                instrument_scientists_run_table_defintions[instrument].update(reverse_mapping_for_section(section))

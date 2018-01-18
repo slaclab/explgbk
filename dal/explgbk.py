@@ -6,13 +6,14 @@ Most of the code here gets a connection to the database, executes a query and fo
 import json
 import datetime
 import logging
+import re
 
 import requests
 
 from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
-from context import logbookclient, imagestoreurl
+from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions
 
 
 __author__ = 'mshankar@slac.stanford.edu'
@@ -145,6 +146,7 @@ def register_new_experiment(experiment_name, incoming_info):
     expdb["setup"].create_index( [("modified_by", ASCENDING), ("modified_at", ASCENDING)], unique=True)
     expdb["shifts"].create_index( [("begin_time", ASCENDING)], unique=True)
     expdb["files"].create_index( [("file_path", ASCENDING), ("run_num", DESCENDING)], unique=True)
+    expdb["run_tables"].create_index( [("name", ASCENDING)], unique=True)
 
 
     global __cached_experiments_list_fetched_time
@@ -271,4 +273,109 @@ def get_experiment_runs(experiment_name, include_run_params=False):
     Does not include the run parameters by default
     '''
     expdb = logbookclient[experiment_name]
-    return [run for run in expdb['runs'].find(projection={ "params": include_run_params }).sort([("num", -1)])]
+    if include_run_params:
+        return [run for run in expdb['runs'].find().sort([("num", -1)])]
+    else:
+        return [run for run in expdb['runs'].find(projection={ "params": include_run_params }).sort([("num", -1)])]
+
+def get_all_run_tables(experiment_name):
+    '''
+    Get specifications for both the default and user defined run tables.
+    The default run tables are based on these items.
+    * Find all run_param_descriptions that are summaries. These have their param names separated by the "/" character into the category and param name. We create a run table definition dynamically based on category.
+    * The run tables defined in the site database are added to all experiments. These are ahead of the experiment specific ones; so the default run tables are the system wide run tables.
+    * Finally, the experiment specific run tables are added.
+    '''
+    expdb = logbookclient[experiment_name]
+    sitedb = logbookclient["site"]
+    allRunTables = []
+    allRunTables.extend([ r for r in sitedb["run_tables"].find()])
+    summtables = {}
+    pdescs = [ x for x in expdb['run_param_descriptions'].find( { "param_name": re.compile(r'.*\/.*') } ) ]
+    for pdesc in pdescs:
+        categoryName, paramName = pdesc['param_name'].split("/")
+        if categoryName not in summtables:
+            summtables[categoryName] = {
+                "name" : categoryName,
+                "description" : pdesc["description"],
+                "is_editable" : False,
+                "coldefs" : []
+                }
+        summtables[categoryName]["coldefs"].append({
+            "column_name" : paramName,
+            "column_type" : categoryName,
+            "column_source": "params." + categoryName + "/" + paramName,
+            "is_editable" : False,
+            "column_position" : 0
+            })
+    allRunTables.extend([summtables[x] for x in sorted(summtables.keys())])
+    allRunTables.extend([x for x in expdb['run_tables'].find()])
+    return allRunTables
+
+def get_runtable_data(experiment_name, tableName):
+    '''
+    Get the data from the run tables for the given table.
+    In addition to the basic run data, we add the sources for the given run table.
+    This is mostly a matter of constructing the appropriate mongo filters.
+    '''
+    tableDef = next(x for x in get_all_run_tables(experiment_name) if x['name'] == tableName)
+    sources = { "num": 1, "begin_time": 1, "end_time": 1 }
+    sources.update({ x['column_source'] : 1 for x in tableDef['coldefs']})
+    return [x for x in logbookclient[experiment_name]['runs'].find({}, sources).sort([("num", -1)])] # Use sources as a filter to find
+
+
+def get_run_param_descriptions(experiment_name):
+    '''
+    Get the run param descriptions for this experiment.
+    '''
+    return [x for x in logbookclient[experiment_name]['run_param_descriptions'].find({}).sort([("name", 1)])]
+
+def get_runtable_sources(experiment_name):
+    '''
+    Get the sources for user defined run tables.
+    This is a combination of these items; not all of these are mutually exclusive.
+    --> The attributes of the run itself
+    --> Any number of editable parameters defined by the user.
+    --> The run_param_descriptions.
+    --> The instrument leads maintain a per instrument list of EPICS variables in a JSON file external to the logbook.
+    We combine all of these into a category --> name+description
+    '''
+    expdb = logbookclient[experiment_name]
+    instrument = expdb.info.find_one({})['instrument']
+    rtbl_sources = {}
+    rtbl_sources["Run Info"] = [{"param_name": "Begin Time", "description": "The start of the run", "column_source": "begin_time"},
+        {"param_name": "End time", "description": "The end of the run", "column_source": "end_time"},
+        {"param_name": "Duration", "description": "The duration of the run", "column_source": "duration"}]
+    rtbl_sources["Editables"] = [ { "param_name": x["_id"], "description": x["_id"], "column_source": "editable_params."+x["_id"] } for x in expdb.runs.aggregate([
+        { "$project": { "editables": { "$objectToArray": "$editable_params" } } },
+        { "$unwind": "$editables" },
+        { "$group": { "_id": "$editables.k", "total": { "$sum": 1 } } } ])]
+    param_names = set([x["_id"] for x in expdb.runs.aggregate([
+        { "$project": { "pnames": { "$objectToArray": "$params" } } },
+        { "$unwind": "$pnames" },
+        { "$group": { "_id": "$pnames.k", "total": { "$sum": 1 } } } ]) ])
+    param_descs = { x["param_name"] : { "param_name" : x["param_name"], "description": x["description"] if x["description"] else x["param_name"], "category": x['param_name'].split('/')[0] if '/' in x['param_name'] else "EPICS:Additional parameters" } for x in  expdb.run_param_descriptions.find({})}
+    # Update the category and description from the instrument_scientists_run_table_defintions if present
+    param_names_with_categories = []
+    for param_name in param_names:
+        if param_name in instrument_scientists_run_table_defintions[instrument]:
+            param_names_with_categories.append({
+                "param_name" : param_name,
+                "category": "EPICS/" + instrument_scientists_run_table_defintions[instrument][param_name]["title"],
+                "description": instrument_scientists_run_table_defintions[instrument][param_name].get("description", param_name),
+                "source": "params." + param_name })
+        elif param_name in param_descs:
+            param_names_with_categories.append({
+                "param_name" : param_name,
+                "category": param_descs[param_name]['category'],
+                "description": param_descs[param_name].get("description", param_name),
+                "source": "params." + param_name })
+        else:
+            param_names_with_categories.append({
+                "param_name" : param_name,
+                "category": "EPICS:Additional parameters",
+                "description": param_name,
+                "source": "params." + param_name })
+    rtbl_sources.update({ x['category'] : [] for x in param_names_with_categories})
+    [ rtbl_sources[x['category']].append(x) for x in param_names_with_categories ]
+    return rtbl_sources

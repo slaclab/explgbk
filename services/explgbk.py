@@ -20,7 +20,7 @@ from flask import Blueprint, jsonify, request, url_for, Response, stream_with_co
 
 from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_experiments, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
-    get_specific_shift, get_experiment_files, get_experiment_runs
+    get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources
 
 from dal.utils import JSONEncoder
 
@@ -296,4 +296,26 @@ def svc_get_files(experiment_name):
 @context.security.authentication_required
 @context.security.authorization_required("read")
 def svc_get_runs(experiment_name):
-    return JSONEncoder().encode({"success": True, "value": get_experiment_runs(experiment_name)})
+    include_run_params = bool(request.args.get("includeParams", "false"))
+    return JSONEncoder().encode({"success": True, "value": get_experiment_runs(experiment_name, include_run_params)})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_tables", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_get_runtables(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_all_run_tables(experiment_name)})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_data", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_get_runtable_data(experiment_name):
+    tableName = request.args.get("tableName")
+    return JSONEncoder().encode({"success": True, "value": get_runtable_data(experiment_name, tableName)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_sources", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_get_runtable_sources(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_runtable_sources(experiment_name)})

@@ -1,0 +1,73 @@
+<div class="container-fluid text-center tabcontainer" id="rtbl_tab">
+ <ul class="nav nav-pills">
+ </ul>
+
+
+<div class="container-fluid text-left" id="rtbl_content">
+</div>
+</div>
+
+<script type="text/javascript">
+$("#rtbl_tab").on("lg.shown.bs.tab", function() {
+  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}">{{ name }}</a></li>{{/value}}<li class="pull-right"><a id="runtblnew" href="#>">New</a></li><li class="pull-right"><a id="runtbledit" href="#>">Edit</a></li>`;
+  var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-responsive table-condensed"><thead></thead><tbody></tbody></table>`;
+  var run_tbl_category_selector = `{{#.}}<option value="{{.}}">{{.}}</option>{{/.}}`;
+  var run_tbl_pvname_selector = `<select class='rtbl_def_pvname_select'><option value=''></option>{{#.}}<option value="{{column_source}}" title="{{param_name}}">{{description}}</option>{{/.}}</select>`;
+  Mustache.parse(run_tbl_pill_template);
+  Mustache.parse(run_tbl_tbl);
+  Mustache.parse(run_tbl_category_selector);
+  Mustache.parse(run_tbl_pvname_selector);
+  $.getJSON("ws/run_tables")
+  .done(function(tblData){
+    _.each(tblData.value, function(tdef){
+      tdef.coldefs = _.sortBy(tdef.coldefs, function(v){ return v["column_position"];});
+      tdef.coldefs.unshift({"column_name": "Num", "column_source": "num", "is_editable": false, "column_position": -1 })
+    });
+    $("#rtbl_tab").data("tblData", _.keyBy(tblData.value, function(o) {  return o.name; }));
+    console.log($("#rtbl_tab").data("tblData"));
+    var rendered = $(Mustache.render(run_tbl_pill_template, tblData));
+    $("#rtbl_tab .nav-pills").append(rendered);
+    rendered.find(".rtbl_pill").on("click", function() {
+      var clkRTblName = $(this).attr("data-rtbl-name");
+      console.log("Getting data for run table " + clkRTblName);
+      var tblDef = $("#rtbl_tab").data("tblData")[clkRTblName];
+      $.getJSON("ws/run_table_data", {"tableName": clkRTblName})
+      .done(function(runData){
+        var numHdrRows = _.find([[6, 1], [12, 2], [18, 3], [0, 4]], function(v) { return (v[0] == 0 || tblDef.coldefs.length < v[0]); })[1];
+        var tblRndr = $(Mustache.render(run_tbl_tbl, {}));
+        var hdr = _.times(numHdrRows, function() { return $("<tr/>"); }), row_tmpl = "";
+        _.each(tblDef.coldefs, function(coldef, idx) {
+          if(idx > 0 && idx < numHdrRows) { hdr[idx%numHdrRows].append($("<th colspan='" + idx + "' class='rtbl_filler'>&nbsp;</th>"))};
+          hdr[idx%numHdrRows].append($("<th colspan='"+ numHdrRows + "' class='rtbl_header' data-col-idx='" + idx + "' >" + coldef["column_name"] + "</th>"));
+          row_tmpl = row_tmpl + "<td>{{ " + coldef["column_source"] +  " }}</td>"
+        });
+        tblRndr.find("thead").append(hdr);
+        var row_tmpl = "{{#value}}<tr>" + row_tmpl + "</tr>{{/value}}";
+        Mustache.parse(row_tmpl);
+        var rowRendered = $(Mustache.render(row_tmpl, runData));
+        rowRendered.find("td").hover(
+          function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").addClass("tblhighlight"); },
+          function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").removeClass("tblhighlight"); });
+        tblRndr.find("tbody").append(rowRendered);
+        $("#rtbl_content").html(tblRndr);
+      });
+      if(tblDef['is_editable']) { $("#runtbledit").show(); } else { $("#runtbledit").hide(); }
+    });
+    rendered.find(".rtbl_pill").first().trigger("click");
+
+    $("#runtblnew").on("click", function(e) {
+       e.preventDefault();
+       $.when($.ajax('../../static/html/tabs/rtbl_def_modal.html'), $.getJSON('ws/run_table_sources'))
+       .done(function(d1, d2) {
+         var mdl = $(d1[0]), rtbl_sources = d2[0];
+         $("#rtbl_content").prepend(mdl);
+         $("#rtbl_def_tbl tbody").find(".rtbl_def_category_select").append(Mustache.render(run_tbl_category_selector, _.keys(rtbl_sources.value)));
+         $("#rtbl_def_tbl tbody").find(".rtbl_def_category_select").on("change", function(){
+           $(this).parent().next().empty().html(Mustache.render(run_tbl_pvname_selector, rtbl_sources.value[$(this).val()]));
+         });
+         $("#rtbl_new_entry_modal").modal();
+       });
+      });
+  });
+});
+</script>

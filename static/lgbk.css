@@ -4,6 +4,7 @@
 /* Main Primary color */
 /* Main Secondary color (1) */
 /* Main Secondary color (2) */
+/* Main Complement color */
 .highlight_mixin {
   color: white;
   background: #7272C0;
@@ -180,6 +181,20 @@ label {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+#myTabContainer ul.nav-pills li a {
+  color: #7272C0;
+  font-weight: bold;
+}
+#myTabContainer ul.nav-pills li.active a {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+#myTabContainer ul.nav-pills li a:hover {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
 #elog_content .glyphicon {
   opacity: .5;
 }
@@ -204,4 +219,18 @@ label {
 }
 #fmgr_tab .glyphicon {
   opacity: .5;
+}
+#rtbl_content table {
+  width: 100%;
+}
+#rtbl_content table thead tr th {
+  overflow: hidden;
+  white-space: nowrap;
+  background: #7272C0;
+  color: white;
+  opacity: .75;
+  font-weight: normal;
+}
+#rtbl_content .tblhighlight {
+  background-color: #333399;
 }
