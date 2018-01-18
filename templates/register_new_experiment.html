@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+    <title>Register New Experiment</title>
+
+    <link rel=stylesheet type=text/css href="../static/lgbk.css">
+    <link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap.min.css">
+    <link rel=stylesheet type=text/css href="../js/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css">
+
+
+    <script type="text/javascript" src="../js/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/mustache/mustache.min.js"></script>
+    <script type="text/javascript" src="../js/lodash/lodash.min.js"></script>
+    <script type="text/javascript" src="../js/moment/min/moment-with-locales.min.js"></script>
+
+    <script type="text/javascript" src="../js/jquery.noty.packaged.js/jquery.noty.packaged.js"></script>
+    <script type="text/javascript" src="../js/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../js/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script type="text/javascript" src="../static/register_new_experiment.js"></script>
+
+    <script type="text/javascript">
+		var instruments_url   = "ws/instruments"
+		var register_experiment_url = "ws/register_new_experiment";
+    </script>
+</head>
+
+<body>
+
+<div class="container-fluid">
+<div class="row" id="register_experiment_div">
+  <div class="panel panel-default">
+   <div class="panel-heading" id="panel_title">Please provide some information for the new experiment:</div>
+   
+   <div id="validation_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+     <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Validation Error</h4>
+      </div>
+      <div class="modal-body alert alert-danger" role="alert">
+        <p id="validation_message"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+     </div>
+    </div>
+   </div>
+   
+   <div class="panel-body">
+     <form id="register_form">
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="experiment_name">Experiment Name:</label>
+       <input type="text" class="form-control" id="experiment_name">
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="instrument">Instrument:</label>
+       <select class="form-control" id="instrument">
+	     <option> </option>
+	   </select>
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="posix_group">Posix Group:</label>
+       <input type="text" class="form-control" id="posix_group">
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="start_time">Start Time:</label>
+       <div class='input-group date' id='start_time'>
+         <input type='text' class="form-control" />
+         <span class="input-group-addon">
+         <span class="glyphicon glyphicon-calendar"></span>
+         </span>
+       </div>
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="end_time">End Time:</label>
+       <div class='input-group date' id='end_time'>
+         <input type='text' class="form-control" />
+         <span class="input-group-addon">
+         <span class="glyphicon glyphicon-calendar"></span>
+         </span>
+       </div>
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="leader_account">Leader Account:</label>
+       <input type="text" class="form-control" id="leader_account">
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="contact_info">PI's Name:</label>
+       <input type="text" class="form-control" id="pi_name">
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="contact_info">PI's email:</label>
+       <input type="email" class="form-control" id="pi_email">
+      </div>
+      <div class="clearfix"></div>      
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="description">Description:</label>
+       <textarea class="form-control" rows="5" id="description"></textarea>
+      </div>
+      <div class="clearfix"></div>      
+      <div class="col-xs-10 col-sm-4 col-md-4 col-lg-4">
+        <button class="btn btn-default" id="panel_btn">Register</button>
+      </div>
+     </form>
+     <div class="clearfix"></div> 
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="footer navbar-fixed-bottom">
+  <img alt="Brand" class="slac_logo" src="../static/SLAC_LogoSD.png"/>
+</div>
+
+</body>
+</html>

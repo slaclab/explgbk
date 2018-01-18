@@ -8,12 +8,14 @@ from threading import Thread
 import eventlet
 import requests
 
-from context import app, logbook_db, security
+from context import app, security
 
 from pages import pages_blueprint
 
-from services.business_service import business_service_blueprint
+from services.explgbk import explgbk_blueprint
 from flask_socket_util import socket_service
+
+import dal.explgbk
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -37,14 +39,17 @@ if app.debug:
     ch.setFormatter(formatter)
     root.addHandler(ch)
 
+logger = logging.getLogger(__name__)
 
 # Register routes.
-app.register_blueprint(pages_blueprint, url_prefix="")
-app.register_blueprint(business_service_blueprint, url_prefix="/ws/business")
+app.register_blueprint(pages_blueprint)
+app.register_blueprint(explgbk_blueprint)
 
-socket_service.init_app(app, security, kafkatopics = ["elog"])
+socket_service.init_app(app, security, kafkatopics = ["experiment", "elog"])
 
-logbook_db.init_app(app)
+dal.explgbk.init_app(app)
+
+logger.info("Server initialization complete")
 
 if __name__ == '__main__':
     print("Please use gunicorn for development as well.")

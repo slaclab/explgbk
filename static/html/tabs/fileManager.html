@@ -1,0 +1,98 @@
+<div class="container-fluid text-center tabcontainer" id="fmgr_tab">
+
+<div class="container-fluid text-left" id="fmgr_content">
+<div class="row exp_tab_header">
+  <div class="col-md-2">Run</div>
+  <div class="col-md-3">File</div>
+  <div class="col-md-2">Size</div>
+  <div class="col-md-2">Created</div>
+  <div class="col-md-3">Checksum</div>
+</div>
+</div>
+</div>
+
+<script type="text/javascript">
+$("#fmgr_tab").on("lg.shown.bs.tab", function() {
+
+  var file_main_templ = `<div class="fdat" data-entry-id="{{ _id }}"><div class="row">
+   <div class="col-md-2"><span class="fmgr-expand exp_icons_left"><span class="glyphicon glyphicon-plus expand_ctrl"></span></span>{{ run_num }}</div>
+   <div class="col-md-3 text-left">{{ run_files.num_files }}</div>
+   <div class="col-md-2 text-left">{{ run_files.hrsize }}</div>
+   <div class="col-md-2"></div>
+   <div class="col-md-3"></div>
+   </div></div>`;
+
+  var fmgr_child_template = `<div class="row col-md-12 fmgr-chid">
+		   <div class="panel panel-default">
+		    <div class="panel-body">
+          {{#files}}
+           <div class="row run_file">
+             <div class="col-md-2"></div>
+             <div class="col-md-3 text-left">{{ name }}</div>
+             <div class="col-md-2 text-left">{{ hrsize }}</div>
+             <div class="col-md-2 text-left">{{#FormatDate}}{{ create_timestamp }}{{/FormatDate}}</div>
+             <div class="col-md-3 text-left">{{ checksum }}</div>
+           </div>
+          {{/files}}
+		    </div>
+		   </div>
+		 </div>`;
+
+  var expandFunction = function() {
+  var run_files =  $(this).parents(".fdat:first").data("run_files");
+	 console.log("Processing " + run_files[""]);
+     if($(this).hasClass("fmgr-expanded")) {
+         $(this).parents(".fdat:first").find(".fmgr-chid").remove();
+         $(this).html('<span class="glyphicon glyphicon-plus expand_ctrl"></span>');
+     } else {
+         var clicked_elem = $(this);
+         clicked_elem.parents(".fdat:first").append(renderMSTemplate(fmgr_child_template, run_files));
+         $(this).html('<span class="glyphicon glyphicon-minus expand_ctrl"></span>');
+       }
+	   $(this).toggleClass("fmgr-expanded");
+    };
+
+  Mustache.parse(file_main_templ);
+  Mustache.parse(fmgr_child_template);
+
+
+	var renderMSTemplate = function(template, entry) { // Convienience method to render time correctly.
+	   entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:MM:ss");}};
+	   return $(Mustache.render(template, entry));
+	 }
+
+   var human_readable_size = function(size_in_bytes) {
+     var units = ["B", "KB", "MB", "GB", "TB", "PB", "EB"];
+     var hr = size_in_bytes;
+     for (var i = 0; i < units.length; i++) {
+       if(_.inRange(hr, 0, 1001)) {
+         return hr.toFixed(2) + " " + units[i];
+       }
+       hr = hr/1024;
+     }
+     return size_in_bytes + " bytes";
+   }
+
+
+	$.getJSON("ws/files")
+	.done(function(data){
+	  var files = {};
+	  _.each(data.value, function(file) {
+		 file.name = _.last(_.split(file.path, "/"));
+     file.hrsize = human_readable_size(file.size);
+		 if(!_.has(files, file["run_num"])) { files[file["run_num"]] = { num_files: 0, total_size: 0, files: []}};
+		 var run_files = files[file["run_num"]];
+		 run_files.files.push(file);
+		 run_files.num_files = run_files.num_files  + 1;
+		 run_files.total_size = run_files.total_size + file.size;
+     run_files.hrsize = human_readable_size(run_files.total_size);
+		 });
+	  _.forOwnRight(files, function(run_files, run_num){
+		  var rendered = renderMSTemplate(file_main_templ, {run_files: run_files, run_num: run_num});
+		  rendered.data("run_files", run_files);
+		  $("#fmgr_content").append(rendered);
+		  });
+	  $("#fmgr_content .fmgr-expand").on("click", expandFunction);
+	});
+});
+</script>

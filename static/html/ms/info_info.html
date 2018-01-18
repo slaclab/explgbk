@@ -1,0 +1,21 @@
+<div class="section">
+ <h1>General Info</h1>
+  <div id="info_toolbar"><a id="info_edit" href="#"><span class="glyphicon glyphicon-edit"></span> Edit</a></div>
+ 
+ 
+ <dl class="dl-horizontal">
+    <dt>Proposal #:</dt><dd>{{ info.value.params.PNR }}</dd>
+    <dt>Instrument:</dt><dd>{{ info.value.instrument }}</dd>
+    <dt>Spokesperson:</dt><dd><span title="{{ info.value.contact_email }}">{{ info.value.contact_name }}</span></dd>
+    <dt>Title:</dt><dd>{{ info.value.description }}</dd>
+</dl>
+
+ <h1>Editable Info</h1>
+ <dl class="dl-horizontal">
+    <dt>Photon energy</dt><dd><input type="text" class="form-control lg-autoupdate" data-attr="fel-parameters-0-photonenergy" value="{{ info.value.latest_setup.fel-parameters-0-photonenergy }}" readonly></dd>
+</dl>
+
+ <h1>Notes</h1>
+<textarea class="form-control lg-autoupdate" rows="5" data-attr="setup-notes" readonly>{{ info.value.latest_setup.setup-notes }}</textarea>
+
+</div>

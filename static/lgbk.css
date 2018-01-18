@@ -1,0 +1,207 @@
+.row.content {
+  height: auto;
+}
+/* Main Primary color */
+/* Main Secondary color (1) */
+/* Main Secondary color (2) */
+.highlight_mixin {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+.font_family_choices_mixin {
+  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+}
+#myNavRow {
+  background-color: #7272C0;
+  margin-bottom: 0;
+  border-radius: 0;
+}
+#myNavRow li.active a {
+  background-color: #333399;
+  color: white;
+}
+#myNavRow li:hover a {
+  background-color: #333399;
+  color: white;
+}
+#myNavRow li a {
+  color: white;
+}
+.slac_logo {
+  height: 28px;
+  margin-top: 6px;
+  float: right;
+  padding-right: 2.0em;
+  padding-bottom: 0.5em;
+}
+.exp_title {
+  margin: 0px;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  background-color: #7272C0;
+  text-align: center;
+  color: white;
+}
+.sectiontitle {
+  font-size: 17px;
+  border-bottom: 2px solid #0071bc;
+  color: #333399;
+  padding: 2px;
+  font-weight: bold;
+  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+}
+body {
+  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+}
+.section h1 {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: white;
+  border-bottom: thin solid #7272C0;
+  text-align: left;
+  padding-left: 1.0em;
+}
+.section .group .header {
+  font-weight: bold;
+  float: left;
+}
+.section textarea {
+  margin-left: 1.0em;
+}
+.dl-horizontal dt {
+  color: #7272C0;
+}
+.dl-horizontal dd {
+  text-align: left;
+}
+@media screen and (max-width: 767px) {
+  .dl-horizontal dt,
+  dd {
+    text-align: left;
+    padding-left: 1px;
+  }
+}
+#info_toolbar {
+  float: right;
+  color: white;
+  padding-right: 1.0em;
+}
+#searchtext {
+  padding: 0.25em;
+  border: thin solid #7272C0;
+  margin: 0.25em;
+  color: #7272C0;
+  font-size: 17px;
+}
+#register_experiment_div {
+  padding: 10px;
+}
+#register_experiment_div .panel-heading {
+  color: white;
+}
+#register_experiment_div .btn {
+  color: white;
+}
+#experiments_container thead th {
+  color: #333399;
+}
+#experiments_container tbody td a {
+  color: #333399;
+}
+#experiments_container li a.year_pill {
+  color: #7272C0;
+  font-weight: bold;
+}
+.year_pill_active {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+#experiments_container li.active a {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+#experiments_container li a:hover {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+label {
+  color: #7272C0;
+}
+#panel_title {
+  color: #7272C0;
+  background: #7272C0;
+  font-weight: bold;
+}
+#panel_btn {
+  color: #7272C0;
+  background: linear-gradient(#7272C0, #333399);
+  font-weight: bold;
+}
+#switch_experiment_div th {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+#switch_experiment_div .btn {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+#choose_experiment_modal table td a {
+  color: #7272C0;
+}
+#myTabContainer .exp_tab_header {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+  border: thin black solid;
+  padding: 0.2em;
+}
+#elog_tab div.edat {
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}
+#elog_tab div.etop:nth-child(odd) {
+  background: #efefef;
+}
+#myTabContainer .expand_ctrl {
+  font-size: 0.75em;
+}
+#myTabContainer .exp_icons_left {
+  float: left;
+  padding-right: 0.2em;
+}
+#myTabContainer .text_truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#elog_content .glyphicon {
+  opacity: .5;
+}
+#elog_content .entry_actions {
+  float: right;
+  font-size: 0.90em;
+  padding-right: 0.25em;
+}
+#elog_button_grp {
+  text-align: left;
+  padding-left: 5vw;
+}
+#fmgr_tab .run_file:nth-child(odd) {
+  background: #efefef;
+}
+#fmgr_tab .fdat {
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}
+#fmgr_tab .fdat:nth-child(odd) {
+  background: #efefef;
+}
+#fmgr_tab .glyphicon {
+  opacity: .5;
+}

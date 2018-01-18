@@ -1,0 +1,262 @@
+
+.row.content {height:auto;}
+
+@color-primary-0: #333399;	/* Main Primary color */
+@color-primary-1: #7272C0;
+@color-primary-2: #4C4CA7;
+@color-primary-3: #1F1F7E;
+@color-primary-4: #0F0F63;
+
+@color-secondary-1-0: #582A94;	/* Main Secondary color (1) */
+@color-secondary-1-1: #8D69BC;
+@color-secondary-1-2: #6C43A2;
+@color-secondary-1-3: #42187A;
+@color-secondary-1-4: #2E0960;
+
+@color-secondary-2-0: #26608D;	/* Main Secondary color (2) */
+@color-secondary-2-1: #6391B5;
+@color-secondary-2-2: #3E729A;
+@color-secondary-2-3: #144A74;
+@color-secondary-2-4: #06365B;
+
+@navbarcolor: @color-primary-1;
+@navbarhover: @color-primary-0;
+@navbartext: white;
+@tablezebra: #efefef;
+
+
+.highlight_mixin {
+  color: @navbartext;
+	background: @navbarcolor;
+	font-weight: bold;
+}
+
+.font_family_choices_mixin {
+  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+}
+
+
+#myNavRow {
+  background-color: @navbarcolor;
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+#myNavRow li.active a {
+  background-color: @navbarhover;
+  color: @navbartext;
+}
+
+#myNavRow li:hover a {
+  background-color: @navbarhover;
+  color: @navbartext;
+}
+
+#myNavRow li a {
+  color: @navbartext;
+}
+
+.slac_logo {
+  height: 28px;
+  margin-top: 6px;
+  float: right;
+  padding-right: 2.0em;
+  padding-bottom: 0.5em;
+}
+
+.exp_title {
+	margin: 0px;
+	padding-top: 0.25em;
+	padding-bottom: 0.25em;
+	background-color: @navbarcolor;
+	text-align: center;
+	color: @navbartext;
+}
+
+.sectiontitle {
+	font-size: 17px;
+	border-bottom: 2px solid #0071bc;
+	color: @navbarhover;
+	padding: 2px;
+	font-weight: bold;
+  .font_family_choices_mixin;
+}
+
+body {
+  .font_family_choices_mixin;
+}
+
+.section h1 {
+	font-size: 1.1em;
+	font-weight: bold;
+	color: @navbartext;
+	border-bottom: thin solid @navbarcolor;
+	text-align: left;
+	padding-left: 1.0em;
+}
+
+.section .group .header {
+	font-weight: bold;
+	float: left;
+}
+
+.section textarea {
+	margin-left: 1.0em;
+}
+
+.dl-horizontal dt {
+	color: @navbarcolor;
+}
+
+.dl-horizontal dd {
+	text-align: left;
+}
+
+@media screen and (max-width: 767px) {
+ .dl-horizontal dt, dd {
+	text-align: left;
+	padding-left: 1px;
+ }
+}
+
+#info_toolbar {
+	float: right;
+	color: @navbartext;
+	padding-right: 1.0em;
+}
+
+#searchtext {
+	padding: 0.25em;
+	border: thin solid @navbarcolor;
+	margin: 0.25em;
+	color: @navbarcolor;
+	font-size: 17px;
+}
+
+#register_experiment_div {
+	padding: 10px;
+}
+
+#register_experiment_div .panel-heading {
+  color: @navbartext;
+}
+
+#register_experiment_div .btn {
+  color: @navbartext;
+}
+
+
+#experiments_container thead th {
+	color: @navbarhover;
+}
+
+#experiments_container tbody td a {
+  color: @navbarhover;
+}
+
+#experiments_container li a.year_pill {
+	color: @navbarcolor;
+	font-weight: bold;
+}
+
+.year_pill_active {
+  .highlight_mixin;
+}
+
+#experiments_container li.active a {
+  .year_pill_active;
+}
+
+#experiments_container li a:hover {
+  .year_pill_active;
+}
+
+label {
+	color: @navbarcolor;
+}
+
+#panel_title {
+	color: @navbarcolor;
+	background: @navbarcolor;
+	font-weight: bold;
+}
+
+#panel_btn {
+	color: @navbarcolor;
+	background: linear-gradient(@navbarcolor, @navbarhover);
+	font-weight: bold;
+}
+
+#switch_experiment_div th {
+  .highlight_mixin;
+}
+
+#switch_experiment_div .btn {
+  .highlight_mixin;
+}
+
+#choose_experiment_modal table td a {
+  color: @navbarcolor;
+}
+
+#myTabContainer .exp_tab_header {
+  .highlight_mixin;
+	border: thin black solid;
+	padding: 0.2em;
+}
+
+#elog_tab div.edat {
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}
+
+#elog_tab div.etop:nth-child(odd) {
+	background: @tablezebra;
+}
+
+#myTabContainer .expand_ctrl {
+  font-size: 0.75em;
+}
+
+#myTabContainer .exp_icons_left {
+	float: left;
+  padding-right: 0.2em;
+}
+
+#myTabContainer .text_truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#elog_content .glyphicon {
+	opacity: .5;
+}
+
+#elog_content .entry_actions {
+	float:right;
+	font-size: 0.90em;
+	padding-right: 0.25em;
+}
+
+#elog_button_grp {
+	text-align: left;
+	padding-left: 5vw;
+}
+
+#fmgr_tab .run_file:nth-child(odd) {
+	background: @tablezebra;
+}
+
+#fmgr_tab .fdat {
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}
+
+#fmgr_tab .fdat:nth-child(odd) {
+	background: @tablezebra;
+}
+
+#fmgr_tab .glyphicon {
+	opacity: .5;
+}
