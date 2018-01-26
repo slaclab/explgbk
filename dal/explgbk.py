@@ -154,12 +154,12 @@ def register_new_experiment(experiment_name, incoming_info):
 
     return (True, "")
 
-
-def get_currently_active_experiments():
+def get_instrument_station_list():
     """
-    Get the currently active experiments at each instrment/station.
+    Get a list of instrumens and end stations as a list.
+    This skips those instruments that have a num_stations of 0.
     """
-    active_queries = []
+    ins_st_list = []
     for instr in get_instruments():
         name = instr["_id"]
         params = instr.get("params", {})
@@ -167,7 +167,15 @@ def get_currently_active_experiments():
         if num_stations:
             # Skip those that have a num_stations of 0.
             for station in range(num_stations):
-                active_queries.append({ "instrument": name, "station": station })
+                ins_st_list.append({ "instrument": name, "station": station })
+    return ins_st_list
+
+
+def get_currently_active_experiments():
+    """
+    Get the currently active experiments at each instrment/station.
+    """
+    active_queries = get_instrument_station_list()
 
     sitedb = logbookclient["site"]
     ret = []
@@ -302,14 +310,20 @@ def get_all_run_tables(experiment_name):
                 "coldefs" : []
                 }
         summtables[categoryName]["coldefs"].append({
-            "column_name" : paramName,
-            "column_type" : categoryName,
-            "column_source": "params." + categoryName + "/" + paramName,
+            "label" : paramName,
+            "type" : categoryName,
+            "source": "params." + categoryName + "/" + paramName,
+            "pvName": paramName,
             "is_editable" : False,
-            "column_position" : 0
+            "position" : 0
             })
     allRunTables.extend([summtables[x] for x in sorted(summtables.keys())])
     allRunTables.extend([x for x in expdb['run_tables'].find()])
+    # The run table categories change with time. This is where we patch for versions of the instrument scientist source list.
+    for rt in allRunTables:
+        for coldef in rt["coldefs"]:
+            if coldef['type'].startswith('EPICS:'):
+                coldef['type'] = coldef['type'].replace('EPICS:', 'EPICS/')
     return allRunTables
 
 def get_runtable_data(experiment_name, tableName):
@@ -320,7 +334,7 @@ def get_runtable_data(experiment_name, tableName):
     '''
     tableDef = next(x for x in get_all_run_tables(experiment_name) if x['name'] == tableName)
     sources = { "num": 1, "begin_time": 1, "end_time": 1 }
-    sources.update({ x['column_source'] : 1 for x in tableDef['coldefs']})
+    sources.update({ x['source'] : 1 for x in tableDef['coldefs']})
     return [x for x in logbookclient[experiment_name]['runs'].find({}, sources).sort([("num", -1)])] # Use sources as a filter to find
 
 
@@ -343,39 +357,70 @@ def get_runtable_sources(experiment_name):
     expdb = logbookclient[experiment_name]
     instrument = expdb.info.find_one({})['instrument']
     rtbl_sources = {}
-    rtbl_sources["Run Info"] = [{"param_name": "Begin Time", "description": "The start of the run", "column_source": "begin_time"},
-        {"param_name": "End time", "description": "The end of the run", "column_source": "end_time"},
-        {"param_name": "Duration", "description": "The duration of the run", "column_source": "duration"}]
-    rtbl_sources["Editables"] = [ { "param_name": x["_id"], "description": x["_id"], "column_source": "editable_params."+x["_id"] } for x in expdb.runs.aggregate([
+    rtbl_sources["Run Info"] = [{"label": "Begin Time", "description": "The start of the run", "source": "begin_time", "category": "Run Info"},
+        {"label": "End time", "description": "The end of the run", "source": "end_time", "category": "Run Info"},
+        {"label": "Run Duration", "description": "The duration of the run", "source": "duration", "category": "Run Info"}]
+    rtbl_sources["Editables"] = [ { "label": x["_id"], "description": x["_id"], "source": "editable_params."+x["_id"]+".value", "category": "Editables" } for x in expdb.runs.aggregate([
         { "$project": { "editables": { "$objectToArray": "$editable_params" } } },
         { "$unwind": "$editables" },
         { "$group": { "_id": "$editables.k", "total": { "$sum": 1 } } } ])]
+    rtbl_sources["Misc"] = [{"label": "Separator", "description": "A column separator", "source": "Separator", "category": "Misc"}]
     param_names = set([x["_id"] for x in expdb.runs.aggregate([
         { "$project": { "pnames": { "$objectToArray": "$params" } } },
         { "$unwind": "$pnames" },
         { "$group": { "_id": "$pnames.k", "total": { "$sum": 1 } } } ]) ])
-    param_descs = { x["param_name"] : { "param_name" : x["param_name"], "description": x["description"] if x["description"] else x["param_name"], "category": x['param_name'].split('/')[0] if '/' in x['param_name'] else "EPICS:Additional parameters" } for x in  expdb.run_param_descriptions.find({})}
+    param_descs = { x["param_name"] : { "label" : x["param_name"], "description": x["description"] if x["description"] else x["param_name"], "category": x['param_name'].split('/')[0] if '/' in x['param_name'] else "EPICS:Additional parameters" } for x in  expdb.run_param_descriptions.find({})}
     # Update the category and description from the instrument_scientists_run_table_defintions if present
     param_names_with_categories = []
     for param_name in param_names:
         if param_name in instrument_scientists_run_table_defintions[instrument]:
             param_names_with_categories.append({
-                "param_name" : param_name,
+                "label" : param_name,
                 "category": "EPICS/" + instrument_scientists_run_table_defintions[instrument][param_name]["title"],
                 "description": instrument_scientists_run_table_defintions[instrument][param_name].get("description", param_name),
                 "source": "params." + param_name })
         elif param_name in param_descs:
             param_names_with_categories.append({
-                "param_name" : param_name,
+                "label" : param_name,
                 "category": param_descs[param_name]['category'],
                 "description": param_descs[param_name].get("description", param_name),
                 "source": "params." + param_name })
         else:
             param_names_with_categories.append({
-                "param_name" : param_name,
+                "label" : param_name,
                 "category": "EPICS:Additional parameters",
                 "description": param_name,
                 "source": "params." + param_name })
     rtbl_sources.update({ x['category'] : [] for x in param_names_with_categories})
     [ rtbl_sources[x['category']].append(x) for x in param_names_with_categories ]
     return rtbl_sources
+
+
+def create_update_user_run_table_def(experiment_name, table_definition):
+    '''
+    Create or update an existing user run table definition for an experiment
+    We expect a fully formed table_definition here...
+    '''
+    expdb = logbookclient[experiment_name]
+    return expdb['run_tables'].update({'name': table_definition['name']}, table_definition, True)
+
+
+def update_editable_param_for_run(experiment_name, runnum, source, value, userid):
+    '''
+    Update the specified editable parameter for the specified run for the experiment.
+    :param experiment_name:
+    :param runnum:
+    :param source: Typically editable_params.Run Title or something like that.
+    :param value:
+    :param userid:
+    '''
+    expdb = logbookclient[experiment_name]
+    if not source.startswith('editable_params.'):
+        raise Exception("Cannot update anything else other than an editable param")
+    return expdb["runs"].find_one_and_update(
+        {"num": runnum},
+        {"$set": { source: {
+                    "value": value,
+                    "modified_by": userid,
+                    "modified_time": datetime.datetime.now()
+                    }}})

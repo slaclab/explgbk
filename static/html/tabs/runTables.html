@@ -9,19 +9,129 @@
 
 <script type="text/javascript">
 $("#rtbl_tab").on("lg.shown.bs.tab", function() {
-  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}">{{ name }}</a></li>{{/value}}<li class="pull-right"><a id="runtblnew" href="#>">New</a></li><li class="pull-right"><a id="runtbledit" href="#>">Edit</a></li>`;
+  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}<li class="pull-right"><a id="runtblnew" href="#>">New</a></li><li class="pull-right"><a id="runtbledit" href="#>">Edit</a></li>`;
   var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-responsive table-condensed"><thead></thead><tbody></tbody></table>`;
-  var run_tbl_category_selector = `{{#.}}<option value="{{.}}">{{.}}</option>{{/.}}`;
-  var run_tbl_pvname_selector = `<select class='rtbl_def_pvname_select'><option value=''></option>{{#.}}<option value="{{column_source}}" title="{{param_name}}">{{description}}</option>{{/.}}</select>`;
+  var run_tbl_def_tr = `<tr>
+    <td><input name="label" class="nonblank"/></td>
+    <td><select name="type" class="rtbl_def_category_select nonblank"><option value="">&nbsp;</option></select></td>
+    <td><select name="source" class="rtbl_def_pvname_select nonblank"><option value="">&nbsp;</option></select></td>
+    <td>
+      <a href="#"><span class="glyphicon glyphicon-arrow-up rtbldef_action" aria-hidden="true"></span></a>
+      <a href="#"><span class="glyphicon glyphicon-arrow-down rtbldef_action" aria-hidden="true"></span></a>
+      <a href="#"><span class="glyphicon glyphicon-trash rtbldef_action" aria-hidden="true"></span></a>
+      <a href="#"><span class="glyphicon glyphicon-plus rtbldef_action" aria-hidden="true"></span></a>
+    </td></tr>`;
+  var run_tbl_def_category_selector = `{{#.}}<option value="{{.}}">{{.}}</option>{{/.}}`;
+  var run_tbl_def_pvname_selector = `<select name="source" class='rtbl_def_pvname_select nonblank'><option value=''></option>{{#.}}<option value="{{label}}" title="{{param_name}}">{{label}}</option>{{/.}}</select>`;
   Mustache.parse(run_tbl_pill_template);
   Mustache.parse(run_tbl_tbl);
-  Mustache.parse(run_tbl_category_selector);
-  Mustache.parse(run_tbl_pvname_selector);
+  Mustache.parse(run_tbl_def_tr);
+  Mustache.parse(run_tbl_def_category_selector);
+  Mustache.parse(run_tbl_def_pvname_selector);
+
+  var col_defs_dialog = function(editTableName) {
+     $.when($.ajax('../../static/html/tabs/rtbl_def_modal.html'), $.getJSON('ws/run_table_sources'))
+     .done(function(d1, d2) {
+       var validations = [
+        [function() { return $.trim($("#rtbl_def_name").val()) == ""; }, "Table name cannot be blank."],
+        [function() { return $.trim($("#rtbl_def_desc").val()) == ""; }, "Please enter a brief description."],
+        [function() { return !/^([a-zA-Z0-9_-]+)$/.test($("#rtbl_def_name").val())}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores only; please don't use spaces, periods etc."],
+        [function() { return $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length <= 0; }, "At least one column definition should have a complete column definition."],
+        [function() { return $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find("[name=label]").val() != "" && $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length == 0; }, "If the column name for a column definition is defined, then the column source(s) must be defined as well"],
+      ];
+       var mdl = $(d1[0]), rtbl_sources = d2[0];
+       _.defaults(rtbl_sources.value, {"Editables": []});
+       rtbl_sources.value["Editables"].push({"label": "New Editable", "description": "Add a new editable run parameter", "source": "editable_params.", "category": "Editables" });
+       $("#rtbl_content").prepend(mdl);
+       $("#rtbl_content").data("run_table_sources", rtbl_sources);
+       var template_tr = $(Mustache.render(run_tbl_def_tr), {});
+       template_tr.find(".rtbl_def_category_select").append(Mustache.render(run_tbl_def_category_selector, _.keys(rtbl_sources.value)));
+       template_tr.find(".rtbl_def_category_select").on("change", function(){
+         $(this).parent().next().empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value[$(this).val()]));
+       });
+       template_tr.find(".glyphicon-plus").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").after(template_tr.clone(true)); });
+       template_tr.find(".glyphicon-trash").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").remove(); });
+       template_tr.find(".glyphicon-arrow-up").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").prev().before($(this).parents("tr:first")); });
+       template_tr.find(".glyphicon-arrow-down").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").next().after($(this).parents("tr:first")); });
+       if (!_.isNil(editTableName)) {
+         console.log("Editing table " + editTableName);
+         var tblDef = $("#rtbl_tab").data("tblData")[editTableName];
+         $("#rtbl_def_name").val(tblDef["name"]);
+         $("#rtbl_def_desc").val(tblDef["description"]);
+         _.each(_.tail(tblDef["coldefs"]), function(coldef, index){
+             var coldefrow = template_tr.clone(true);
+             coldefrow.find("[name='label']").val(coldef["label"]);
+             var rtbl_src_obj = _.find(_.flatten(_.values(rtbl_sources.value)), function(rdf){return rdf['source'] == coldef["source"]});
+             if(!_.isNil(rtbl_src_obj)) {
+               coldefrow.find(".rtbl_def_category_select").val(rtbl_src_obj['category']);
+               coldefrow.find(".rtbl_def_pvname_select").empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value[rtbl_src_obj['category']])).val(rtbl_src_obj['label']);
+             }
+             $("#rtbl_def_tbl tbody").append(coldefrow);
+         });
+       } else {
+         $("#rtbl_def_tbl tbody").append(template_tr.clone(true));
+       }
+       $("#rtbl_def_post").on("click", function(e){
+         var v_failed = false; // Various validations
+         _.each(validations, function(validation, i) {
+           if(validation[0]()) {
+             e.preventDefault();
+             $("#rtbl_validation_modal .modal-body p").text(validation[1]);
+             $("#rtbl_validation_modal").modal();
+             v_failed = true;
+             return false;
+           }
+         });
+         if(!v_failed) {
+           var tbl_def = {
+             name: $("#rtbl_def_name").val(),
+             description: $("#rtbl_def_desc").val(),
+             is_editable: true,
+             coldefs: []
+           };
+           $("#rtbl_def_tbl tbody tr").each(function(index, defnrow){
+             var colname = $(this).find("[name='label']").val();
+             var type = $(this).find("[name='type']").val();
+             var srclbl = $(this).find("[name='source']").val();
+             console.log("Looking for source for " + srclbl);
+             var source = (srclbl == "New Editable") ? "editable_params." + colname + ".value" : _.find($("#rtbl_content").data("run_table_sources").value[type], function(o){ return o['label'] == srclbl; })['source'];
+             tbl_def.coldefs.push({
+               label: colname,
+               type: type,
+               source: source,
+               is_editable: type == "Editables",
+               position: index
+             });
+           });
+       	   $.getJSON({
+       		    url: 'ws/create_update_user_run_table_def',
+       		    data: JSON.stringify(tbl_def),
+              type: "POST",
+       		    contentType: 'application/json'
+       		 })
+       		 .done(function(data, textStatus, jqXHR) {
+       			 if(data.success) { console.log("Successfully updated user run table definition"); sessionStorage['runtable_active_tab'] = $("#rtbl_def_name").val(); window.location.reload(true); } else { alert("Server side exception updating user run table definition " + data.errormsg); }
+       		 })
+       		 .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception updating user run table definition " + jqXHR.responseText); })
+           $("#rtbl_new_entry_modal").modal("hide");
+         }
+       });
+       $("#rtbl_new_entry_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); });
+       $("#rtbl_new_entry_modal").modal();
+     });
+  }
+
+  var update_editable_for_run = function( input_elem ) {
+    $.getJSON({ url: "ws/run_table_editable_update", data: { runnum: input_elem.attr('data-run-num'), source: input_elem.attr('data-column-source'), value: input_elem.val()}})
+    .done(function(data, textStatus, jqXHR){ if(data.success) { console.log("Successfully updated editable");} else { alert("Server side exception updating editable " + data.errormsg); }})
+    .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception updating editable " + jqXHR.responseText)});
+  }
+
   $.getJSON("ws/run_tables")
   .done(function(tblData){
     _.each(tblData.value, function(tdef){
-      tdef.coldefs = _.sortBy(tdef.coldefs, function(v){ return v["column_position"];});
-      tdef.coldefs.unshift({"column_name": "Num", "column_source": "num", "is_editable": false, "column_position": -1 })
+      tdef.coldefs = _.sortBy(tdef.coldefs, function(v){ return v["position"];});
+      tdef.coldefs.unshift({"label": "Num", "source": "num", "is_editable": false, "position": -1 })
     });
     $("#rtbl_tab").data("tblData", _.keyBy(tblData.value, function(o) {  return o.name; }));
     console.log($("#rtbl_tab").data("tblData"));
@@ -38,36 +148,39 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
         var hdr = _.times(numHdrRows, function() { return $("<tr/>"); }), row_tmpl = "";
         _.each(tblDef.coldefs, function(coldef, idx) {
           if(idx > 0 && idx < numHdrRows) { hdr[idx%numHdrRows].append($("<th colspan='" + idx + "' class='rtbl_filler'>&nbsp;</th>"))};
-          hdr[idx%numHdrRows].append($("<th colspan='"+ numHdrRows + "' class='rtbl_header' data-col-idx='" + idx + "' >" + coldef["column_name"] + "</th>"));
-          row_tmpl = row_tmpl + "<td>{{ " + coldef["column_source"] +  " }}</td>"
+          hdr[idx%numHdrRows].append($("<th colspan='"+ numHdrRows + "' class='rtbl_header' data-col-idx='" + idx + "' >" + coldef["label"] + "</th>"));
+          if(coldef["source"] == "Separator") {
+            row_tmpl = row_tmpl + "<td class='rtbl_separator'>&nbsp;</td>";
+          } else if (coldef["is_editable"]) {
+            row_tmpl = row_tmpl + "<td><input type='text' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column form-control' value='{{" + coldef["source"] + "}}'></td>";
+          } else {
+            row_tmpl = row_tmpl + "<td>{{" + coldef["source"] + "}}</td>";
+          }
         });
         tblRndr.find("thead").append(hdr);
-        var row_tmpl = "{{#value}}<tr>" + row_tmpl + "</tr>{{/value}}";
+        row_tmpl = "{{#value}}<tr>" + row_tmpl + "</tr>{{/value}}";
         Mustache.parse(row_tmpl);
         var rowRendered = $(Mustache.render(row_tmpl, runData));
         rowRendered.find("td").hover(
           function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").addClass("tblhighlight"); },
           function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").removeClass("tblhighlight"); });
+        rowRendered.find("input.rtbl_editable_column").change(function(){ update_editable_for_run($(this))});
         tblRndr.find("tbody").append(rowRendered);
         $("#rtbl_content").html(tblRndr);
       });
       if(tblDef['is_editable']) { $("#runtbledit").show(); } else { $("#runtbledit").hide(); }
     });
-    rendered.find(".rtbl_pill").first().trigger("click");
+    rendered.find( _.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
+    sessionStorage.removeItem("runtable_active_tab");
+    WebSocketConnection.connect();
+    $(document).on('runs', function(event, runData) {
+      console.log(runData);
+      console.log("Processing web socket event for run " + runData['num'] + " for experiment " + runData['experiment_name']);
+    });
 
-    $("#runtblnew").on("click", function(e) {
-       e.preventDefault();
-       $.when($.ajax('../../static/html/tabs/rtbl_def_modal.html'), $.getJSON('ws/run_table_sources'))
-       .done(function(d1, d2) {
-         var mdl = $(d1[0]), rtbl_sources = d2[0];
-         $("#rtbl_content").prepend(mdl);
-         $("#rtbl_def_tbl tbody").find(".rtbl_def_category_select").append(Mustache.render(run_tbl_category_selector, _.keys(rtbl_sources.value)));
-         $("#rtbl_def_tbl tbody").find(".rtbl_def_category_select").on("change", function(){
-           $(this).parent().next().empty().html(Mustache.render(run_tbl_pvname_selector, rtbl_sources.value[$(this).val()]));
-         });
-         $("#rtbl_new_entry_modal").modal();
-       });
-      });
+
+    $("#runtblnew").on("click", function(e) { e.preventDefault(); col_defs_dialog(); });
+    $("#runtbledit").on("click", function(e) { e.preventDefault(); var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); col_defs_dialog(clkRTblName); });
   });
 });
 </script>

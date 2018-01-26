@@ -18,7 +18,7 @@ $(function() {
 
 	Mustache.parse(instrument_template);
 	Mustache.parse(exper_template);
-	
+
     $(document).ready(function() {
     	$("#switch_experiment").on("click", function(){
     		var exp_switch_info = $('#choose_experiment_modal table').data("selected-experiment");
@@ -41,10 +41,13 @@ $(function() {
     		})
     		.fail( function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception switching experiment " + jqXHR.responseText); })
     	});
-    	$.getJSON(active_experiments_url)
-    	.done(function(data) {
-    		data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
-    		var rendered = Mustache.render(instrument_template, data);
+    	$.when($.getJSON(active_experiments_url), $.getJSON(instrument_station_list))
+    	.done(function(d1, d2) {
+				var active_exps = d1[0], ins_st_list = d2[0];
+				var others = _.differenceWith(ins_st_list.value, active_exps.value, function(av, ov){ return av['instrument'] == ov['instrument'] && av['station'] == ov['station'] });
+				_.each(others, function(ot){ active_exps.value.push(ot); });
+    		active_exps.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+    		var rendered = Mustache.render(instrument_template, active_exps);
     		$("#switch_experiment_div tbody").html(rendered);
     		$("a.expswitch").on("click", function() {
     			var instr = $(this).attr("data-instrument");

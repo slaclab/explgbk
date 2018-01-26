@@ -71,6 +71,7 @@
 
 $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
 	var target = $(e.target).attr("href");
+  window.location.hash = e.target.hash;
 	if ($(target).is(':empty')) {
 		console.log("Activated tab " + target + " is empty. Triggering load");
 		var template_url = $(e.target).attr("data-url");

@@ -20,16 +20,22 @@ from flask import Blueprint, jsonify, request, url_for, Response, stream_with_co
 
 from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_experiments, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
-    get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources
+    get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources, \
+    create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list
 
-from dal.utils import JSONEncoder
+from dal.run_control import start_run, get_current_run, end_run, add_run_params
 
+from dal.utils import JSONEncoder, escape_chars_for_mongo
 
 __author__ = 'mshankar@slac.stanford.edu'
 
 explgbk_blueprint = Blueprint('experiment_logbook_api', __name__)
 
 logger = logging.getLogger(__name__)
+
+def logAndAbort(error_msg):
+    logger.error(error_msg)
+    return Response(error_msg, status=500)
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/info", methods=["GET"])
@@ -115,6 +121,16 @@ def svc_get_instruments():
     """
     return jsonify({'success': True, 'value': get_instruments()})
 
+
+@explgbk_blueprint.route("/lgbk/ws/instrument_station_list", methods=["GET"])
+@context.security.authentication_required
+def svc_instrument_station_list():
+    """
+    Get the list of possible instrument/station pairs as a list.
+    """
+    return JSONEncoder().encode({'success': True, 'value': get_instrument_station_list()})
+
+
 @explgbk_blueprint.route("/lgbk/ws/activeexperiments", methods=["GET"])
 @context.security.authentication_required
 def svc_get_active_experiments():
@@ -143,10 +159,6 @@ def svc_register_new_experiment():
     Register a new experiment.
     We expect the experiment_name as a query parameter and the registration information as a JSON document in the POST body.
     """
-    def logAndAbort(error_msg):
-        logger.error(error_msg)
-        return Response(error_msg, status=500)
-
     experiment_name = request.args.get("experiment_name", None)
     if not experiment_name:
         return logAndAbort("Experiment registration missing experiment_name in query parameters")
@@ -237,10 +249,6 @@ def svc_post_new_elog_entry(experiment_name):
     Create a new log entry.
     Process multi-part file upload
     """
-    def logAndAbort(error_msg):
-        logger.error(error_msg)
-        return Response(error_msg, status=500)
-
     log_content = request.form["log_text"]
 
     if not log_content or not log_content.strip():
@@ -319,3 +327,102 @@ def svc_get_runtable_data(experiment_name):
 @context.security.authorization_required("read")
 def svc_get_runtable_sources(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_runtable_sources(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_update_user_run_table_def", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_create_update_user_run_table_def(experiment_name):
+    """
+    Create or update an existing user definition table.
+    """
+    # logger.info(json.dumps(request.json, indent=2))
+    return JSONEncoder().encode({"success": True, "status": create_update_user_run_table_def(experiment_name, request.json)})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_editable_update")
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_run_table_editable_update(experiment_name):
+    """
+    Update the editable param for the specified run for the experiment.
+    :runnum: Specify the run using the runnum parameter.
+    :source: Specify the source using the source parameter.
+    :value: The new value
+    """
+    runnum = int(request.args.get("runnum"))
+    source = request.args.get("source")
+    value = request.args.get("value")
+    userid = context.security.get_current_user_id()
+
+    if not source.startswith('editable_params.'):
+        return logAndAbort("We can only change editable parameters.")
+    if source.endswith('.value'):
+        source = source.replace(".value", "")
+    return JSONEncoder().encode({"success": True, "result": update_editable_param_for_run(experiment_name, runnum, source, value, userid)})
+
+
+@explgbk_blueprint.route("/run_control/<experiment_name>/ws/start_run", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_start_run(experiment_name):
+    """
+    Start a new run for an experiment.
+    Pass in the type of the run as a query parameter run_type. This defaults to DATA.
+    """
+    run_type = request.args.get("run_type", "DATA")
+
+    # Here's where we can put validations on starting a new run.
+    # Currently; there are none (after discussions with the DAQ team)
+    # But we may want to make sure the previous run is closed etc.
+
+    run_doc = start_run(experiment_name, run_type)
+
+    run_doc['experiment_name'] = experiment_name
+    context.kafka_producer.send("runs", run_doc)
+    logger.debug("Published the new run for %s", experiment_name)
+
+    return JSONEncoder().encode({"success": True, "value": run_doc})
+
+
+@explgbk_blueprint.route("/run_control/<experiment_name>/ws/end_run", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_end_run(experiment_name):
+    """
+    End the current run; ending the current run is mostly setting the end time.
+    """
+    run_doc = end_run(experiment_name)
+    run_doc['experiment_name'] = experiment_name
+    context.kafka_producer.send("runs", run_doc)
+
+    return JSONEncoder().encode({"success": True, "value": run_doc})
+
+
+@explgbk_blueprint.route("/run_control/<experiment_name>/ws/current_run", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_current_run(experiment_name):
+    """
+    Get the run document for the current run.
+    """
+    return JSONEncoder().encode({"success": True, "value": get_current_run(experiment_name)})
+
+
+
+@explgbk_blueprint.route("/run_control/<experiment_name>/ws/add_run_params", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_add_run_params(experiment_name):
+    """
+    Takes a dictionary as the POST body and bulk adds these are run parameters to the current run.
+    For example, send all the EPICS variables as a JSON dict.
+    We make sure the current run is still open (end_time is None)
+    """
+    params = request.json
+    run_params = {"params." + escape_chars_for_mongo(k) : v for k, v in params.items() }
+
+    current_run_doc = get_current_run(experiment_name)
+    if current_run_doc['end_time']:
+        return logAndAbort("The current run %s is closed for experiment %s" % (current_run_doc['num'], experiment_name))
+
+    return JSONEncoder().encode({"success": True, "value": add_run_params(experiment_name, run_params)})

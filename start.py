@@ -23,7 +23,7 @@ __author__ = 'mshankar@slac.stanford.edu'
 # Initialize application.
 app = Flask("explgbk")
 # Set the expiration for static files
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300; 
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300;
 
 app.secret_key = "This is a secret key that is somewhat temporary."
 app.debug = bool(os.environ.get('DEBUG', "False"))
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 app.register_blueprint(pages_blueprint)
 app.register_blueprint(explgbk_blueprint)
 
-socket_service.init_app(app, security, kafkatopics = ["experiment", "elog"])
+socket_service.init_app(app, security, kafkatopics = ["experiment", "elog", "runs"])
 
 dal.explgbk.init_app(app)
 
