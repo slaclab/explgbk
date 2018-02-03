@@ -19,13 +19,20 @@ __author__ = 'mshankar@slac.stanford.edu'
 # Application context.
 app = None
 
+MONGODB_HOST=os.environ['MONGODB_HOST'] or localhost
+MONGODB_PORT=int(os.environ['MONGODB_PORT']) or 27017
+MONGODB_USERNAME=os.environ['MONGODB_USERNAME'] or 'roleReader'
+MONGODB_PASSWORD=os.environ['MONGODB_PASSWORD'] or 'slac123'
+
+MONGODB_ADMIN_USERNAME=os.environ['MONGODB_ADMIN_USERNAME'] or 'admin'
+MONGODB_ADMIN_PASSWORD=os.environ['MONGODB_ADMIN_PASSWORD'] or 'slac123'
 
 # Set up the security manager
-mongorolereaderclient = MongoClient(host="localhost", port=27017, username="roleReader", password="slac123", authSource="admin")
+mongorolereaderclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, authSource="admin")
 usergroups = UserGroups()
 security = FlaskAuthnz(MongoDBRoles(mongorolereaderclient, usergroups), "LogBook")
 
-logbookclient = MongoClient(host="localhost", port=27017, username="admin", password="slac123", authSource="admin")
+logbookclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_ADMIN_USERNAME, password=MONGODB_ADMIN_PASSWORD, authSource="admin")
 
 
 def __getKafkaProducer():
