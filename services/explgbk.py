@@ -21,7 +21,7 @@ from flask import Blueprint, jsonify, request, url_for, Response, stream_with_co
 from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_experiments, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
     get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources, \
-    create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list
+    create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params
 
@@ -174,9 +174,39 @@ def svc_register_new_experiment():
 
     (status, errormsg) = register_new_experiment(experiment_name, info)
     if status:
+        context.kafka_producer.send("experiment", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/ws/update_experiment_info", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("edit")
+def svc_update_experiment_info():
+    """
+    Update the information for an existing experiment.
+    We expect the experiment_name as a query parameter and the registration information as a JSON document in the POST body.
+    """
+    experiment_name = request.args.get("experiment_name", None)
+    if not experiment_name:
+        return logAndAbort("Experiment registration missing experiment_name in query parameters")
+
+    info = request.json
+    if not info:
+        return logAndAbort("Experiment registration missing info document")
+
+    necessary_keys = set(['instrument', 'start_time', 'end_time', 'leader_account', 'contact_info', 'posix_group'])
+    missing_keys = necessary_keys - info.keys()
+    if missing_keys:
+        return logAndAbort("Experiment registration missing keys %s" % missing_keys)
+
+    (status, errormsg) = update_existing_experiment(experiment_name, info)
+    if status:
+        context.kafka_producer.send("experiment", {"experiment_name" : experiment_name, "CRUD": "Update", "value": info})
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
 
 
 @explgbk_blueprint.route("/lgbk/ws/switch_experiment", methods=["POST"])

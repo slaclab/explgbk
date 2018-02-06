@@ -23,8 +23,8 @@ def send_js(path):
         filepath = pkg_resources.resource_filename(pathparts[1], os.sep.join(pathparts[2:]))
         if os.path.exists(filepath):
             return send_file(filepath)
-        
-        
+
+
     # $CONDA_PREFIX/lib/node_modules/jquery/dist/
     filepath = os.path.join(os.getenv("CONDA_PREFIX"), "lib", "node_modules", path)
     if not os.path.exists(filepath):
@@ -34,11 +34,17 @@ def send_js(path):
     else:
         logger.error("Cannot find static file %s in %s", path, filepath)
         abort(403)
-        return None 
+        return None
 
 @pages_blueprint.route("/lgbk/<experiment_name>/templates/<path:path>", methods=["GET"])
 def templates(experiment_name, path):
     return render_template(path, experiment_name=experiment_name)
+
+@pages_blueprint.route("/lgbk/ops", methods=["GET"])
+@context.security.authentication_required
+def operator_dashboard():
+    return render_template("ops.html")
+
 
 @pages_blueprint.route("/lgbk/experiments", methods=["GET"])
 @context.security.authentication_required
@@ -63,5 +69,3 @@ def experiment_switch():
 @context.security.authorization_required("read")
 def exp_elog(experiment_name):
     return render_template("lgbk.html", experiment_name=experiment_name)
-
-

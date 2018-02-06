@@ -14,68 +14,11 @@ from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
 from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions
-
+from dal.exp_cache import get_experiments
 
 __author__ = 'mshankar@slac.stanford.edu'
 
 logger = logging.getLogger(__name__)
-
-__cached_experiments_list = []
-__cached_experiments_list_fetched_time = datetime.datetime.fromtimestamp(0)
-
-
-def init_app(app):
-    """
-    Perform startup initialization
-    This is a good opportunity to preload caches etc.
-    """
-    get_experiments() # Cache experiments from the database
-
-
-def get_experiments():
-    """
-    Get a list of experiments from the database.
-    Returns basic information and also some info on the first and last runs.
-    """
-    global __cached_experiments_list
-    global __cached_experiments_list_fetched_time
-    nw = datetime.datetime.now()
-    if (nw - __cached_experiments_list_fetched_time).total_seconds() < 30*60:
-        return __cached_experiments_list
-
-    logger.info("Reloading experiments from database.")
-    experiments = []
-    for database in logbookclient.database_names():
-        expdb = logbookclient[database]
-        collnames = expdb.collection_names()
-        if 'info' in collnames:
-            expinfo = {}
-            info = expdb["info"].find_one({}, {"latest_setup": 0})
-            if 'runs' in collnames:
-                run_count = expdb["runs"].count()
-                expinfo['run_count'] = run_count
-                if run_count:
-                    last_run =  expdb["runs"].find({}, { "num": 1, "begin_time": 1, "end_time": 1 } ).sort([("begin_time", -1)]).limit(1)[0]
-                    first_run = expdb["runs"].find({}, { "num": 1, "begin_time": 1, "end_time": 1 } ).sort([("begin_time",  1)]).limit(1)[0]
-                    expinfo["first_run"] = { "num": first_run["num"],
-                            "begin_time": first_run["begin_time"],
-                            "end_time": first_run["end_time"]
-                        }
-                    expinfo["last_run"] =  { "num": last_run["num"],
-                            "begin_time": last_run["begin_time"],
-                            "end_time": last_run["end_time"]
-                        }
-            else:
-                logger.debug("No runs in experiment " + database)
-            expinfo.update(info)
-            experiments.append(expinfo)
-        else:
-            logger.debug("Skipping non-experiment database " + database)
-
-    __cached_experiments_list = experiments
-    __cached_experiments_list_fetched_time = nw
-
-    return experiments
 
 def get_instruments():
     """
@@ -147,12 +90,27 @@ def register_new_experiment(experiment_name, incoming_info):
     expdb["shifts"].create_index( [("begin_time", ASCENDING)], unique=True)
     expdb["files"].create_index( [("file_path", ASCENDING), ("run_num", DESCENDING)], unique=True)
     expdb["run_tables"].create_index( [("name", ASCENDING)], unique=True)
-
-
-    global __cached_experiments_list_fetched_time
-    __cached_experiments_list_fetched_time = datetime.datetime.fromtimestamp(0)
-
     return (True, "")
+
+def update_existing_experiment(experiment_name, incoming_info):
+    """
+    Update an existing experiment
+    """
+    if experiment_name not in logbookclient.database_names():
+        return (False, "Experiment %s does not exist" % experiment_name)
+
+    expdb = logbookclient[experiment_name]
+    info = {}
+    info.update(incoming_info)
+    info_id                    = experiment_name.replace(" ", "_")
+    info["name"]               = experiment_name
+    info["start_time"]         = datetime.datetime.strptime(info["start_time"], '%Y-%m-%dT%H:%M:%S.%fZ')
+    info["end_time"]           = datetime.datetime.strptime(info["end_time"],   '%Y-%m-%dT%H:%M:%S.%fZ')
+
+    expdb['info'].update_one({}, { "$set": info })
+    return (True, "")
+
+
 
 def get_instrument_station_list():
     """

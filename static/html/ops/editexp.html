@@ -1,0 +1,150 @@
+<div class="container-fluid text-center tabcontainer" id="register_edit_exp_tab">
+<div class="row">
+  <div class="panel panel-default">
+   <div class="panel-body">
+     <div class="row btnbar">
+       <button class="btn btn-default panel_btn" id="register_experiment">Register New</button>
+       <input type="text" size="30" id="searchtext"><span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+     </div>
+     <div id="mdl_holder"></div>
+     <div class="table-responsive">
+       <table class="table table-condensed table-striped table-bordered" id="searchresults">
+         <thead><tr><th>Name</th><th>First Run</th><th>Last Run</th><th>Contact</th><th>Description</th><th>Edit</th></tr></thead>
+         <tbody></tbody>
+       </table>
+     </div>
+  </div>
+  </div>
+</div>
+</div>
+
+<script type="text/javascript">
+$("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
+  var edit_exp = function(expInfo) {
+    expInfo['contact_info_name'] = expInfo['contact_info'].split("(")[0];
+    expInfo['contact_info_email'] = expInfo['contact_info'].split("(")[1].split(")")[0];
+    $.when($.ajax ("../static/html/ms/expreg.html"), $.getJSON(instruments_url))
+    .done(function( d1, d2 ) {
+      var tmpl = d1[0], instruments = d2[0], options = `{{#value}}<option value="{{ _id }}">{{ _id }}</option>{{/value}}`;
+      Mustache.parse(tmpl); Mustache.parse(options);
+      var rendered = $(Mustache.render(tmpl, expInfo));
+      rendered.find(".start_time").datetimepicker({defaultDate: moment(expInfo['start_time']), sideBySide: true });
+      rendered.find(".end_time").datetimepicker({defaultDate: moment(expInfo['end_time']), sideBySide: true });
+      rendered.find(".instrument").append($(Mustache.render(options, instruments)));
+      rendered.find(".instrument").val(expInfo['instrument']);
+      if (_.has(expInfo, "name")) { rendered.find(".register_btn").text("Update"); }
+      rendered.find(".register_btn").on("click", function(e) {
+        e.preventDefault();
+        var formObj = $("#mdl_holder").find("form");
+        var validations = [
+            [function() { return $.trim(formObj.find(".experiment_name").val()) == ""; }, "Experiment name cannot be blank."],
+            [function() { return $.trim(formObj.find(".instrument").val()) == ""; }, "Please choose a valid instrument."],
+            [function() { return $.trim(formObj.find(".posix_group").val()) == ""; }, "Please choose a posix group for authorization."],
+            [function() { return $.trim(formObj.find(".start_time input").val()) == ""; }, "Please choose a valid start time."],
+            [function() { return $.trim(formObj.find(".end_time input").val()) == ""; }, "Please choose a valid end time."],
+            [function() { return formObj.find('.end_time').data("DateTimePicker").date().isSameOrBefore(formObj.find('.start_time').data("DateTimePicker").date(), 'minute') ; }, "The end time should be after the start time."],
+            [function() { return $.trim(formObj.find(".leader_account").val()) == ""; }, "Please specify the UNIX account of the leader for the experiment."],
+            [function() { return $.trim(formObj.find(".pi_name").val()) == ""; }, "Please specify the full name of the principal investigator."],
+            [function() { return $.trim(formObj.find(".pi_email").val()) == ""; }, "Please specify the email address for the principal investigator."],
+            [function() {
+              var email = $.trim(formObj.find(".pi_email").val());
+              var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+              return !re.test(email.toLowerCase());
+              }, "Please specify the email address for the principal investigator."],
+            [function() { return $.trim(formObj.find(".description").val()) == ""; }, "A brief description of the experiment is very helpful."]
+          ];
+        // Various validations
+        var v_failed = false;
+        _.each(validations, function(validation, i) {
+          // console.log("Trying validation " + i + "" + validation[1]);
+          if(validation[0]()) {
+              $("#mdl_holder").find(".validation_message").html(validation[1]);
+              $("#mdl_holder").find(".validation_modal").modal("show");
+              v_failed = true;
+              return false;
+          }
+        });
+        if (v_failed) { e.preventDefault(); return; }
+        var experiment_name = $.trim(formObj.find(".experiment_name").val());
+        var original_experiment_name = $.trim(formObj.find(".experiment_name_original").val());
+        var updating_existing_experiment = (original_experiment_name == experiment_name);
+        var registration_doc = {
+            "name" : experiment_name,
+            "instrument" : $.trim(formObj.find(".instrument").val()),
+            "description" : $.trim(formObj.find(".description").val()),
+            "start_time" : formObj.find('.start_time').data("DateTimePicker").date().toJSON(),
+            "end_time" : formObj.find('.end_time').data("DateTimePicker").date().toJSON(),
+            "leader_account" : $.trim(formObj.find(".leader_account").val()),
+            "contact_info" : $.trim(formObj.find(".pi_name").val()) + "(" + $.trim($(".pi_email").val()) + ")",
+            "posix_group" : $.trim(formObj.find(".posix_group").val())
+        };
+
+        $.ajax({
+          type: "POST",
+          contentType: "application/json; charset=utf-8",
+          url: (updating_existing_experiment ? update_experiment_url : register_experiment_url) + "?experiment_name=" + encodeURIComponent(experiment_name),
+          data: JSON.stringify(registration_doc),
+          dataType: "json"
+        })
+        .done(function(data, textStatus, jqXHR) {
+          if(data.success) {
+              console.log("Successfully submitted experiment " + experiment_name);
+              $("#mdl_holder").find(".edit_modal").modal("hide");
+          } else {
+            alert("Server side exception registering new experiment " + data.errormsg);
+          }
+        })
+        .fail( function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); console.log(errorThrown); console.log("Server side HTTP failure registering new experiment " + textStatus); })
+      });
+     $("#mdl_holder").append(rendered);
+     $("#mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#mdl_holder").empty(); });
+     $("#mdl_holder").find(".edit_modal").modal("show");
+    });
+  };
+
+  var exper_template = `{{#value}}<tr>
+        <td> <a target="_blank" href="{{_id}}/">{{ name }}</a> </td>
+        <td> {{#FormatDate}}{{first_run.begin_time }}{{/FormatDate}} </td>
+        <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
+        <td> {{ contact_info }} </td>
+        <td> {{ description }} </td>
+        <td> <a class="editexpbtn" href="#"><span class="glyphicon glyphicon-edit"></span>&nbsp;</a> </td>
+    </tr>{{/value}}`;
+  Mustache.parse(exper_template);
+
+  $.getJSON ({ url: experiments_url })
+  .done(function( experiments ) {
+    // Prepare for searches...
+    var exp_names = []
+    var name2info = {};
+    _.forOwn(experiments.value, function(exp) {
+        exp_names.push(exp['name']);
+        name2info[exp['name']] = exp;
+    });
+    $("#searchtext").on("input", function(e) {
+      if($("#searchtext").val().length > 2) {
+        var curname = $("#searchtext").val();
+        var matchexps = [];
+        _.each(exp_names, function(exp_name){
+          if(_.startsWith(exp_name, curname)) {
+            matchexps.push(name2info[exp_name]);
+          }
+        });
+        if(matchexps.length > 0) {
+          var expdata = {value: matchexps};
+            expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+            var rendered = Mustache.render(exper_template, expdata);
+            $("#searchresults tbody").html(rendered);
+            $("#searchresults a.editexpbtn").on("click", function(){
+              var expName = $(this).parents("tr").find("td").first().find("a").text()
+              console.log("Editing experiment " + expName);
+              edit_exp(name2info[expName]);
+            });
+        }
+      } else {
+          $("#searchresults tbody").empty();
+      }
+    });
+    $("#register_experiment").on("click", function() { edit_exp({ contact_info: "()", start_time : moment(), end_time : moment().add(2, 'days')}); });
+  });
+});

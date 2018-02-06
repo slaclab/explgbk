@@ -104,6 +104,23 @@ body {
 #register_experiment_div .btn {
   color: white;
 }
+#register_edit_exp_tab .modal-content {
+  padding: 0.5em;
+}
+#register_edit_exp_tab .panel-body {
+  padding: 0.5em;
+}
+#register_edit_exp_tab .btnbar {
+  margin-left: 2.0em;
+  text-align: left;
+}
+#register_edit_exp_tab .btn {
+  background-color: #7272C0;
+  color: white;
+}
+#register_edit_exp_tab .btnbar input {
+  margin-left: 2.0em;
+}
 #experiments_container thead th {
   color: #333399;
 }

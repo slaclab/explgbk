@@ -1,0 +1,152 @@
+<div class="container-fluid text-center tabcontainer" id="register_tab">
+<div class="row" id="register_experiment_div">
+  <div class="panel panel-default">
+   <div class="panel-heading" id="panel_title">Please provide some information for the new experiment:</div>
+
+   <div id="validation_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+     <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Validation Error</h4>
+      </div>
+      <div class="modal-body alert alert-danger" role="alert">
+        <p id="validation_message"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <div class="panel-body">
+     <form id="register_form">
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="experiment_name">Experiment Name:</label>
+       <input type="text" class="form-control" id="experiment_name">
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="instrument">Instrument:</label>
+       <select class="form-control" id="instrument">
+	     <option> </option>
+	   </select>
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="posix_group">Posix Group:</label>
+       <input type="text" class="form-control" id="posix_group">
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="start_time">Start Time:</label>
+       <div class='input-group date' id='start_time'>
+         <input type='text' class="form-control" />
+         <span class="input-group-addon">
+         <span class="glyphicon glyphicon-calendar"></span>
+         </span>
+       </div>
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="end_time">End Time:</label>
+       <div class='input-group date' id='end_time'>
+         <input type='text' class="form-control" />
+         <span class="input-group-addon">
+         <span class="glyphicon glyphicon-calendar"></span>
+         </span>
+       </div>
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="leader_account">Leader Account:</label>
+       <input type="text" class="form-control" id="leader_account">
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="contact_info">PI's Name:</label>
+       <input type="text" class="form-control" id="pi_name">
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="contact_info">PI's email:</label>
+       <input type="email" class="form-control" id="pi_email">
+      </div>
+      <div class="clearfix"></div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="description">Description:</label>
+       <textarea class="form-control" rows="5" id="description"></textarea>
+      </div>
+      <div class="clearfix"></div>
+      <div class="col-xs-10 col-sm-4 col-md-4 col-lg-4">
+        <button class="btn btn-default" id="panel_btn">Register</button>
+      </div>
+     </form>
+     <div class="clearfix"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script type="text/javascript">
+$("#register_tab").on("lg.shown.bs.tab", function() {
+  	$('#start_time').datetimepicker({defaultDate: moment(), sideBySide: true });
+  	$('#end_time').datetimepicker({defaultDate: moment().add(2, 'days'), sideBySide: true });
+  	$.getJSON(instruments_url).done(function(data) {
+  		_.each(data.value, function(instr) {
+  			$("#instrument").append('<option value="' + instr["_id"] + '">' + instr["_id"] + '</option>');
+  		});
+  	});
+  	validations = [
+  		[function() { return $.trim($("#experiment_name").val()) == ""; }, "Experiment name cannot be blank."],
+  		[function() { return $.trim($("#instrument").val()) == ""; }, "Please choose a valid instrument."],
+  		[function() { return $.trim($("#posix_group").val()) == ""; }, "Please choose a posix group for authorization."],
+  		[function() { return $.trim($("#start_time input").val()) == ""; }, "Please choose a valid start time."],
+  		[function() { return $.trim($("#end_time input").val()) == ""; }, "Please choose a valid end time."],
+  		[function() { return $('#end_time').data("DateTimePicker").date().isSameOrBefore($('#start_time').data("DateTimePicker").date(), 'minute') ; }, "The end time should be after the start time."],
+  		[function() { return $.trim($("#leader_account").val()) == ""; }, "Please specify the UNIX account of the leader for the experiment."],
+  		[function() { return $.trim($("#pi_name").val()) == ""; }, "Please specify the full name of the principal investigator."],
+  		[function() { return $.trim($("#pi_email").val()) == ""; }, "Please specify the email address for the principal investigator."],
+  		[function() { var email = $.trim($("#pi_email").val()); var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/; return !re.test(email.toLowerCase()); }, "Please specify the email address for the principal investigator."],
+  		[function() { return $.trim($("#description").val()) == ""; }, "A brief description of the experiment is very helpful."]
+  	];
+
+  	$("#panel_btn").on("click", function(e) {
+		e.preventDefault();
+
+  		// Various validations
+  		var v_failed = false;
+  		_.each(validations, function(validation, i) {
+  			// console.log("Trying validation " + i + "" + validation[1]);
+  			if(validation[0]()) {
+      			$("#validation_message").html(validation[1]);
+      			$("#validation_modal").modal();
+      			e.preventDefault();
+      			v_failed = true;
+      			return false;
+  			}
+  		});
+  		if (v_failed) { e.preventDefault(); return; }
+  		var experiment_name = $.trim($("#experiment_name").val());
+  		var registration_doc = {
+  				"name" : experiment_name,
+  				"instrument" : $.trim($("#instrument").val()),
+  				"description" : $.trim($("#description").val()),
+  				"start_time" : $('#start_time').data("DateTimePicker").date().toJSON(),
+  				"end_time" : $('#end_time').data("DateTimePicker").date().toJSON(),
+  				"leader_account" : $.trim($("#leader_account").val()),
+  				"contact_info" : $.trim($("#pi_name").val()) + "(" + $.trim($("#pi_email").val()) + ")",
+  				"posix_group" : $.trim($("#posix_group").val())
+  		};
+  		$.ajax({
+  			type: "POST",
+  			contentType: "application/json; charset=utf-8",
+  			url: register_experiment_url + "?experiment_name=" + encodeURIComponent(experiment_name),
+  			data: JSON.stringify(registration_doc),
+  			dataType: "json"
+  		})
+  		.done(function(data, textStatus, jqXHR) {
+  			if(data.success) {
+      			console.log("Successfully submitted experiment " + experiment_name);
+      			window.location=experiment_name.replace(" ", "_") + "/";
+  			} else {
+  				alert("Server side exception registering new experiment " + data.errormsg);
+  			}
+  		})
+  		.fail( function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception registering new experiment " + jqXHR.responseText); })
+  	});
+});

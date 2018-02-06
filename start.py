@@ -15,7 +15,7 @@ from pages import pages_blueprint
 from services.explgbk import explgbk_blueprint
 from flask_socket_util import socket_service
 
-import dal.explgbk
+import dal.exp_cache
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -47,7 +47,7 @@ app.register_blueprint(explgbk_blueprint)
 
 socket_service.init_app(app, security, kafkatopics = ["experiment", "elog", "runs"])
 
-dal.explgbk.init_app(app)
+dal.exp_cache.init_app(app)
 
 logger.info("Server initialization complete")
 

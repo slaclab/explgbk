@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Operator Dashboard</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../static/lgbk.css">
+  <link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap.min.css">
+  <link rel=stylesheet type=text/css href="../js/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css">
+
+  <script type="text/javascript" src="../js/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="../js/mustache/mustache.min.js"></script>
+  <script type="text/javascript" src="../js/lodash/lodash.min.js"></script>
+  <script type="text/javascript" src="../js/moment/min/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="../js/jquery.noty.packaged.js/jquery.noty.packaged.js"></script>
+  <script type="text/javascript" src="../js/bootstrap/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../js/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>  <script type="text/javascript" src="../js/socket.io/node_modules/socket.io-client/dist/socket.io.js"></script>
+  <script type="text/javascript" src="../js/python/flask_socket_util/websocket_client.js"></script>
+
+  <script src="../static/ops.js"></script>
+
+  <script type="text/javascript">
+    var active_experiments_url = "ws/activeexperiments";
+    var instruments_url   = "ws/instruments";
+    var instrument_station_list = "ws/instrument_station_list";
+    var experiments_url   = "ws/experiments";
+    var switch_experiment_url = "ws/switch_experiment";
+		var register_experiment_url = "ws/register_new_experiment";
+    var update_experiment_url = "ws/update_experiment_info";
+  </script>
+
+</head>
+<body>
+
+<nav class="navbar navbar-default" role="navigation" id="myNavRow">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <li><a data-toggle="tab" data-url="../static/html/ops/switch.html" href="#switch">Switch</a></li>
+        <li><a data-toggle="tab" data-url="../static/html/ops/editexp.html" href="#experiments">Experiments</a></li>
+        <li><a data-toggle="tab" data-url="../static/html/ops/instruments.html" href="#instruments">Instruments</a></li>
+      </ul>
+    </div>
+    <h3 class="exp_title">Operator dashboard</h3>
+  </div>
+</nav>
+
+<div class="tab-content" id="myTabContainer">
+  <div role="tabpanel" class="tab-pane fade" id="switch"></div>
+  <div role="tabpanel" class="tab-pane fade" id="experiments"></div>
+  <div role="tabpanel" class="tab-pane fade" id="instruments"></div>
+</div>
+
+<script type="text/javascript">
+
+$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+	var target = $(e.target).attr("href");
+  window.location.hash = e.target.hash;
+	if ($(target).is(':empty')) {
+		console.log("Activated tab " + target + " is empty. Triggering load");
+		var template_url = $(e.target).attr("data-url");
+	    $.ajax({
+	      type: "GET",
+	      url: template_url,
+	      error: function(data){
+	        alert("Error fetching template " + template_url + ".");
+	      },
+	      success: function(data){
+	  		console.log("Getting tab data and binding selectors");
+	        $(target).html(data);
+	        $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
+	      }
+	    });
+	}
+ });
+
+
+// Code for honoring the hash; for example URL#eLog gets you to the eLog
+var hash = window.location.hash;
+if (hash) {
+  $('ul.nav a[href="' + hash + '"]').tab('show');
+} else {
+	$('.navbar-nav a:first').tab('show');
+}
+
+</script>
+
+<div class="footer navbar-fixed-bottom">
+  <img alt="Brand" class="slac_logo" src="../static/SLAC_LogoSD.png"/>
+</div>
+
+</body>
+</html>
