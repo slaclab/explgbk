@@ -10,6 +10,10 @@
   background: #7272C0;
   font-weight: bold;
 }
+.bold_text_mixin {
+  color: #7272C0;
+  font-weight: bold;
+}
 .font_family_choices_mixin {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
 }
@@ -95,15 +99,6 @@ body {
   color: #7272C0;
   font-size: 17px;
 }
-#register_experiment_div {
-  padding: 10px;
-}
-#register_experiment_div .panel-heading {
-  color: white;
-}
-#register_experiment_div .btn {
-  color: white;
-}
 #register_edit_exp_tab .modal-content {
   padding: 0.5em;
 }
@@ -115,11 +110,26 @@ body {
   text-align: left;
 }
 #register_edit_exp_tab .btn {
-  background-color: #7272C0;
   color: white;
+  background: #7272C0;
+  font-weight: bold;
 }
 #register_edit_exp_tab .btnbar input {
   margin-left: 2.0em;
+}
+#ops_instruments_tab .instrument_lbl {
+  color: #7272C0;
+  font-weight: bold;
+}
+#ops_instruments_tab .btnbar {
+  margin-left: 2.0em;
+  text-align: left;
+  padding-bottom: 0.5em;
+}
+#ops_instruments_tab .btnbar .btn {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
 }
 #experiments_container thead th {
   color: #333399;

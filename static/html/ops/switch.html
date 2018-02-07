@@ -90,7 +90,7 @@ $("#expswitch_tab").on("lg.shown.bs.tab", function() {
     			var station = $(this).attr("data-station");
     			console.log("Switch " + instr + "/" + station);
     			$("#choose_experiment_modal .modal-title").text("Choose new experiment for " + instr + "(" + station + ")");
-    			$.getJSON(experiments_url)
+    			$.getJSON(experiments_by_instrument)
     			.done(function(data) {
     				var experiments_for_instrument = data.value[instr];
     				var rendered = Mustache.render(exper_template, {value: experiments_for_instrument});

@@ -25,7 +25,7 @@ def get_instruments():
     Get the list of instruments from the site database.
     """
     sitedb = logbookclient["site"]
-    return [x for x in sitedb["instruments"].find()]
+    return [x for x in sitedb["instruments"].find().sort([("_id", 1)])]
 
 
 def get_experiment_info(experiment_name):

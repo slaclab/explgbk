@@ -121,13 +121,15 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
         exp_names.push(exp['name']);
         name2info[exp['name']] = exp;
     });
+    $("#register_edit_exp_tab").data("exp_names", exp_names);
+    $("#register_edit_exp_tab").data("name2info", name2info);
     $("#searchtext").on("input", function(e) {
       if($("#searchtext").val().length > 2) {
         var curname = $("#searchtext").val();
         var matchexps = [];
-        _.each(exp_names, function(exp_name){
+        _.each($("#register_edit_exp_tab").data("exp_names"), function(exp_name){
           if(_.startsWith(exp_name, curname)) {
-            matchexps.push(name2info[exp_name]);
+            matchexps.push($("#register_edit_exp_tab").data("name2info")[exp_name]);
           }
         });
         if(matchexps.length > 0) {
@@ -138,7 +140,7 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
             $("#searchresults a.editexpbtn").on("click", function(){
               var expName = $(this).parents("tr").find("td").first().find("a").text()
               console.log("Editing experiment " + expName);
-              edit_exp(name2info[expName]);
+              edit_exp($("#register_edit_exp_tab").data("name2info")[expName]);
             });
         }
       } else {

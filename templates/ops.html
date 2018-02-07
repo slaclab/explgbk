@@ -22,6 +22,7 @@
     var instruments_url   = "ws/instruments";
     var instrument_station_list = "ws/instrument_station_list";
     var experiments_url   = "ws/experiments";
+    var experiments_by_instrument = "ws/experiments?categorize=instrument&sortby=lastrunyear";
     var switch_experiment_url = "ws/switch_experiment";
 		var register_experiment_url = "ws/register_new_experiment";
     var update_experiment_url = "ws/update_experiment_info";
@@ -42,7 +43,7 @@
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
         <li><a data-toggle="tab" data-url="../static/html/ops/switch.html" href="#switch">Switch</a></li>
-        <li><a data-toggle="tab" data-url="../static/html/ops/editexp.html" href="#experiments">Experiments</a></li>
+        <li><a data-toggle="tab" data-url="../static/html/ops/experiments.html" href="#experiments">Experiments</a></li>
         <li><a data-toggle="tab" data-url="../static/html/ops/instruments.html" href="#instruments">Instruments</a></li>
       </ul>
     </div>
