@@ -125,6 +125,9 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
     });
     $("#register_edit_exp_tab").data("exp_names", exp_names);
     $("#register_edit_exp_tab").data("name2info", name2info);
+    experiments.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+    var rendered = Mustache.render(exper_template, experiments);
+    $("#searchresults tbody").html(rendered);
     $("#searchtext").on("input", function(e) {
       if($("#searchtext").val().length > 0) {
         var curname = $("#searchtext").val();
@@ -146,7 +149,8 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
             });
         }
       } else {
-          $("#searchresults tbody").empty();
+        var rendered = Mustache.render(exper_template, experiments);
+        $("#searchresults tbody").html(rendered);
       }
     });
     $("#register_experiment").on("click", function() { edit_exp({ contact_info: "()", start_time : moment(), end_time : moment().add(2, 'days')}); });
