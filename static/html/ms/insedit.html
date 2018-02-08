@@ -7,22 +7,32 @@
      </div>
      <form class="register_form">
       <input type="hidden" class="form-control instrument_name_original" value="{{ _id }}">
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+      <div class="form-group col-lg-4">
        <label for="instrument_name">Instrument Name:</label>
        <input type="text" class="form-control instrument_name" value="{{ _id }}">
       </div>
-      <div class="clearfix"></div>
-      <div class="form-group col-xs-10 col-sm-10 col-md-10 col-lg-10">
+      <div class="form-group col-lg-8">
        <label for="description">Description:</label>
        <textarea class="form-control description" rows="5">{{ description }}</textarea>
       </div>
       <div class="clearfix"></div>
       <table class="table table-condensed table-striped table-bordered" id="instrument_params_tbl">
-        <thead><tr><th>Param Name</th><th>Value</th></thead>
+        <thead><tr><th>Param Name</th><th>Value</th><th>Actions</th></thead>
         <tbody>
           {{#paramkvs}}
-          <tr><td>{{key}}</td><td>{{value}}</td></tr>
+          <tr><td><input type="text" class="key" value="{{key}}"></td><td><input type="text" class="value" value="{{value}}"></td>
+            <td>
+              <a href="#"><span class="glyphicon glyphicon-trash param_action" aria-hidden="true"></span></a>
+              <a href="#"><span class="glyphicon glyphicon-plus param_action" aria-hidden="true"></span></a>
+            </td>
+          </tr>
           {{/paramkvs}}
+          <tr><td><input type="text" class="key" value=""></td><td><input type="text" class="value" value=""></td>
+            <td>
+              <a href="#"><span class="glyphicon glyphicon-trash param_action" aria-hidden="true"></span></a>
+              <a href="#"><span class="glyphicon glyphicon-plus param_action" aria-hidden="true"></span></a>
+            </td>
+          </tr>
         </tbody>
       </table>
       <div class="col-xs-10 col-sm-4 col-md-4 col-lg-4">

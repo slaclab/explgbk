@@ -19,6 +19,70 @@
 
 <script type="text/javascript">
 $("#ops_instruments_tab").on("lg.shown.bs.tab", function() {
+  var editcreatefn = function(instr_obj) {
+    $.ajax ("../static/html/ms/insedit.html")
+    .done(function(tmpl){
+      Mustache.parse(tmpl);
+      instr_obj.paramkvs = _.map(instr_obj['params'], function(value, key) { return { key: key, value: value };});
+      var rendered = $(Mustache.render(tmpl, instr_obj));
+      rendered.find(".glyphicon-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
+      rendered.find(".glyphicon-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      if(_.has(instr_obj, '_id')) { rendered.find(".register_btn").text("Update");}
+      rendered.find(".register_btn").on("click", function(e) {
+        e.preventDefault();
+        var formObj = $("#ins_mdl_holder").find("form");
+        var validations = [
+            [function() { return $.trim(formObj.find(".instrument_name").val()) == ""; }, "Instrument name cannot be blank."],
+            [function() { return $.trim(formObj.find(".description").val()) == ""; }, "Please enter a description for the instrument."],
+            [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
+          ];
+        // Various validations
+        var v_failed = false;
+        _.each(validations, function(validation, i) {
+          console.log("Trying validation " + i + "" + validation[1]);
+          if(validation[0]()) {
+              $("#ins_mdl_holder").find(".validation_message").html(validation[1]);
+              $("#ins_mdl_holder").find(".validation_modal").modal("show");
+              v_failed = true;
+              return false;
+          }
+        });
+        if (v_failed) { e.preventDefault(); return; }
+        var instrument_name = $.trim(formObj.find(".instrument_name").val());
+        var original_instrument_name = $.trim(formObj.find(".instrument_name_original").val());
+        ins_params = {};
+        formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { ins_params[key] = val; }});
+
+        var updating_existing_instrument = (original_instrument_name == instrument_name);
+        var registration_doc = {
+            "_id" : instrument_name,
+            "description" : $.trim(formObj.find(".description").val()),
+            "params": ins_params
+        };
+
+        $.ajax({
+          type: "POST",
+          contentType: "application/json; charset=utf-8",
+          url: create_update_instrument + "?instrument_name=" + encodeURIComponent(instrument_name) + "&create=" + (updating_existing_instrument ? false : true),
+          data: JSON.stringify(registration_doc),
+          dataType: "json"
+        })
+        .done(function(data, textStatus, jqXHR) {
+          if(data.success) {
+              console.log("Successfully processed instrument " + instrument_name);
+              $("#ins_mdl_holder").find(".edit_modal").modal("hide");
+          } else {
+            alert("Server side exception processing instrument " + data.errormsg);
+          }
+        })
+        .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure processing instrument " + textStatus); })
+      });
+      $("#ins_mdl_holder").append(rendered);
+      $("#ins_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#ins_mdl_holder").empty(); });
+      $("#ins_mdl_holder").find(".edit_modal").modal("show");
+    });
+  }
+
   var instmpl = `{{#value}}<tr>
         <td class="instrument_lbl">{{ _id }}</td>
         <td>{{ description }}</td>
@@ -29,19 +93,14 @@ $("#ops_instruments_tab").on("lg.shown.bs.tab", function() {
   $.getJSON(instruments_url)
   .done(function(instruments){
     var rendered = $(Mustache.render(instmpl, instruments));
-    rendered.find(".editinsbtn").on("click", function(){
-      var insname = $(this).parents("tr").find("td").first().text();
+    rendered.find(".editinsbtn").on("click", function(e){
+      e.preventDefault();
       console.log("Editing instrument " + insname);
-      $.ajax ("../static/html/ms/insedit.html")
-      .done(function(tmpl){
-        Mustache.parse(tmpl);
-        var instr_obj = _.find(instruments.value, function(instr){ return instr._id == insname; });
-        instr_obj.paramkvs = _.map(instr_obj['params'], function(value, key) { return { key: key, value: value };});
-        $("#ins_mdl_holder").append($(Mustache.render(tmpl, instr_obj)));
-        $("#ins_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#ins_mdl_holder").empty(); });
-        $("#ins_mdl_holder").find(".edit_modal").modal("show");
-      });
+      var insname = $(this).parents("tr").find("td").first().text();
+      var instr_obj = _.find(instruments.value, function(instr){ return instr._id == insname; });
+      editcreatefn(instr_obj);
     });
     $("#instrumentstbl tbody").append(rendered);
+    $("#new_instrument").on("click", function(e){ e.preventDefault(); editcreatefn({})});
   });
 });

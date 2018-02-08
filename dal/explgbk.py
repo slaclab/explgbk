@@ -110,7 +110,24 @@ def update_existing_experiment(experiment_name, incoming_info):
     expdb['info'].update_one({}, { "$set": info })
     return (True, "")
 
+def create_update_instrument(instrument_name, createp, incoming_info):
+    """
+    Create or update an instrument.
+    :param instrument_name: Name of the instrument.
+    :createp: A boolean indicating if this is to be created.
+    :incoming_info: The JSON document containing the description of the instrument to be created.
+    """
+    sitedb = logbookclient["site"]
+    if createp and sitedb.instruments.find_one({"_id": instrument_name}):
+        return (False, "Instrument %s already exists" % instrument_name)
+    if not createp and not sitedb.instruments.find_one({"_id": instrument_name}):
+        return (False, "Instrument %s does not exist" % instrument_name)
 
+    if createp:
+        sitedb.instruments.insert_one(incoming_info)
+    else:
+        sitedb.instruments.find_one_and_update({"_id": instrument_name}, { "$set": incoming_info })
+    return (True, "Instrument %s processed" % instrument_name)
 
 def get_instrument_station_list():
     """

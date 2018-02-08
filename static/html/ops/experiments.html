@@ -94,7 +94,7 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
             alert("Server side exception registering new experiment " + data.errormsg);
           }
         })
-        .fail( function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); console.log(errorThrown); console.log("Server side HTTP failure registering new experiment " + textStatus); })
+        .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure registering new experiment " + textStatus); })
       });
      $("#mdl_holder").append(rendered);
      $("#mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#mdl_holder").empty(); });

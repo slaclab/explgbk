@@ -126,7 +126,10 @@ body {
   text-align: left;
   padding-bottom: 0.5em;
 }
-#ops_instruments_tab .btnbar .btn {
+#ops_instruments_tab .register_btn {
+  margin-bottom: 1.0em;
+}
+#ops_instruments_tab .btn {
   color: white;
   background: #7272C0;
   font-weight: bold;

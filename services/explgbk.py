@@ -21,7 +21,8 @@ from flask import Blueprint, jsonify, request, url_for, Response, stream_with_co
 from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_experiments, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
     get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources, \
-    create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment
+    create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
+    create_update_instrument
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params
 
@@ -149,6 +150,41 @@ def svc_getUserGroupsForAuthenticatedUser():
     userid = context.security.get_current_user_id()
     groups = context.usergroups.get_user_posix_groups(userid)
     return jsonify({'success': True, 'value': { "userid": userid, "groups": groups }})
+
+
+@explgbk_blueprint.route("/lgbk/ws/create_update_instrument", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("edit")
+def svc_create_update_instrument():
+    """
+    Create a new instrument. Pass in the document..
+    """
+    instrument_name = request.args.get("instrument_name", None)
+    if not instrument_name:
+        return logAndAbort("Creating instrument must pass instrument_name in query parameters")
+
+    create_str = request.args.get("create", None)
+    if not create_str:
+        return logAndAbort("Creating instrument must have a boolean create parameter indicating if the instrument is created or updated.")
+    createp = create_str.lower() in set(["yes", "true", "t", "1"])
+    logger.debug("Create update instrument is %s for %s", createp, create_str)
+
+    info = request.json
+    if not info:
+        return logAndAbort("Creating instrument missing info document")
+
+    necessary_keys = set(['_id', 'description'])
+    missing_keys = necessary_keys - info.keys()
+    if missing_keys:
+        return logAndAbort("Creating instrument missing keys %s" % missing_keys)
+
+    (status, errormsg) = create_update_instrument(instrument_name, createp, info)
+    if status:
+        context.kafka_producer.send("instrument", {"instrument_name" : instrument_name, "CRUD": "Create" if createp else "Update", "value": info })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
 
 
 @explgbk_blueprint.route("/lgbk/ws/register_new_experiment", methods=["POST"])
