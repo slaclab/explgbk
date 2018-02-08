@@ -71,6 +71,8 @@ $("#ops_instruments_tab").on("lg.shown.bs.tab", function() {
           if(data.success) {
               console.log("Successfully processed instrument " + instrument_name);
               $("#ins_mdl_holder").find(".edit_modal").modal("hide");
+              sessionStorage.setItem("ops_active_tab", "instruments");
+              window.location.reload(true);
           } else {
             alert("Server side exception processing instrument " + data.errormsg);
           }

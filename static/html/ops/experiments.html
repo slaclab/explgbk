@@ -90,6 +90,8 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
           if(data.success) {
               console.log("Successfully submitted experiment " + experiment_name);
               $("#mdl_holder").find(".edit_modal").modal("hide");
+              sessionStorage.setItem("ops_active_tab", "experiments");
+              window.location.reload(true);
           } else {
             alert("Server side exception registering new experiment " + data.errormsg);
           }
