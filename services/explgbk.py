@@ -279,6 +279,12 @@ def svc_switch_experiment():
 
     (status, errormsg) = switch_experiment(instrument, station, experiment_name, userid)
     if status:
+        context.kafka_producer.send("experiment_switch", {"experiment_name" : experiment_name, "value": {
+            "instrument": instrument,
+            "startion": station,
+            "experiment_name": experiment_name,
+            "userid": userid,
+        }})
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
