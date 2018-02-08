@@ -126,7 +126,7 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
     $("#register_edit_exp_tab").data("exp_names", exp_names);
     $("#register_edit_exp_tab").data("name2info", name2info);
     $("#searchtext").on("input", function(e) {
-      if($("#searchtext").val().length > 2) {
+      if($("#searchtext").val().length > 0) {
         var curname = $("#searchtext").val();
         var matchexps = [];
         _.each($("#register_edit_exp_tab").data("exp_names"), function(exp_name){
