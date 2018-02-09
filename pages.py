@@ -68,4 +68,4 @@ def experiment_switch():
 @context.security.authentication_required
 @context.security.authorization_required("read")
 def exp_elog(experiment_name):
-    return render_template("lgbk.html", experiment_name=experiment_name)
+    return render_template("lgbk.html", experiment_name=experiment_name, logged_in_user=context.security.get_current_user_id())

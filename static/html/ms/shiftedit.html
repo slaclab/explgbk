@@ -3,13 +3,26 @@
    <div class="modal-content">
      <div class="modal-header">
        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-       <h2 class="modal-title">Instrument details</h2>
+       <h2 class="modal-title">Shift details</h2>
      </div>
      <form class="register_form">
-      <input type="hidden" class="form-control instrument_name_original" value="{{ _id }}">
+      <input type="hidden" class="form-control shift_name_original" value="{{ name }}">
       <div class="form-group col-lg-4">
-       <label for="instrument_name">Instrument Name:</label>
-       <input type="text" class="form-control instrument_name" value="{{ _id }}">
+       <label for="shift_name">Shift Name:</label>
+       <input type="text" class="form-control shift_name" value="{{ name }}">
+      </div>
+      <div class="form-group col-lg-4">
+       <label for="shift_leader">Leader:</label>
+       <input type="text" class="form-control shift_leader" value="{{ leader }}">
+      </div>
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="start_time">Start Time:</label>
+       <div class='input-group date start_time'>
+         <input type='text' class="form-control" />
+         <span class="input-group-addon">
+         <span class="glyphicon glyphicon-calendar"></span>
+         </span>
+       </div>
       </div>
       <div class="form-group col-lg-8">
        <label for="description">Description:</label>

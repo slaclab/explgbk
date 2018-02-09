@@ -17,6 +17,11 @@
 .font_family_choices_mixin {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
 }
+.listview_icon_mixin {
+  opacity: .5;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+}
 #myNavRow {
   background-color: #7272C0;
   margin-bottom: 0;
@@ -286,4 +291,23 @@ label {
 #rtbl_content td.rtbl_separator {
   background: #efefef;
   width: 0.25em;
+}
+#shifts_tab .btn {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+#shifts_tab .table th {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+#shifts_tab .btnbar {
+  margin-left: 0.5em;
+  text-align: left;
+}
+#shifts_tab .listview-action {
+  opacity: .5;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
 }

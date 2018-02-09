@@ -1,0 +1,119 @@
+<div class="container-fluid text-center tabcontainer" id="shifts_tab">
+  <div class="row">
+    <div class="panel panel-default">
+     <div class="panel-body">
+       <div class="row btnbar">
+         <button class="btn btn-default panel_btn" id="new_shift">New Shift</button>
+       </div>
+       <div id="mdl_holder"></div>
+       <div class="table-responsive">
+         <table class="table table-condensed table-striped table-bordered shiftstbl">
+           <thead><tr><th>Name</th><th>Starting</th><th>Ending</th><th>Leader</th><th>Description</th><th>Actions</th></tr></thead>
+           <tbody></tbody>
+         </table>
+       </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+$("#shifts_tab").on("lg.shown.bs.tab", function() {
+  var edit_shift = function(shift_obj) {
+    shift_obj.paramkvs = _.map(shift_obj['params'], function(value, key) { return { key: key, value: value };});
+    $.ajax("../../static/html/ms/shiftedit.html")
+    .done(function(tmpl){
+      Mustache.parse(tmpl);
+      var rendered = $(Mustache.render(tmpl, shift_obj));
+      rendered.find(".start_time").datetimepicker({defaultDate: moment(shift_obj['begin_time']), sideBySide: true });
+      if(_.has(shift_obj, 'name')) { rendered.find(".register_btn").text("Update");}
+      rendered.find(".glyphicon-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
+      rendered.find(".glyphicon-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      rendered.find(".register_btn").on("click", function(e) {
+        e.preventDefault();
+        var formObj = $("#shifts_tab").find("#mdl_holder").find("form");
+        var validations = [
+            [function() { return $.trim(formObj.find(".shift_name").val()) == ""; }, "Shift name cannot be blank."],
+            [function() { return $.trim(formObj.find(".shift_leader").val()) == ""; }, "Please enter a shift leader."],
+            [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
+          ];
+        // Various validations
+        var v_failed = false;
+        _.each(validations, function(validation, i) {
+          console.log("Trying validation " + i + "" + validation[1]);
+          if(validation[0]()) {
+              $("#shifts_tab").find("#mdl_holder").find(".validation_message").html(validation[1]);
+              $("#shifts_tab").find("#mdl_holder").find(".validation_modal").modal("show");
+              v_failed = true;
+              return false;
+          }
+        });
+        if (v_failed) { e.preventDefault(); return; }
+        var shift_name = $.trim(formObj.find(".shift_name").val());
+        var shift_name_original = $.trim(formObj.find(".shift_name_original").val());
+        var shift_params = {};
+        formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { shift_params[key] = val; }});
+        var new_shift_doc = {
+          name: shift_name,
+          leader: $.trim(formObj.find(".shift_leader").val()),
+          begin_time: formObj.find('.start_time').data("DateTimePicker").date().toJSON(),
+          end_time: null,
+          description: $.trim(formObj.find(".description").val()),
+          params: shift_params
+        };
+        console.log(new_shift_doc);
+        $.ajax({
+          type: "POST",
+          contentType: "application/json; charset=utf-8",
+          url: "ws/create_update_shift"+ "?shift_name=" + encodeURIComponent(shift_name) + "&create=" + ((shift_name == shift_name_original) ? false : true),
+          data: JSON.stringify(new_shift_doc),
+          dataType: "json"
+        })
+        .done(function(data, textStatus, jqXHR) {
+          if(data.success) {
+              console.log("Successfully processed shift " + shift_name);
+              $("#shifts_tab").find("#mdl_holder").find(".edit_modal").modal("hide");
+              window.location.reload(true);
+          } else {
+            alert("Server side exception processing shift " + data.errormsg);
+          }
+        })
+        .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure processing shift " + textStatus); })
+      });
+
+      $("#shifts_tab").find("#mdl_holder").append(rendered);
+      $("#shifts_tab").find("#mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#shifts_tab").find("#mdl_holder").empty(); });
+      $("#shifts_tab").find("#mdl_holder").find(".edit_modal").modal("show");
+    })
+  }
+
+  var shift_tr_tmpl = `{{#value}}<tr><td>{{ name }}</td><td>{{#FormatDate}}{{begin_time}}{{/FormatDate}}</td><td>{{#FormatDate}}{{end_time}}{{/FormatDate}}</td><td>{{ leader }}</td><td>{{ description }}</td><td><span title="Edit shift details" class="glyphicon glyphicon-edit listview-action"></span><span title="Close out shift" class="glyphicon glyphicon-log-out listview-action"></span></td></tr>{{/value}}`;
+  Mustache.parse(shift_tr_tmpl);
+  $.getJSON("ws/shifts")
+  .done(function(data){
+    data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:MM:SS");}};
+    $("#shifts_tab").data("shifts", data);
+    var rendered = $(Mustache.render(shift_tr_tmpl, data));
+    rendered.find(".glyphicon-log-out").on("click", function(){
+      var shift_name = $(this).parents("tr").first().find("td").first().text();
+      $.getJSON("ws/close_shift", {shift_name: shift_name})
+      .done(function(data, textStatus, jqXHR) {
+        if(data.success) {
+            console.log("Successfully closed shift " + shift_name);
+            window.location.reload(true);
+        } else {
+          alert("Server side exception closing shift " + data.errormsg);
+        }
+      })
+      .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure closing shift " + textStatus); })
+    });
+    rendered.find(".glyphicon-edit").on("click", function(){
+      var shift_name = $(this).parents("tr").first().find("td").first().text();
+      var shift_obj = _.find($("#shifts_tab").data("shifts").value, function(shf){return shf.name == shift_name});
+      edit_shift(shift_obj);
+    });
+    $("#shifts_tab .shiftstbl tbody").append(rendered);
+    $("#new_shift").on("click", function(e){ e.preventDefault(); edit_shift({leader: logged_in_user})});
+  });
+});
+</script>

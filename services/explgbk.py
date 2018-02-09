@@ -22,7 +22,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
     get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources, \
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
-    create_update_instrument
+    create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
+    create_update_shift, get_latest_shift
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params
 
@@ -211,6 +212,7 @@ def svc_register_new_experiment():
     (status, errormsg) = register_new_experiment(experiment_name, info)
     if status:
         context.kafka_producer.send("experiment", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
+        context.kafka_producer.send("shift", {"experiment_name" : experiment_name, "CRUD": "Create", "value": get_latest_shift(experiment_name) })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -379,6 +381,12 @@ def svc_get_runs(experiment_name):
     include_run_params = bool(request.args.get("includeParams", "false"))
     return JSONEncoder().encode({"success": True, "value": get_experiment_runs(experiment_name, include_run_params)})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/shifts", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_get_shifts(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_experiment_shifts(experiment_name)})
+
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_tables", methods=["GET"])
 @context.security.authentication_required
@@ -450,7 +458,7 @@ def svc_start_run(experiment_name):
     run_doc = start_run(experiment_name, run_type)
 
     run_doc['experiment_name'] = experiment_name
-    context.kafka_producer.send("runs", run_doc)
+    context.kafka_producer.send("run", run_doc)
     logger.debug("Published the new run for %s", experiment_name)
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
@@ -465,7 +473,7 @@ def svc_end_run(experiment_name):
     """
     run_doc = end_run(experiment_name)
     run_doc['experiment_name'] = experiment_name
-    context.kafka_producer.send("runs", run_doc)
+    context.kafka_producer.send("run", run_doc)
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
 
@@ -478,8 +486,6 @@ def svc_current_run(experiment_name):
     Get the run document for the current run.
     """
     return JSONEncoder().encode({"success": True, "value": get_current_run(experiment_name)})
-
-
 
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/add_run_params", methods=["POST"])
 @context.security.authentication_required
@@ -498,3 +504,64 @@ def svc_add_run_params(experiment_name):
         return logAndAbort("The current run %s is closed for experiment %s" % (current_run_doc['num'], experiment_name))
 
     return JSONEncoder().encode({"success": True, "value": add_run_params(experiment_name, run_params)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/close_shift", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_close_shift(experiment_name):
+    """
+    Close the shift specified by the shift name.
+    """
+    shift_name = request.args.get("shift_name", None)
+    if not shift_name:
+        return logAndAbort("Need to specify a shift name when closing a shift")
+
+    (status, errormsg) = close_shift_for_experiment(experiment_name, shift_name)
+    if status:
+        shift_doc = get_shift_for_experiment_by_name(experiment_name, shift_name)
+        context.kafka_producer.send("shift", {"experiment_name" : experiment_name, "CRUD": "Update", "value": shift_doc})
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_update_shift", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_create_update_shift(experiment_name):
+    """
+    Create/update a shift.
+    Need to pass in the shift_name and a create indicating if this is a create or an update
+    """
+    shift_name = request.args.get("shift_name", None)
+    if not shift_name:
+        return logAndAbort("We need a shift_name as a parameter")
+
+    create_str = request.args.get("create", None)
+    if not create_str:
+        return logAndAbort("Creating shift must have a boolean create parameter indicating if the shift is created or updated.")
+    createp = create_str.lower() in set(["yes", "true", "t", "1"])
+    logger.debug("Create update shift is %s for %s", createp, create_str)
+
+    info = request.json
+    if not info:
+        return logAndAbort("Creating shift missing info document")
+
+    necessary_keys = set(['name', 'leader', 'begin_time'])
+    missing_keys = necessary_keys - info.keys()
+    if missing_keys:
+        return logAndAbort("Creating shift missing keys %s" % missing_keys)
+
+    (status, errormsg) = create_update_shift(experiment_name, shift_name, createp, info)
+    if status:
+        shift_doc = get_shift_for_experiment_by_name(experiment_name, shift_name)
+        context.kafka_producer.send("shift", {"experiment_name" : experiment_name, "CRUD": "Create" if createp else "Update", "value": shift_doc })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_latest_shift", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_get_latest_shift(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_latest_shift(experiment_name)})

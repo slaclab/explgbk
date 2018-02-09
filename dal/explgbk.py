@@ -13,7 +13,7 @@ import requests
 from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
-from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions
+from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, security
 from dal.exp_cache import get_experiments
 
 __author__ = 'mshankar@slac.stanford.edu'
@@ -87,9 +87,20 @@ def register_new_experiment(experiment_name, incoming_info):
     expdb["roles"].create_index( [("app", ASCENDING), ("name", ASCENDING)], unique=True)
     expdb["run_param_descriptions"].create_index( [("param_name", DESCENDING)], unique=True)
     expdb["setup"].create_index( [("modified_by", ASCENDING), ("modified_at", ASCENDING)], unique=True)
+    expdb["shifts"].create_index( [("name", ASCENDING)], unique=True)
     expdb["shifts"].create_index( [("begin_time", ASCENDING)], unique=True)
     expdb["files"].create_index( [("file_path", ASCENDING), ("run_num", DESCENDING)], unique=True)
     expdb["run_tables"].create_index( [("name", ASCENDING)], unique=True)
+
+    # Create a default shift
+    expdb["shifts"].insert_one( { "name" : "Default",
+        "begin_time" : datetime.datetime.now(),
+        "end_time" : None,
+        "leader" : security.get_current_user_id(),
+        "description" : "Default shift created automatically during experiment registration",
+        "params" : {}
+        } )
+
     return (True, "")
 
 def update_existing_experiment(experiment_name, incoming_info):
@@ -194,15 +205,6 @@ def get_specific_elog_entry(experiment_name, id):
     """
     expdb = logbookclient[experiment_name]
     return expdb['elog'].find_one({"_id": ObjectId(id)})
-
-def get_specific_shift(experiment_name, id):
-    """
-    Get the specified shift entry for the experiment.
-    For now, we have id based lookups.
-    """
-    expdb = logbookclient[experiment_name]
-    return expdb['shifts'].find_one({"_id": ObjectId(id)})
-
 
 def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None):
     """
@@ -399,3 +401,63 @@ def update_editable_param_for_run(experiment_name, runnum, source, value, userid
                     "modified_by": userid,
                     "modified_time": datetime.datetime.now()
                     }}})
+
+def get_experiment_shifts(experiment_name):
+    """
+    Get the shifts for an experiment.
+    """
+    expdb = logbookclient[experiment_name]
+    return list(expdb.shifts.find({}).sort([("begin_time", -1)]))
+
+def get_specific_shift(experiment_name, id):
+    """
+    Get the specified shift entry for the experiment.
+    For now, we have id based lookups.
+    """
+    expdb = logbookclient[experiment_name]
+    return expdb['shifts'].find_one({"_id": ObjectId(id)})
+
+def get_shift_for_experiment_by_name(experiment_name, shift_name):
+    """
+    Get the specified shift specified by shift_name for the experiment.
+    """
+    expdb = logbookclient[experiment_name]
+    return expdb['shifts'].find_one({"name": shift_name})
+
+def get_latest_shift(experiment_name):
+    """
+    Get's the latest shift as detemined by the shift begin time.
+    """
+    expdb = logbookclient[experiment_name]
+    return list(expdb.shifts.find({}).sort([("begin_time", -1)]).limit(1))[0]
+
+
+def close_shift_for_experiment(experiment_name, shift_name):
+    """
+    Close the shift specified by shift_name for the experiment.
+    For now, this mostly means setting the end time to the current time.
+    """
+    expdb = logbookclient[experiment_name]
+    shift_doc = expdb['shifts'].find_one({"name": shift_name})
+    if not shift_doc:
+        return (False, "Cannot find the shift specified by shift name " % shift_name)
+    expdb['shifts'].find_one_and_update({"name": shift_name}, {"$set": { "end_time" : datetime.datetime.now()}})
+    return (True, "")
+
+def create_update_shift(experiment_name, shift_name, createp, info):
+    """
+    Create or update the shift for the specified experiment.
+    """
+    expdb = logbookclient[experiment_name]
+    shift_doc = expdb['shifts'].find_one({"name": shift_name})
+    if shift_doc and createp:
+        return (False, "Shift %s already exists" % shift_name)
+    if not shift_doc and not createp:
+        return (False, "Shift %s does not exist" % shift_name)
+
+    if createp:
+        expdb['shifts'].insert_one(info)
+    else:
+        expdb['shifts'].find_one_and_update({"name": shift_name}, {"$set": info})
+
+    return (True, "")
