@@ -23,6 +23,7 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
   var edit_exp = function(expInfo) {
     expInfo['contact_info_name'] = expInfo['contact_info'].split("(")[0];
     expInfo['contact_info_email'] = expInfo['contact_info'].split("(")[1].split(")")[0];
+    expInfo['paramkvs'] = _.map(expInfo['params'], function(value, key) { return { key: key, value: value };});
     $.when($.ajax ("../static/html/ms/expreg.html"), $.getJSON(instruments_url))
     .done(function( d1, d2 ) {
       var tmpl = d1[0], instruments = d2[0], options = `{{#value}}<option value="{{ _id }}">{{ _id }}</option>{{/value}}`;
@@ -32,6 +33,8 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
       rendered.find(".end_time").datetimepicker({defaultDate: moment(expInfo['end_time']), sideBySide: true });
       rendered.find(".instrument").append($(Mustache.render(options, instruments)));
       rendered.find(".instrument").val(expInfo['instrument']);
+      rendered.find(".glyphicon-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
+      rendered.find(".glyphicon-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
       if (_.has(expInfo, "name")) { rendered.find(".register_btn").text("Update"); }
       rendered.find(".register_btn").on("click", function(e) {
         e.preventDefault();
@@ -51,7 +54,8 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
               var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
               return !re.test(email.toLowerCase());
               }, "Please specify the email address for the principal investigator."],
-            [function() { return $.trim(formObj.find(".description").val()) == ""; }, "A brief description of the experiment is very helpful."]
+            [function() { return $.trim(formObj.find(".description").val()) == ""; }, "A brief description of the experiment is very helpful."],
+            [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
           ];
         // Various validations
         var v_failed = false;
@@ -68,6 +72,8 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
         var experiment_name = $.trim(formObj.find(".experiment_name").val());
         var original_experiment_name = $.trim(formObj.find(".experiment_name_original").val());
         var updating_existing_experiment = (original_experiment_name == experiment_name);
+        var exp_params = {};
+        formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { exp_params[key] = val; }});
         var registration_doc = {
             "name" : experiment_name,
             "instrument" : $.trim(formObj.find(".instrument").val()),
@@ -76,7 +82,8 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
             "end_time" : formObj.find('.end_time').data("DateTimePicker").date().toJSON(),
             "leader_account" : $.trim(formObj.find(".leader_account").val()),
             "contact_info" : $.trim(formObj.find(".pi_name").val()) + "(" + $.trim($(".pi_email").val()) + ")",
-            "posix_group" : $.trim(formObj.find(".posix_group").val())
+            "posix_group" : $.trim(formObj.find(".posix_group").val()),
+            "params": exp_params
         };
 
         $.ajax({

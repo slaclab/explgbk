@@ -57,6 +57,26 @@
        <textarea class="form-control description" rows="5">{{ description }}</textarea>
       </div>
       <div class="clearfix"></div>
+      <table class="table table-condensed table-striped table-bordered" id="experiment_params_tbl">
+        <thead><tr><th>Param Name</th><th>Value</th><th>Actions</th></thead>
+        <tbody>
+          {{#paramkvs}}
+          <tr><td><input type="text" class="key" value="{{key}}"></td><td><input type="text" class="value" value="{{value}}"></td>
+            <td>
+              <a href="#"><span class="glyphicon glyphicon-trash param_action" aria-hidden="true"></span></a>
+              <a href="#"><span class="glyphicon glyphicon-plus param_action" aria-hidden="true"></span></a>
+            </td>
+          </tr>
+          {{/paramkvs}}
+          <tr><td><input type="text" class="key" value=""></td><td><input type="text" class="value" value=""></td>
+            <td>
+              <a href="#"><span class="glyphicon glyphicon-trash param_action" aria-hidden="true"></span></a>
+              <a href="#"><span class="glyphicon glyphicon-plus param_action" aria-hidden="true"></span></a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="clearfix"></div>
       <div class="col-xs-10 col-sm-4 col-md-4 col-lg-4">
         <button class="btn btn-default panel_btn register_btn">Register</button>
       </div>

@@ -50,7 +50,7 @@ $("#ops_instruments_tab").on("lg.shown.bs.tab", function() {
         if (v_failed) { e.preventDefault(); return; }
         var instrument_name = $.trim(formObj.find(".instrument_name").val());
         var original_instrument_name = $.trim(formObj.find(".instrument_name_original").val());
-        ins_params = {};
+        var ins_params = {};
         formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { ins_params[key] = val; }});
 
         var updating_existing_instrument = (original_instrument_name == instrument_name);
