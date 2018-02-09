@@ -57,8 +57,8 @@
        <textarea class="form-control description" rows="5">{{ description }}</textarea>
       </div>
       <div class="clearfix"></div>
-      <table class="table table-condensed table-striped table-bordered" id="experiment_params_tbl">
-        <thead><tr><th>Param Name</th><th>Value</th><th>Actions</th></thead>
+      <table class="table table-condensed table-striped table-bordered">
+        <thead><tr><th>Param Name</th><th>Param Value</th><th>Actions</th></thead>
         <tbody>
           {{#paramkvs}}
           <tr><td><input type="text" class="key" value="{{key}}"></td><td><input type="text" class="value" value="{{value}}"></td>

@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 __cached_experiments = {}
 
 def init_app(app):
+    global __cached_experiments
     __load_experiments()
+    logger.info("Loaded %s experiments from the database ", len(__cached_experiments))
     __establish_kafka_consumers()
 
 def get_experiments():

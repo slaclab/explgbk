@@ -134,6 +134,21 @@ body {
   background: #7272C0;
   font-weight: bold;
 }
+.param_table_header_mixin {
+  color: #7272C0;
+  font-weight: bold;
+  padding-left: 2.0em;
+}
+#ops_instruments_tab .modal .table tr th {
+  color: #7272C0;
+  font-weight: bold;
+  padding-left: 2.0em;
+}
+#register_edit_exp_tab .modal .table tr th {
+  color: #7272C0;
+  font-weight: bold;
+  padding-left: 2.0em;
+}
 #experiments_container thead th {
   color: #333399;
 }
