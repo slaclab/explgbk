@@ -311,3 +311,10 @@ label {
   padding-left: 0.25em;
   padding-right: 0.25em;
 }
+#shifts_tab .shiftstbl tr.active_shift td {
+  color: #7272C0;
+  font-weight: bold;
+  background: #FFE084;
+  margin: 0.1em;
+  padding: 0.1em;
+}

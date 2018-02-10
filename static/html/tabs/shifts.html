@@ -87,7 +87,7 @@ $("#shifts_tab").on("lg.shown.bs.tab", function() {
     })
   }
 
-  var shift_tr_tmpl = `{{#value}}<tr><td>{{ name }}</td><td>{{#FormatDate}}{{begin_time}}{{/FormatDate}}</td><td>{{#FormatDate}}{{end_time}}{{/FormatDate}}</td><td>{{ leader }}</td><td>{{ description }}</td><td><span title="Edit shift details" class="glyphicon glyphicon-edit listview-action"></span><span title="Close out shift" class="glyphicon glyphicon-log-out listview-action"></span></td></tr>{{/value}}`;
+  var shift_tr_tmpl = `{{#value}}<tr {{^end_time}}class="active_shift"{{/end_time}}><td>{{ name }}</td><td>{{#FormatDate}}{{begin_time}}{{/FormatDate}}</td><td>{{#FormatDate}}{{end_time}}{{/FormatDate}}</td><td>{{ leader }}</td><td>{{ description }}</td><td><span title="Edit shift details" class="glyphicon glyphicon-edit listview-action"></span><span title="Close out shift" class="glyphicon glyphicon-log-out listview-action"></span></td></tr>{{/value}}`;
   Mustache.parse(shift_tr_tmpl);
   $.getJSON("ws/shifts")
   .done(function(data){
