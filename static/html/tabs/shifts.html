@@ -35,6 +35,7 @@ $("#shifts_tab").on("lg.shown.bs.tab", function() {
         var validations = [
             [function() { return $.trim(formObj.find(".shift_name").val()) == ""; }, "Shift name cannot be blank."],
             [function() { return $.trim(formObj.find(".shift_leader").val()) == ""; }, "Please enter a shift leader."],
+            [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() != "" && !/^[\w_]+$/.test($(this).find("input.key").val()); }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Please restrict param names to alphanumeric characters and underscores."],
             [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
           ];
         // Various validations

@@ -336,6 +336,7 @@ def get_runtable_sources(experiment_name):
     rtbl_sources = {}
     rtbl_sources["Run Info"] = [{"label": "Begin Time", "description": "The start of the run", "source": "begin_time", "category": "Run Info"},
         {"label": "End time", "description": "The end of the run", "source": "end_time", "category": "Run Info"},
+        {"label": "Sample", "description": "The sample associated with the run", "source": "sample", "category": "Run Info"},
         {"label": "Run Duration", "description": "The duration of the run", "source": "duration", "category": "Run Info"}]
     rtbl_sources["Editables"] = [ { "label": x["_id"], "description": x["_id"], "source": "editable_params."+x["_id"]+".value", "category": "Editables" } for x in expdb.runs.aggregate([
         { "$project": { "editables": { "$objectToArray": "$editable_params" } } },
@@ -350,7 +351,7 @@ def get_runtable_sources(experiment_name):
     # Update the category and description from the instrument_scientists_run_table_defintions if present
     param_names_with_categories = []
     for param_name in param_names:
-        if param_name in instrument_scientists_run_table_defintions[instrument]:
+        if instrument in instrument_scientists_run_table_defintions and param_name in instrument_scientists_run_table_defintions[instrument]:
             param_names_with_categories.append({
                 "label" : param_name,
                 "category": "EPICS/" + instrument_scientists_run_table_defintions[instrument][param_name]["title"],
@@ -460,4 +461,62 @@ def create_update_shift(experiment_name, shift_name, createp, info):
     else:
         expdb['shifts'].find_one_and_update({"name": shift_name}, {"$set": info})
 
+    return (True, "")
+
+def get_samples(experiment_name):
+    """
+    Get the defined samples for the experiment
+    The current sample (if any) is stored in the current collection.
+    """
+    expdb = logbookclient[experiment_name]
+    samples = list(expdb.samples.find({}).sort([("_id", -1)]))
+    current_sample = expdb.current.find_one({"_id": "sample"})
+    if current_sample:
+        current_sample_name = current_sample["name"]
+        def set_current(x):
+            if x["_id"] == current_sample_name:
+                x["current"] = True
+            return x
+        samples = list(map(set_current, samples))
+    return samples
+
+def get_sample_for_experiment_by_name(experiment_name, sample_name):
+    """
+    Get sample for experiment by name
+    """
+    expdb = logbookclient[experiment_name]
+    requested_sample = expdb.samples.find_one({"_id": sample_name})
+    current_sample = expdb.current.find_one({"_id": "sample"})
+    if current_sample and requested_sample and current_sample["name"] == requested_sample["_id"]:
+        requested_sample["current"] = True
+    return requested_sample
+
+def create_update_sample(experiment_name, sample_name, createp, info):
+    """
+    Create or update a sample for an experiment.
+    """
+    expdb = logbookclient[experiment_name]
+    sample_doc = expdb['samples'].find_one({"_id": sample_name})
+    if sample_doc and createp:
+        return (False, "Sample %s already exists" % sample_name)
+    if not sample_doc and not createp:
+        return (False, "Sample %s does not exist" % sample_name)
+
+    if createp:
+        expdb['samples'].insert_one(info)
+    else:
+        expdb['samples'].find_one_and_update({"_id": sample_name}, {"$set": info})
+
+    return (True, "")
+
+def make_sample_current(experiment_name, sample_name):
+    """
+    Make the sample specified by the sample_name as the current sample.
+    """
+    expdb = logbookclient[experiment_name]
+    sample_doc = expdb['samples'].find_one({"_id": sample_name})
+    if not sample_doc:
+        return (False, "Sample %s does not exist" % sample_name)
+
+    expdb.current.find_one_and_update({"_id": "sample"}, {"$set": { "_id": "sample", "name" : sample_name }} , upsert=True)
     return (True, "")

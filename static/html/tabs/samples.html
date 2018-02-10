@@ -1,0 +1,116 @@
+<div class="container-fluid text-center tabcontainer" id="samples_tab">
+  <div class="row">
+    <div class="panel panel-default">
+     <div class="panel-body">
+       <div class="row btnbar">
+         <button class="btn btn-default panel_btn" id="new_sample">New Sample</button>
+       </div>
+       <div id="mdl_holder"></div>
+       <div class="table-responsive">
+         <table class="table table-condensed table-striped table-bordered samplestbl">
+           <thead><tr><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
+           <tbody></tbody>
+         </table>
+       </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+$("#samples_tab").on("lg.shown.bs.tab", function() {
+  var edit_sample = function(sample_obj) {
+    sample_obj.paramkvs = _.map(sample_obj['params'], function(value, key) { return { key: key, value: value };});
+    $.ajax("../../static/html/ms/sampleedit.html")
+    .done(function(tmpl){
+      Mustache.parse(tmpl);
+      var rendered = $(Mustache.render(tmpl, sample_obj));
+      if(_.has(sample_obj, '_id')) { rendered.find(".register_btn").text("Update");}
+      rendered.find(".glyphicon-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
+      rendered.find(".glyphicon-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      rendered.find(".register_btn").on("click", function(e) {
+        e.preventDefault();
+        var formObj = $("#samples_tab").find("#mdl_holder").find("form");
+        var validations = [
+          [function() { return $.trim(formObj.find(".sample_name").val()) == ""; }, "Sample name cannot be blank."],
+          [function() { return $.trim(formObj.find(".sample_description").val()) == ""; }, "Sample description cannot be blank."],
+          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() != "" && !/^[\w_]+$/.test($(this).find("input.key").val()); }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Please restrict param names to alphanumeric characters and underscores."],
+          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
+          ];
+        // Various validations
+        var v_failed = false;
+        _.each(validations, function(validation, i) {
+          console.log("Trying validation " + i + "" + validation[1]);
+          if(validation[0]()) {
+              $("#samples_tab").find("#mdl_holder").find(".validation_message").html(validation[1]);
+              $("#samples_tab").find("#mdl_holder").find(".validation_modal").modal("show");
+              v_failed = true;
+              return false;
+          }
+        });
+        if (v_failed) { e.preventDefault(); return; }
+        var sample_name = $.trim(formObj.find(".sample_name").val());
+        var sample_name_original = $.trim(formObj.find(".sample_name_original").val());
+        var sample_params = {};
+        formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { sample_params[key] = val; }});
+        var new_sample_doc = {
+          _id: sample_name,
+          description: $.trim(formObj.find(".sample_description").val()),
+          params: sample_params
+        };
+        console.log(new_sample_doc);
+        $.ajax({
+          type: "POST",
+          contentType: "application/json; charset=utf-8",
+          url: "ws/create_update_sample"+ "?sample_name=" + encodeURIComponent(sample_name) + "&create=" + ((sample_name == sample_name_original) ? false : true),
+          data: JSON.stringify(new_sample_doc),
+          dataType: "json"
+        })
+        .done(function(data, textStatus, jqXHR) {
+          if(data.success) {
+              console.log("Successfully processed sample " + sample_name);
+              $("#samples_tab").find("#mdl_holder").find(".edit_modal").modal("hide");
+              window.location.reload(true);
+          } else {
+            alert("Server side exception processing sample " + data.errormsg);
+          }
+        })
+        .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure processing sample " + textStatus); })
+      });
+
+      $("#samples_tab").find("#mdl_holder").append(rendered);
+      $("#samples_tab").find("#mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#samples_tab").find("#mdl_holder").empty(); });
+      $("#samples_tab").find("#mdl_holder").find(".edit_modal").modal("show");
+    })
+  }
+
+  var sample_tr_tmpl = `{{#value}}<tr {{#current}}class="active_sample"{{/current}}><td>{{ _id }}</td><td>{{ description }}</td><td><span title="Edit sample details" class="glyphicon glyphicon-edit listview-action"></span>{{^current}}<span title="Make this sample the current sample" class="glyphicon glyphicon-log-in listview-action"></span>{{/current}}</td></tr>{{/value}}`;
+  Mustache.parse(sample_tr_tmpl);
+  $.getJSON("ws/samples")
+  .done(function(data){
+    data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:MM:SS");}};
+    $("#samples_tab").data("samples", data);
+    var rendered = $(Mustache.render(sample_tr_tmpl, data));
+    rendered.find(".glyphicon-log-in").on("click", function(){
+      var sample_name = $(this).parents("tr").first().find("td").first().text();
+      $.getJSON("ws/make_sample_current", {sample_name: sample_name})
+      .done(function(data, textStatus, jqXHR) {
+        if(data.success) {
+            console.log("Successfully closed sample " + sample_name);
+            window.location.reload(true);
+        } else {
+          alert("Server side exception closing sample " + data.errormsg);
+        }
+      })
+      .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure closing sample " + textStatus); })
+    });
+    rendered.find(".glyphicon-edit").on("click", function(){
+      var sample_name = $(this).parents("tr").first().find("td").first().text();
+      var sample_obj = _.find($("#samples_tab").data("samples").value, function(shf){return shf._id == sample_name});
+      edit_sample(sample_obj);
+    });
+    $("#samples_tab .samplestbl tbody").append(rendered);
+    $("#new_sample").on("click", function(e){ e.preventDefault(); edit_sample({})});
+  });
+});
+</script>

@@ -318,3 +318,29 @@ label {
   margin: 0.1em;
   padding: 0.1em;
 }
+#samples_tab .btn {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+#samples_tab .table th {
+  color: white;
+  background: #7272C0;
+  font-weight: bold;
+}
+#samples_tab .btnbar {
+  margin-left: 0.5em;
+  text-align: left;
+}
+#samples_tab .listview-action {
+  opacity: .5;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+}
+#samples_tab .samplestbl tr.active_sample td {
+  color: #7272C0;
+  font-weight: bold;
+  background: #FFE084;
+  margin: 0.1em;
+  padding: 0.1em;
+}

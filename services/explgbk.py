@@ -23,7 +23,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources, \
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
     create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
-    create_update_shift, get_latest_shift
+    create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
+    make_sample_current
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params
 
@@ -565,3 +566,61 @@ def svc_create_update_shift(experiment_name):
 @context.security.authorization_required("read")
 def svc_get_latest_shift(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_latest_shift(experiment_name)})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_get_samples(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_samples(experiment_name)})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_update_sample", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_create_update_sample(experiment_name):
+    """
+    Create/update a sample.
+    """
+    sample_name = request.args.get("sample_name", None)
+    if not sample_name:
+        return logAndAbort("We need a sample_name as a parameter")
+
+    create_str = request.args.get("create", None)
+    if not create_str:
+        return logAndAbort("Creating sample must have a boolean create parameter indicating if the sample is created or updated.")
+    createp = create_str.lower() in set(["yes", "true", "t", "1"])
+    logger.debug("Create update sample is %s for %s", createp, create_str)
+
+    info = request.json
+    if not info:
+        return logAndAbort("Creating sample missing info document")
+
+    necessary_keys = set(['description'])
+    missing_keys = necessary_keys - info.keys()
+    if missing_keys:
+        return logAndAbort("Creating sample missing keys %s" % missing_keys)
+
+    (status, errormsg) = create_update_sample(experiment_name, sample_name, createp, info)
+    if status:
+        sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
+        context.kafka_producer.send("sample", {"experiment_name" : experiment_name, "CRUD": "Create" if createp else "Update", "value": sample_doc })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/make_sample_current", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_make_sample_current(experiment_name):
+    sample_name = request.args.get("sample_name", None)
+    if not sample_name:
+        return logAndAbort("We need a sample_name as a parameter")
+
+    (status, errormsg) = make_sample_current(experiment_name, sample_name)
+    if status:
+        sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
+        context.kafka_producer.send("sample", {"experiment_name" : experiment_name, "CRUD": "Update", "value": sample_doc })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})

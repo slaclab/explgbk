@@ -30,13 +30,19 @@ def start_run(experiment_name, run_type):
 
     next_run_num = next_run_num_doc["seq"]
     logger.info("Next run for experiment %s is %s", experiment_name, next_run_num)
-    result = expdb['runs'].insert_one({
+
+    run_doc = {
         "num" : next_run_num,
         "type" : run_type,
         "begin_time" : datetime.datetime.now(),
         "end_time" : None,
         "params" : {},
-        "editable_params" : {}})
+        "editable_params" : {}}
+    current_sample = expdb.current.find_one({"_id": "sample"})
+    if current_sample:
+        run_doc["sample"] = current_sample["name"]
+
+    result = expdb['runs'].insert_one(run_doc)
     return expdb['runs'].find_one({"num": next_run_num})
 
 def get_current_run(experiment_name):
