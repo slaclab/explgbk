@@ -188,6 +188,28 @@ def svc_create_update_instrument():
         return jsonify({'success': False, 'errormsg': errormsg})
 
 
+@explgbk_blueprint.route("/lgbk/ws/lookup_experiment_in_urawi", methods=["GET"])
+@context.security.authentication_required
+def svc_lookup_experiment_in_URAWI():
+    """
+    Lookup the specified experiment in URAWI and return the information from URAWI as the value.
+    """
+    URAWI_URL = os.environ.get("URAWI_EXPERIMENT_LOOKUP_URL", None)
+    experiment_name = request.args.get("experiment_name", None)
+    if URAWI_URL and experiment_name:
+        try:
+            logger.info("Getting URAWI data for proposal %s using %s", experiment_name, URAWI_URL)
+            urawi_doc = requests.get(URAWI_URL, params={ "proposalNo" : experiment_name }, verify=False).json()
+            if urawi_doc.get("status", "error") == "success":
+                return jsonify({'success': True, "value": urawi_doc})
+            else:
+                logger.warning("Did not get a successful response from URAWI for %s", experiment_name)
+                return jsonify({'success': False})
+        except Exception as e:
+            logger.exception("Exception fetching data from URAWI using URL %s for %s", URAWI_URL, experiment_name)
+            return jsonify({'success': False})
+
+    return jsonify({'success': False})
 
 @explgbk_blueprint.route("/lgbk/ws/register_new_experiment", methods=["POST"])
 @context.security.authentication_required
