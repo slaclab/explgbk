@@ -24,7 +24,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
     create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
-    make_sample_current
+    make_sample_current, register_file_for_experiment
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params
 
@@ -643,6 +643,39 @@ def svc_make_sample_current(experiment_name):
     if status:
         sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
         context.kafka_producer.send("sample", {"experiment_name" : experiment_name, "CRUD": "Update", "value": sample_doc })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/register_file", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_register_file(experiment_name):
+    """
+    Registers a new file with the data management service.
+    Pass in the JSON document for the file; this has the path, run_num, checksum, create_timestamp, modify_timestamp and size.
+    If the run_num is not present, we associate the file with the current run.
+    """
+    info = request.json
+    if not info:
+        return logAndAbort("Please pass in the file json to register a new file.")
+
+    if 'run_num' not in info.keys():
+        current_run_num = get_current_run(experiment_name)['num']
+        logger.info("Associating file %s with current run %s", info['path'], current_run_num)
+        info['run_num'] = current_run_num
+
+    necessary_keys = set(['path', 'run_num', 'checksum', 'create_timestamp', 'modify_timestamp', 'size'])
+    missing_keys = necessary_keys - info.keys()
+    if missing_keys:
+        return logAndAbort("File registration missing keys %s" % missing_keys)
+
+
+    (status, errormsg) = register_file_for_experiment(experiment_name, info)
+    if status:
+        context.kafka_producer.send("file", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})

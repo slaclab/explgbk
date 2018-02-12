@@ -520,3 +520,11 @@ def make_sample_current(experiment_name, sample_name):
 
     expdb.current.find_one_and_update({"_id": "sample"}, {"$set": { "_id": "sample", "name" : sample_name }} , upsert=True)
     return (True, "")
+
+def register_file_for_experiment(experiment_name, info):
+    """
+    Register a file for the experiment.
+    """
+    expdb = logbookclient[experiment_name]
+    inserted_id = expdb.files.insert_one(info).inserted_id
+    return (True, expdb.files.find_one({"_id": ObjectId(inserted_id) }))
