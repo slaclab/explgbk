@@ -136,6 +136,12 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
     </tr>{{/value}}`;
   Mustache.parse(exper_template);
 
+  var edit_exp_btn_action = function(){
+    var expName = $(this).parents("tr").find("td").first().find("a").text()
+    console.log("Editing experiment " + expName);
+    edit_exp($("#register_edit_exp_tab").data("name2info")[expName]);
+  };
+
   $.getJSON ({ url: experiments_url })
   .done(function( experiments ) {
     // Prepare for searches...
@@ -150,6 +156,7 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
     experiments.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
     var rendered = Mustache.render(exper_template, experiments);
     $("#searchresults tbody").html(rendered);
+    $("#searchresults a.editexpbtn").on("click", edit_exp_btn_action);
     $("#searchtext").on("input", function(e) {
       if($("#searchtext").val().length > 0) {
         var curname = $("#searchtext").val();
@@ -164,11 +171,7 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
             expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
             var rendered = Mustache.render(exper_template, expdata);
             $("#searchresults tbody").html(rendered);
-            $("#searchresults a.editexpbtn").on("click", function(){
-              var expName = $(this).parents("tr").find("td").first().find("a").text()
-              console.log("Editing experiment " + expName);
-              edit_exp($("#register_edit_exp_tab").data("name2info")[expName]);
-            });
+            $("#searchresults a.editexpbtn").on("click", edit_exp_btn_action);
         }
       } else {
         var rendered = Mustache.render(exper_template, experiments);
