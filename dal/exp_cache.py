@@ -39,6 +39,7 @@ def __load_single_experiment(experiment_name):
     """
     Load a single experiment's info and return the info as a dict
     """
+    logger.debug("Loading experiment cache for experiment %s", experiment_name)
     expdb = logbookclient[experiment_name]
     collnames = expdb.collection_names()
     expinfo = {}
