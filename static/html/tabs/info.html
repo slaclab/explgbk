@@ -1,4 +1,4 @@
-<div class="container-fluid text-center tabcontainer" id="info_tab">    
+<div class="container-fluid text-center tabcontainer" id="info_tab">
   <div class="row content">
     <div class="lgcontent"></div>
   </div>
@@ -46,6 +46,6 @@
 		  { url: "ws/info", ctxnm: "info" }
 	  ];
 
-	  getJSONAndRender({ url: "../../static/html/ms/info_info.html" }, requestobjs, context, $("#info_tab").find(".lgcontent"));	  
+	  getJSONAndRender({ url: "../../static/html/ms/info_" + logbook_site + ".html" }, requestobjs, context, $("#info_tab").find(".lgcontent"));	  
   });
 </script>
