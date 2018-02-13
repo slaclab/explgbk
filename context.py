@@ -27,6 +27,12 @@ MONGODB_PASSWORD=os.environ['MONGODB_PASSWORD'] or 'slac123'
 MONGODB_ADMIN_USERNAME=os.environ['MONGODB_ADMIN_USERNAME'] or 'admin'
 MONGODB_ADMIN_PASSWORD=os.environ['MONGODB_ADMIN_PASSWORD'] or 'slac123'
 
+# This identifies the current deployment site.
+# Functionality that depends on the deployment location is based off this variable.
+# For example, use LCLS for LCLS, Cryo for Cryo.
+LOGBOOK_SITE = os.environ.get('LOGBOOK_SITE', 'test')
+
+
 # Set up the security manager
 mongorolereaderclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, authSource="admin")
 usergroups = UserGroups()

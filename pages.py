@@ -43,7 +43,7 @@ def templates(experiment_name, path):
 @pages_blueprint.route("/lgbk/ops", methods=["GET"])
 @context.security.authentication_required
 def operator_dashboard():
-    return render_template("ops.html")
+    return render_template("ops.html", logbook_site=context.LOGBOOK_SITE)
 
 
 @pages_blueprint.route("/lgbk/experiments", methods=["GET"])
@@ -68,4 +68,8 @@ def experiment_switch():
 @context.security.authentication_required
 @context.security.authorization_required("read")
 def exp_elog(experiment_name):
-    return render_template("lgbk.html", experiment_name=experiment_name, logged_in_user=context.security.get_current_user_id())
+    return render_template("lgbk.html",
+        experiment_name=experiment_name,
+        logged_in_user=context.security.get_current_user_id(),
+        logbook_site=context.LOGBOOK_SITE
+        )
