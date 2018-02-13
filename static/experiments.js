@@ -8,31 +8,32 @@ $(function() {
     		    <td> {{ description }} </td>
     		</tr>{{/value}}`;
 
-    	var instrument_tab_template = `<li><a class="instrument_tab" data-toggle="tab" href="#{{instrument}}">{{ instrument }}</a></li>`;
-    	var instrument_tab_content_template = `<div role="tabpanel" class="tab-pane fade in" id="{{instrument}}"><div class="tabbable"><ul class="nav nav-pills"></ul></div><div class="tab-content"><div class="table-responsive">
+    	var instrument_tab_template = `<li><a class="instrument_tab" data-toggle="tab" href="#{{escaped_instr}}">{{ instrument }}</a></li>`;
+    	var instrument_tab_content_template = `<div role="tabpanel" class="tab-pane fade in" id="{{escaped_instr}}"><div class="tabbable"><ul class="nav nav-pills"></ul></div><div class="tab-content"><div class="table-responsive">
             <table class="table table-condensed table-striped table-bordered">
             <thead><tr><th>Name</th><th>First Run</th><th>Last Run</th><th>Contact</th><th>Description</th></tr></thead>
             <tbody>
             </tbody>
           </table></div></div>`;
     	var year_pill_template = `<li><a class="year_pill" data-toggle="tab" data-instrument="{{instrument}}" data-year="{{year}}" href="#{{year}}">{{ year }}</a></li>`;
-    	
+
 
     	Mustache.parse(exper_template);
     	Mustache.parse(instrument_tab_template);
     	Mustache.parse(instrument_tab_content_template);
     	Mustache.parse(year_pill_template);
-    	
+
     	$.when($.getJSON (useridgroups_url), $.getJSON ({ url: experiments_url }))
         .done(function( d1, d2 ) {
         	var userdata = d1[0], data = d2[0];
         	console.log("Done getting experiments");
-        	_.each(_.sortBy(_.keys(data.value)).reverse(), function(instr) { 
-        		$("#activeexperimentsli").after(Mustache.render(instrument_tab_template, { instrument: instr }));
-        		$("#activeexptab").after(Mustache.render(instrument_tab_content_template, { instrument: instr }))
+        	_.each(_.sortBy(_.keys(data.value)).reverse(), function(instr) {
+            var escaped_instr = instr.replace(/[ \/]/g, '_');
+        		$("#activeexperimentsli").after(Mustache.render(instrument_tab_template, { instrument: instr, escaped_instr: escaped_instr }));
+        		$("#activeexptab").after(Mustache.render(instrument_tab_content_template, { instrument: instr, escaped_instr: escaped_instr }))
         	});
-        	$(".instrument_tab").on("shown.bs.tab", function(e){ 
-        		var instr = $(e.target).text(); 
+        	$(".instrument_tab").on("shown.bs.tab", function(e){
+        		var instr = $(e.target).text();
         		var tabtarget = $(e.target).attr("href");
         		console.log("Showing experiments for instrument " + instr + " in tab " + tabtarget);
         		if ($(tabtarget + " .tabbable ul").find(".year_pill").length <= 0) {
@@ -48,7 +49,7 @@ $(function() {
 	        			var expdata = {value: yrdt};
 	        			expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
 	        			var rendered = Mustache.render(exper_template, expdata);
-	                	$("#" + instr + " table tbody").html(rendered);
+	                	$(tabtarget + " table tbody").html(rendered);
 	        		});
 	        		$(tabtarget + " .tabbable .nav-pills a:first").tab('show');
         		}
@@ -62,7 +63,7 @@ $(function() {
             				_.forEach(data.value[instr][year], function(exp, index) {
             					if ((exp['leader_account'] == userdata.value.userid) || (_.includes(userdata.value.groups, exp['posix_group']))) {
             						myExps.push(exp);
-            					} 
+            					}
             				});
             			});
         			}
@@ -73,7 +74,7 @@ $(function() {
         		$("#myexptab tbody").html(rendered);
         	});
         	$('#myexperimentsli a').tab('show');
-        	
+
         	$("#activeexperimentsli a").on("shown.bs.tab", function(e){
         		console.log("Showing active experiments");
         		$.getJSON(active_experiments_url)
@@ -83,7 +84,7 @@ $(function() {
             		$("#activeexptab tbody").html(rendered);
         		});
         	});
-        	
+
         	// Prepare for searches...
         	var exp_names = []
         	var name2info = {};
@@ -96,7 +97,7 @@ $(function() {
     			})
     		});
 
-        	
+
         	$("#searchtab").on("input", function(e) {
         		if($("#searchtext").val().length > 2) {
         			var curname = $("#searchtext").val();
@@ -115,7 +116,7 @@ $(function() {
         		} else {
             		$("#searchresults tbody").empty();
         		}
-        	});        	
+        	});
         })
         .fail(function (errmsg) {
         	noty( { text: errmsg, layout: "topRight", type: "error" } );
