@@ -89,7 +89,7 @@ def __establish_kafka_consumers():
     """
     def subscribe_kafka():
         consumer = KafkaConsumer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")])
-        consumer.subscribe(["runs", "experiment"])
+        consumer.subscribe(["runs", "experiments"])
 
         for msg in consumer:
             logger.info("Message from Kafka %s", msg)

@@ -185,7 +185,7 @@ def svc_create_update_instrument():
 
     (status, errormsg) = create_update_instrument(instrument_name, createp, info)
     if status:
-        context.kafka_producer.send("instrument", {"instrument_name" : instrument_name, "CRUD": "Create" if createp else "Update", "value": info })
+        context.kafka_producer.send("instruments", {"instrument_name" : instrument_name, "CRUD": "Create" if createp else "Update", "value": info })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -237,8 +237,8 @@ def svc_register_new_experiment():
 
     (status, errormsg) = register_new_experiment(experiment_name, info)
     if status:
-        context.kafka_producer.send("experiment", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
-        context.kafka_producer.send("shift", {"experiment_name" : experiment_name, "CRUD": "Create", "value": get_latest_shift(experiment_name) })
+        context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
+        context.kafka_producer.send("shifts", {"experiment_name" : experiment_name, "CRUD": "Create", "value": get_latest_shift(experiment_name) })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -266,7 +266,7 @@ def svc_update_experiment_info():
 
     (status, errormsg) = update_existing_experiment(experiment_name, info)
     if status:
-        context.kafka_producer.send("experiment", {"experiment_name" : experiment_name, "CRUD": "Update", "value": info})
+        context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Update", "value": info})
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -490,7 +490,7 @@ def svc_start_run(experiment_name):
     run_doc = start_run(experiment_name, run_type)
 
     run_doc['experiment_name'] = experiment_name
-    context.kafka_producer.send("run", run_doc)
+    context.kafka_producer.send("runs", run_doc)
     logger.debug("Published the new run for %s", experiment_name)
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
@@ -505,7 +505,7 @@ def svc_end_run(experiment_name):
     """
     run_doc = end_run(experiment_name)
     run_doc['experiment_name'] = experiment_name
-    context.kafka_producer.send("run", run_doc)
+    context.kafka_producer.send("runs", run_doc)
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
 
@@ -551,7 +551,7 @@ def svc_close_shift(experiment_name):
     (status, errormsg) = close_shift_for_experiment(experiment_name, shift_name)
     if status:
         shift_doc = get_shift_for_experiment_by_name(experiment_name, shift_name)
-        context.kafka_producer.send("shift", {"experiment_name" : experiment_name, "CRUD": "Update", "value": shift_doc})
+        context.kafka_producer.send("shifts", {"experiment_name" : experiment_name, "CRUD": "Update", "value": shift_doc})
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -586,7 +586,7 @@ def svc_create_update_shift(experiment_name):
     (status, errormsg) = create_update_shift(experiment_name, shift_name, createp, info)
     if status:
         shift_doc = get_shift_for_experiment_by_name(experiment_name, shift_name)
-        context.kafka_producer.send("shift", {"experiment_name" : experiment_name, "CRUD": "Create" if createp else "Update", "value": shift_doc })
+        context.kafka_producer.send("shifts", {"experiment_name" : experiment_name, "CRUD": "Create" if createp else "Update", "value": shift_doc })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -635,7 +635,7 @@ def svc_create_update_sample(experiment_name):
     (status, errormsg) = create_update_sample(experiment_name, sample_name, createp, info)
     if status:
         sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
-        context.kafka_producer.send("sample", {"experiment_name" : experiment_name, "CRUD": "Create" if createp else "Update", "value": sample_doc })
+        context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Create" if createp else "Update", "value": sample_doc })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -651,7 +651,7 @@ def svc_make_sample_current(experiment_name):
     (status, errormsg) = make_sample_current(experiment_name, sample_name)
     if status:
         sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
-        context.kafka_producer.send("sample", {"experiment_name" : experiment_name, "CRUD": "Update", "value": sample_doc })
+        context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Update", "value": sample_doc })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -684,7 +684,7 @@ def svc_register_file(experiment_name):
 
     (status, errormsg) = register_file_for_experiment(experiment_name, info)
     if status:
-        context.kafka_producer.send("file", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
+        context.kafka_producer.send("files", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})

@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 app.register_blueprint(pages_blueprint)
 app.register_blueprint(explgbk_blueprint)
 
-socket_service.init_app(app, security, kafkatopics = ["experiment", "elog", "run", "shift"])
+socket_service.init_app(app, security, kafkatopics = ["experiments", "elog", "runs", "shifts"])
 
 dal.exp_cache.init_app(app)
 
