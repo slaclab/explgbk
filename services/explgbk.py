@@ -77,11 +77,11 @@ sorters = {
     "lastrunyear": ((lambda exp: exp["last_run"]["begin_time"] if "last_run" in exp else exp["start_time"]), True)
     }
 
-def categorize(list, categorizers, sorter):
+def categorize(explist, categorizers, sorter):
     ret = {}
     if sorter:
-        list = sorted(list, key=sorter[0], reverse=sorter[1])
-    for exp in list:
+        explist = sorted(explist, key=sorter[0], reverse=sorter[1])
+    for exp in explist:
         cur_dict = ret
         for n, categorizer in enumerate(categorizers):
             key = categorizer(exp)
@@ -110,11 +110,14 @@ def svc_get_experiments():
     """
     experiments = get_experiments()
     categorizer = categorizers.get(request.args.get("categorize", None), None)
-    if not categorizer:
-        return JSONEncoder().encode({"success": True, "value": experiments})
-
     sortby = sorters.get(request.args.get("sortby", None), None)
-    return JSONEncoder().encode({"success": True, "value": categorize(experiments, categorizer, sortby)})
+    if categorizer and sortby:
+        return JSONEncoder().encode({"success": True, "value": categorize(experiments, categorizer, sortby)})
+    if sortby:
+        return JSONEncoder().encode({"success": True, "value": sorted(experiments, key=sortby[0], reverse=sortby[1])})
+
+    return JSONEncoder().encode({"success": True, "value": experiments})
+
 
 @explgbk_blueprint.route("/lgbk/ws/instruments", methods=["GET"])
 @context.security.authentication_required
