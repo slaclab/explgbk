@@ -362,7 +362,7 @@ def get_runtable_sources(experiment_name):
     --> Any number of editable parameters defined by the user.
     --> The run_param_descriptions.
     --> The instrument leads maintain a per instrument list of EPICS variables in a JSON file external to the logbook.
-    We combine all of these into a category --> name+description
+    We combine all of these into a param name --> category+description
     '''
     expdb = logbookclient[experiment_name]
     instrument = expdb.info.find_one({})['instrument']

@@ -19,17 +19,21 @@ __author__ = 'mshankar@slac.stanford.edu'
 logger = logging.getLogger(__name__)
 
 
-def start_run(experiment_name, run_type):
+def start_run(experiment_name, run_type, user_specified_run_number=None):
     '''
     Start a new run for the specified experiment
+    If the user_specified_run_number is not specified; we use the next_runnum autoincrement counter.
     '''
     expdb = logbookclient[experiment_name]
-    next_run_num_doc = expdb['counters'].find_one_and_update({ "_id" : "next_runnum"}, {'$inc': {'seq': 1}}, return_document=ReturnDocument.AFTER)
-    if not next_run_num_doc:
-        raise Exception("Could not update run number counter for experiment %s" % experiment_name)
-
-    next_run_num = next_run_num_doc["seq"]
-    logger.info("Next run for experiment %s is %s", experiment_name, next_run_num)
+    if not user_specified_run_number:
+        next_run_num_doc = expdb['counters'].find_one_and_update({ "_id" : "next_runnum"}, {'$inc': {'seq': 1}}, return_document=ReturnDocument.AFTER)
+        if not next_run_num_doc:
+            raise Exception("Could not update run number counter for experiment %s" % experiment_name)
+        next_run_num = next_run_num_doc["seq"]
+        logger.info("Next run for experiment %s is %s", experiment_name, next_run_num)
+    else:
+        next_run_num = user_specified_run_number
+        logger.info("Next run for experiment %s is from the user %s", experiment_name, next_run_num)
 
     run_doc = {
         "num" : next_run_num,

@@ -480,14 +480,18 @@ def svc_start_run(experiment_name):
     """
     Start a new run for an experiment.
     Pass in the type of the run as a query parameter run_type. This defaults to DATA.
+    You can pass in an optional run number; note you cannot use both options for an experiment.
+    For example, CryoEM uses the file prefix as the run number as that fits in with their workflow.
+    LCLS uses a auto-increment counter.
     """
     run_type = request.args.get("run_type", "DATA")
+    user_specified_run_number = request.args.get("run_num", None)
 
     # Here's where we can put validations on starting a new run.
     # Currently; there are none (after discussions with the DAQ team)
-    # But we may want to make sure the previous run is closed etc.
+    # But we may want to make sure the previous run is closed, the specified experiment is the active one etc.
 
-    run_doc = start_run(experiment_name, run_type)
+    run_doc = start_run(experiment_name, run_type, user_specified_run_number)
 
     run_doc['experiment_name'] = experiment_name
     context.kafka_producer.send("runs", run_doc)
