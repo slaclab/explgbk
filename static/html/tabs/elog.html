@@ -172,18 +172,23 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
       id2entry[entry["_id"]] = entry;
   }
   $("#elog_tab").data("entries", id2entry);
+
+  var processElogResponse = function(data) {
+    _.each(data.value, function(entry) { processNewEntry(entry); });
+  	$("#elog_content").html(elog_header);
+  	_.each(_.sortBy(_.filter(data.value, function(f) { return !_.has(f, "root") }), function(s) { return s["inserted_time"]}).reverse(), function(entry) { // Show only the top level entries in descending order
+  		if(! _.has(entry, "root")) {
+  		    var rendered = renderMSTemplate(elog_main_template, entry);
+  		    rendered.data("entry", entry).addClass("etop");
+  		    $("#elog_content").append(rendered);
+  		}
+  	});
+    $(".elog-expand").on("click", expandFunction);
+  };
+
   $.getJSON("ws/elog")
   .done(function(data){
-	_.each(data.value, function(entry) { processNewEntry(entry); });
-	$("#elog_content").html(elog_header);
-	_.each(_.sortBy(_.filter(data.value, function(f) { return !_.has(f, "root") }), function(s) { return s["inserted_time"]}).reverse(), function(entry) { // Show only the top level entries in descending order
-		if(! _.has(entry, "root")) {
-		    var rendered = renderMSTemplate(elog_main_template, entry);
-		    rendered.data("entry", entry).addClass("etop");
-		    $("#elog_content").append(rendered);
-		}
-	});
-    $(".elog-expand").on("click", expandFunction);
+    processElogResponse(data);
     WebSocketConnection.connect();
     $(document).on('elog', function(event, elogData) {
     	console.log("Processing elog event for experiment " + experiment_name);
@@ -252,6 +257,14 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
 		})
 		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception posting new elog entry " + jqXHR.responseText); })
 	  $("#elog_new_entry_modal").modal("hide");
+  });
+  $("#elog_search_text").on("input", function(e) {
+    var search_text = $("#elog_search_text").val();
+    if (!_.isNil(search_text) && search_text.length > 2) {
+      $.getJSON({ url: "ws/search_elog", data: { search_text : search_text }}).done(function(data){ processElogResponse(data); });
+    } else {
+      $.getJSON("ws/elog").done(function(data){ processElogResponse(data); });
+    }
   });
 });
 </script>

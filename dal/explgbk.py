@@ -194,6 +194,7 @@ def switch_experiment(instrument, station, experiment_name, userid):
 def get_elog_entries(experiment_name):
     """
     Get the elog entries for the experiment as a flat list sorted by inserted time ascending.
+    The sort order is important as the UI uses this to optimize tree-building.
     """
     expdb = logbookclient[experiment_name]
     return [entry for entry in expdb['elog'].find().sort([("insert_time", 1)])]
@@ -205,6 +206,38 @@ def get_specific_elog_entry(experiment_name, id):
     """
     expdb = logbookclient[experiment_name]
     return expdb['elog'].find_one({"_id": ObjectId(id)})
+
+def __get_root_and_parent_entries(experiment_name, matching_entries):
+    """
+    Get the root and parent entries for all elog entries in matching entries.
+    """
+    logger.debug("Recursively expanding root and parent entries for %s", experiment_name)
+    anyAdditions = False
+    def __addEntryIfNotPresent(matching_entry, idname):
+        nonlocal anyAdditions
+        if idname in matching_entry and matching_entry[idname] not in matching_entries:
+            matching_entries[matching_entry[idname]] = get_specific_elog_entry(experiment_name, matching_entry[idname])
+            anyAdditions = True
+
+    for matching_entry in matching_entries.copy().values():
+        __addEntryIfNotPresent(matching_entry, "root")
+        __addEntryIfNotPresent(matching_entry, "parent")
+    return anyAdditions
+
+
+def search_elog_for_text(experiment_name, search_text):
+    """
+    Search for elog entries that match text.
+    Return the matching entries sorted by inserted time ascending.
+    The sort order is important as the UI uses this to optimize tree-building.
+    """
+    expdb = logbookclient[experiment_name]
+    matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "$text": { "$search": search_text }})}
+    # Recursively gather all root and parent entries
+    while __get_root_and_parent_entries(experiment_name, matching_entries):
+        pass
+
+    return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
 
 def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None):
     """

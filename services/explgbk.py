@@ -24,7 +24,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
     create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
-    make_sample_current, register_file_for_experiment
+    make_sample_current, register_file_for_experiment, search_elog_for_text
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params
 
@@ -392,6 +392,12 @@ def svc_post_new_elog_entry(experiment_name):
     logger.debug("Published the new elog entry for %s", experiment_name)
     return JSONEncoder().encode({'success': True, 'value': inserted_doc})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/search_elog", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_search_elog(experiment_name):
+    search_text = request.args.get("search_text", "")
+    return JSONEncoder().encode({"success": True, "value": search_elog_for_text(experiment_name, search_text)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files", methods=["GET"])
 @context.security.authentication_required
