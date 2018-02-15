@@ -89,7 +89,7 @@ def register_new_experiment(experiment_name, incoming_info):
     expdb["setup"].create_index( [("modified_by", ASCENDING), ("modified_at", ASCENDING)], unique=True)
     expdb["shifts"].create_index( [("name", ASCENDING)], unique=True)
     expdb["shifts"].create_index( [("begin_time", ASCENDING)], unique=True)
-    expdb["files"].create_index( [("file_path", ASCENDING), ("run_num", DESCENDING)], unique=True)
+    expdb["files"].create_index( [("path", ASCENDING), ("run_num", DESCENDING)], unique=True)
     expdb["run_tables"].create_index( [("name", ASCENDING)], unique=True)
 
     # Create a default shift
