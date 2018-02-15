@@ -648,6 +648,8 @@ def svc_create_update_sample(experiment_name):
     if not info:
         return logAndAbort("Creating sample missing info document")
 
+    info["_id"] = sample_name
+
     necessary_keys = set(['description'])
     missing_keys = necessary_keys - info.keys()
     if missing_keys:
