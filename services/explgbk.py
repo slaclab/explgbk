@@ -544,7 +544,7 @@ def svc_add_run_params(experiment_name):
     params = request.json
     run_params = {"params." + escape_chars_for_mongo(k) : v for k, v in params.items() }
 
-    return JSONEncoder().encode({"success": True, "value": add_run_params(experiment_name, run_params)})
+    return JSONEncoder().encode({"success": True, "value": add_run_params(experiment_name, current_run_doc, run_params)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/close_shift", methods=["GET"])
 @context.security.authentication_required

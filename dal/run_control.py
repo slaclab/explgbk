@@ -74,10 +74,9 @@ def end_run(experiment_name):
     return expdb.runs.find_one_and_update({"num": current_run_doc["num"]}, {'$set': {'end_time': datetime.datetime.now()}}, return_document=ReturnDocument.AFTER)
 
 
-def add_run_params(experiment_name, run_params):
+def add_run_params(experiment_name, run_doc, run_num):
     '''
-    Add run parameters to the current run.
+    Add run parameters to the specified run.
     '''
     expdb = logbookclient[experiment_name]
-    current_run_doc = get_current_run(experiment_name)
-    return expdb.runs.find_one_and_update({"num": current_run_doc["num"]}, {'$set': run_params }, return_document=ReturnDocument.AFTER)
+    return expdb.runs.find_one_and_update({"num": run_doc["num"]}, {'$set': run_params }, return_document=ReturnDocument.AFTER)
