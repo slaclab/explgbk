@@ -27,8 +27,7 @@ $("#fmgr_tab").on("lg.shown.bs.tab", function() {
 		    <div class="panel-body">
           {{#files}}
            <div class="row run_file">
-             <div class="col-md-2"></div>
-             <div class="col-md-3 text-left">{{ name }}</div>
+             <div class="col-md-5 text-left fmgr_exp_file_name">{{ name }}</div>
              <div class="col-md-2 text-left">{{ hrsize }}</div>
              <div class="col-md-2 text-left">{{#FormatDate}}{{ create_timestamp }}{{/FormatDate}}</div>
              <div class="col-md-3 text-left">{{ checksum }}</div>
