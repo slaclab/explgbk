@@ -680,20 +680,42 @@ def svc_register_file(experiment_name):
     if not info:
         return logAndAbort("Please pass in the file json to register a new file.")
 
-    if 'run_num' not in info.keys():
-        current_run_num = get_current_run(experiment_name)['num']
-        logger.info("Associating file %s with current run %s", info['path'], current_run_num)
-        info['run_num'] = current_run_num
-
     necessary_keys = set(['path', 'run_num', 'checksum', 'create_timestamp', 'modify_timestamp', 'size'])
-    missing_keys = necessary_keys - info.keys()
-    if missing_keys:
-        return logAndAbort("File registration missing keys %s" % missing_keys)
+
+    def attach_current_run(flinfo):
+        if 'run_num' not in flinfo.keys():
+            current_run_num = get_current_run(experiment_name)['num']
+            logger.info("Associating file %s with current run %s", flinfo['path'], current_run_num)
+            flinfo['run_num'] = current_run_num
 
 
-    (status, errormsg) = register_file_for_experiment(experiment_name, info)
-    if status:
-        context.kafka_producer.send("files", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
-        return jsonify({'success': True})
+    if isinstance(info, list):
+        ret_status = []
+        for finfo in info:
+            missing_keys = necessary_keys - finfo.keys()
+            if missing_keys:
+                ret_status.append({'success': False, 'errormsg': "File registration missing keys %s" % missing_keys})
+                continue
+
+            attach_current_run(finfo)
+
+            (status, errormsg) = register_file_for_experiment(experiment_name, finfo)
+            if status:
+                context.kafka_producer.send("files", {"experiment_name" : experiment_name, "CRUD": "Create", "value": finfo })
+                ret_status.append({'success': True})
+            else:
+                ret_status.append({'success': False, 'errormsg': errormsg})
+        return jsonify(ret_status)
     else:
-        return jsonify({'success': False, 'errormsg': errormsg})
+        missing_keys = necessary_keys - info.keys()
+        if missing_keys:
+            return logAndAbort("File registration missing keys %s" % missing_keys)
+
+        attach_current_run(info)
+
+        (status, errormsg) = register_file_for_experiment(experiment_name, info)
+        if status:
+            context.kafka_producer.send("files", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'errormsg': errormsg})
