@@ -57,6 +57,13 @@ def get_current_run(experiment_name):
     current_run_doc = expdb.runs.find().sort([("num", DESCENDING)]).limit(1)
     return list(current_run_doc)[0]
 
+def get_run_doc_for_run_num(experiment_name, run_num):
+    """
+    Get the run document for the specified run number
+    """
+    expdb = logbookclient[experiment_name]
+    run_doc = expdb.runs.find({"num": run_num})
+    return list(run_doc)[0]
 
 def end_run(experiment_name):
     '''

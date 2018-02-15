@@ -26,7 +26,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
     make_sample_current, register_file_for_experiment, search_elog_for_text
 
-from dal.run_control import start_run, get_current_run, end_run, add_run_params
+from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo
 
@@ -532,12 +532,17 @@ def svc_add_run_params(experiment_name):
     For example, send all the EPICS variables as a JSON dict.
     We make sure the current run is still open (end_time is None)
     """
-    params = request.json
-    run_params = {"params." + escape_chars_for_mongo(k) : v for k, v in params.items() }
+    user_specified_run_number = request.args.get("run_num", None)
+    if user_specified_run_number:
+        current_run_doc = get_run_doc_for_run_num(user_specified_run_number)
+    else:
+        current_run_doc = get_current_run(experiment_name)
 
-    current_run_doc = get_current_run(experiment_name)
     if current_run_doc['end_time']:
         return logAndAbort("The current run %s is closed for experiment %s" % (current_run_doc['num'], experiment_name))
+
+    params = request.json
+    run_params = {"params." + escape_chars_for_mongo(k) : v for k, v in params.items() }
 
     return JSONEncoder().encode({"success": True, "value": add_run_params(experiment_name, run_params)})
 
