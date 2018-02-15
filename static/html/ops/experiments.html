@@ -21,8 +21,13 @@
 <script type="text/javascript">
 $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
   var edit_exp = function(expInfo) {
-    expInfo['contact_info_name'] = expInfo['contact_info'].split("(")[0];
-    expInfo['contact_info_email'] = expInfo['contact_info'].split("(")[1].split(")")[0];
+    if(/.+\(.+\)/.test(expInfo['contact_info'])) {
+      expInfo['contact_info_name'] = expInfo['contact_info'].split("(")[0];
+      expInfo['contact_info_email'] = expInfo['contact_info'].split("(")[1].split(")")[0];
+    } else {
+      expInfo['contact_info_name'] = expInfo['contact_info'];
+      expInfo['contact_info_email'] = expInfo['contact_info'];
+    }
     expInfo['paramkvs'] = _.map(expInfo['params'], function(value, key) { return { key: key, value: value };});
     $.when($.ajax ("../static/html/ms/expreg.html"), $.getJSON(instruments_url))
     .done(function( d1, d2 ) {
