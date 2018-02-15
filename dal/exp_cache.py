@@ -23,9 +23,21 @@ __cached_experiments = {}
 
 def init_app(app):
     global __cached_experiments
-    __load_experiments()
+    __cached_experiments = __load_experiments()
     logger.info("Loaded %s experiments from the database ", len(__cached_experiments))
     __establish_kafka_consumers()
+
+def reload_cache():
+    """
+    Reload the experiment cache from the database.
+    Use only if you make changes directly in the database bypassing the app.
+    If you are using to recover from invalid cache issues; please do generate a bug report.
+    """
+    global __cached_experiments
+    __cached_experiments = __load_experiments()
+    logger.info("Loaded %s experiments from the database ", len(__cached_experiments))
+
+
 
 def get_experiments():
     """
@@ -66,17 +78,16 @@ def __load_single_experiment(experiment_name):
 def __load_experiments():
     """
     Load the experiments from the database into the cache.
+    Return the loaded experiments.
     """
-    global __cached_experiments
-
     logger.info("Reloading experiments from database.")
-    experiments = []
+    experiments = {}
     for experiment_name in logbookclient.database_names():
         expdb = logbookclient[experiment_name]
         collnames = expdb.collection_names()
         if 'info' in collnames:
             expinfo = __load_single_experiment(experiment_name)
-            __cached_experiments[experiment_name] = expinfo
+            experiments[experiment_name] = expinfo
         else:
             logger.debug("Skipping non-experiment database " + experiment_name)
 

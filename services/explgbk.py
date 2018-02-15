@@ -30,6 +30,8 @@ from dal.run_control import start_run, get_current_run, end_run, add_run_params,
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo
 
+from dal.exp_cache import reload_cache as reload_experiment_cache
+
 __author__ = 'mshankar@slac.stanford.edu'
 
 explgbk_blueprint = Blueprint('experiment_logbook_api', __name__)
@@ -270,6 +272,16 @@ def svc_update_experiment_info():
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/ws/reload_experiment_cache", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("edit")
+def svc_reload_experiment_cache():
+    """
+    Switch the active experiment at an instrument station.
+    """
+    reload_experiment_cache()
+    return jsonify({'success': True})
 
 
 
