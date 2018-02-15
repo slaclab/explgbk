@@ -534,7 +534,7 @@ def svc_add_run_params(experiment_name):
     """
     user_specified_run_number = request.args.get("run_num", None)
     if user_specified_run_number:
-        current_run_doc = get_run_doc_for_run_num(user_specified_run_number)
+        current_run_doc = get_run_doc_for_run_num(experiment_name, user_specified_run_number)
     else:
         current_run_doc = get_current_run(experiment_name)
 
