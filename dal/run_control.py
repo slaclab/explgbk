@@ -74,7 +74,7 @@ def end_run(experiment_name):
     return expdb.runs.find_one_and_update({"num": current_run_doc["num"]}, {'$set': {'end_time': datetime.datetime.now()}}, return_document=ReturnDocument.AFTER)
 
 
-def add_run_params(experiment_name, run_doc, run_num):
+def add_run_params(experiment_name, run_doc, run_params):
     '''
     Add run parameters to the specified run.
     '''
