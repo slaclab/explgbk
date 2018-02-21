@@ -153,6 +153,8 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
             row_tmpl = row_tmpl + "<td class='rtbl_separator'>&nbsp;</td>";
           } else if (coldef["is_editable"]) {
             row_tmpl = row_tmpl + "<td><input type='text' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column form-control' value='{{" + coldef["source"] + "}}'></td>";
+          } else if (_.startsWith(coldef["mime_type"], "image/")) {
+            row_tmpl = row_tmpl + "<td><img class='rtbl_thumbnail' src='{{" + coldef["source"] + "}}'></td>";
           } else {
             row_tmpl = row_tmpl + "<td>{{" + coldef["source"] + "}}</td>";
           }

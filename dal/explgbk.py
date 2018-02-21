@@ -310,6 +310,8 @@ def get_all_run_tables(experiment_name):
     allRunTables.extend([ r for r in sitedb["run_tables"].find()])
     summtables = {}
     pdescs = [ x for x in expdb['run_param_descriptions'].find( { "param_name": re.compile(r'.*\/.*') } ) ]
+    mimes = { "params." + x["param_name"] : x["type"] for x in sitedb['run_param_descriptions'].find({"type": { "$exists": True }})}
+    mimes.update({ "params." + x["param_name"] : x["type"] for x in expdb['run_param_descriptions'].find({"type": { "$exists": True }})})
     for pdesc in pdescs:
         categoryName, paramName = pdesc['param_name'].split("/")
         if categoryName not in summtables:
@@ -334,6 +336,7 @@ def get_all_run_tables(experiment_name):
         for coldef in rt["coldefs"]:
             if coldef['type'].startswith('EPICS:'):
                 coldef['type'] = coldef['type'].replace('EPICS:', 'EPICS/')
+            coldef['mime_type'] = mimes.get(coldef['source'], "text")
     return allRunTables
 
 def get_runtable_data(experiment_name, tableName):
