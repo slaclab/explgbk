@@ -385,7 +385,7 @@ def get_runtable_sources(experiment_name):
     def get_leaves_of_a_document(current_key, items, keyset):
         for k, v in items:
             if isinstance(v, dict):
-                return get_leaves_of_a_document(join_key(current_key, k), v.items(), keyset)
+                get_leaves_of_a_document(join_key(current_key, k), v.items(), keyset)
             else:
                 keyset.add(join_key(current_key, k))
     param_names = set()
