@@ -150,7 +150,7 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
           $("#rtbl_content").html("<div id='" + histDivName + "'></div>");
           var traces = [];
           _.each(_.tail(tblDef.coldefs), function(coldef, idx) {
-            traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram"});
+            traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram", showlegend: true, name: coldef["label"]});
           });
           Plotly.newPlot(histDivName, traces, {barmode: "overlay"}, {displaylogo: false});
           return;

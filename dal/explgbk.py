@@ -379,14 +379,22 @@ def get_runtable_sources(experiment_name):
         { "$unwind": "$editables" },
         { "$group": { "_id": "$editables.k", "total": { "$sum": 1 } } } ])]
     rtbl_sources["Misc"] = [{"label": "Separator", "description": "A column separator", "source": "Separator", "category": "Misc"}]
-    param_names = set([x["_id"] for x in expdb.runs.aggregate([
-        { "$project": { "pnames": { "$objectToArray": "$params" } } },
-        { "$unwind": "$pnames" },
-        { "$group": { "_id": "$pnames.k", "total": { "$sum": 1 } } } ]) ])
+    # Mongo currently does not support finding the leaves of documents if they have embedded fields; so we have to loop thru all the runs and do this in python.
+    def join_key(current_key, new_key):
+        return current_key + "." + new_key if current_key else new_key
+    def get_leaves_of_a_document(current_key, items, keyset):
+        for k, v in items:
+            if isinstance(v, dict):
+                return get_leaves_of_a_document(join_key(current_key, k), v.items(), keyset)
+            else:
+                keyset.add(join_key(current_key, k))
+    param_names = set()
+    for run in expdb.runs.find({}, {"params" : 1}):
+        get_leaves_of_a_document(None, run["params"].items(), param_names)
     param_descs = { x["param_name"] : { "label" : x["param_name"], "description": x["description"] if x["description"] else x["param_name"], "category": x['param_name'].split('/')[0] if '/' in x['param_name'] else "EPICS:Additional parameters" } for x in  expdb.run_param_descriptions.find({})}
     # Update the category and description from the instrument_scientists_run_table_defintions if present
     param_names_with_categories = []
-    for param_name in param_names:
+    for param_name in sorted(param_names):
         if instrument in instrument_scientists_run_table_defintions and param_name in instrument_scientists_run_table_defintions[instrument]:
             param_names_with_categories.append({
                 "label" : param_name,
