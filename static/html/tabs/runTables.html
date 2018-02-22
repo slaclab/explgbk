@@ -9,7 +9,7 @@
 
 <script type="text/javascript">
 $("#rtbl_tab").on("lg.shown.bs.tab", function() {
-  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}<li class="pull-right"><a id="runtblnew" href="#>">New</a></li><li class="pull-right"><a id="runtbledit" href="#>">Edit</a></li>`;
+  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}<li class="pull-right"><a id="runtbldelete" href="#>">Delete</a></li><li class="pull-right"><a id="runtbledit" href="#>">Edit</a></li><li class="pull-right"><a id="runtblnew" href="#>">New</a></li>`;
   var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-responsive table-condensed"><thead></thead><tbody></tbody></table>`;
   var run_tbl_def_tr = `<tr>
     <td><input name="label" class="nonblank"/></td>
@@ -182,7 +182,7 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
         tblRndr.find("tbody").append(rowRendered);
         $("#rtbl_content").html(tblRndr);
       });
-      if(tblDef['is_editable']) { $("#runtbledit").show(); } else { $("#runtbledit").hide(); }
+      if(tblDef['is_editable']) { $("#runtbledit").show(); $("#runtbldelete").show(); } else { $("#runtbledit").hide(); $("#runtbldelete").hide();}
     });
     rendered.find( _.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
     sessionStorage.removeItem("runtable_active_tab");
@@ -195,6 +195,7 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
 
     $("#runtblnew").on("click", function(e) { e.preventDefault(); col_defs_dialog(); });
     $("#runtbledit").on("click", function(e) { e.preventDefault(); var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); col_defs_dialog(clkRTblName); });
+    $("#runtbldelete").on("click", function(e) { e.preventDefault(); var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); $.getJSON({ url: "ws/delete_run_table", data: { table_name : clkRTblName }}).done(window.location.reload(true))});
   });
 });
 </script>

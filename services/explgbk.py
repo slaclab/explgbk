@@ -24,7 +24,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
     create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
-    make_sample_current, register_file_for_experiment, search_elog_for_text
+    make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -483,6 +483,18 @@ def svc_run_table_editable_update(experiment_name):
     if source.endswith('.value'):
         source = source.replace(".value", "")
     return JSONEncoder().encode({"success": True, "result": update_editable_param_for_run(experiment_name, runnum, source, value, userid)})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_run_table", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_delete_run_table(experiment_name):
+    table_name = request.args.get("table_name", None)
+    if not table_name:
+        return logAndAbort("Please specify the table name to delete.")
+    return JSONEncoder().encode({"success": True, "value": delete_run_table(experiment_name, table_name)})
+
+
 
 
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/start_run", methods=["GET"])

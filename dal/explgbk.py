@@ -426,6 +426,14 @@ def create_update_user_run_table_def(experiment_name, table_definition):
     expdb = logbookclient[experiment_name]
     return expdb['run_tables'].update({'name': table_definition['name']}, table_definition, True)
 
+def delete_run_table(experiment_name, table_name):
+    '''
+    Delete the specified run table for the experiment.
+    '''
+    expdb = logbookclient[experiment_name]
+    expdb["run_tables"].delete_one({"name": table_name})
+    return (True, "")
+
 
 def update_editable_param_for_run(experiment_name, runnum, source, value, userid):
     '''
