@@ -58,6 +58,7 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
          var tblDef = $("#rtbl_tab").data("tblData")[editTableName];
          $("#rtbl_def_name").val(tblDef["name"]);
          $("#rtbl_def_desc").val(tblDef["description"]);
+         $("#rtbl_def_table_type").val(_.get(tblDef, "table_type", "table"));
          _.each(_.tail(tblDef["coldefs"]), function(coldef, index){
              var coldefrow = template_tr.clone(true);
              coldefrow.find("[name='label']").val(coldef["label"]);
@@ -87,6 +88,7 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
              name: $("#rtbl_def_name").val(),
              description: $("#rtbl_def_desc").val(),
              is_editable: true,
+             table_type: $("#rtbl_def_table_type").val(),
              coldefs: []
            };
            $("#rtbl_def_tbl tbody tr").each(function(index, defnrow){
@@ -143,6 +145,16 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
       var tblDef = $("#rtbl_tab").data("tblData")[clkRTblName];
       $.getJSON("ws/run_table_data", {"tableName": clkRTblName})
       .done(function(runData){
+        if(_.get(tblDef, "table_type") == "histogram") {
+          var histDivName = _.get(tblDef, "name") + '_histogram';
+          $("#rtbl_content").html("<div id='" + histDivName + "'></div>");
+          var traces = [];
+          _.each(_.tail(tblDef.coldefs), function(coldef, idx) {
+            traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram"});
+          });
+          Plotly.newPlot(histDivName, traces, {barmode: "overlay"}, {displaylogo: false});
+          return;
+        }
         var numHdrRows = _.find([[6, 1], [12, 2], [18, 3], [0, 4]], function(v) { return (v[0] == 0 || tblDef.coldefs.length < v[0]); })[1];
         var tblRndr = $(Mustache.render(run_tbl_tbl, {}));
         var hdr = _.times(numHdrRows, function() { return $("<tr/>"); }), row_tmpl = "";
