@@ -89,7 +89,7 @@ def register_new_experiment(experiment_name, incoming_info):
     expdb["setup"].create_index( [("modified_by", ASCENDING), ("modified_at", ASCENDING)], unique=True)
     expdb["shifts"].create_index( [("name", ASCENDING)], unique=True)
     expdb["shifts"].create_index( [("begin_time", ASCENDING)], unique=True)
-    expdb["files"].create_index( [("path", ASCENDING), ("run_num", DESCENDING)], unique=True)
+    expdb["file_catalog"].create_index( [("path", ASCENDING), ("run_num", DESCENDING)], unique=True)
     expdb["run_tables"].create_index( [("name", ASCENDING)], unique=True)
 
     # Create a default shift
@@ -282,7 +282,7 @@ def get_experiment_files(experiment_name):
     Get the files for the given experiment
     '''
     expdb = logbookclient[experiment_name]
-    return [file for file in expdb['files'].find().sort([("run_num", -1), ("create_timestamp", -1)])]
+    return [file for file in expdb['file_catalog'].find().sort([("run_num", -1), ("create_timestamp", -1)])]
 
 
 def get_experiment_runs(experiment_name, include_run_params=False):
@@ -578,5 +578,5 @@ def register_file_for_experiment(experiment_name, info):
     Register a file for the experiment.
     """
     expdb = logbookclient[experiment_name]
-    inserted_id = expdb.files.insert_one(info).inserted_id
-    return (True, expdb.files.find_one({"_id": ObjectId(inserted_id) }))
+    inserted_id = expdb['file_catalog'].insert_one(info).inserted_id
+    return (True, expdb['file_catalog'].find_one({"_id": ObjectId(inserted_id) }))

@@ -727,7 +727,7 @@ def svc_register_file(experiment_name):
 
             (status, errormsg) = register_file_for_experiment(experiment_name, finfo)
             if status:
-                context.kafka_producer.send("files", {"experiment_name" : experiment_name, "CRUD": "Create", "value": finfo })
+                context.kafka_producer.send("file_catalog", {"experiment_name" : experiment_name, "CRUD": "Create", "value": finfo })
                 ret_status.append({'success': True})
             else:
                 ret_status.append({'success': False, 'errormsg': errormsg})
@@ -741,7 +741,7 @@ def svc_register_file(experiment_name):
 
         (status, errormsg) = register_file_for_experiment(experiment_name, info)
         if status:
-            context.kafka_producer.send("files", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
+            context.kafka_producer.send("file_catalog", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
             return jsonify({'success': True})
         else:
             return jsonify({'success': False, 'errormsg': errormsg})
