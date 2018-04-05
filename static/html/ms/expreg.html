@@ -1,8 +1,8 @@
 <div class="modal fade edit_modal" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
    <div class="modal-content">
+     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
      <div class="modal-header">
-       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
        <h2 class="modal-title">Experiment details</h2>
      </div>
      <form class="register_form">
@@ -26,7 +26,7 @@
        <div class='input-group date start_time'>
          <input type='text' class="form-control" />
          <span class="input-group-addon">
-         <span class="glyphicon glyphicon-calendar"></span>
+             <i class="fa fa-calendar fa-lg"></i>
          </span>
        </div>
       </div>
@@ -35,7 +35,7 @@
        <div class='input-group date end_time'>
          <input type='text' class="form-control" />
          <span class="input-group-addon">
-         <span class="glyphicon glyphicon-calendar"></span>
+             <i class="fa fa-calendar fa-lg"></i>
          </span>
        </div>
       </div>
@@ -64,25 +64,23 @@
           {{#paramkvs}}
           <tr><td><input type="text" class="form-control key" value="{{key}}"></td><td><input type="text" class="form-control value" value="{{value}}"></td>
             <td>
-              <a href="#"><span class="glyphicon glyphicon-trash param_action" aria-hidden="true"></span></a>
-              <a href="#"><span class="glyphicon glyphicon-plus param_action" aria-hidden="true"></span></a>
+                <a href="#"><i class="fa fa-trash fa-lg param_action" aria-hidden="true"></i></a>
+                <a href="#"><i class="fa fa-plus fa-lg param_action" aria-hidden="true"></i></a>
             </td>
           </tr>
           {{/paramkvs}}
           <tr><td><input type="text" class="form-control key" value=""></td><td><input type="text" class="form-control value" value=""></td>
             <td>
-              <a href="#"><span class="glyphicon glyphicon-trash param_action" aria-hidden="true"></span></a>
-              <a href="#"><span class="glyphicon glyphicon-plus param_action" aria-hidden="true"></span></a>
+                <a href="#"><i class="fa fa-trash fa-lg param_action" aria-hidden="true"></i></a>
+                <a href="#"><i class="fa fa-plus fa-lg param_action" aria-hidden="true"></i></a>
             </td>
           </tr>
         </tbody>
       </table>
-      <div class="clearfix"></div>
-      <div class="col-xs-10 col-sm-4 col-md-4 col-lg-4">
-        <button class="btn btn-default panel_btn register_btn">Register</button>
+      <div class="modal-footer">
+          <button class="btn btn-default panel_btn register_btn">Register</button>
       </div>
      </form>
-   <div class="clearfix"></div>
  </div>
 </div>
 </div>

@@ -12,10 +12,10 @@
 </div>
 
 <script type="text/javascript">
-$("#fmgr_tab").on("lg.shown.bs.tab", function() {
+$("#fmgr_tab").on("lg.loaded.bs.tab", function() {
 
   var file_main_templ = `<div class="fdat" data-entry-id="{{ _id }}"><div class="row">
-   <div class="col-md-2"><span class="fmgr-expand exp_icons_left"><span class="glyphicon glyphicon-plus expand_ctrl"></span></span>{{ run_num }}</div>
+   <div class="col-md-2"><span class="fmgr-expand exp_icons_left"><i class="fa fa-plus expand_ctrl"></i></span>{{ run_num }}</div>
    <div class="col-md-3 text-left">{{ run_files.num_files }}</div>
    <div class="col-md-2 text-left">{{ run_files.hrsize }}</div>
    <div class="col-md-2"></div>
@@ -42,12 +42,12 @@ $("#fmgr_tab").on("lg.shown.bs.tab", function() {
 	 console.log("Processing " + run_files[""]);
      if($(this).hasClass("fmgr-expanded")) {
          $(this).parents(".fdat:first").find(".fmgr-chid").remove();
-         $(this).html('<span class="glyphicon glyphicon-plus expand_ctrl"></span>');
+         $(this).html('<i class="fa fa-plus expand_ctrl"></i>');
      } else {
          var clicked_elem = $(this);
          run_files.files = _.sortBy(run_files.files, function(fl){ return fl['name']});
          clicked_elem.parents(".fdat:first").append(renderMSTemplate(fmgr_child_template, run_files));
-         $(this).html('<span class="glyphicon glyphicon-minus expand_ctrl"></span>');
+         $(this).html('<i class="fa fa-minus expand_ctrl"></i>');
        }
 	   $(this).toggleClass("fmgr-expanded");
     };

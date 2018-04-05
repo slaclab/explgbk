@@ -1,24 +1,15 @@
 <div class="container-fluid text-center tabcontainer" id="shifts_tab">
-  <div class="row">
-    <div class="panel panel-default">
-     <div class="panel-body">
-       <div class="row btnbar">
-         <button class="btn btn-default panel_btn" id="new_shift">New Shift</button>
-       </div>
-       <div id="mdl_holder"></div>
-       <div class="table-responsive">
-         <table class="table table-condensed table-striped table-bordered shiftstbl">
-           <thead><tr><th>Name</th><th>Starting</th><th>Ending</th><th>Leader</th><th>Description</th><th>Actions</th></tr></thead>
-           <tbody></tbody>
-         </table>
-       </div>
+    <div id="mdl_holder"></div>
+    <div class="table-responsive">
+      <table class="table table-condensed table-striped table-bordered shiftstbl">
+        <thead><tr><th>Name</th><th>Starting</th><th>Ending</th><th>Leader</th><th>Description</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
-    </div>
-  </div>
 </div>
 
 <script type="text/javascript">
-$("#shifts_tab").on("lg.shown.bs.tab", function() {
+$("#shifts_tab").on("lg.loaded.bs.tab", function() {
   var edit_shift = function(shift_obj) {
     shift_obj.paramkvs = _.map(shift_obj['params'], function(value, key) { return { key: key, value: value };});
     $.ajax("../../static/html/ms/shiftedit.html")
@@ -27,9 +18,9 @@ $("#shifts_tab").on("lg.shown.bs.tab", function() {
       var rendered = $(Mustache.render(tmpl, shift_obj));
       rendered.find(".start_time").datetimepicker({defaultDate: moment(shift_obj['begin_time']), sideBySide: true });
       if(_.has(shift_obj, 'name')) { rendered.find(".register_btn").text("Update");}
-      rendered.find(".glyphicon-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
-      rendered.find(".glyphicon-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
-      rendered.find(".register_btn").on("click", function(e) {
+      rendered.find(".fa-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      rendered.find("#shift_create").on("click", function(e) {
         e.preventDefault();
         var formObj = $("#shifts_tab").find("#mdl_holder").find("form");
         var validations = [
@@ -87,15 +78,16 @@ $("#shifts_tab").on("lg.shown.bs.tab", function() {
       $("#shifts_tab").find("#mdl_holder").find(".edit_modal").modal("show");
     })
   }
+  $("#shifts_tab").data("edit_shift", edit_shift);
 
-  var shift_tr_tmpl = `{{#value}}<tr {{^end_time}}class="active_shift"{{/end_time}}><td>{{ name }}</td><td>{{#FormatDate}}{{begin_time}}{{/FormatDate}}</td><td>{{#FormatDate}}{{end_time}}{{/FormatDate}}</td><td>{{ leader }}</td><td>{{ description }}</td><td><span title="Edit shift details" class="glyphicon glyphicon-edit listview-action"></span><span title="Close out shift" class="glyphicon glyphicon-log-out listview-action"></span></td></tr>{{/value}}`;
+  var shift_tr_tmpl = `{{#value}}<tr {{^end_time}}class="active_shift"{{/end_time}}><td>{{ name }}</td><td>{{#FormatDate}}{{begin_time}}{{/FormatDate}}</td><td>{{#FormatDate}}{{end_time}}{{/FormatDate}}</td><td>{{ leader }}</td><td>{{ description }}</td><td><i title="Edit shift details" class="fa fa-edit listview-action"></i><i title="Close out shift" class="fa fa-power-off listview-action"></i></td></tr>{{/value}}`;
   Mustache.parse(shift_tr_tmpl);
   $.getJSON("ws/shifts")
   .done(function(data){
     data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:MM:SS");}};
     $("#shifts_tab").data("shifts", data);
     var rendered = $(Mustache.render(shift_tr_tmpl, data));
-    rendered.find(".glyphicon-log-out").on("click", function(){
+    rendered.find(".fa-power-off").on("click", function(){
       var shift_name = $(this).parents("tr").first().find("td").first().text();
       $.getJSON("ws/close_shift", {shift_name: shift_name})
       .done(function(data, textStatus, jqXHR) {
@@ -108,13 +100,20 @@ $("#shifts_tab").on("lg.shown.bs.tab", function() {
       })
       .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure closing shift " + textStatus); })
     });
-    rendered.find(".glyphicon-edit").on("click", function(){
+    rendered.find(".fa-edit").on("click", function(){
       var shift_name = $(this).parents("tr").first().find("td").first().text();
       var shift_obj = _.find($("#shifts_tab").data("shifts").value, function(shf){return shf.name == shift_name});
       edit_shift(shift_obj);
     });
     $("#shifts_tab .shiftstbl tbody").append(rendered);
-    $("#new_shift").on("click", function(e){ e.preventDefault(); edit_shift({leader: logged_in_user})});
   });
 });
+
+$("#shifts_tab").on("lg.shown.bs.tab", function() {
+    var tab_toolbar = `<i class="fa fa-plus fa-lg" id="new_shift"></i>`;
+    var toolbar_rendered = $(tab_toolbar);
+    $("#toolbar_for_tab").append(toolbar_rendered);
+    $("#new_shift").on("click", function(e){ $("#shifts_tab").data("edit_shift")({leader: logged_in_user})});
+});
+
 </script>

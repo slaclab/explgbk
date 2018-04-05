@@ -6,7 +6,7 @@
 
 
 <script type="text/javascript">
-  $("#info_tab").on("lg.shown.bs.tab", function() {
+  $("#info_tab").on("lg.loaded.bs.tab", function() {
 	  var context = {};
 	  window.psdm_context = context;
 	  context.postGet = function() {
@@ -29,14 +29,14 @@
 			  dataType: "json"
 			})
 			.done(function() {
-				  $("#info_toolbar").html('<a id="info_edit" href="#"><span class="glyphicon glyphicon-edit"></span> Edit</a>');
+				  $("#info_toolbar").html('<a id="info_edit" href="#"><i class="fa fa-edit"></i> Edit</a>');
 				  $("#info_edit").on("click", edit_function);
 			  })
 		    .fail( function() { alert("Error when updating setup details"); })
 	  }
 	  var edit_function = function() {
 		  $("#info_tab").find(".lg-autoupdate").prop('readonly', false);
-		  $("#info_toolbar").html('<a id="info_save" href="#"><span class="glyphicon glyphicon-save"></span> Save</a>');
+		  $("#info_toolbar").html('<a id="info_save" href="#"><i class="fa fa-save"></i> Save</a>');
 		  $("#info_save").on("click", save_function);
 	  }
 	  context.postRender = function() {
@@ -46,6 +46,6 @@
 		  { url: "ws/info", ctxnm: "info" }
 	  ];
 
-	  getJSONAndRender({ url: "../../static/html/ms/info_" + logbook_site + ".html" }, requestobjs, context, $("#info_tab").find(".lgcontent"));	  
+	  getJSONAndRender({ url: "../../static/html/ms/info_" + logbook_site + ".html" }, requestobjs, context, $("#info_tab").find(".lgcontent"));
   });
 </script>

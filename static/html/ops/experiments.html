@@ -1,25 +1,17 @@
 <div class="container-fluid text-center tabcontainer" id="register_edit_exp_tab">
 <div class="row">
-  <div class="panel panel-default">
-   <div class="panel-body">
-     <div class="row btnbar">
-       <button class="btn btn-default panel_btn" id="register_experiment">Register New</button>
-       <input type="text" size="30" id="searchtext"><span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-     </div>
-     <div id="exp_mdl_holder"></div>
-     <div class="table-responsive">
-       <table class="table table-condensed table-striped table-bordered" id="exp_searchresults">
-         <thead><tr><th>Name</th><th>First Run</th><th>Last Run</th><th>Contact</th><th>Description</th><th>Edit</th></tr></thead>
-         <tbody></tbody>
-       </table>
-     </div>
-  </div>
-  </div>
+    <div id="exp_mdl_holder"></div>
+    <div class="table-responsive">
+        <table class="table table-condensed table-striped table-bordered" id="exp_searchresults">
+            <thead><tr><th>Name</th><th>First Run</th><th>Last Run</th><th>Contact</th><th>Description</th><th>Edit</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
 </div>
 </div>
 
 <script type="text/javascript">
-$("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
+$("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   var edit_exp = function(expInfo) {
     if(/.+\(.+\)/.test(expInfo['contact_info'])) {
       expInfo['contact_info_name'] = expInfo['contact_info'].split("(")[0];
@@ -38,8 +30,8 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
       rendered.find(".end_time").datetimepicker({defaultDate: moment(expInfo['end_time']), sideBySide: true });
       rendered.find(".instrument").append($(Mustache.render(options, instruments)));
       rendered.find(".instrument").val(expInfo['instrument']);
-      rendered.find(".glyphicon-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
-      rendered.find(".glyphicon-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      rendered.find(".fa-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
       rendered.find(".experiment_name").on("change", function(){
         console.log("Checking to see if experiment " + $(this).val() + " is registered in URAWI");
         $.getJSON(lookup_experiment_in_urawi, {"experiment_name": $(this).val()})
@@ -137,7 +129,7 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
         <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
         <td> {{ contact_info }} </td>
         <td> {{ description }} </td>
-        <td> <a class="editexpbtn" href="#"><span class="glyphicon glyphicon-edit"></span>&nbsp;</a> </td>
+        <td> <a class="editexpbtn" href="#"><i class="fa fa-edit"></i></span>&nbsp;</a> </td>
     </tr>{{/value}}`;
   Mustache.parse(exper_template);
 
@@ -162,9 +154,9 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
     var rendered = Mustache.render(exper_template, experiments);
     $("#exp_searchresults tbody").html(rendered);
     $("#exp_searchresults a.editexpbtn").on("click", edit_exp_btn_action);
-    $("#searchtext").on("input", function(e) {
-      if($("#searchtext").val().length > 0) {
-        var curname = $("#searchtext").val();
+    $("#register_edit_exp_tab").data("search_function", function() { // Register the search function.
+      if($("#ops_exp_searchtext").val().length > 0) {
+        var curname = $("#ops_exp_searchtext").val();
         var matchexps = [];
         _.each($("#register_edit_exp_tab").data("exp_names"), function(exp_name){
           if(_.startsWith(exp_name, curname)) {
@@ -183,6 +175,15 @@ $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
         $("#exp_searchresults tbody").html(rendered);
       }
     });
-    $("#register_experiment").on("click", function() { edit_exp({ contact_info: "()", start_time : moment(), end_time : moment().add(2, 'days')}); });
+    $("#register_edit_exp_tab").data("register_experiment_function", function() { edit_exp({ contact_info: "", start_time : moment(), end_time : moment().add(2, 'days')}); });
+  });
+
+  $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
+      var tab_toolbar = `<input type="text" placeholder="Search" id="ops_exp_searchtext">
+      <i class="fa fa-plus fa-lg" id="register_experiment" title="Register New Experiment"></i>`;
+      var toolbar_rendered = $(tab_toolbar);
+      $("#toolbar_for_tab").append(toolbar_rendered);
+      $("#ops_exp_searchtext").on("input", function(){ $("#register_edit_exp_tab").data("search_function")() });
+      $("#register_experiment").on("click", function(){ $("#register_edit_exp_tab").data("register_experiment_function")() });
   });
 });

@@ -8,18 +8,18 @@
 </div>
 
 <script type="text/javascript">
-$("#rtbl_tab").on("lg.shown.bs.tab", function() {
-  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}<li class="pull-right"><a id="runtbldelete" href="#>">Delete</a></li><li class="pull-right"><a id="runtbledit" href="#>">Edit</a></li><li class="pull-right"><a id="runtblnew" href="#>">New</a></li>`;
+$("#rtbl_tab").on("lg.loaded.bs.tab", function() {
+  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}`;
   var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-responsive table-condensed"><thead></thead><tbody></tbody></table>`;
   var run_tbl_def_tr = `<tr>
     <td><input name="label" class="nonblank"/></td>
     <td><select name="type" class="rtbl_def_category_select nonblank"><option value="">&nbsp;</option></select></td>
     <td><select name="source" class="rtbl_def_pvname_select nonblank"><option value="">&nbsp;</option></select></td>
     <td>
-      <a href="#"><span class="glyphicon glyphicon-arrow-up rtbldef_action" aria-hidden="true"></span></a>
-      <a href="#"><span class="glyphicon glyphicon-arrow-down rtbldef_action" aria-hidden="true"></span></a>
-      <a href="#"><span class="glyphicon glyphicon-trash rtbldef_action" aria-hidden="true"></span></a>
-      <a href="#"><span class="glyphicon glyphicon-plus rtbldef_action" aria-hidden="true"></span></a>
+      <a href="#"><i class="fa fa-arrow-up fa-lg rtbldef_action" aria-hidden="true"></i></a>
+      <a href="#"><i class="fa fa-arrow-down fa-lg rtbldef_action" aria-hidden="true"></i></a>
+      <a href="#"><i class="fa fa-trash fa-lg rtbldef_action" aria-hidden="true"></i></a>
+      <a href="#"><i class="fa fa-plus fa-lg rtbldef_action" aria-hidden="true"></i></a>
     </td></tr>`;
   var run_tbl_def_category_selector = `{{#.}}<option value="{{.}}">{{.}}</option>{{/.}}`;
   var run_tbl_def_pvname_selector = `<select name="source" class='rtbl_def_pvname_select nonblank'><option value=''></option>{{#.}}<option value="{{label}}" title="{{param_name}}">{{label}}</option>{{/.}}</select>`;
@@ -49,10 +49,10 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
        template_tr.find(".rtbl_def_category_select").on("change", function(){
          $(this).parent().next().empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value[$(this).val()]));
        });
-       template_tr.find(".glyphicon-plus").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").after(template_tr.clone(true)); });
-       template_tr.find(".glyphicon-trash").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").remove(); });
-       template_tr.find(".glyphicon-arrow-up").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").prev().before($(this).parents("tr:first")); });
-       template_tr.find(".glyphicon-arrow-down").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").next().after($(this).parents("tr:first")); });
+       template_tr.find(".fa-plus").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").after(template_tr.clone(true)); });
+       template_tr.find(".fa-trash").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").remove(); });
+       template_tr.find(".fa-arrow-up").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").prev().before($(this).parents("tr:first")); });
+       template_tr.find(".fa-arrow-down").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").next().after($(this).parents("tr:first")); });
        if (!_.isNil(editTableName)) {
          console.log("Editing table " + editTableName);
          var tblDef = $("#rtbl_tab").data("tblData")[editTableName];
@@ -142,8 +142,11 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
     rendered.find(".rtbl_pill").on("click", function() {
       var clkRTblName = $(this).attr("data-rtbl-name");
       console.log("Getting data for run table " + clkRTblName);
+      sessionStorage['runtable_active_tab'] = clkRTblName;
       var tblDef = $("#rtbl_tab").data("tblData")[clkRTblName];
-      $.getJSON("ws/run_table_data", {"tableName": clkRTblName})
+      var rtbl_data_params = {"tableName": clkRTblName};
+      if(sample_showing_in_UI != null) { rtbl_data_params["sampleName"] = sample_showing_in_UI; }
+      $.getJSON("ws/run_table_data", rtbl_data_params)
       .done(function(runData){
         if(_.get(tblDef, "table_type") == "histogram") {
           var histDivName = _.get(tblDef, "name") + '_histogram';
@@ -182,20 +185,34 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
         tblRndr.find("tbody").append(rowRendered);
         $("#rtbl_content").html(tblRndr);
       });
-      if(tblDef['is_editable']) { $("#runtbledit").show(); $("#runtbldelete").show(); } else { $("#runtbledit").hide(); $("#runtbldelete").hide();}
+      if(tblDef['is_editable']) { $("#edit_rtbl_btn").show(); $("#del_rtbl_btn").show(); } else { $("#edit_rtbl_btn").hide(); $("#del_rtbl_btn").hide();}
     });
     rendered.find( _.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
     sessionStorage.removeItem("runtable_active_tab");
-    WebSocketConnection.connect();
     $(document).on('runs', function(event, runData) {
       console.log(runData);
       console.log("Processing web socket event for run " + runData['num'] + " for experiment " + runData['experiment_name']);
     });
 
+    $("#rtbl_tab").data("new_rtbl_fn", function(e) { col_defs_dialog(); });
+    $("#rtbl_tab").data("edit_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); col_defs_dialog(clkRTblName); });
+    $("#rtbl_tab").data("del_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); $.getJSON({ url: "ws/delete_run_table", data: { table_name : clkRTblName }}).done(window.location.reload(true))});
 
-    $("#runtblnew").on("click", function(e) { e.preventDefault(); col_defs_dialog(); });
-    $("#runtbledit").on("click", function(e) { e.preventDefault(); var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); col_defs_dialog(clkRTblName); });
-    $("#runtbldelete").on("click", function(e) { e.preventDefault(); var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); $.getJSON({ url: "ws/delete_run_table", data: { table_name : clkRTblName }}).done(window.location.reload(true))});
+    $("#rtbl_tab").on("lg.refresh", function() {
+        $("#rtbl_tab").find(_.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
+    });
   });
 });
+
+$("#rtbl_tab").on("lg.shown.bs.tab", function() {
+    var tab_toolbar = `<i class="fa fa-plus fa-lg" id="new_rtbl"></i>
+    <i class="fa fa-edit fa-lg" id="edit_rtbl"></i>
+    <i class="fa fa-trash fa-lg" id="del_rtbl"></i>`;
+    var toolbar_rendered = $(tab_toolbar);
+    $("#toolbar_for_tab").append(toolbar_rendered);
+    $("#new_rtbl").on("click", function(e) { $("#rtbl_tab").data("new_rtbl_fn")(e)});
+    $("#edit_rtbl").on("click", function(e) { $("#rtbl_tab").data("edit_rtbl_fn")(e)});
+    $("#del_rtbl").on("click", function(e) { $("#rtbl_tab").data("del_rtbl_fn")(e)});
+});
+
 </script>

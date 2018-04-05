@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="../static/lgbk.css">
   <link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap.min.css">
   <link rel=stylesheet type=text/css href="../js/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css">
+  <link rel=stylesheet type=text/css href="../js/font-awesome/css/font-awesome.min.css">
 
   <script type="text/javascript" src="../js/jquery/jquery.min.js"></script>
   <script type="text/javascript" src="../js/mustache/mustache.min.js"></script>
@@ -51,7 +52,10 @@
         <li><a data-toggle="tab" data-url="../static/html/ops/instruments.html" href="#instruments">Instruments</a></li>
       </ul>
     </div>
-    <h3 class="exp_title">Operator dashboard</h3>
+    <div class="tab_title_bar">
+        <span class="exp_title">Operator dashboard<span id="current_sample_lbl"></span></span>
+        <span id="toolbar_for_tab"></span>
+    </div>
   </div>
 </nav>
 
@@ -64,27 +68,30 @@
 <script type="text/javascript">
 
 $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-	var target = $(e.target).attr("href");
-  window.location.hash = e.target.hash;
-	if ($(target).is(':empty')) {
-		console.log("Activated tab " + target + " is empty. Triggering load");
-		var template_url = $(e.target).attr("data-url");
-	    $.ajax({
-	      type: "GET",
-	      url: template_url,
-	      error: function(data){
-	        alert("Error fetching template " + template_url + ".");
-	      },
-	      success: function(data){
-	  		console.log("Getting tab data and binding selectors");
-	        $(target).html(data);
-	        $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
-	      }
-	    });
-	} else {
-    console.log("Should be switching to the " + target + " tab now");
-  }
- });
+    var target = $(e.target).attr("href");
+    history.pushState(null, null, e.target.hash)
+    if ($(target).is(':empty')) {
+        console.log("Activated tab " + target + " is empty. Triggering load");
+        var template_url = $(e.target).attr("data-url");
+        $.ajax({
+            type: "GET",
+            url: template_url,
+            error: function(data){
+                alert("Error fetching template " + template_url + ".");
+            },
+            success: function(data){
+                console.log("Getting tab data and binding selectors");
+                $(target).html(data);
+                $("#toolbar_for_tab").empty();
+                $(target).find(".tabcontainer").trigger("lg.loaded.bs.tab", e);
+                $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
+            }
+        });
+    } else {
+        $("#toolbar_for_tab").empty();
+        $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
+    }
+});
 
 
 // Code for honoring the hash; for example URL#eLog gets you to the eLog

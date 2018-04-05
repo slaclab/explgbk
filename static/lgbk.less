@@ -1,39 +1,40 @@
 
 .row.content {height:auto;}
 
-@color-primary-0: #333399;	/* Main Primary color */
-@color-primary-1: #7272C0;
-@color-primary-2: #4C4CA7;
-@color-primary-3: #1F1F7E;
-@color-primary-4: #0F0F63;
+@color-primary-0: #6685F4;	/* Main Primary color */
+@color-primary-1: #BDCBFC;
+@color-primary-2: #8CA4F8;
+@color-primary-3: #4367ED;
+@color-primary-4: #1E48DF;
 
-@color-secondary-1-0: #DBCB2F;	/* Main Secondary color (1) */
-@color-secondary-1-1: #FFF484;
-@color-secondary-1-2: #EFE156;
-@color-secondary-1-3: #B4A515;
-@color-secondary-1-4: #8D8101;
+@color-secondary-1-0: #9064F4;	/* Main Secondary color (1) */
+@color-secondary-1-1: #D0BCFC;
+@color-secondary-1-2: #AC8BF8;
+@color-secondary-1-3: #7540ED;
+@color-secondary-1-4: #571BE0;
 
-@color-secondary-2-0: #DB912F;	/* Main Secondary color (2) */
-@color-secondary-2-1: #FFCA84;
-@color-secondary-2-2: #EFAD56;
-@color-secondary-2-3: #B47015;
-@color-secondary-2-4: #8D5101;
+@color-secondary-2-0: #FFE757;	/* Main Secondary color (2) */
+@color-secondary-2-1: #FFF5B7;
+@color-secondary-2-2: #FFED81;
+@color-secondary-2-3: #FFE130;
+@color-secondary-2-4: #FFDB05;
 
-@color-complement-0: #DBB02F;	/* Main Complement color */
-@color-complement-1: #FFE084;
-@color-complement-2: #EFC956;
-@color-complement-3: #B48C15;
-@color-complement-4: #8D6A01;
+@color-complement-0: #FFCC57;	/* Main Complement color */
+@color-complement-1: #FFE9B7;
+@color-complement-2: #FFD981;
+@color-complement-3: #FFC030;
+@color-complement-4: #FFB305;
 
-@navbarcolor: @color-primary-1;
-@navbarhover: @color-primary-0;
+@navbarcolor: @color-primary-0;
+@navbarhover: @color-primary-4;
+@activewidgetcolor: @color-complement-0;
 @navbartext: white;
 @tablezebra: #efefef;
-@tblhdrbg: @color-primary-1;
+@tblhdrbg: @color-primary-0;
 
 
 .highlight_mixin {
-  color: @navbartext;
+    color: @navbartext;
 	background: @navbarcolor;
 	font-weight: bold;
 }
@@ -53,6 +54,13 @@
   padding-right: 0.25em;
 }
 
+body {
+  .font_family_choices_mixin;
+}
+
+label {
+	color: @navbarcolor;
+}
 
 #myNavRow {
   background-color: @navbarcolor;
@@ -82,44 +90,76 @@
   padding-bottom: 0.5em;
 }
 
-.exp_title {
-	margin: 0px;
-	padding-top: 0.25em;
-	padding-bottom: 0.25em;
+.tab_title_bar {
+    margin: 0px;
+    padding-top: 0.1em;
+	padding-bottom: 0.1em;
 	background-color: @navbarcolor;
+    text-align: center;
+}
+
+.exp_title {
+    font-size: 1.25em;
 	text-align: center;
+    display: inline-block;
+    font-weight: bold;
 	color: @navbartext;
 }
 
-.sectiontitle {
-	font-size: 17px;
-	border-bottom: 2px solid #0071bc;
-	color: @navbarhover;
-	padding: 2px;
-	font-weight: bold;
-  .font_family_choices_mixin;
+#toolbar_for_tab {
+    float: right;
+    margin-right: 15px;
 }
 
-body {
-  .font_family_choices_mixin;
+#toolbar_for_tab .fa {
+    color: @navbartext;
+    background: @navbarcolor;
 }
 
-.section h1 {
+.ttip .ttiptext {
+    font-style: normal;
+    background: @navbartext;
+    visibility: hidden;
+    width: 30em;
+    text-align: center;
+    padding: 5px 0;
+    border: @navbarcolor solid thin;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+    color: black;
+    top: 100%;
+    left: 50%;
+    margin-left: -15em;
+}
+
+.ttip:hover .ttiptext {
+    visibility: visible;
+}
+
+
+.exp_info h1 {
 	font-size: 1.1em;
 	font-weight: bold;
-	color: @navbartext;
+	color: @navbarcolor;
 	border-bottom: thin solid @navbarcolor;
 	text-align: left;
 	padding-left: 1.0em;
 }
 
-.section .group .header {
+.exp_info .group .header {
 	font-weight: bold;
 	float: left;
 }
 
-.section textarea {
-	margin-left: 1.0em;
+.exp_info textarea {
+    margin-left: 1%;
+    width: 98%;
+}
+
+.exp_info input {
+    margin-left: 1%;
+    width: 98%;
 }
 
 .dl-horizontal dt {
@@ -143,12 +183,29 @@ body {
 	padding-right: 1.0em;
 }
 
-#searchtext {
-	padding: 0.25em;
+
+.search_text_mixin {
+    padding: 0.25em;
 	border: thin solid @navbarcolor;
 	margin: 0.25em;
 	color: @navbarcolor;
 	font-size: 17px;
+}
+
+#searchtext {
+    .search_text_mixin;
+}
+
+.modal-title {
+    .highlight_mixin;
+    padding-left: 1.0em;
+    padding-right: 1.0em;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+}
+
+.modal-body table tr th {
+    .highlight_mixin;
 }
 
 #register_edit_exp_tab .modal-content {
@@ -159,50 +216,39 @@ body {
   padding: 0.5em;
 }
 
-#register_edit_exp_tab .btnbar {
-  margin-left: 2.0em;
-  text-align: left;
-}
-
 #register_edit_exp_tab .btn {
   .highlight_mixin;
 }
 
-#register_edit_exp_tab .btnbar input {
-  margin-left: 2.0em;
+#register_edit_exp_tab th {
+  .highlight_mixin;
 }
 
 #ops_instruments_tab .instrument_lbl {
   .bold_text_mixin;
 }
 
-#ops_instruments_tab .btnbar {
-  margin-left: 2.0em;
-  text-align: left;
-  padding-bottom: 0.5em;
-}
-
-#ops_instruments_tab .register_btn {
-  margin-bottom: 1.0em;
-}
-
-#ops_instruments_tab .btn {
-  .highlight_mixin;
-}
-
 .param_table_header_mixin {
-  .bold_text_mixin;
-  padding-left: 2.0em;
+    .highlight_mixin;
+    padding-left: 2.0em;
 }
 
 #ops_instruments_tab .modal .table tr th {
   .param_table_header_mixin;
 }
 
+#ops_instruments_tab th {
+  .highlight_mixin;
+}
+
+
+#ops_exp_searchtext {
+    .search_text_mixin;
+}
+
 #register_edit_exp_tab .modal .table tr th {
   .param_table_header_mixin;
 }
-
 
 #experiments_container thead th {
 	color: @navbarhover;
@@ -227,10 +273,6 @@ body {
 
 #experiments_container li a:hover {
   .year_pill_active;
-}
-
-label {
-	color: @navbarcolor;
 }
 
 #panel_title {
@@ -272,6 +314,37 @@ label {
 	background: @tablezebra;
 }
 
+.tab_toolbar_btn_mixin {
+    padding: 0.1em;
+    margin-bottom: 0.1em;
+    margin-top: 0;
+    border: none;
+}
+
+#elog_search_text {
+    padding: 0.1em;
+    margin: 0;
+    border: none;
+    border-radius: 4px;
+    width: 15em;
+    color: @navbarcolor;
+    font-weight: bold;
+}
+
+#current_sample_lbl .fa {
+    padding-right: 0.25em;
+}
+#current_sample_lbl {
+    font-weight: lighter;
+    font-size: small;
+    font-style: italic;
+    margin-left: 1.0em;
+}
+
+#current_sample_lbl.samples_different {
+    color: @activewidgetcolor;
+}
+
 #myTabContainer .expand_ctrl {
   font-size: 0.75em;
 }
@@ -300,7 +373,12 @@ label {
   .highlight_mixin;
 }
 
-#elog_content .glyphicon {
+#elog_content {
+    padding: 1px;
+    margin: 0px;
+    padding-top: 0px;
+}
+#elog_content .fa {
 	opacity: .5;
 }
 
@@ -308,11 +386,6 @@ label {
 	float:right;
 	font-size: 0.90em;
 	padding-right: 0.25em;
-}
-
-#elog_button_grp {
-	text-align: left;
-	padding-left: 5vw;
 }
 
 #fmgr_tab .run_file:nth-child(odd) {
@@ -328,7 +401,7 @@ label {
 	background: @tablezebra;
 }
 
-#fmgr_tab .glyphicon {
+#fmgr_tab .fa {
 	opacity: .5;
 }
 
@@ -371,6 +444,10 @@ label {
   height: 100px;
 }
 
+#rtbl_tab .btn {
+  .highlight_mixin;
+}
+
 #shifts_tab .btn {
   .highlight_mixin;
 }
@@ -392,9 +469,15 @@ label {
 
 #shifts_tab .shiftstbl tr.active_shift td {
   .bold_text_mixin;
-  background: @color-complement-1;
+  background: @activewidgetcolor;
   margin: 0.1em;
   padding: 0.1em;
+}
+
+#sample_content {
+    padding: 1px;
+    margin: 0px;
+    padding-top: 0px;
 }
 
 #samples_tab .btn {
@@ -418,7 +501,13 @@ label {
 
 #samples_tab .samplestbl tr.active_sample td {
   .bold_text_mixin;
-  background: @color-complement-1;
+  background: @activewidgetcolor;
   margin: 0.1em;
   padding: 0.1em;
+}
+
+.note-callout {
+    border: thin @navbarcolor solid;
+    padding: 0.5em;
+    margin-top: 0.25em;
 }

@@ -339,16 +339,21 @@ def get_all_run_tables(experiment_name):
             coldef['mime_type'] = mimes.get(coldef['source'], "text")
     return allRunTables
 
-def get_runtable_data(experiment_name, tableName):
+def get_runtable_data(experiment_name, tableName, sampleName):
     '''
     Get the data from the run tables for the given table.
     In addition to the basic run data, we add the sources for the given run table.
     This is mostly a matter of constructing the appropriate mongo filters.
+    If sampleName is specified, we restrict the returned data to runs associated with the sample. Otherwise, we return all runs.
     '''
     tableDef = next(x for x in get_all_run_tables(experiment_name) if x['name'] == tableName)
     sources = { "num": 1, "begin_time": 1, "end_time": 1 }
     sources.update({ x['source'] : 1 for x in tableDef['coldefs']})
-    return [x for x in logbookclient[experiment_name]['runs'].find({}, sources).sort([("num", -1)])] # Use sources as a filter to find
+    query = {}
+    if sampleName:
+        logger.debug("Getting run table data for sample %s", sampleName)
+        query = { "sample": sampleName }
+    return [x for x in logbookclient[experiment_name]['runs'].find(query, sources).sort([("num", -1)])] # Use sources as a filter to find
 
 
 def get_run_param_descriptions(experiment_name):
@@ -531,6 +536,15 @@ def get_samples(experiment_name):
             return x
         samples = list(map(set_current, samples))
     return samples
+
+def get_current_sample_name(experiment_name):
+    """
+    Get the current sample name for the specified experiment.
+    This can return None.
+    """
+    expdb = logbookclient[experiment_name]
+    current_sample = expdb.current.find_one({"_id": "sample"})
+    return current_sample['name'] if current_sample else None
 
 def get_sample_for_experiment_by_name(experiment_name, sample_name):
     """

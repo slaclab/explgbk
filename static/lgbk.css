@@ -7,11 +7,11 @@
 /* Main Complement color */
 .highlight_mixin {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 .bold_text_mixin {
-  color: #7272C0;
+  color: #6685F4;
   font-weight: bold;
 }
 .font_family_choices_mixin {
@@ -22,17 +22,23 @@
   padding-left: 0.25em;
   padding-right: 0.25em;
 }
+body {
+  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+}
+label {
+  color: #6685F4;
+}
 #myNavRow {
-  background-color: #7272C0;
+  background-color: #6685F4;
   margin-bottom: 0;
   border-radius: 0;
 }
 #myNavRow li.active a {
-  background-color: #333399;
+  background-color: #1E48DF;
   color: white;
 }
 #myNavRow li:hover a {
-  background-color: #333399;
+  background-color: #1E48DF;
   color: white;
 }
 #myNavRow li a {
@@ -45,42 +51,69 @@
   padding-right: 2.0em;
   padding-bottom: 0.5em;
 }
-.exp_title {
+.tab_title_bar {
   margin: 0px;
-  padding-top: 0.25em;
-  padding-bottom: 0.25em;
-  background-color: #7272C0;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  background-color: #6685F4;
   text-align: center;
+}
+.exp_title {
+  font-size: 1.25em;
+  text-align: center;
+  display: inline-block;
+  font-weight: bold;
   color: white;
 }
-.sectiontitle {
-  font-size: 17px;
-  border-bottom: 2px solid #0071bc;
-  color: #333399;
-  padding: 2px;
-  font-weight: bold;
-  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+#toolbar_for_tab {
+  float: right;
+  margin-right: 15px;
 }
-body {
-  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+#toolbar_for_tab .fa {
+  color: white;
+  background: #6685F4;
 }
-.section h1 {
+.ttip .ttiptext {
+  font-style: normal;
+  background: white;
+  visibility: hidden;
+  width: 30em;
+  text-align: center;
+  padding: 5px 0;
+  border: #6685F4 solid thin;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  color: black;
+  top: 100%;
+  left: 50%;
+  margin-left: -15em;
+}
+.ttip:hover .ttiptext {
+  visibility: visible;
+}
+.exp_info h1 {
   font-size: 1.1em;
   font-weight: bold;
-  color: white;
-  border-bottom: thin solid #7272C0;
+  color: #6685F4;
+  border-bottom: thin solid #6685F4;
   text-align: left;
   padding-left: 1.0em;
 }
-.section .group .header {
+.exp_info .group .header {
   font-weight: bold;
   float: left;
 }
-.section textarea {
-  margin-left: 1.0em;
+.exp_info textarea {
+  margin-left: 1%;
+  width: 98%;
+}
+.exp_info input {
+  margin-left: 1%;
+  width: 98%;
 }
 .dl-horizontal dt {
-  color: #7272C0;
+  color: #6685F4;
 }
 .dl-horizontal dd {
   text-align: left;
@@ -97,12 +130,33 @@ body {
   color: white;
   padding-right: 1.0em;
 }
+.search_text_mixin {
+  padding: 0.25em;
+  border: thin solid #6685F4;
+  margin: 0.25em;
+  color: #6685F4;
+  font-size: 17px;
+}
 #searchtext {
   padding: 0.25em;
-  border: thin solid #7272C0;
+  border: thin solid #6685F4;
   margin: 0.25em;
-  color: #7272C0;
+  color: #6685F4;
   font-size: 17px;
+}
+.modal-title {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+  padding-left: 1.0em;
+  padding-right: 1.0em;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+}
+.modal-body table tr th {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
 }
 #register_edit_exp_tab .modal-content {
   padding: 0.5em;
@@ -110,104 +164,101 @@ body {
 #register_edit_exp_tab .panel-body {
   padding: 0.5em;
 }
-#register_edit_exp_tab .btnbar {
-  margin-left: 2.0em;
-  text-align: left;
-}
 #register_edit_exp_tab .btn {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
-#register_edit_exp_tab .btnbar input {
-  margin-left: 2.0em;
+#register_edit_exp_tab th {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
 }
 #ops_instruments_tab .instrument_lbl {
-  color: #7272C0;
-  font-weight: bold;
-}
-#ops_instruments_tab .btnbar {
-  margin-left: 2.0em;
-  text-align: left;
-  padding-bottom: 0.5em;
-}
-#ops_instruments_tab .register_btn {
-  margin-bottom: 1.0em;
-}
-#ops_instruments_tab .btn {
-  color: white;
-  background: #7272C0;
+  color: #6685F4;
   font-weight: bold;
 }
 .param_table_header_mixin {
-  color: #7272C0;
+  color: white;
+  background: #6685F4;
   font-weight: bold;
   padding-left: 2.0em;
 }
 #ops_instruments_tab .modal .table tr th {
-  color: #7272C0;
+  color: white;
+  background: #6685F4;
   font-weight: bold;
   padding-left: 2.0em;
 }
+#ops_instruments_tab th {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+}
+#ops_exp_searchtext {
+  padding: 0.25em;
+  border: thin solid #6685F4;
+  margin: 0.25em;
+  color: #6685F4;
+  font-size: 17px;
+}
 #register_edit_exp_tab .modal .table tr th {
-  color: #7272C0;
+  color: white;
+  background: #6685F4;
   font-weight: bold;
   padding-left: 2.0em;
 }
 #experiments_container thead th {
-  color: #333399;
+  color: #1E48DF;
 }
 #experiments_container tbody td a {
-  color: #333399;
+  color: #1E48DF;
 }
 #experiments_container li a.year_pill {
-  color: #7272C0;
+  color: #6685F4;
   font-weight: bold;
 }
 .year_pill_active {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 #experiments_container li.active a {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 #experiments_container li a:hover {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
-label {
-  color: #7272C0;
-}
 #panel_title {
-  color: #7272C0;
-  background: #7272C0;
+  color: #6685F4;
+  background: #6685F4;
   font-weight: bold;
 }
 #panel_btn {
-  color: #7272C0;
-  background: linear-gradient(#7272C0, #333399);
+  color: #6685F4;
+  background: linear-gradient(#6685F4, #1E48DF);
   font-weight: bold;
 }
 #switch_experiment_div th {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 #switch_experiment_div .btn {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 #choose_experiment_modal table td a {
-  color: #7272C0;
+  color: #6685F4;
 }
 #myTabContainer .exp_tab_header {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
   border: thin black solid;
   padding: 0.2em;
@@ -218,6 +269,33 @@ label {
 }
 #elog_tab div.etop:nth-child(odd) {
   background: #efefef;
+}
+.tab_toolbar_btn_mixin {
+  padding: 0.1em;
+  margin-bottom: 0.1em;
+  margin-top: 0;
+  border: none;
+}
+#elog_search_text {
+  padding: 0.1em;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  width: 15em;
+  color: #6685F4;
+  font-weight: bold;
+}
+#current_sample_lbl .fa {
+  padding-right: 0.25em;
+}
+#current_sample_lbl {
+  font-weight: lighter;
+  font-size: small;
+  font-style: italic;
+  margin-left: 1.0em;
+}
+#current_sample_lbl.samples_different {
+  color: #FFCC57;
 }
 #myTabContainer .expand_ctrl {
   font-size: 0.75em;
@@ -232,30 +310,31 @@ label {
   text-overflow: ellipsis;
 }
 #myTabContainer ul.nav-pills li a {
-  color: #7272C0;
+  color: #6685F4;
   font-weight: bold;
 }
 #myTabContainer ul.nav-pills li.active a {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 #myTabContainer ul.nav-pills li a:hover {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
-#elog_content .glyphicon {
+#elog_content {
+  padding: 1px;
+  margin: 0px;
+  padding-top: 0px;
+}
+#elog_content .fa {
   opacity: .5;
 }
 #elog_content .entry_actions {
   float: right;
   font-size: 0.90em;
   padding-right: 0.25em;
-}
-#elog_button_grp {
-  text-align: left;
-  padding-left: 5vw;
 }
 #fmgr_tab .run_file:nth-child(odd) {
   background: #efefef;
@@ -267,7 +346,7 @@ label {
 #fmgr_tab .fdat:nth-child(odd) {
   background: #efefef;
 }
-#fmgr_tab .glyphicon {
+#fmgr_tab .fa {
   opacity: .5;
 }
 #fmgr_tab .fmgr_exp_file_name {
@@ -280,13 +359,13 @@ label {
 #rtbl_content table thead tr th {
   overflow: hidden;
   white-space: nowrap;
-  background: #7272C0;
+  background: #6685F4;
   color: white;
   opacity: .75;
   font-weight: normal;
 }
 #rtbl_content .tblhighlight {
-  background-color: #333399;
+  background-color: #1E48DF;
 }
 #rtbl_content .rtbldef_action {
   padding-left: 0.25em;
@@ -302,14 +381,19 @@ label {
   padding: 5px;
   height: 100px;
 }
+#rtbl_tab .btn {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+}
 #shifts_tab .btn {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 #shifts_tab .table th {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 #shifts_tab .btnbar {
@@ -322,20 +406,25 @@ label {
   padding-right: 0.25em;
 }
 #shifts_tab .shiftstbl tr.active_shift td {
-  color: #7272C0;
+  color: #6685F4;
   font-weight: bold;
-  background: #FFE084;
+  background: #FFCC57;
   margin: 0.1em;
   padding: 0.1em;
 }
+#sample_content {
+  padding: 1px;
+  margin: 0px;
+  padding-top: 0px;
+}
 #samples_tab .btn {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 #samples_tab .table th {
   color: white;
-  background: #7272C0;
+  background: #6685F4;
   font-weight: bold;
 }
 #samples_tab .btnbar {
@@ -348,9 +437,14 @@ label {
   padding-right: 0.25em;
 }
 #samples_tab .samplestbl tr.active_sample td {
-  color: #7272C0;
+  color: #6685F4;
   font-weight: bold;
-  background: #FFE084;
+  background: #FFCC57;
   margin: 0.1em;
   padding: 0.1em;
+}
+.note-callout {
+  border: thin #6685F4 solid;
+  padding: 0.5em;
+  margin-top: 0.25em;
 }

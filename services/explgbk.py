@@ -24,7 +24,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
     create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
-    make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table
+    make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -444,7 +444,8 @@ def svc_get_runtables(experiment_name):
 @context.security.authorization_required("read")
 def svc_get_runtable_data(experiment_name):
     tableName = request.args.get("tableName")
-    return JSONEncoder().encode({"success": True, "value": get_runtable_data(experiment_name, tableName)})
+    sampleName = request.args.get("sampleName", None)
+    return JSONEncoder().encode({"success": True, "value": get_runtable_data(experiment_name, tableName, sampleName=sampleName)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_sources", methods=["GET"])
 @context.security.authentication_required
@@ -638,6 +639,11 @@ def svc_get_latest_shift(experiment_name):
 def svc_get_samples(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_samples(experiment_name)})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/current_sample_name", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_get_current_sample(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_current_sample_name(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_update_sample", methods=["POST"])
 @context.security.authentication_required
@@ -686,7 +692,7 @@ def svc_make_sample_current(experiment_name):
     (status, errormsg) = make_sample_current(experiment_name, sample_name)
     if status:
         sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
-        context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Update", "value": sample_doc })
+        context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Make_Current", "value": sample_doc })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})

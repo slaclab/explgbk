@@ -1,45 +1,39 @@
 <div class="container-fluid text-center tabcontainer" id="elog_tab">
- <div class="row" id="elog_button_grp">
-      <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-plus" id="elog_new_entry"></span></button>
-      <input type="text" placeholder="Search" id="elog_search_text">
-      <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-search" id="elog_search_btn"></span></button>
- </div>
-
 <div id="elog_new_entry_modal" class="modal fade" role="dialog">
- <div class="modal-dialog">
-  <div class="modal-content">
-   <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal">&times;</button>
-    <h4 class="modal-title">Post new eLog entry</h4>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <div class="modal-header">
+                <h4 class="modal-title">Post new eLog entry</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" role="form" id="elog_new_entry_form">
+                    <div class="form-group">
+                        <label  class="col-sm-2 control-label" for="elog_new_entry_run_num">Run</label>
+                        <div class="col-sm-6">
+                            <input type="text" class="form-control" name="run_num" id="elog_new_entry_run_num"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text</label>
+                        <div class="col-sm-10">
+                            <textarea class="form-control" rows="5" name="log_text" id="elog_new_entry_log_text"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label  class="col-sm-2 control-label" for="elog_new_entry_file_upload">File</label>
+                        <div class="col-sm-10">
+                            <input type="file" class="form-control" name="files" id="elog_new_entry_file_upload" multiple/>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" id="elog_new_entry_modal_post">Post</button>
+            </div>
+        </div>
     </div>
-    <div class="modal-body">
-     <form class="form-horizontal" role="form" id="elog_new_entry_form">
-      <div class="form-group">
-       <label  class="col-sm-2 control-label" for="elog_new_entry_run_num">Run</label>
-       <div class="col-sm-6">
-        <input type="text" class="form-control" name="run_num" id="elog_new_entry_run_num"/>
-       </div>
-      </div>
-      <div class="form-group">
-       <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text</label>
-       <div class="col-sm-10">
-        <textarea class="form-control" rows="5" name="log_text" id="elog_new_entry_log_text"></textarea>
-       </div>
-      </div>
-      <div class="form-group">
-       <label  class="col-sm-2 control-label" for="elog_new_entry_file_upload">File</label>
-       <div class="col-sm-10">
-        <input type="file" class="form-control" name="files" id="elog_new_entry_file_upload" multiple/>
-       </div>
-      </div>
-     </form>
-    </div>
-   <div class="modal-footer">
-     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-     <button type="button" class="btn btn-default" id="elog_new_entry_modal_post">Post</button>
-    </div>
-  </div>
- </div>
 </div>
 
 <div class="container-fluid text-center" id="elog_content">
@@ -51,7 +45,7 @@
 
 
 <script type="text/javascript">
-$("#elog_tab").on("lg.shown.bs.tab", function() {
+$("#elog_tab").on("lg.loaded.bs.tab", function() {
 
  var elog_header = `<div class="row exp_tab_header">
   <div class="col-md-3">Posted</div>
@@ -62,8 +56,8 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
  </div>`;
  var elog_main_template = `<div class="edat" data-entry-id="{{ _id }}"><div class="row">
   <div class="col-md-3">
-    <span class="elog-expand exp_icons_left"><span class="glyphicon glyphicon-plus expand_ctrl"></span></span>
-    {{#c_attach}}<span class="exp_icons_left"><span class="glyphicon glyphicon-paperclip"></span></span>{{/c_attach}}
+    <span class="elog-expand exp_icons_left"><i class="fa fa-plus expand_ctrl"></i></span>
+    {{#c_attach}}<span class="exp_icons_left"><i class="fa fa-paperclip expand_ctrl"></i></span>{{/c_attach}}
     {{#FormatDate}}{{ insert_time }}{{/FormatDate}}
   </div>
   <div class="col-md-1">{{ run_num }}</div>
@@ -74,7 +68,7 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
 
  var elog_child_template = `<div class="row col-md-12 elog-chid">
    <div class="panel panel-default">
-    <div class="panel-heading text-left"><span class="entry_actions"><span class="glyphicon glyphicon-send followup"></span></span><pre>{{content}}</pre></div>
+    <div class="panel-heading text-left"><span class="entry_actions"><i class="fa fa-send followup"></i></span><pre>{{content}}</pre></div>
     <div class="panel-body">
      <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="#" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}"></img></a></div>{{/attachments}}</div>
      <div class="row dialog_holder"></div>
@@ -135,7 +129,7 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
 	console.log("Expand/contract " + entry["_id"]);
 	if($(this).hasClass("elog-expanded")) {
 		$(this).parents(".edat:first").find(".elog-chid").remove();
-    	$(this).html('<span class="glyphicon glyphicon-plus expand_ctrl"></span>');
+    	$(this).html('<i class="fa fa-plus expand_ctrl"></i>');
 	} else {
 		var clicked_elem = $(this);
 	    clicked_elem.parents(".edat:first").append(renderMSTemplate(elog_child_template, entry));
@@ -146,7 +140,7 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
 		    clicked_elem.parents(".edat:first").find(".panel-body").append(rendered);
 		    rendered.find(".elog-expand").on("click", expandFunction);
 		});
-    	$(this).html('<span class="glyphicon glyphicon-minus expand_ctrl"></span>');
+    	$(this).html('<i class="fa fa-minus expand_ctrl"></i>');
 	}
 	$(this).toggleClass("elog-expanded");
  };
@@ -189,7 +183,6 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
   $.getJSON("ws/elog")
   .done(function(data){
     processElogResponse(data);
-    WebSocketConnection.connect();
     $(document).on('elog', function(event, elogData) {
     	console.log("Processing elog event for experiment " + experiment_name);
     	processNewEntry(elogData);
@@ -234,10 +227,12 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
 	   	}
     });
   });
-  $("#elog_new_entry").on("click", function(e) {
+
+  $("#elog_tab").data("new_entry_click", function(e) {
 	 e.preventDefault();
 	 $("#elog_new_entry_modal").modal();
-  });
+ });
+
   $("#elog_new_entry_modal_post").on("click", function (e) {
 	  var formData = new FormData($('#elog_new_entry_form')[0]);
 	  $.ajax({
@@ -258,13 +253,24 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
 		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception posting new elog entry " + jqXHR.responseText); })
 	  $("#elog_new_entry_modal").modal("hide");
   });
-  $("#elog_search_text").on("input", function(e) {
-    var search_text = $("#elog_search_text").val();
-    if (!_.isNil(search_text) && search_text.length > 2) {
-      $.getJSON({ url: "ws/search_elog", data: { search_text : search_text }}).done(function(data){ processElogResponse(data); });
-    } else {
-      $.getJSON("ws/elog").done(function(data){ processElogResponse(data); });
-    }
+
+  $("#elog_tab").data("search_text_input", function(e) {
+      var search_text = $("#elog_search_text").val();
+      if (!_.isNil(search_text) && search_text.length > 2) {
+          $.getJSON({ url: "ws/search_elog", data: { search_text : search_text }}).done(function(data){ processElogResponse(data); });
+      } else {
+          $.getJSON("ws/elog").done(function(data){ processElogResponse(data); });
+      }
   });
 });
+
+$("#elog_tab").on("lg.shown.bs.tab", function() {
+    var tab_toolbar = `<input type="text" placeholder="Search/Run/Run-Run" id="elog_search_text">
+    <i class="fa fa-plus fa-lg" id="elog_new_entry"></i>`;
+    var toolbar_rendered = $(tab_toolbar);
+    $("#toolbar_for_tab").append(toolbar_rendered);
+    $("#elog_new_entry").on("click", $("#elog_tab").data("new_entry_click"));
+    $("#elog_search_text").on("input", $("#elog_tab").data("search_text_input"));
+});
+
 </script>

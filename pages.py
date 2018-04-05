@@ -7,6 +7,8 @@ import context
 
 from flask import Blueprint, render_template, send_file, abort
 
+from dal.explgbk import get_current_sample_name
+
 pages_blueprint = Blueprint('pages_api', __name__)
 
 logger = logging.getLogger(__name__)
@@ -71,5 +73,6 @@ def exp_elog(experiment_name):
     return render_template("lgbk.html",
         experiment_name=experiment_name,
         logged_in_user=context.security.get_current_user_id(),
+        current_sample_name=get_current_sample_name(experiment_name),
         logbook_site=context.LOGBOOK_SITE
         )
