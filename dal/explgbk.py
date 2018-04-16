@@ -239,6 +239,32 @@ def search_elog_for_text(experiment_name, search_text):
 
     return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
 
+def get_elogs_for_run_num(experiment_name, run_num):
+    """
+    Get elog entries belonging to run number run_num
+    """
+    expdb = logbookclient[experiment_name]
+    matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "run_num": run_num})}
+    # Recursively gather all root and parent entries
+    while __get_root_and_parent_entries(experiment_name, matching_entries):
+        pass
+
+    return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+
+
+def get_elogs_for_run_num_range(experiment_name, start_run_num, end_run_num):
+    """
+    Get elog entries for the run number range - start_run_num to end_run_num (both inclusive)
+    """
+    expdb = logbookclient[experiment_name]
+    matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "run_num": {"$gte": start_run_num, "$lte": end_run_num}})}
+    # Recursively gather all root and parent entries
+    while __get_root_and_parent_entries(experiment_name, matching_entries):
+        pass
+
+    return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+
+
 def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None):
     """
     Create a new log entry.

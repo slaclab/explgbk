@@ -68,7 +68,7 @@ var setCurrentUISample = function() {
                  rendered.find("#choose_sample tr").on("click", function(){
                      var selected_sample = $(this).attr("data-sample");
                      if(selected_sample == "All Samples") {
-                         sample_showing_in_UI = null;
+                         sample_showing_in_UI = "All Samples";
                      } else if (selected_sample == "Current Sample") {
                          sample_showing_in_UI = current_sample_at_DAQ;
                      } else{

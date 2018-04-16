@@ -24,7 +24,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
     create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
-    make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name
+    make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
+    get_elogs_for_run_num, get_elogs_for_run_num_range
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -382,7 +383,7 @@ def svc_post_new_elog_entry(experiment_name):
 
     run_num = request.form.get("run_num", None);
     if(run_num):
-        optional_args["run_num"] = run_num
+        optional_args["run_num"] = int(run_num)
 
     shift = request.form.get("shift", None);
     if(shift):
@@ -408,8 +409,16 @@ def svc_post_new_elog_entry(experiment_name):
 @context.security.authentication_required
 @context.security.authorization_required("read")
 def svc_search_elog(experiment_name):
-    search_text = request.args.get("search_text", "")
-    return JSONEncoder().encode({"success": True, "value": search_elog_for_text(experiment_name, search_text)})
+    search_text   = request.args.get("search_text", "")
+    run_num_str   = request.args.get("run_num", None)
+    start_run_num_str = request.args.get("start_run_num", None)
+    end_run_num_str   = request.args.get("end_run_num", None)
+    if run_num_str:
+        return JSONEncoder().encode({"success": True, "value": get_elogs_for_run_num(experiment_name, int(run_num_str))})
+    elif start_run_num_str and end_run_num_str:
+        return JSONEncoder().encode({"success": True, "value": get_elogs_for_run_num_range(experiment_name, int(start_run_num_str), int(end_run_num_str))})
+    else:
+        return JSONEncoder().encode({"success": True, "value": search_elog_for_text(experiment_name, search_text)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files", methods=["GET"])
 @context.security.authentication_required

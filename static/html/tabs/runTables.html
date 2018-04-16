@@ -145,7 +145,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       sessionStorage['runtable_active_tab'] = clkRTblName;
       var tblDef = $("#rtbl_tab").data("tblData")[clkRTblName];
       var rtbl_data_params = {"tableName": clkRTblName};
-      if(sample_showing_in_UI != null) { rtbl_data_params["sampleName"] = sample_showing_in_UI; }
+      if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { rtbl_data_params["sampleName"] = sample_showing_in_UI; }
       $.getJSON("ws/run_table_data", rtbl_data_params)
       .done(function(runData){
         if(_.get(tblDef, "table_type") == "histogram") {
