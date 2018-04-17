@@ -87,3 +87,21 @@ var setCurrentUISample = function() {
          $("#current_sample_lbl").empty();
      }
 }
+
+/*
+ * Get the value of the first URL parameter with the given name.
+ * Note that there can be more than one parameter with the same name; if need be, extend this to return an array later.
+ */
+var getURLParameter = function(paramName) {
+	var queryString = window.location.search;
+	if(!_.isNil(queryString) && queryString.length > 2) {
+		var queries = queryString.substring(1).split("&");
+		for ( i = 0, l = queries.length; i < l; i++ ) {
+			var parts = queries[i].split('='), name = parts[0], val =  decodeURIComponent(parts[1]);
+            if(name == paramName) {
+                return val;
+            }
+		}
+	}
+    return null;
+}

@@ -15,6 +15,8 @@ import logging
 import requests
 import context
 
+import smtplib
+from email.message import EmailMessage
 
 from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context
 
@@ -25,7 +27,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
-    get_elogs_for_run_num, get_elogs_for_run_num_range
+    get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -342,17 +344,63 @@ def svc_get_elog_entries(experiment_name):
 def svc_get_elog_attachment(experiment_name):
     entry_id = request.args.get("entry_id", None)
     attachment_id = request.args.get("attachment_id", None)
+    prefer_preview = bool(request.args.get("prefer_preview", "False"))
     logger.info("Fetching attachment " + attachment_id + " for entry " + entry_id)
     entry = get_specific_elog_entry(experiment_name, entry_id)
     for attachment in entry.get("attachments", None):
         if str(attachment.get("_id", None)) == attachment_id:
-            remote_url = attachment.get("url", None)
+            if prefer_preview and "preview_url" in attachment:
+                remote_url = attachment.get("preview_url", None)
+            else:
+                logger.debug("Cannot find preview, returning main document.")
+                remote_url = attachment.get("url", None)
             if remote_url:
                 req = requests.get(remote_url, stream = True)
                 return Response(stream_with_context(req.iter_content(chunk_size=1024)), content_type = req.headers['content-type'])
 
     return Response("Cannot find attachment " + attachment_id , status=404)
 
+def send_elog_as_email(experiment_name, elog_doc, email_to):
+    """
+    Send the elog document as an emails to the specified list.
+    """
+    try:
+        full_email_addresses = [ x + "@slac.stanford.edu" if '@' not in x else x for x in email_to]
+        logger.info("Sending elog " + elog_doc["content"] + " for experiment " + experiment_name + " as an email to " + ",".join(full_email_addresses));
+        if(len(list(filter(lambda x: "@" in x , full_email_addresses)))) != len(full_email_addresses):
+            logger.error("Not all addresss in the email To list have a @ character. Not sending mail %s", full_email_addresses)
+            return False
+        def generateEMailMsgFromELogDoc(elog_doc):
+            msg = EmailMessage()
+            msg.set_content(elog_doc["content"])
+            msg.make_mixed()
+            for attachment in elog_doc.get("attachments", []):
+                if 'type' in attachment and '/' in attachment['type']:
+                    maintype, subtype = attachment['type'].split('/', 1)
+                else:
+                    maintype, subtype = "application", "data"
+                with requests.get(attachment["url"], stream=True) as imgget:
+                    msg.add_attachment(imgget.raw.read(), maintype=maintype, subtype=subtype, filename=attachment['name'])
+            return msg
+
+        msg = generateEMailMsgFromELogDoc(elog_doc)
+        msg['Subject'] = '' + "Elog message for " + experiment_name
+        msg['From'] = 'exp_logbook_robot@slac.stanford.edu'
+        msg['To'] = ", ".join(full_email_addresses)
+        parent_msg = msg
+        while elog_doc.get("parent", None):
+            elog_doc = get_specific_elog_entry(experiment_name, elog_doc["parent"])
+            child_message = generateEMailMsgFromELogDoc(elog_doc)
+            parent_msg.attach(child_message)
+            parent_msg = child_message
+
+        s = smtplib.SMTP("smtp.slac.stanford.edu")
+        s.sendmail(msg['From'], full_email_addresses, msg.as_string())
+        s.quit()
+    except Exception:
+        logger.exception("Exception sending elog emails for experiment " + experiment_name)
+
+    return True
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/new_elog_entry", methods=["POST"])
 @context.security.authentication_required
@@ -381,17 +429,35 @@ def svc_post_new_elog_entry(experiment_name):
         else:
             return logAndAbort("Cannot find parent entry for followup log message for experiment " + experiment_name + " for parent oid " + parent)
 
-    run_num = request.form.get("run_num", None);
-    if(run_num):
-        optional_args["run_num"] = int(run_num)
+    run_num_str = request.form.get("run_num", None);
+    if run_num_str:
+        try:
+            run_num = int(run_num_str)
+        except ValueError:
+            run_num = run_num_str # Cryo uses strings for run numbers.
+        run_doc = get_run_doc_for_run_num(experiment_name, run_num)
+        if not run_doc:
+            return JSONEncoder().encode({'success': False, 'errormsg': "Cannot find run with specified run number - " + str(run_num) + " for experiment " + experiment_name})
+        optional_args["run_num"] = run_num
 
     shift = request.form.get("shift", None);
-    if(shift):
+    if shift:
         shift_obj = get_specific_shift(experiment_name, shift)
         if shift_obj:
             optional_args["shift"] = shift_obj["_id"] # We should get a oid here
 
+    log_emails = request.form.get("log_emails", None)
+    if log_emails:
+        optional_args["email_to"] = log_emails.split()
+
+    log_tags_str = request.form.get("log_tags", None)
+    if log_tags_str:
+        tags = log_tags_str.split()
+        optional_args["tags"] = tags
+
     logger.debug("Optional args %s ", optional_args)
+
+
 
     files = []
     for upload in request.files.getlist("files"):
@@ -403,6 +469,14 @@ def svc_post_new_elog_entry(experiment_name):
     inserted_doc['experiment_name'] = experiment_name
     context.kafka_producer.send("elog", inserted_doc)
     logger.debug("Published the new elog entry for %s", experiment_name)
+
+    # Send an email out if a list of emails was specified.
+    email_to = inserted_doc.get("email_to", None)
+    if not email_to and "root" in inserted_doc:
+        email_to = get_specific_elog_entry(experiment_name, inserted_doc["root"]).get("email_to", None)
+    if email_to:
+        send_elog_as_email(experiment_name, inserted_doc, email_to)
+
     return JSONEncoder().encode({'success': True, 'value': inserted_doc})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/search_elog", methods=["GET"])
@@ -413,10 +487,13 @@ def svc_search_elog(experiment_name):
     run_num_str   = request.args.get("run_num", None)
     start_run_num_str = request.args.get("start_run_num", None)
     end_run_num_str   = request.args.get("end_run_num", None)
+    id_str = request.args.get("_id", None)
     if run_num_str:
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_run_num(experiment_name, int(run_num_str))})
     elif start_run_num_str and end_run_num_str:
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_run_num_range(experiment_name, int(start_run_num_str), int(end_run_num_str))})
+    elif id_str:
+        return JSONEncoder().encode({"success": True, "value": get_elogs_for_specified_id(experiment_name, id_str)})
     else:
         return JSONEncoder().encode({"success": True, "value": search_elog_for_text(experiment_name, search_text)})
 

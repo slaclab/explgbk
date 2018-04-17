@@ -1,6 +1,6 @@
 <div class="container-fluid text-center tabcontainer" id="elog_tab">
 <div id="elog_new_entry_modal" class="modal fade" role="dialog">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
             <div class="modal-header">
@@ -9,16 +9,26 @@
             <div class="modal-body">
                 <form class="form-horizontal" role="form" id="elog_new_entry_form">
                     <div class="form-group">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_run_num">Run</label>
+                        <label  class="col-sm-2 control-label" for="elog_new_entry_run_num" title="Specify an optional run number">Run</label>
                         <div class="col-sm-6">
                             <input type="text" class="form-control" name="run_num" id="elog_new_entry_run_num"/>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text</label>
+                        <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text*</label>
                         <div class="col-sm-10">
                             <textarea class="form-control" rows="5" name="log_text" id="elog_new_entry_log_text"></textarea>
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="elog_new_entry_email_dest" title="Email this log entry to folks specified in this list:">Email:</label>
+                        <div class="col-sm-4">
+                            <input class="form-control" rows="5" name="log_emails" id="elog_new_entry_email_dest" placeholder="email1 email2@institution.edu"></input>
+                        </div>
+                        <!--label class="col-sm-2 control-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
+                        <div class="col-sm-4">
+                            <input class="form-control" rows="5" name="log_tags" id="elog_new_entry_tags" placeholder="Tag1 Tag2 Tag3"></input>
+                        </div-->
                     </div>
                     <div class="form-group">
                         <label  class="col-sm-2 control-label" for="elog_new_entry_file_upload">File</label>
@@ -56,7 +66,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  </div>`;
  var elog_main_template = `<div class="edat" data-entry-id="{{ _id }}"><div class="row">
   <div class="col-md-3">
-    <span class="elog-expand exp_icons_left"><i class="fa fa-plus expand_ctrl"></i></span>
+    <span class="elog-expand elog-compressed exp_icons_left"><i class="fa fa-plus expand_ctrl"></i></span>
     {{#c_attach}}<span class="exp_icons_left"><i class="fa fa-paperclip expand_ctrl"></i></span>{{/c_attach}}
     {{#FormatDate}}{{ insert_time }}{{/FormatDate}}
   </div>
@@ -70,7 +80,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
    <div class="panel panel-default">
     <div class="panel-heading text-left"><span class="entry_actions"><i class="fa fa-send followup"></i></span><pre>{{content}}</pre></div>
     <div class="panel-body">
-     <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="#" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}"></img></a></div>{{/attachments}}</div>
+     <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="#" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>
      <div class="row dialog_holder"></div>
     </div>
    </div>
@@ -142,7 +152,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 		});
     	$(this).html('<i class="fa fa-minus expand_ctrl"></i>');
 	}
-	$(this).toggleClass("elog-expanded");
+	$(this).toggleClass("elog-expanded elog-compressed");
  };
 
   var id2entry = {};
@@ -180,56 +190,76 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
     $(".elog-expand").on("click", expandFunction);
   };
 
-  $.getJSON("ws/elog")
-  .done(function(data){
-    processElogResponse(data);
-    $(document).on('elog', function(event, elogData) {
-    	console.log("Processing elog event for experiment " + experiment_name);
-    	processNewEntry(elogData);
-    	var entryinserted = false;
-		var newentrydt = moment(elogData['insert_time']);
-	    var rendered = renderMSTemplate(elog_main_template, elogData);
-	    rendered.data("entry", elogData).addClass("etop");
-	    rendered.find(".elog-expand").on("click", expandFunction);
-    	if (!_.has(elogData, 'root') && !_.has(elogData, 'parent')) {
-    		$.each($("#elog_content").find(".etop"), function(i, entry) {
-    			var existing_entry = $(this).data("entry");
-    			if (!_.has(existing_entry, 'root') && !_.has(existing_entry, 'parent')) {
-        			var existing_entry_dt = moment(existing_entry['insert_time']);
-        			if (newentrydt.isAfter(existing_entry_dt)) {
-        			    $(this).before(rendered);
-        			    entryinserted = true
-        			    return false;
-        			}
-    			} else { alert("We should never be here... Please report this to pcds-datamgt-l"); }
-    		});
-    		if(!entryinserted) {
-    			console.log("Inserting possible first entry");
-    			$("#elog_content").append(rendered);
-    			entryinserted = true;
-    		}
-	   	} else {
-	   		console.log("Child row of " + elogData["parent"]);
-			$.each($("div[data-entry-id='"+elogData["parent"]+"']").find(".edat"), function() {
-				var existing_entry = $(this).data("entry");
-				var existing_entry_dt = moment(existing_entry['insert_time']);
-				if (newentrydt.isAfter(existing_entry_dt)) {
-					$(this).before(rendered);
-					entryinserted = true
-					return false;
-				}
-			});
-	   		if(!entryinserted) {
-	   			console.log("Inserting possible first child entry");
-	   			$("div[data-entry-id='"+elogData["parent"]+"']").find(".panel-body").append(rendered);
-	   			entryinserted = true;
-	   		}
-	   	}
-    });
+  var skip_websocket_elog_messages = false;
+  var load_elog_function = function() {
+      var user_specified_log_entry_id = getURLParameter("_id");
+      if(!_.isNil(user_specified_log_entry_id)) {
+          console.log("Loading elog for specific entry " + user_specified_log_entry_id);
+          $.getJSON({ url: "ws/search_elog", data: { "_id": user_specified_log_entry_id }}).done(function(data){
+              processElogResponse(data);
+              _.times(100, function(){ $(".elog-compressed").trigger("click"); });
+              skip_websocket_elog_messages = true;
+          });
+      } else {
+          $.getJSON("ws/elog")
+          .done(function(data){
+              skip_websocket_elog_messages = false;
+              processElogResponse(data);
+          });
+      }
+  };
+  $("#elog_tab").data("refresh", load_elog_function);
+
+  load_elog_function();
+
+  $(document).on('elog', function(event, elogData) {
+      if(skip_websocket_elog_messages) { console.log("Skipping elog message from server."); return; }
+      console.log("Processing elog event for experiment " + experiment_name);
+      processNewEntry(elogData);
+      var entryinserted = false;
+      var newentrydt = moment(elogData['insert_time']);
+      var rendered = renderMSTemplate(elog_main_template, elogData);
+      rendered.data("entry", elogData).addClass("etop");
+      rendered.find(".elog-expand").on("click", expandFunction);
+      if (!_.has(elogData, 'root') && !_.has(elogData, 'parent')) {
+          $.each($("#elog_content").find(".etop"), function(i, entry) {
+              var existing_entry = $(this).data("entry");
+              if (!_.has(existing_entry, 'root') && !_.has(existing_entry, 'parent')) {
+                  var existing_entry_dt = moment(existing_entry['insert_time']);
+                  if (newentrydt.isAfter(existing_entry_dt)) {
+                      $(this).before(rendered);
+                      entryinserted = true
+                      return false;
+                  }
+              } else { alert("We should never be here... Please report this to pcds-datamgt-l"); }
+          });
+          if(!entryinserted) {
+              console.log("Inserting possible first entry");
+              $("#elog_content").append(rendered);
+              entryinserted = true;
+          }
+      } else {
+          console.log("Child row of " + elogData["parent"]);
+          $.each($("div[data-entry-id='"+elogData["parent"]+"']").find(".edat"), function() {
+              var existing_entry = $(this).data("entry");
+              var existing_entry_dt = moment(existing_entry['insert_time']);
+              if (newentrydt.isAfter(existing_entry_dt)) {
+                  $(this).before(rendered);
+                  entryinserted = true
+                  return false;
+              }
+          });
+          if(!entryinserted) {
+              console.log("Inserting possible first child entry");
+              $("div[data-entry-id='"+elogData["parent"]+"']").find(".panel-body").append(rendered);
+              entryinserted = true;
+          }
+      }
   });
 
   $("#elog_tab").data("new_entry_click", function(e) {
 	 e.preventDefault();
+     $("#elog_new_entry_form")[0].reset();
 	 $("#elog_new_entry_modal").modal();
  });
 
@@ -250,7 +280,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 				alert("Server side exception posting new elog entry " + data.errormsg);
 			}
 		})
-		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception posting new elog entry " + jqXHR.responseText); })
+		.fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception posting new elog entry " + jqXHR.responseText); })
 	  $("#elog_new_entry_modal").modal("hide");
   });
 
@@ -258,28 +288,60 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       var search_text = $("#elog_search_text").val();
       if (!_.isNil(search_text)) {
           if(/^[0-9]+$/g.test(search_text)) {
-              $.getJSON({ url: "ws/search_elog", data: { run_num : search_text }}).done(function(data){ processElogResponse(data); });
+              $.getJSON({ url: "ws/search_elog", data: { run_num : search_text }}).done(function(data){ processElogResponse(data); skip_websocket_elog_messages = true; });
           } else if(/^([0-9]+)-([0-9]+)$/g.test(search_text)) {
               var start_run_num = /^([0-9]+)-([0-9]+)$/g.exec(search_text)[1];
               var end_run_num   = /^([0-9]+)-([0-9]+)$/g.exec(search_text)[2];
-              $.getJSON({ url: "ws/search_elog", data: { start_run_num : start_run_num, end_run_num: end_run_num }}).done(function(data){ processElogResponse(data); });
+              $.getJSON({ url: "ws/search_elog", data: { start_run_num : start_run_num, end_run_num: end_run_num }}).done(function(data){ processElogResponse(data); skip_websocket_elog_messages = true; });
           } else if(search_text.length > 2) {
-              $.getJSON({ url: "ws/search_elog", data: { search_text : search_text }}).done(function(data){ processElogResponse(data); });
+              $.getJSON({ url: "ws/search_elog", data: { search_text : search_text }}).done(function(data){ processElogResponse(data); skip_websocket_elog_messages = true; });
           } else {
-              $.getJSON("ws/elog").done(function(data){ processElogResponse(data); });
+              $.getJSON("ws/elog").done(function(data){ processElogResponse(data); skip_websocket_elog_messages = false; });
           }
       } else {
-          $.getJSON("ws/elog").done(function(data){ processElogResponse(data); });
+          $.getJSON("ws/elog").done(function(data){ processElogResponse(data); skip_websocket_elog_messages = false; });
       }
   });
+
+  $("#elog_tab").data("elog_attachments_only", function() {
+      console.log("Getting data for attachments only");
+      $.getJSON("ws/elog")
+      .done(function(data){
+          var attachments_only_template = `<div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="?_id={{entry_id}}#eLog" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
+          Mustache.parse(attachments_only_template);
+          var attachments_flat_list = [];
+          _.each(data.value, function(entry) {
+              if(_.has(entry, 'attachments')) {
+                  _.each(entry.attachments, function(attachment){
+                      attachment["entry_id"] = entry["_id"];
+                      attachments_flat_list.push(attachment);
+                  });
+              }
+          });
+          var rendered = Mustache.render(attachments_only_template, { attachments: attachments_flat_list.reverse()});
+          $("#elog_content").html(rendered);
+      });
+  });
+
 });
 
 $("#elog_tab").on("lg.shown.bs.tab", function() {
     var tab_toolbar = `<input type="text" placeholder="Search/Run/Run-Run" id="elog_search_text">
-    <i class="fa fa-plus fa-lg" id="elog_new_entry"></i>`;
+    <i class="fa fa-plus fa-lg" id="elog_new_entry"></i>
+    <i class="fa fa-paperclip fa-lg" id="elog_attachments_only"></i>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
     $("#elog_new_entry").on("click", $("#elog_tab").data("new_entry_click"));
+    $("#elog_attachments_only").on("click", function() {
+        if($("#elog_attachments_only").hasClass("pushedin")) {
+            $("#elog_tab").data("refresh")();
+            skip_websocket_elog_messages = false;
+        } else {
+            $("#elog_tab").data("elog_attachments_only")();
+            skip_websocket_elog_messages = true;
+        }
+        $("#elog_attachments_only").toggleClass("pushedin");
+    });
     $("#elog_search_text").on("input", $("#elog_tab").data("search_text_input"));
 });
 

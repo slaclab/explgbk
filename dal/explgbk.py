@@ -9,6 +9,8 @@ import logging
 import re
 
 import requests
+import tempfile
+import subprocess
 
 from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
@@ -264,8 +266,20 @@ def get_elogs_for_run_num_range(experiment_name, start_run_num, end_run_num):
 
     return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
 
+def get_elogs_for_specified_id(experiment_name, specified_id):
+    """
+    Get the elog entries related to the entry with the specified id.
+    """
+    specified_entry = get_specific_elog_entry(experiment_name, specified_id)
+    if specified_entry:
+        matching_entries = { specified_entry["_id"]: specified_entry }
+        while __get_root_and_parent_entries(experiment_name, matching_entries):
+            pass
+        return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+    else:
+        return []
 
-def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None):
+def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None):
     """
     Create a new log entry.
     """
@@ -274,12 +288,33 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
     for file in files:
         filename = file[0]
         filestorage = file[1] # http://werkzeug.pocoo.org/docs/0.14/datastructures/#werkzeug.datastructures.FileStorage
+
         isloc = requests.post(imagestoreurl + "dir/assign").json()
         imgurl = isloc['publicUrl'] + isloc['fid']
         logger.info("Posting attachment %s to URL %s", filename, imgurl)
         files = {'file': (filename, filestorage.stream, filestorage.mimetype, {'Content-Disposition' : 'inline; filename=%s' % filename})}
         requests.put(imgurl, files=files)
-        attachments.append({"_id": ObjectId(), "name" : filename, "type": filestorage.mimetype, "url" : imgurl })
+        attachment = {"_id": ObjectId(), "name" : filename, "type": filestorage.mimetype, "url" : imgurl }
+
+        # We get the data back from the image server; this is to make sure the content did make it there; also the stream is probably in an inconsistent state
+        # Not the most efficient but the safest perhaps.
+        with requests.get(imgurl, stream=True) as imgget, tempfile.NamedTemporaryFile("w+b") as fd:
+            tfname, tf_thmbname = fd.name, fd.name+".png"
+            for chunk in imgget.iter_content(chunk_size=128):
+                fd.write(chunk)
+            fd.flush()
+            cp = subprocess.run(["convert", "-thumbnail", "128", tfname, tf_thmbname], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=30)
+            logger.info(cp)
+            if cp.returncode == 0:
+                with open(tf_thmbname, 'rb') as thmb_s:
+                    thmb_isloc = requests.post(imagestoreurl + "dir/assign").json()
+                    thmb_imgurl = thmb_isloc['publicUrl'] + thmb_isloc['fid']
+                    logger.info("Posting attachment thumbnail %s to URL %s", tf_thmbname, thmb_imgurl)
+                    thmb_files = {'file': (filename, thmb_s, "image/png", {'Content-Disposition' : 'inline; filename=%s' % "preview_" + filename})}
+                    requests.put(thmb_imgurl, files=thmb_files)
+                    attachment["preview_url"] = thmb_imgurl
+
+        attachments.append(attachment)
 
     elog_doc = {
         "relevance_time": datetime.datetime.now(),
@@ -294,6 +329,10 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
         elog_doc["run_num"] = run_num
     if shift:
         elog_doc["shift"] = shift
+    if email_to:
+        elog_doc["email_to"] = email_to
+    if tags:
+        elog_doc["tags"] = tags
     if root:
         elog_doc["root"] = root
     if parent:
