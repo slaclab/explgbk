@@ -49,7 +49,7 @@ def __getKafkaProducer():
 
 kafka_producer = __getKafkaProducer()
 
-imagestoreurl = "http://localhost:9333/"
+imagestoreurl = os.environ.get("IMAGE_STORE_URL", "http://localhost:9333/")
 if not imagestoreurl.endswith("/"):
     imagestoreurl = imagestoreurl + "/"
 
