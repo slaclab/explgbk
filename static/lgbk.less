@@ -54,7 +54,7 @@
   padding-right: 0.25em;
 }
 
-body {
+#lgbk_body {
   .font_family_choices_mixin;
 }
 
@@ -507,4 +507,38 @@ label {
     border: thin @navbarcolor solid;
     padding: 0.5em;
     margin-top: 0.25em;
+}
+
+#collab_tab .collabtbl {
+    thead tr th {
+        text-align: center;
+        .highlight_mixin;
+    }
+    tbody tr td {
+        text-align: left;
+        padding-left: 1.0em
+    }
+    tbody tr td .fa {
+        padding-right: 1.0em;
+    }
+    tbody tr td .fa-trash {
+        opacity: 0.8;
+    }
+    tbody tr td .role_present {
+        color: red;
+    }
+    tbody tr td .role_absent {
+        color: green;
+    }
+    .croxxout {
+        vertical-align: sub;
+        font-size: small;
+        position: relative;
+        bottom: -0.25em;
+        right: 1.5em;
+    }
+}
+
+#collab_mdl_holder tbody .fa {
+    padding-right: 0.75em;
 }

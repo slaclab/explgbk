@@ -7,6 +7,7 @@ import json
 import datetime
 import logging
 import re
+from operator import itemgetter
 
 import requests
 import tempfile
@@ -15,7 +16,7 @@ import subprocess
 from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
-from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, security
+from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, security, usergroups
 from dal.exp_cache import get_experiments
 
 __author__ = 'mshankar@slac.stanford.edu'
@@ -659,3 +660,59 @@ def register_file_for_experiment(experiment_name, info):
     expdb = logbookclient[experiment_name]
     inserted_id = expdb['file_catalog'].insert_one(info).inserted_id
     return (True, expdb['file_catalog'].find_one({"_id": ObjectId(inserted_id) }))
+
+def get_collaborators(experiment_name):
+    """
+    Get the list of collaborators and their permissions for the experiment.
+    This is basically the roles collection for this experiment reorganized to serve the UI.
+    """
+    expdb = logbookclient[experiment_name]
+    roles = [x for x in expdb["roles"].find()]
+    all_players = set() # First, generate a set of all the players in the experiment.
+    list(map(lambda x : all_players.update(x.get('players', [])), roles))
+    players2roles = { x : [] for x in all_players }
+    for role in roles:
+        for player in role.get('players', []):
+            players2roles[player].append("{0}/{1}".format(role['app'], role['name']))
+    ret = []
+    for player in players2roles.keys():
+        is_group = False if player.startswith("uid:") else True
+        user_details = usergroups.get_userids_matching_pattern(player.replace("uid:", "")) if not is_group else None
+        ret.append({
+            "id": player.replace("uid:", ""),
+            "uid": player,
+            "is_group": is_group,
+            "full_name": user_details[0].get('gecos', "N/A") if user_details else "N/A",
+            "roles": players2roles[player]
+        })
+    return sorted(ret, key=itemgetter('id'))
+
+def get_role_object(experiment_name, role_fq_name):
+    expdb = logbookclient[experiment_name]
+    application_name, role_name = role_fq_name.split("/")
+    roleobj = expdb["roles"].find_one({"app": application_name, "name": role_name})
+    return roleobj
+
+def add_collaborator_to_role(experiment_name, uid, role_fq_name):
+    expdb = logbookclient[experiment_name]
+    application_name, role_name = role_fq_name.split("/")
+    roleobj = expdb["roles"].find_one({"app": application_name, "name": role_name})
+    if not roleobj:
+        expdb["roles"].insert_one({"app": application_name, "name": role_name, "players": [ uid ]})
+        return True
+    if "players" not in roleobj:
+        result = expdb["roles"].update_one({"app": application_name, "name": role_name}, { "$set": { "players": [ uid ] }})
+    elif uid not in roleobj["players"]:
+        result = expdb["roles"].update_one({"app": application_name, "name": role_name}, {"$addToSet": { "players": uid }})
+    else:
+        return False
+    return result.matched_count > 0
+
+def remove_collaborator_from_role(experiment_name, uid, role_fq_name):
+    expdb = logbookclient[experiment_name]
+    application_name, role_name = role_fq_name.split("/")
+    roleobj = expdb["roles"].find_one({"app": application_name, "name": role_name})
+    if not roleobj or "players" not in roleobj or uid not in roleobj["players"]:
+        return False
+    result = expdb["roles"].update_one({"app": application_name, "name": role_name}, { "$pull": { "players": uid }})
+    return result.matched_count > 0

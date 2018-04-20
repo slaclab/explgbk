@@ -27,7 +27,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_expe
     create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
-    get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id
+    get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
+    add_collaborator_to_role, remove_collaborator_from_role
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -44,7 +45,6 @@ logger = logging.getLogger(__name__)
 def logAndAbort(error_msg):
     logger.error(error_msg)
     return Response(error_msg, status=500)
-
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/info", methods=["GET"])
 @context.security.authentication_required
@@ -100,7 +100,6 @@ def categorize(explist, categorizers, sorter):
                 cur_dict = cur_dict[key]
 
     return ret
-
 
 @explgbk_blueprint.route("/lgbk/ws/experiments", methods=["GET"])
 @context.security.authentication_required
@@ -331,6 +330,23 @@ def svc_switch_experiment():
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/has_role", methods=["GET"])
+@context.security.authentication_required
+def svc_has_role(experiment_name):
+    """
+    Check's if the logged in user has a role.
+    """
+    # Should this check for a privilege? For now, we stop at roles.
+    role_fq_name = request.args.get("role_fq_name", None)
+    if not role_fq_name:
+        return logAndAbort("Please pass in a fully qualified role name like LogBook/Editor")
+    application_name, role_name = role_fq_name.split("/")
+    return JSONEncoder().encode({"success": True,
+        "value": {
+            "role_fq_name": role_fq_name, "application_name": application_name, "role_name": role_name,
+            "hasRole": context.roleslookup.has_slac_user_role(context.security.get_current_user_id(), application_name, role_name, experiment_name)
+        }})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog", methods=["GET"])
 @context.security.authentication_required
@@ -837,3 +853,81 @@ def svc_register_file(experiment_name):
             return jsonify({'success': True})
         else:
             return jsonify({'success': False, 'errormsg': errormsg})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/collaborators", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def svc_get_collaborators(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_collaborators(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/toggle_role", methods=["GET"])
+@context.ldapadminsecurity.authentication_required
+@context.ldapadminsecurity.authorization_required("manage_groups")
+def svc_toggle_role(experiment_name):
+    uid = request.args.get("uid", None)
+    role_fq_name = request.args.get("role_fq_name", None)
+    if not uid or not role_fq_name:
+        return logAndAbort("Please specify a uid and role_fq_name")
+
+    role_obj = get_role_object(experiment_name, role_fq_name)
+    if role_obj and 'players' in role_obj and uid in role_obj['players']:
+        status = remove_collaborator_from_role(experiment_name, uid, role_fq_name)
+    else:
+        status = add_collaborator_to_role(experiment_name, uid, role_fq_name)
+
+    if status:
+        role_obj = get_role_object(experiment_name, role_fq_name)
+        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
+
+    return JSONEncoder().encode({"success": status, "message": "Did not match any entries" if not status else ""})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_collaborator", methods=["GET"])
+@context.ldapadminsecurity.authentication_required
+@context.ldapadminsecurity.authorization_required("manage_groups")
+def svc_add_collaborator(experiment_name):
+    uid = request.args.get("uid", None)
+    if not uid:
+        return logAndAbort("Please specify a uid")
+    role_fq_name = request.args.get("role_fq_name", "LogBook/Reader")
+
+    status = add_collaborator_to_role(experiment_name, uid, role_fq_name)
+
+    if status:
+        role_obj = get_role_object(experiment_name, role_fq_name)
+        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
+    return JSONEncoder().encode({"success": status, "message": "Did not match any entries" if not status else ""})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/remove_collaborator", methods=["GET"])
+@context.ldapadminsecurity.authentication_required
+@context.ldapadminsecurity.authorization_required("manage_groups")
+def svc_remove_collaborator(experiment_name):
+    uid = request.args.get("uid", None)
+    if not uid:
+        return logAndAbort("Please specify a uid")
+
+    collaborator_roles = next(filter(lambda x : x["uid"] == uid, get_collaborators(experiment_name)))
+    for role in collaborator_roles['roles']:
+        remove_collaborator_from_role(experiment_name, uid, role)
+        role_obj = get_role_object(experiment_name, role)
+        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
+
+    return JSONEncoder().encode({"success": True, "message": "Removed collaborator"})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_matching_uids", methods=["GET"])
+@context.security.authentication_required
+def get_matching_uids(experiment_name):
+    uid = request.args.get("uid", None)
+    if not uid:
+        return logAndAbort("Please specify a uid")
+    return JSONEncoder().encode({"success": True, "value": context.usergroups.get_userids_matching_pattern(uid)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_matching_groups", methods=["GET"])
+@context.security.authentication_required
+def get_matching_groups(experiment_name):
+    group_name = request.args.get("group_name", None)
+    if not group_name:
+        return logAndAbort("Please specify a group_name")
+    return JSONEncoder().encode({"success": True, "value": context.usergroups.get_groups_matching_pattern(group_name)})
