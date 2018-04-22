@@ -70,9 +70,13 @@ def experiment_switch():
 @context.security.authentication_required
 @context.security.authorization_required("read")
 def exp_elog(experiment_name):
+    logged_in_user=context.security.get_current_user_id()
     return render_template("lgbk.html",
         experiment_name=experiment_name,
-        logged_in_user=context.security.get_current_user_id(),
+        logged_in_user=logged_in_user,
+        is_writer=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "Writer", experiment_name)),
+        is_editor=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "Editor", experiment_name)),
+        is_admin=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LDAP", "Admin", experiment_name)),
         current_sample_name=get_current_sample_name(experiment_name),
         logbook_site=context.LOGBOOK_SITE
         )

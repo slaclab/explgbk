@@ -459,7 +459,7 @@ label {
   padding-right: 1.0em;
 }
 #collab_tab .collabtbl tbody tr td .fa-trash {
-  opacity: 0.8;
+  opacity: 0.5;
 }
 #collab_tab .collabtbl tbody tr td .role_present {
   color: red;
@@ -473,6 +473,9 @@ label {
   position: relative;
   bottom: -0.25em;
   right: 1.5em;
+}
+#collab_tab .collabtbl .collab-no-role {
+  opacity: 0.5;
 }
 #collab_mdl_holder tbody .fa {
   padding-right: 0.75em;
