@@ -100,7 +100,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   Mustache.parse(elog_followup_template);
 
   var renderMSTemplate = function(template, entry) { // Convienience method to render time correctly.
-    entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:MM:ss");}};
+    entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:SS");}};
     return $(Mustache.render(template, entry));
   }
 

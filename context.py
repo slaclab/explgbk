@@ -34,13 +34,13 @@ LOGBOOK_SITE = os.environ.get('LOGBOOK_SITE', 'test')
 
 
 # Set up the security manager
-mongorolereaderclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, authSource="admin")
+mongorolereaderclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, authSource="admin", tz_aware=True)
 usergroups = UserGroups()
 roleslookup = MongoDBRoles(mongorolereaderclient, usergroups)
 security = FlaskAuthnz(roleslookup, "LogBook")
 ldapadminsecurity = FlaskAuthnz(roleslookup, "LDAP")
 
-logbookclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_ADMIN_USERNAME, password=MONGODB_ADMIN_PASSWORD, authSource="admin")
+logbookclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_ADMIN_USERNAME, password=MONGODB_ADMIN_PASSWORD, authSource="admin", tz_aware=True)
 
 
 def __getKafkaProducer():
