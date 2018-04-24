@@ -6,6 +6,7 @@ import re
 
 import requests
 import threading
+import sched
 
 from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
@@ -19,12 +20,13 @@ __author__ = 'mshankar@slac.stanford.edu'
 
 logger = logging.getLogger(__name__)
 
-__cached_experiments = {}
-
 def init_app(app):
-    global __cached_experiments
-    __cached_experiments = __load_experiments()
-    logger.info("Loaded %s experiments from the database ", len(__cached_experiments))
+    scheduler = sched.scheduler()
+    def __refresh_cache_periodically():
+        scheduler.enter(60*60*24, 1, refresh_cache_periodically)
+        __update_experiments_info()
+
+    __update_experiments_info()
     __establish_kafka_consumers()
 
 def reload_cache():
@@ -33,65 +35,58 @@ def reload_cache():
     Use only if you make changes directly in the database bypassing the app.
     If you are using to recover from invalid cache issues; please do generate a bug report.
     """
-    global __cached_experiments
-    __cached_experiments = __load_experiments()
+    __update_experiments_info()
     logger.info("Loaded %s experiments from the database ", len(__cached_experiments))
-
-
 
 def get_experiments():
     """
     Get a list of experiments from the database.
     Returns basic information and also some info on the first and last runs.
     """
-    global __cached_experiments
-    return list(__cached_experiments.values())
+    return list(logbookclient['explgbk_cache']['experiments'].find({}))
 
-def __load_single_experiment(experiment_name):
+def __update_experiments_info():
+    """
+    Since we are using an database per experiment, getting basic information that spans experiments can take some time.
+    We cache this information in a 'explgbk_cache' database.
+    We update this using Kafka; but we also periodically do a full reload of this information
+    """
+    logger.info("Updating the experiment info cached in 'explgbk_cache'.")
+    database_names = list(logbookclient.database_names())
+    for experiment_name in database_names:
+        __update_single_experiment_info(experiment_name)
+
+def __update_single_experiment_info(experiment_name):
     """
     Load a single experiment's info and return the info as a dict
     """
-    logger.debug("Loading experiment cache for experiment %s", experiment_name)
+    logger.debug("Gathering the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     expdb = logbookclient[experiment_name]
-    collnames = expdb.collection_names()
-    expinfo = {}
-    info = expdb["info"].find_one({}, {"latest_setup": 0})
-    if 'runs' in collnames:
-        run_count = expdb["runs"].count()
-        expinfo['run_count'] = run_count
-        if run_count:
-            last_run =  expdb["runs"].find({}, { "num": 1, "begin_time": 1, "end_time": 1 } ).sort([("begin_time", -1)]).limit(1)[0]
-            first_run = expdb["runs"].find({}, { "num": 1, "begin_time": 1, "end_time": 1 } ).sort([("begin_time",  1)]).limit(1)[0]
-            expinfo["first_run"] = { "num": first_run["num"],
-                    "begin_time": first_run["begin_time"],
-                    "end_time": first_run["end_time"]
-                }
-            expinfo["last_run"] =  { "num": last_run["num"],
-                    "begin_time": last_run["begin_time"],
-                    "end_time": last_run["end_time"]
-                }
-    else:
-        logger.debug("No runs in experiment " + database)
-    expinfo.update(info)
-    return expinfo
-
-def __load_experiments():
-    """
-    Load the experiments from the database into the cache.
-    Return the loaded experiments.
-    """
-    logger.info("Reloading experiments from database.")
-    experiments = {}
-    for experiment_name in logbookclient.database_names():
-        expdb = logbookclient[experiment_name]
-        collnames = expdb.collection_names()
-        if 'info' in collnames:
-            expinfo = __load_single_experiment(experiment_name)
-            experiments[experiment_name] = expinfo
+    collnames = list(expdb.collection_names())
+    if 'info' in collnames:
+        expinfo = { "_id": experiment_name }
+        info = expdb["info"].find_one({}, {"latest_setup": 0})
+        if 'runs' in collnames:
+            run_count = expdb["runs"].count()
+            expinfo['run_count'] = run_count
+            if run_count:
+                last_run =  expdb["runs"].find({}, { "num": 1, "begin_time": 1, "end_time": 1 } ).sort([("begin_time", -1)]).limit(1)[0]
+                first_run = expdb["runs"].find({}, { "num": 1, "begin_time": 1, "end_time": 1 } ).sort([("begin_time",  1)]).limit(1)[0]
+                expinfo["first_run"] = { "num": first_run["num"],
+                        "begin_time": first_run["begin_time"],
+                        "end_time": first_run["end_time"]
+                    }
+                expinfo["last_run"] =  { "num": last_run["num"],
+                        "begin_time": last_run["begin_time"],
+                        "end_time": last_run["end_time"]
+                    }
         else:
-            logger.debug("Skipping non-experiment database " + experiment_name)
-
-    return experiments
+            logger.debug("No runs in experiment " + experiment_name)
+        expinfo.update(info)
+        logbookclient['explgbk_cache']['experiments'].update({"_id": experiment_name}, expinfo, upsert=True)
+        logger.info("Updated the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
+    else:
+        logger.debug("Skipping non-experiment database " + experiment_name)
 
 
 def __establish_kafka_consumers():
@@ -109,10 +104,7 @@ def __establish_kafka_consumers():
             message_type = msg.topic
             experiment_name = info['experiment_name']
             # No matter what the message type is, we reload the experiment info.
-            global __cached_experiments
-            expinfo = __load_single_experiment(experiment_name)
-            __cached_experiments[experiment_name] = expinfo
-
+            __update_single_experiment_info(experiment_name)
 
     # Create thread for kafka consumer
     kafka_client_thread = threading.Thread(target=subscribe_kafka)

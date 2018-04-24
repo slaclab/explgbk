@@ -17,7 +17,6 @@ from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
 from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, security, usergroups
-from dal.exp_cache import get_experiments
 
 __author__ = 'mshankar@slac.stanford.edu'
 

@@ -20,7 +20,7 @@ from email.message import EmailMessage
 
 from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context
 
-from dal.explgbk import get_experiment_info, save_new_experiment_setup, get_experiments, register_new_experiment, \
+from dal.explgbk import get_experiment_info, save_new_experiment_setup, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
     get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources, \
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
@@ -34,7 +34,7 @@ from dal.run_control import start_run, get_current_run, end_run, add_run_params,
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo
 
-from dal.exp_cache import reload_cache as reload_experiment_cache
+from dal.exp_cache import get_experiments, reload_cache as reload_experiment_cache
 
 __author__ = 'mshankar@slac.stanford.edu'
 
