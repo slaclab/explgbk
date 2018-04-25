@@ -80,7 +80,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
    <div class="panel panel-default">
     <div class="panel-heading text-left"><span class="entry_actions"><i class="fa fa-send followup"></i></span><pre>{{content}}</pre></div>
     <div class="panel-body">
-     <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="#" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>
+     <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=False" target="_blank" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>
      <div class="row dialog_holder"></div>
     </div>
    </div>

@@ -360,8 +360,8 @@ def svc_get_elog_entries(experiment_name):
 def svc_get_elog_attachment(experiment_name):
     entry_id = request.args.get("entry_id", None)
     attachment_id = request.args.get("attachment_id", None)
-    prefer_preview = bool(request.args.get("prefer_preview", "False"))
-    logger.info("Fetching attachment " + attachment_id + " for entry " + entry_id)
+    prefer_preview = request.args.get("prefer_preview", "False").lower() == "true"
+    logger.info("Fetching attachment %s for entry %s prefer_preview is %s",  attachment_id, entry_id, prefer_preview)
     entry = get_specific_elog_entry(experiment_name, entry_id)
     for attachment in entry.get("attachments", None):
         if str(attachment.get("_id", None)) == attachment_id:
