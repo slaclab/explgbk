@@ -83,7 +83,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
   Mustache.parse(sample_tr_tmpl);
   $.getJSON("ws/samples")
   .done(function(data){
-    data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:MM:SS");}};
+    data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:SS");}};
     $("#samples_tab").data("samples", data);
     var rendered = $(Mustache.render(sample_tr_tmpl, data));
     rendered.find(".fa-anchor").on("click", function(){

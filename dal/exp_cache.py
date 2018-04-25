@@ -36,7 +36,6 @@ def reload_cache():
     If you are using to recover from invalid cache issues; please do generate a bug report.
     """
     __update_experiments_info()
-    logger.info("Loaded %s experiments from the database ", len(__cached_experiments))
 
 def get_experiments():
     """

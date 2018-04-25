@@ -80,13 +80,15 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
   }
   $("#shifts_tab").data("edit_shift", edit_shift);
 
-  var shift_tr_tmpl = `{{#value}}<tr {{^end_time}}class="active_shift"{{/end_time}}><td>{{ name }}</td><td>{{#FormatDate}}{{begin_time}}{{/FormatDate}}</td><td>{{#FormatDate}}{{end_time}}{{/FormatDate}}</td><td>{{ leader }}</td><td>{{ description }}</td><td><i title="Edit shift details" class="fa fa-edit listview-action"></i><i title="Close out shift" class="fa fa-power-off listview-action"></i></td></tr>{{/value}}`;
+  var shift_tr_tmpl = `{{#value}}<tr {{#latest}}class="active_shift"{{/latest}}><td>{{ name }}</td><td>{{#FormatDate}}{{begin_time}}{{/FormatDate}}</td><td>{{#FormatDate}}{{end_time}}{{/FormatDate}}</td><td>{{ leader }}</td><td>{{ description }}</td><td><i title="Edit shift details" class="fa fa-edit listview-action"></i><i title="Close out shift" class="fa fa-power-off listview-action"></i></td></tr>{{/value}}`;
   Mustache.parse(shift_tr_tmpl);
-  $.getJSON("ws/shifts")
-  .done(function(data){
-    data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:MM:SS");}};
-    $("#shifts_tab").data("shifts", data);
-    var rendered = $(Mustache.render(shift_tr_tmpl, data));
+  $.when($.getJSON("ws/shifts"), $.getJSON("ws/get_latest_shift"))
+  .done(function(d0, d1){
+    var shift_data = d0[0], latest_shift = d1[0], latest_shift_data = _.find(shift_data.value, function(o){ return o.name == _.get(latest_shift, 'value.name', ''); });
+    if(latest_shift_data){ latest_shift_data['latest'] = true; }
+    shift_data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:SS");}};
+    $("#shifts_tab").data("shifts", shift_data);
+    var rendered = $(Mustache.render(shift_tr_tmpl, shift_data));
     rendered.find(".fa-power-off").on("click", function(){
       var shift_name = $(this).parents("tr").first().find("td").first().text();
       $.getJSON("ws/close_shift", {shift_name: shift_name})

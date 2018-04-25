@@ -38,7 +38,7 @@ def start_run(experiment_name, run_type, user_specified_run_number=None):
     run_doc = {
         "num" : next_run_num,
         "type" : run_type,
-        "begin_time" : datetime.datetime.now(),
+        "begin_time" : datetime.datetime.utcnow(),
         "end_time" : None,
         "params" : {},
         "editable_params" : {}}
@@ -73,7 +73,7 @@ def end_run(experiment_name):
     '''
     expdb = logbookclient[experiment_name]
     current_run_doc = get_current_run(experiment_name)
-    return expdb.runs.find_one_and_update({"num": current_run_doc["num"]}, {'$set': {'end_time': datetime.datetime.now()}}, return_document=ReturnDocument.AFTER)
+    return expdb.runs.find_one_and_update({"num": current_run_doc["num"]}, {'$set': {'end_time': datetime.datetime.utcnow()}}, return_document=ReturnDocument.AFTER)
 
 
 def add_run_params(experiment_name, run_doc, run_params):

@@ -55,7 +55,7 @@ def save_new_experiment_setup(experiment_name, setup_document, userid):
     """
     expdb = logbookclient[experiment_name]
     setup_document["modified_by"] = userid
-    setup_document["modified_at"] = datetime.datetime.now()
+    setup_document["modified_at"] = datetime.datetime.utcnow()
     latest_setup_id = expdb['setup'].insert_one(setup_document).inserted_id
     expdb['info'].find_one_and_update({}, {'$set': {'latest_setup': latest_setup_id}})
 
@@ -96,7 +96,7 @@ def register_new_experiment(experiment_name, incoming_info):
 
     # Create a default shift
     expdb["shifts"].insert_one( { "name" : "Default",
-        "begin_time" : datetime.datetime.now(),
+        "begin_time" : datetime.datetime.utcnow(),
         "end_time" : None,
         "leader" : security.get_current_user_id(),
         "description" : "Default shift created automatically during experiment registration",
@@ -188,7 +188,7 @@ def switch_experiment(instrument, station, experiment_name, userid):
         "experiment_name" : experiment_name,
         "instrument" : instrument,
         "station" : int(station),
-        "switch_time" : datetime.datetime.now(),
+        "switch_time" : datetime.datetime.utcnow(),
         "requestor_uid" : userid
         })
     return (True, "")
@@ -317,8 +317,8 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
         attachments.append(attachment)
 
     elog_doc = {
-        "relevance_time": datetime.datetime.now(),
-        "insert_time": datetime.datetime.now(),
+        "relevance_time": datetime.datetime.utcnow(),
+        "insert_time": datetime.datetime.utcnow(),
         "author": author,
         "content": log_content,
         "content_type": "TEXT"
@@ -522,7 +522,7 @@ def update_editable_param_for_run(experiment_name, runnum, source, value, userid
         {"$set": { source: {
                     "value": value,
                     "modified_by": userid,
-                    "modified_time": datetime.datetime.now()
+                    "modified_time": datetime.datetime.utcnow()
                     }}})
 
 def get_experiment_shifts(experiment_name):
@@ -552,7 +552,10 @@ def get_latest_shift(experiment_name):
     Get's the latest shift as detemined by the shift begin time.
     """
     expdb = logbookclient[experiment_name]
-    return list(expdb.shifts.find({}).sort([("begin_time", -1)]).limit(1))[0]
+    shifts = list(expdb.shifts.find({ "begin_time" : { "$lte": datetime.datetime.utcnow() }, "end_time": None }).sort([("begin_time", -1)]).limit(1))
+    if shifts:
+        return shifts[0]
+    return None
 
 
 def close_shift_for_experiment(experiment_name, shift_name):
@@ -564,7 +567,7 @@ def close_shift_for_experiment(experiment_name, shift_name):
     shift_doc = expdb['shifts'].find_one({"name": shift_name})
     if not shift_doc:
         return (False, "Cannot find the shift specified by shift name " % shift_name)
-    expdb['shifts'].find_one_and_update({"name": shift_name}, {"$set": { "end_time" : datetime.datetime.now()}})
+    expdb['shifts'].find_one_and_update({"name": shift_name}, {"$set": { "end_time" : datetime.datetime.utcnow()}})
     return (True, "")
 
 def create_update_shift(experiment_name, shift_name, createp, info):
@@ -577,6 +580,7 @@ def create_update_shift(experiment_name, shift_name, createp, info):
         return (False, "Shift %s already exists" % shift_name)
     if not shift_doc and not createp:
         return (False, "Shift %s does not exist" % shift_name)
+    info['begin_time'] = datetime.datetime.strptime(info["begin_time"], '%Y-%m-%dT%H:%M:%S.%fZ')
 
     if createp:
         expdb['shifts'].insert_one(info)
