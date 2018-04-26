@@ -28,6 +28,7 @@
 @navbarcolor: @color-primary-0;
 @navbarhover: @color-primary-4;
 @activewidgetcolor: @color-complement-0;
+@contrastcolor: @color-complement-4;
 @navbartext: white;
 @tablezebra: #efefef;
 @tblhdrbg: @color-primary-0;
@@ -314,6 +315,16 @@ label {
   padding-bottom: 0.1em;
 }
 
+#elog_tab .elog_deleted {
+    text-decoration: line-through;
+}
+
+#elog_tab .elog_deleted_by {
+    color: @contrastcolor;
+    padding-left: 1.25em;
+    text-align: left;
+}
+
 #elog_tab div.etop:nth-child(odd) {
 	background: @tablezebra;
 }
@@ -383,6 +394,11 @@ label {
 	float:right;
 	font-size: 0.90em;
 	padding-right: 0.25em;
+
+    .fa {
+        padding-left: 0.15em;
+        padding-right: 0.15em;
+    }
 }
 
 #fmgr_tab .run_file:nth-child(odd) {

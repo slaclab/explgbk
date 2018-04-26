@@ -57,7 +57,7 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
 
 
 	var renderMSTemplate = function(template, entry) { // Convienience method to render time correctly.
-	   entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:SS");}};
+	   entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
 	   return $(Mustache.render(template, entry));
 	 }
 

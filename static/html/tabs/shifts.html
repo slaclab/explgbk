@@ -86,7 +86,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
   .done(function(d0, d1){
     var shift_data = d0[0], latest_shift = d1[0], latest_shift_data = _.find(shift_data.value, function(o){ return o.name == _.get(latest_shift, 'value.name', ''); });
     if(latest_shift_data){ latest_shift_data['latest'] = true; }
-    shift_data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:SS");}};
+    shift_data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
     $("#shifts_tab").data("shifts", shift_data);
     var rendered = $(Mustache.render(shift_tr_tmpl, shift_data));
     rendered.find(".fa-power-off").on("click", function(){

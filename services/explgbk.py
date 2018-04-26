@@ -28,7 +28,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
-    add_collaborator_to_role, remove_collaborator_from_role
+    add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -482,8 +482,7 @@ def svc_post_new_elog_entry(experiment_name):
             logger.info(filename)
             files.append((filename, upload))
     inserted_doc = post_new_log_entry(experiment_name, userid, log_content, files, **optional_args)
-    inserted_doc['experiment_name'] = experiment_name
-    context.kafka_producer.send("elog", inserted_doc)
+    context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Create", "value": inserted_doc})
     logger.debug("Published the new elog entry for %s", experiment_name)
 
     # Send an email out if a list of emails was specified.
@@ -494,6 +493,29 @@ def svc_post_new_elog_entry(experiment_name):
         send_elog_as_email(experiment_name, inserted_doc, email_to)
 
     return JSONEncoder().encode({'success': True, 'value': inserted_doc})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/modify_elog_entry", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("edit")
+def svc_modify_elog_entry(experiment_name):
+    entry_id = request.args.get("_id", None)
+    log_content = request.form["log_text"]
+    if not entry_id or not log_content:
+        return logAndAbort("Please pass in the _id of the elog entry for " + experiment_name + " and the new content")
+
+    files = []
+    for upload in request.files.getlist("files"):
+        filename = upload.filename.rsplit("/")[0]
+        if filename:
+            logger.info(filename)
+            files.append((filename, upload))
+
+    status = modify_elog_entry(experiment_name, entry_id, context.security.get_current_user_id(), log_content, files)
+    if status:
+        entry = get_specific_elog_entry(experiment_name, entry_id)
+        context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": entry})
+    return JSONEncoder().encode({"success": status})
+
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/search_elog", methods=["GET"])
 @context.security.authentication_required
@@ -512,6 +534,19 @@ def svc_search_elog(experiment_name):
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_specified_id(experiment_name, id_str)})
     else:
         return JSONEncoder().encode({"success": True, "value": search_elog_for_text(experiment_name, search_text)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_elog_entry", methods=["DELETE"])
+@context.security.authentication_required
+@context.security.authorization_required("delete")
+def svc_delete_elog_entry(experiment_name):
+    entry_id   = request.args.get("_id", None)
+    if not entry_id:
+        return logAndAbort("Please pass in the _id of the elog entry for " + experiment_name)
+    status = delete_elog_entry(experiment_name, entry_id, context.security.get_current_user_id())
+    if status:
+        entry = get_specific_elog_entry(experiment_name, entry_id)
+        context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": entry})
+    return JSONEncoder().encode({"success": status})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files", methods=["GET"])
 @context.security.authentication_required
