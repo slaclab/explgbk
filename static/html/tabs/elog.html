@@ -79,14 +79,15 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
  var elog_child_template = `<div class="row col-md-12 elog-chid">
    <div class="panel panel-default">
-    <div class="panel-heading text-left"><span class="entry_actions"><i class="fa fa-send fa-lg followup"></i>{{#roles.is_editor}}<i class="fa fa-trash fa-lg delete"></i><i class="fa fa-edit fa-lg edit"></i>{{/roles.is_editor}}</span><pre>{{content}}</pre></div>
+    <div class="panel-heading text-left"><span class="entry_actions"><i class="fa fa-send fa-lg followup"></i>{{#roles.is_editor}}<i class="fa fa-edit fa-lg edit"></i><i class="fa fa-trash fa-lg delete"></i>{{/roles.is_editor}}</span><pre>{{content}}</pre></div>
     <div class="panel-body">
-     {{#deleted_by}}<div class="row elog_deleted_by">Deleted by {{deleted_by}} - {{#FormatDate}}{{ deleted_time }}{{/FormatDate}}</div>{{/deleted_by}}
-     <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=False" target="_blank" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>
+      {{> elog_chid_body_content }}
      <div class="row dialog_holder"></div>
     </div>
    </div>
  </div>`;
+ var elog_chid_body_content = `<div class="elog_chid_body_content">{{#deleted_by}}<div class="row elog_deleted_by">Deleted by {{deleted_by}} - {{#FormatDate}}{{ deleted_time }}{{/FormatDate}}</div>{{/deleted_by}}
+ <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=False" target="_blank" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div></div>`;
 
  var elog_followup_template = `<div class="row followup_div"><div class="panel col-sm-8"><div class="panel-body">
       <form class="form-horizontal followup_form" role="form">
@@ -100,6 +101,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   Mustache.parse(elog_main_template);
   Mustache.parse(elog_main_content_template);
   Mustache.parse(elog_child_template);
+  Mustache.parse(elog_chid_body_content);
   Mustache.parse(elog_followup_template);
 
   var renderMSTemplate = function(template, entry, partials) { // Convienience method to render time correctly.
@@ -182,7 +184,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
     	$(this).html('<i class="fa fa-plus expand_ctrl"></i>');
 	} else {
 		var clicked_elem = $(this);
-	    clicked_elem.parents(".edat:first").append(renderMSTemplate(elog_child_template, entry));
+	    clicked_elem.parents(".edat:first").append(renderMSTemplate(elog_child_template, entry, { elog_chid_body_content: elog_chid_body_content } ));
 	    clicked_elem.parents(".edat:first").find(".followup").on("click", followup_function);
         clicked_elem.parents(".edat:first").find(".delete").on("click", delete_elog_entry);
         clicked_elem.parents(".edat:first").find(".edit").on("click", edit_elog_entry);
@@ -268,6 +270,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       if(existingElem.length > 0) {
           existingElem.find(".elog_main_content").first().replaceWith(renderMSTemplate(elog_main_content_template, elogData));
           existingElem.find(".elog-chid pre").first().text(elogData["content"]);
+          existingElem.find(".elog_chid_body_content").first().replaceWith(renderMSTemplate(elog_chid_body_content, elogData));
           entryinserted = true;
           return;
       }

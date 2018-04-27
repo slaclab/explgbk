@@ -18,7 +18,7 @@ import context
 import smtplib
 from email.message import EmailMessage
 
-from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context
+from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context, send_file
 
 from dal.explgbk import get_experiment_info, save_new_experiment_setup, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
@@ -365,14 +365,19 @@ def svc_get_elog_attachment(experiment_name):
     entry = get_specific_elog_entry(experiment_name, entry_id)
     for attachment in entry.get("attachments", None):
         if str(attachment.get("_id", None)) == attachment_id:
-            if prefer_preview and "preview_url" in attachment:
-                remote_url = attachment.get("preview_url", None)
+            if prefer_preview:
+                if "preview_url" in attachment:
+                    remote_url = attachment.get("preview_url", None)
+                else:
+                    return send_file('static/attachment.png')
             else:
                 logger.debug("Cannot find preview, returning main document.")
                 remote_url = attachment.get("url", None)
             if remote_url:
                 req = requests.get(remote_url, stream = True)
-                return Response(stream_with_context(req.iter_content(chunk_size=1024)), content_type = req.headers['content-type'])
+                resp = Response(stream_with_context(req.iter_content(chunk_size=1024)), content_type = req.headers['content-type'])
+                resp.headers["Content-Disposition"] = 'attachment; filename="' + attachment["name"] + '"'
+                return resp
 
     return Response("Cannot find attachment " + attachment_id , status=404)
 
@@ -514,6 +519,9 @@ def svc_modify_elog_entry(experiment_name):
     if status:
         entry = get_specific_elog_entry(experiment_name, entry_id)
         context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": entry})
+        previous_version = get_specific_elog_entry(experiment_name, entry["previous_version"])
+        context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Create", "value": previous_version})
+
     return JSONEncoder().encode({"success": status})
 
 
