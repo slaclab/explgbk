@@ -376,7 +376,8 @@ def svc_get_elog_attachment(experiment_name):
             if remote_url:
                 req = requests.get(remote_url, stream = True)
                 resp = Response(stream_with_context(req.iter_content(chunk_size=1024)), content_type = req.headers['content-type'])
-                resp.headers["Content-Disposition"] = 'attachment; filename="' + attachment["name"] + '"'
+                if not (attachment["type"].startswith("image") or "preview_url" in attachment):
+                    resp.headers["Content-Disposition"] = 'attachment; filename="' + attachment["name"] + '"'
                 return resp
 
     return Response("Cannot find attachment " + attachment_id , status=404)
