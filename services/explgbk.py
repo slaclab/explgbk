@@ -35,7 +35,7 @@ from dal.run_control import start_run, get_current_run, end_run, add_run_params,
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo
 
-from dal.exp_cache import get_experiments, does_experiment_exist, reload_cache as reload_experiment_cache
+from dal.exp_cache import get_experiments, does_experiment_exist, reload_cache as reload_experiment_cache, text_search_for_experiments
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -141,6 +141,15 @@ def svc_get_experiments():
 
     return JSONEncoder().encode({"success": True, "value": experiments})
 
+@explgbk_blueprint.route("/lgbk/ws/search_experiment_info", methods=["GET"])
+@context.security.authentication_required
+def svc_search_experiment_info():
+    """
+    Perform a text search against the cached experiment info.
+    This only searches against basic information like the name, description, PI etc.
+    """
+    search_terms = request.args.get("search_text", "")
+    return jsonify({'success': True, 'value': text_search_for_experiments(search_terms)})
 
 @explgbk_blueprint.route("/lgbk/ws/instruments", methods=["GET"])
 @context.security.authentication_required
@@ -206,6 +215,9 @@ def svc_create_update_instrument():
     if missing_keys:
         return logAndAbort("Creating instrument missing keys %s" % missing_keys)
 
+    if createp and info["_id"] in set([x["_id"] for x in get_instruments()]):
+        return logAndAbort("Instrument %s already exists" % info["_id"])
+
     (status, errormsg) = create_update_instrument(instrument_name, createp, info)
     if status:
         context.kafka_producer.send("instruments", {"instrument_name" : instrument_name, "CRUD": "Create" if createp else "Update", "value": info })
@@ -248,6 +260,8 @@ def svc_register_new_experiment():
     experiment_name = request.args.get("experiment_name", None)
     if not experiment_name:
         return logAndAbort("Experiment registration missing experiment_name in query parameters")
+    if does_experiment_exist(experiment_name):
+        return logAndAbort("Experiment %s already exists" % experiment_name)
 
     info = request.json
     if not info:
@@ -257,6 +271,8 @@ def svc_register_new_experiment():
     missing_keys = necessary_keys - info.keys()
     if missing_keys:
         return logAndAbort("Experiment registration missing keys %s" % missing_keys)
+    if info["instrument"] not in set([x["_id"] for x in get_instruments()]):
+        return logAndAbort("The instrument specified %s  is not a valid instrument" % info["instrument"])
 
     (status, errormsg) = register_new_experiment(experiment_name, info)
     if status:

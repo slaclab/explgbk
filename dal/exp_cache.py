@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 all_experiment_names = set()
 
 def init_app(app):
+    if 'experiments' not in list(logbookclient['explgbk_cache'].collection_names()):
+        logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] );
     scheduler = sched.scheduler()
     def __refresh_cache_periodically():
         scheduler.enter(60*60*24, 1, refresh_cache_periodically)
@@ -54,6 +56,16 @@ def does_experiment_exist(experiment_name):
     """
     global all_experiment_names
     return experiment_name in all_experiment_names
+
+def text_search_for_experiments(search_terms):
+    """
+    Search the experiment cache for experiments matching the search terms.
+    Use search terms separated by spaces. The backslash escapes the space for literal searches.
+    Use the minus character to suppress a word.
+    """
+    matching_entries = list(logbookclient['explgbk_cache']['experiments'].find({ "$text": { "$search": search_terms }}))
+    return sorted(matching_entries, key=lambda x : x["name"])
+
 
 def __update_experiments_info():
     """

@@ -12,6 +12,10 @@
 
 <script type="text/javascript">
 $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
+  var show_validation_message = function(message) {
+      $("#exp_mdl_holder").find(".validation_message").html(message);
+      $("#exp_mdl_holder").find(".validation_modal").modal("show");
+  }
   var edit_exp = function(expInfo) {
     if(/.+\(.+\)/.test(expInfo['contact_info'])) {
       expInfo['contact_info_name'] = expInfo['contact_info'].split("(")[0];
@@ -74,8 +78,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
         _.each(validations, function(validation, i) {
           // console.log("Trying validation " + i + "" + validation[1]);
           if(validation[0]()) {
-              $("#exp_mdl_holder").find(".validation_message").html(validation[1]);
-              $("#exp_mdl_holder").find(".validation_modal").modal("show");
+              show_validation_message(validation[1]);
               v_failed = true;
               return false;
           }
@@ -112,10 +115,10 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
               sessionStorage.setItem("ops_active_tab", "experiments");
               window.location.reload(true);
           } else {
-            alert("Server side exception registering new experiment " + data.errormsg);
+            show_validation_message("Server failure: " + data.errormsg);
           }
         })
-        .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure registering new experiment " + textStatus); })
+        .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
       });
      $("#exp_mdl_holder").append(rendered);
      $("#exp_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#exp_mdl_holder").empty(); });

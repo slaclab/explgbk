@@ -212,16 +212,29 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       if(parent != null && _.has(id2entry, parent)) {
     	  var pey = id2entry[parent];
    		  _.defaults(pey, {"c_children": []});
-   		  pey["c_children"].push(entry["_id"]);
+   		  pey["c_children"] = _.union(pey["c_children"], [ entry["_id"] ]);
       }
       if(root != null && _.has(id2entry, root)) {
     	  var rey = id2entry[root];
    		  _.defaults(rey, {"c_desc": []});
-   		  rey["c_desc"].push(entry["_id"]);
+   		  rey["c_desc"] = _.union(rey["c_desc"], [ entry["_id"] ]);
       }
       entry.roles = roles;
       id2entry[entry["_id"]] = entry;
   }
+
+  var reattach_children = function(elog_entry) { // When getting a socket request, we may get an update on the pareant without getting an update on the children. Loop thru and reattach children
+      _.each(id2entry, function(entry, key){
+          var myid = elog_entry["_id"], root = _.get(entry, "root", null), parent = _.get(entry, "parent", null);
+          if(parent != null && myid == parent) {
+       		  elog_entry["c_children"] = _.union(elog_entry["c_children"], [ entry["_id"] ]);
+          }
+          if(root != null && myid == root) {
+       		  elog_entry["c_desc"] = _.union(elog_entry["c_desc"], [ entry["_id"] ]);
+          }
+      });
+  }
+
   $("#elog_tab").data("entries", id2entry);
 
   var processElogResponse = function(data) {
@@ -264,6 +277,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       var elogData = elogEvent.value;
       console.log("Processing elog event for experiment " + experiment_name + " id=" + elogData["_id"]);
       processNewEntry(elogData);
+      reattach_children(elogData);
       var entryinserted = false;
       var newentrydt = moment(elogData['insert_time']);
       var rendered = renderMSTemplate(elog_main_template, elogData, { main_content_tmpl: elog_main_content_template });
