@@ -8,6 +8,7 @@ import context
 from flask import Blueprint, render_template, send_file, abort
 
 from dal.explgbk import get_current_sample_name
+from services.explgbk import experiment_exists
 
 pages_blueprint = Blueprint('pages_api', __name__)
 
@@ -39,6 +40,7 @@ def send_js(path):
         return None
 
 @pages_blueprint.route("/lgbk/<experiment_name>/templates/<path:path>", methods=["GET"])
+@experiment_exists
 def templates(experiment_name, path):
     return render_template(path, experiment_name=experiment_name)
 
@@ -67,6 +69,7 @@ def experiment_switch():
 
 
 @pages_blueprint.route("/lgbk/<experiment_name>/", methods=["GET"])
+@experiment_exists
 @context.security.authentication_required
 @context.security.authorization_required("read")
 def exp_elog(experiment_name):

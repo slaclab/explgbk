@@ -22,6 +22,9 @@
   padding-left: 0.25em;
   padding-right: 0.25em;
 }
+.validation_warning {
+  color: #FFB305;
+}
 #lgbk_body {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
 }

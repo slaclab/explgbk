@@ -20,6 +20,8 @@ __author__ = 'mshankar@slac.stanford.edu'
 
 logger = logging.getLogger(__name__)
 
+all_experiment_names = set()
+
 def init_app(app):
     scheduler = sched.scheduler()
     def __refresh_cache_periodically():
@@ -44,6 +46,15 @@ def get_experiments():
     """
     return list(logbookclient['explgbk_cache']['experiments'].find({}))
 
+def does_experiment_exist(experiment_name):
+    """
+    Checks for the existence of the experiment_name.
+    This is meant mostly for validation of the experiment_name; we assume that this is going to be called many times.
+    So, we are avoiding a hit to the database by caching just the names themselves in memory.
+    """
+    global all_experiment_names
+    return experiment_name in all_experiment_names
+
 def __update_experiments_info():
     """
     Since we are using an database per experiment, getting basic information that spans experiments can take some time.
@@ -59,10 +70,12 @@ def __update_single_experiment_info(experiment_name):
     """
     Load a single experiment's info and return the info as a dict
     """
+    global all_experiment_names
     logger.debug("Gathering the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     expdb = logbookclient[experiment_name]
     collnames = list(expdb.collection_names())
     if 'info' in collnames:
+        all_experiment_names.add(experiment_name)
         expinfo = { "_id": experiment_name }
         info = expdb["info"].find_one({}, {"latest_setup": 0})
         if 'runs' in collnames:

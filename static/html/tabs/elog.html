@@ -14,6 +14,7 @@
                             <input type="text" class="form-control" name="run_num" id="elog_new_entry_run_num"/>
                         </div>
                     </div>
+                    <div class="validation_warning"></div>
                     <div class="form-group">
                         <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text*</label>
                         <div class="col-sm-10">
@@ -93,6 +94,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       <form class="form-horizontal followup_form" role="form">
        <button type="button" class="close">&times;</button>
        <input type="hidden" name="parent" value="{{ _id }}">
+       <div class="validation_warning"></div>
        <div class="form-group"><label class="col-sm-2 control-label">Text</label><div class="col-sm-8"><textarea class="form-control" rows="5" name="log_text"></textarea></div></div>
        <div class="form-group"><label class="col-sm-2 control-label">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
        <div class="form-group"><button type="button" class="btn btn-default followup_post">Post</button></div>
@@ -116,6 +118,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 		$(this).closest(".followup_div").remove();
 	});
 	rendered.find(".followup_post").on("click", function(){
+        if(_.isEmpty($.trim($(this).closest(".followup_form").find("textarea").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
 		var formData = new FormData(rendered.find(".followup_form")[0]);
 		$.ajax({
 			url: 'ws/new_elog_entry',
@@ -268,6 +271,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       rendered.find(".elog-expand").on("click", expandFunction);
       var existingElem = $("#"+elogData["_id"]);
       if(existingElem.length > 0) {
+          existingElem.data("entry", elogData);
           existingElem.find(".elog_main_content").first().replaceWith(renderMSTemplate(elog_main_content_template, elogData));
           existingElem.find(".elog-chid pre").first().text(elogData["content"]);
           existingElem.find(".elog_chid_body_content").first().replaceWith(renderMSTemplate(elog_chid_body_content, elogData));
@@ -318,6 +322,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
   $("#elog_new_entry_modal_post").on("click", function (e) {
 	  var formData = new FormData($('#elog_new_entry_form')[0]);
+      if(_.isEmpty($.trim($("#elog_new_entry_log_text").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
 	  $.ajax({
 		    url: 'ws/new_elog_entry',
 		    data: formData,
