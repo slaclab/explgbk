@@ -110,10 +110,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   }
 
  var followup_function = function() {
-	var entry = $(this).parents(".edat:first").data("entry");
+	var entry = $(this).closest(".edat").data("entry");
 	var rendered = renderMSTemplate(elog_followup_template, entry);
 	rendered.find(".close").on("click", function(){
-		$(this).parents(".followup_div:first").remove();
+		$(this).closest(".followup_div").remove();
 	});
 	rendered.find(".followup_post").on("click", function(){
 		var formData = new FormData(rendered.find(".followup_form")[0]);
@@ -133,17 +133,17 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 			}
 		})
 		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception posting followup elog entry " + jqXHR.responseText); })
-		$(this).parents(".followup_div:first").remove();
+		$(this).closest(".followup_div").remove();
 	});
 
-	$(this).parents(".elog-chid:first").find(".dialog_holder").html(rendered);
+	$(this).closest(".elog-chid").find(".dialog_holder").html(rendered);
  }
 
  var edit_elog_entry = function() {
-    var entry = $(this).parents(".edat:first").data("entry");
+    var entry = $(this).closest(".edat").data("entry");
     var rendered = renderMSTemplate(elog_followup_template, entry);
  	rendered.find(".close").on("click", function(){
- 		$(this).parents(".followup_div:first").remove();
+ 		$(this).closest(".followup_div").remove();
  	});
     rendered.find("textarea").first().text(entry["content"]);
  	rendered.find(".followup_post").on("click", function(){
@@ -164,34 +164,34 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  			}
  		})
  		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception editing elog entry " + jqXHR.responseText); })
- 		$(this).parents(".followup_div:first").remove();
+ 		$(this).closest(".followup_div").remove();
  	});
-    $(this).parents(".elog-chid:first").find(".dialog_holder").html(rendered);
+    $(this).closest(".elog-chid").find(".dialog_holder").html(rendered);
  }
 
  var delete_elog_entry = function() {
-     var entry = $(this).parents(".edat:first").data("entry");
+     var entry = $(this).closest(".edat").data("entry");
      $.getJSON({url: "ws/delete_elog_entry?_id="+encodeURIComponent(entry["_id"]), method: "DELETE" })
      .done(function(){})
      .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception deleting elog entry " + jqXHR.responseText); })
  }
 
  var expandFunction = function() {
-	var entry = $(this).parents(".edat:first").data("entry");
+	var entry = $(this).closest(".edat").data("entry");
 	console.log("Expand/contract " + entry["_id"]);
 	if($(this).hasClass("elog-expanded")) {
-		$(this).parents(".edat:first").find(".elog-chid").remove();
+		$(this).closest(".edat").find(".elog-chid").remove();
     	$(this).html('<i class="fa fa-plus expand_ctrl"></i>');
 	} else {
 		var clicked_elem = $(this);
-	    clicked_elem.parents(".edat:first").append(renderMSTemplate(elog_child_template, entry, { elog_chid_body_content: elog_chid_body_content } ));
-	    clicked_elem.parents(".edat:first").find(".followup").on("click", followup_function);
-        clicked_elem.parents(".edat:first").find(".delete").on("click", delete_elog_entry);
-        clicked_elem.parents(".edat:first").find(".edit").on("click", edit_elog_entry);
+	    clicked_elem.closest(".edat").append(renderMSTemplate(elog_child_template, entry, { elog_chid_body_content: elog_chid_body_content } ));
+	    clicked_elem.closest(".edat").find(".followup").on("click", followup_function);
+        clicked_elem.closest(".edat").find(".delete").on("click", delete_elog_entry);
+        clicked_elem.closest(".edat").find(".edit").on("click", edit_elog_entry);
 		_.each(_.sortBy(_.map(entry["c_children"], function(chid) { return $("#elog_tab").data("entries")[chid]; }), function(s) { return s["inserted_time"]; }).reverse(), function(ch_entry) {
 		    var rendered = renderMSTemplate(elog_main_template, ch_entry, { main_content_tmpl: elog_main_content_template });
 		    rendered.data("entry", ch_entry).addClass("edesc");
-		    clicked_elem.parents(".edat:first").find(".panel-body").append(rendered);
+		    clicked_elem.closest(".edat").find(".panel-body").append(rendered);
 		    rendered.find(".elog-expand").on("click", expandFunction);
 		});
     	$(this).html('<i class="fa fa-minus expand_ctrl"></i>');

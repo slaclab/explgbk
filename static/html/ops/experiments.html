@@ -30,8 +30,8 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
       rendered.find(".end_time").datetimepicker({defaultDate: moment(expInfo['end_time']), sideBySide: true });
       rendered.find(".instrument").append($(Mustache.render(options, instruments)));
       rendered.find(".instrument").val(expInfo['instrument']);
-      rendered.find(".fa-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
-      rendered.find(".fa-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      rendered.find(".fa-plus").on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").on("click", function(){ $(this).closest("tr").remove(); });
       rendered.find(".experiment_name").on("change", function(){
         console.log("Checking to see if experiment " + $(this).val() + " is registered in URAWI");
         $.getJSON(lookup_experiment_in_urawi, {"experiment_name": $(this).val()})
@@ -134,7 +134,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   Mustache.parse(exper_template);
 
   var edit_exp_btn_action = function(){
-    var expName = $(this).parents("tr").find("td").first().find("a").text()
+    var expName = $(this).closest("tr").find("td").first().find("a").text()
     console.log("Editing experiment " + expName);
     edit_exp($("#register_edit_exp_tab").data("name2info")[expName]);
   };

@@ -38,15 +38,15 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
 		 </div>`;
 
   var expandFunction = function() {
-  var run_files =  $(this).parents(".fdat:first").data("run_files");
+  var run_files =  $(this).closest(".fdat").data("run_files");
 	 console.log("Processing " + run_files[""]);
      if($(this).hasClass("fmgr-expanded")) {
-         $(this).parents(".fdat:first").find(".fmgr-chid").remove();
+         $(this).closest(".fdat").find(".fmgr-chid").remove();
          $(this).html('<i class="fa fa-plus expand_ctrl"></i>');
      } else {
          var clicked_elem = $(this);
          run_files.files = _.sortBy(run_files.files, function(fl){ return fl['name']});
-         clicked_elem.parents(".fdat:first").append(renderMSTemplate(fmgr_child_template, run_files));
+         clicked_elem.closest(".fdat").append(renderMSTemplate(fmgr_child_template, run_files));
          $(this).html('<i class="fa fa-minus expand_ctrl"></i>');
        }
 	   $(this).toggleClass("fmgr-expanded");

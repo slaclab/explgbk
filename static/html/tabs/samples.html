@@ -19,8 +19,8 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
       Mustache.parse(tmpl);
       var rendered = $(Mustache.render(tmpl, sample_obj));
       if(_.has(sample_obj, '_id')) { rendered.find("#sample_create").text("Update");}
-      rendered.find(".fa-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
-      rendered.find(".fa-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      rendered.find(".fa-plus").on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").on("click", function(){ $(this).closest("tr").remove(); });
       rendered.find("#sample_create").on("click", function(e) {
         e.preventDefault();
         var formObj = $("#samples_tab").find("#mdl_holder").find("form");
@@ -87,7 +87,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
     $("#samples_tab").data("samples", data);
     var rendered = $(Mustache.render(sample_tr_tmpl, data));
     rendered.find(".fa-anchor").on("click", function(){
-      var sample_name = $(this).parents("tr").first().find("td").first().text();
+      var sample_name = $(this).closest("tr").find("td").first().text();
       $.getJSON("ws/make_sample_current", {sample_name: sample_name})
       .done(function(data, textStatus, jqXHR) {
         if(data.success) {
@@ -100,7 +100,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
       .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure closing sample " + textStatus); })
     });
     rendered.find(".fa-edit").on("click", function(){
-      var sample_name = $(this).parents("tr").first().find("td").first().text();
+      var sample_name = $(this).closest("tr").find("td").first().text();
       var sample_obj = _.find($("#samples_tab").data("samples").value, function(shf){return shf._id == sample_name});
       edit_sample(sample_obj);
     });

@@ -33,13 +33,13 @@ $("#collab_tab").on("lg.loaded.bs.tab", function() {
                   $("tr[data-uid='" + collab["uid"] + "'] td.collab_admin_actions").append($("<i class='fa fa-lg fa-trash remove-collab' aria-hidden='true'></i>"));
               });
               $("span[data-role-fq-name]").on("click", function(){
-                  var role_fq_name = $(this).attr("data-role-fq-name"), uid = $(this).parents("tr").first().attr("data-uid");
+                  var role_fq_name = $(this).attr("data-role-fq-name"), uid = $(this).closest("tr").attr("data-uid");
                   $.getJSON("ws/toggle_role", { uid: uid, role_fq_name: role_fq_name})
                   .done(function() { $("#collab_tab").data("refresh")(); })
                   .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception adding/removing role " + jqXHR.responseText); })
               });
               $(".remove-collab").on("click", function() {
-                  var uid = $(this).parents("tr").first().attr("data-uid");
+                  var uid = $(this).closest("tr").attr("data-uid");
                   $.getJSON("ws/remove_collaborator", { uid: uid})
                   .done(function() { $("#collab_tab").data("refresh")(); })
                   .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception removing collaborator " + jqXHR.responseText); })
@@ -76,8 +76,8 @@ $("#collab_tab").on("lg.shown.bs.tab", function() {
                             .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception adding collaborator " + jqXHR.responseText); })
                         }
                         $("#collab_mdl_holder").find("tbody").empty().append(Mustache.render(ms_template, data));
-                        $("#collab_mdl_holder").find("tbody").find(".fa-pencil").on("click", function() {var uid = uid_prefix + $(this).parents("tr").first().attr("data-uid"); add_new_collab_to_role(uid, "LogBook/Writer")});
-                        $("#collab_mdl_holder").find("tbody").find(".fa-edit").on("click", function() {var uid = uid_prefix + $(this).parents("tr").first().attr("data-uid"); add_new_collab_to_role(uid, "LogBook/Editor")});
+                        $("#collab_mdl_holder").find("tbody").find(".fa-pencil").on("click", function() {var uid = uid_prefix + $(this).closest("tr").attr("data-uid"); add_new_collab_to_role(uid, "LogBook/Writer")});
+                        $("#collab_mdl_holder").find("tbody").find(".fa-edit").on("click", function() {var uid = uid_prefix + $(this).closest("tr").attr("data-uid"); add_new_collab_to_role(uid, "LogBook/Editor")});
                     });
                 } else{
                     $("#collab_mdl_holder").find("tbody").empty();

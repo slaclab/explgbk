@@ -18,8 +18,8 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
       var rendered = $(Mustache.render(tmpl, shift_obj));
       rendered.find(".start_time").datetimepicker({defaultDate: moment(shift_obj['begin_time']), sideBySide: true });
       if(_.has(shift_obj, 'name')) { rendered.find(".register_btn").text("Update");}
-      rendered.find(".fa-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
-      rendered.find(".fa-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      rendered.find(".fa-plus").on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").on("click", function(){ $(this).closest("tr").remove(); });
       rendered.find("#shift_create").on("click", function(e) {
         e.preventDefault();
         var formObj = $("#shifts_tab").find("#mdl_holder").find("form");
@@ -90,7 +90,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
     $("#shifts_tab").data("shifts", shift_data);
     var rendered = $(Mustache.render(shift_tr_tmpl, shift_data));
     rendered.find(".fa-power-off").on("click", function(){
-      var shift_name = $(this).parents("tr").first().find("td").first().text();
+      var shift_name = $(this).closest("tr").find("td").first().text();
       $.getJSON("ws/close_shift", {shift_name: shift_name})
       .done(function(data, textStatus, jqXHR) {
         if(data.success) {
@@ -103,7 +103,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
       .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure closing shift " + textStatus); })
     });
     rendered.find(".fa-edit").on("click", function(){
-      var shift_name = $(this).parents("tr").first().find("td").first().text();
+      var shift_name = $(this).closest("tr").find("td").first().text();
       var shift_obj = _.find($("#shifts_tab").data("shifts").value, function(shf){return shf.name == shift_name});
       edit_shift(shift_obj);
     });

@@ -18,8 +18,8 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
       Mustache.parse(tmpl);
       instr_obj.paramkvs = _.map(instr_obj['params'], function(value, key) { return { key: key, value: value };});
       var rendered = $(Mustache.render(tmpl, instr_obj));
-      rendered.find(".fa-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
-      rendered.find(".fa-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      rendered.find(".fa-plus").on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").on("click", function(){ $(this).closest("tr").remove(); });
       if(_.has(instr_obj, '_id')) { rendered.find(".register_btn").text("Update");}
       rendered.find(".register_btn").on("click", function(e) {
         e.preventDefault();
@@ -92,7 +92,7 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
     rendered.find(".editinsbtn").on("click", function(e){
       e.preventDefault();
       console.log("Editing instrument " + insname);
-      var insname = $(this).parents("tr").find("td").first().text();
+      var insname = $(this).closest("tr").find("td").first().text();
       var instr_obj = _.find(instruments.value, function(instr){ return instr._id == insname; });
       editcreatefn(instr_obj);
     });
