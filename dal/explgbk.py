@@ -7,6 +7,7 @@ import json
 import datetime
 import logging
 import re
+import copy
 from operator import itemgetter
 
 import requests
@@ -279,11 +280,10 @@ def get_elogs_for_specified_id(experiment_name, specified_id):
     else:
         return []
 
-def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None):
+def __upload_attachments_to_imagestore_and_return_urls(files):
     """
-    Create a new log entry.
+    Given a list of file uploads, upload these to the imagestore, generate thumbnails and return a list of attachments objects.
     """
-    expdb = logbookclient[experiment_name]
     attachments = []
     for file in files:
         filename = file[0]
@@ -315,7 +315,15 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
                     attachment["preview_url"] = thmb_imgurl
 
         attachments.append(attachment)
+    return attachments
 
+
+def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None):
+    """
+    Create a new log entry.
+    """
+    expdb = logbookclient[experiment_name]
+    attachments = __upload_attachments_to_imagestore_and_return_urls(files)
     elog_doc = {
         "relevance_time": datetime.datetime.utcnow(),
         "insert_time": datetime.datetime.utcnow(),
@@ -341,6 +349,47 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
     ins_id = expdb['elog'].insert_one(elog_doc).inserted_id
     entry = expdb['elog'].find_one({"_id": ins_id})
     return entry
+
+def delete_elog_entry(experiment_name, entry_id, userid):
+    """
+    Mark the elog entry specified by the entry_id as being deleted
+    This is a logical delete; so we add a deleted_by and deleted_time
+    """
+    expdb = logbookclient[experiment_name]
+    result = expdb['elog'].update_one({"_id": ObjectId(entry_id)}, {"$set": { "deleted_by": userid, "deleted_time": datetime.datetime.utcnow()}})
+    return result.modified_count > 0
+
+def modify_elog_entry(experiment_name, entry_id, userid, new_content, files):
+    """
+    Change the content for the specified elog entry.
+    We have to retain the history of the change; so we clone the existing entry but make the clone a child of the existing entry.
+    We also set the deleted_by/deleted_time for the clone; so it should show up as deleted.
+    """
+    expdb = logbookclient[experiment_name]
+    attachments = __upload_attachments_to_imagestore_and_return_urls(files)
+    current_entry = expdb['elog'].find_one({"_id": ObjectId(entry_id)})
+    hist_entry = copy.deepcopy(current_entry)
+    del hist_entry["_id"]
+    hist_entry["relevance_time"] = datetime.datetime.utcnow()
+    hist_entry["parent"] = current_entry["_id"]
+    hist_entry["root"] = current_entry["root"] if "root" in current_entry else current_entry["_id"]
+    hist_entry["deleted_by"] = userid
+    hist_entry["deleted_time"] = datetime.datetime.utcnow()
+    if "previous_version" in current_entry:
+        hist_entry["previous_version"] = current_entry["previous_version"]
+    hist_result = expdb['elog'].insert_one(hist_entry)
+    if hist_result and hist_result.inserted_id:
+        modification = {"$set": {
+            "content": new_content,
+            "author": userid,
+            "previous_version": hist_result.inserted_id
+        }}
+        if attachments:
+            modification["$push"] = { "attachments": { "$each": attachments }}
+        result = expdb['elog'].update_one({"_id": current_entry["_id"]}, modification)
+        return result.modified_count > 0
+    return False
+
 
 def get_experiment_files(experiment_name):
     '''

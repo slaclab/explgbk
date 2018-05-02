@@ -49,10 +49,10 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
        template_tr.find(".rtbl_def_category_select").on("change", function(){
          $(this).parent().next().empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value[$(this).val()]));
        });
-       template_tr.find(".fa-plus").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").after(template_tr.clone(true)); });
-       template_tr.find(".fa-trash").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").remove(); });
-       template_tr.find(".fa-arrow-up").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").prev().before($(this).parents("tr:first")); });
-       template_tr.find(".fa-arrow-down").parent().on("click", function(e){ e.preventDefault(); $(this).parents("tr:first").next().after($(this).parents("tr:first")); });
+       template_tr.find(".fa-plus").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").after(template_tr.clone(true)); });
+       template_tr.find(".fa-trash").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").remove(); });
+       template_tr.find(".fa-arrow-up").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").prev().before($(this).closest("tr")); });
+       template_tr.find(".fa-arrow-down").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").next().after($(this).closest("tr")); });
        if (!_.isNil(editTableName)) {
          console.log("Editing table " + editTableName);
          var tblDef = $("#rtbl_tab").data("tblData")[editTableName];

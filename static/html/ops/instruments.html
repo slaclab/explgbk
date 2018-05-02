@@ -12,14 +12,18 @@
 
 <script type="text/javascript">
 $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
+  var show_validation_message = function(message) {
+      $("#ins_mdl_holder").find(".validation_message").html(message);
+      $("#ins_mdl_holder").find(".validation_modal").modal("show");
+  }
   var editcreatefn = function(instr_obj) {
     $.ajax ("../static/html/ms/insedit.html")
     .done(function(tmpl){
       Mustache.parse(tmpl);
       instr_obj.paramkvs = _.map(instr_obj['params'], function(value, key) { return { key: key, value: value };});
       var rendered = $(Mustache.render(tmpl, instr_obj));
-      rendered.find(".fa-plus").on("click", function(){ $(this).parents("tr").first().after($(this).parents("tr").first().clone(true).find("input").val("").end()); });
-      rendered.find(".fa-trash").on("click", function(){ $(this).parents("tr").first().remove(); });
+      rendered.find(".fa-plus").on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").on("click", function(){ $(this).closest("tr").remove(); });
       if(_.has(instr_obj, '_id')) { rendered.find(".register_btn").text("Update");}
       rendered.find(".register_btn").on("click", function(e) {
         e.preventDefault();
@@ -34,8 +38,7 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
         _.each(validations, function(validation, i) {
           console.log("Trying validation " + i + "" + validation[1]);
           if(validation[0]()) {
-              $("#ins_mdl_holder").find(".validation_message").html(validation[1]);
-              $("#ins_mdl_holder").find(".validation_modal").modal("show");
+              show_validation_message(validation[1]);
               v_failed = true;
               return false;
           }
@@ -67,10 +70,10 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
               sessionStorage.setItem("ops_active_tab", "instruments");
               window.location.reload(true);
           } else {
-            alert("Server side exception processing instrument " + data.errormsg);
+            show_validation_message("Server side: " + data.errormsg);
           }
         })
-        .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure processing instrument " + textStatus); })
+        .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server side: " + _.get(jqXHR, "responseText", textStatus))})
       });
       $("#ins_mdl_holder").append(rendered);
       $("#ins_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#ins_mdl_holder").empty(); });
@@ -92,7 +95,7 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
     rendered.find(".editinsbtn").on("click", function(e){
       e.preventDefault();
       console.log("Editing instrument " + insname);
-      var insname = $(this).parents("tr").find("td").first().text();
+      var insname = $(this).closest("tr").find("td").first().text();
       var instr_obj = _.find(instruments.value, function(instr){ return instr._id == insname; });
       editcreatefn(instr_obj);
     });

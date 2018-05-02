@@ -14,6 +14,7 @@
                             <input type="text" class="form-control" name="run_num" id="elog_new_entry_run_num"/>
                         </div>
                     </div>
+                    <div class="validation_warning"></div>
                     <div class="form-group">
                         <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text*</label>
                         <div class="col-sm-10">
@@ -64,7 +65,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   <div class="col-md-5">Content</div>
   <div class="col-md-2">Author</div>
  </div>`;
- var elog_main_template = `<div class="edat" data-entry-id="{{ _id }}"><div class="row">
+ var elog_main_template = `<div class="edat" id="{{ _id }}"><div class="row">
   <div class="col-md-3">
     <span class="elog-expand elog-compressed exp_icons_left"><i class="fa fa-plus expand_ctrl"></i></span>
     {{#c_attach}}<span class="exp_icons_left"><i class="fa fa-paperclip expand_ctrl"></i></span>{{/c_attach}}
@@ -72,45 +73,52 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   </div>
   <div class="col-md-1">{{ run_num }}</div>
   <div class="col-md-1">Length</div>
-  <div class="col-md-5 text_truncate">{{ content }}</div>
+  {{> main_content_tmpl }}
   <div class="col-md-2">{{ author }}</div>
   </div></div>`;
+  var elog_main_content_template = `<div class="col-md-5 elog_main_content text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{ content }}</div>`;
 
  var elog_child_template = `<div class="row col-md-12 elog-chid">
    <div class="panel panel-default">
-    <div class="panel-heading text-left"><span class="entry_actions"><i class="fa fa-send followup"></i></span><pre>{{content}}</pre></div>
+    <div class="panel-heading text-left"><span class="entry_actions"><i class="fa fa-send fa-lg followup"></i>{{#roles.is_editor}}<i class="fa fa-edit fa-lg edit"></i><i class="fa fa-trash fa-lg delete"></i>{{/roles.is_editor}}</span><pre>{{content}}</pre></div>
     <div class="panel-body">
-     <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=False" target="_blank" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>
+      {{> elog_chid_body_content }}
      <div class="row dialog_holder"></div>
     </div>
    </div>
  </div>`;
+ var elog_chid_body_content = `<div class="elog_chid_body_content">{{#deleted_by}}<div class="row elog_deleted_by">Deleted by {{deleted_by}} - {{#FormatDate}}{{ deleted_time }}{{/FormatDate}}</div>{{/deleted_by}}
+ <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=False" target="_blank" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div></div>`;
 
  var elog_followup_template = `<div class="row followup_div"><div class="panel col-sm-8"><div class="panel-body">
       <form class="form-horizontal followup_form" role="form">
        <button type="button" class="close">&times;</button>
        <input type="hidden" name="parent" value="{{ _id }}">
+       <div class="validation_warning"></div>
        <div class="form-group"><label class="col-sm-2 control-label">Text</label><div class="col-sm-8"><textarea class="form-control" rows="5" name="log_text"></textarea></div></div>
        <div class="form-group"><label class="col-sm-2 control-label">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
        <div class="form-group"><button type="button" class="btn btn-default followup_post">Post</button></div>
       </form></div></div></div>`;
 
   Mustache.parse(elog_main_template);
+  Mustache.parse(elog_main_content_template);
   Mustache.parse(elog_child_template);
+  Mustache.parse(elog_chid_body_content);
   Mustache.parse(elog_followup_template);
 
-  var renderMSTemplate = function(template, entry) { // Convienience method to render time correctly.
-    entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:SS");}};
-    return $(Mustache.render(template, entry));
+  var renderMSTemplate = function(template, entry, partials) { // Convienience method to render time correctly.
+    entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+    return $(Mustache.render(template, entry, partials));
   }
 
- var followup = function() {
-	var entry = $(this).parents(".edat:first").data("entry");
+ var followup_function = function() {
+	var entry = $(this).closest(".edat").data("entry");
 	var rendered = renderMSTemplate(elog_followup_template, entry);
 	rendered.find(".close").on("click", function(){
-		$(this).parents(".followup_div:first").remove();
+		$(this).closest(".followup_div").remove();
 	});
 	rendered.find(".followup_post").on("click", function(){
+        if(_.isEmpty($.trim($(this).closest(".followup_form").find("textarea").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
 		var formData = new FormData(rendered.find(".followup_form")[0]);
 		$.ajax({
 			url: 'ws/new_elog_entry',
@@ -128,26 +136,65 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 			}
 		})
 		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception posting followup elog entry " + jqXHR.responseText); })
-		$(this).parents(".followup_div:first").remove();
+		$(this).closest(".followup_div").remove();
 	});
 
-	$(this).parents(".elog-chid:first").find(".dialog_holder").html(rendered);
+	$(this).closest(".elog-chid").find(".dialog_holder").html(rendered);
+ }
+
+ var edit_elog_entry = function() {
+    var entry = $(this).closest(".edat").data("entry");
+    var rendered = renderMSTemplate(elog_followup_template, entry);
+ 	rendered.find(".close").on("click", function(){
+ 		$(this).closest(".followup_div").remove();
+ 	});
+    rendered.find("textarea").first().text(entry["content"]);
+ 	rendered.find(".followup_post").on("click", function(){
+ 		var formData = new FormData(rendered.find(".followup_form")[0]);
+ 		$.ajax({
+ 			url: 'ws/modify_elog_entry?_id='+encodeURIComponent(entry["_id"]),
+ 			data: formData,
+ 			type: 'POST',
+ 			contentType: false, // Needed
+ 			processData: false // Needed
+ 		})
+ 		.done(function(data, textStatus, jqXHR) {
+ 			data = JSON.parse(data);
+ 			if(data.success) {
+ 				console.log("Successfully edited elog entry");
+ 			} else {
+ 				alert("Server side exception editing elog entry " + data.errormsg);
+ 			}
+ 		})
+ 		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception editing elog entry " + jqXHR.responseText); })
+ 		$(this).closest(".followup_div").remove();
+ 	});
+    $(this).closest(".elog-chid").find(".dialog_holder").html(rendered);
+ }
+
+ var delete_elog_entry = function() {
+     var entry = $(this).closest(".edat").data("entry");
+     $.getJSON({url: "ws/delete_elog_entry?_id="+encodeURIComponent(entry["_id"]), method: "DELETE" })
+     .done(function(){})
+     .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception deleting elog entry " + jqXHR.responseText); })
  }
 
  var expandFunction = function() {
-	var entry = $(this).parents(".edat:first").data("entry");
+	var entry = $(this).closest(".edat").data("entry");
 	console.log("Expand/contract " + entry["_id"]);
 	if($(this).hasClass("elog-expanded")) {
-		$(this).parents(".edat:first").find(".elog-chid").remove();
+		$(this).closest(".edat").find(".elog-chid").remove();
     	$(this).html('<i class="fa fa-plus expand_ctrl"></i>');
 	} else {
 		var clicked_elem = $(this);
-	    clicked_elem.parents(".edat:first").append(renderMSTemplate(elog_child_template, entry));
-	    clicked_elem.parents(".edat:first").find(".followup").on("click", followup);
+	    clicked_elem.closest(".edat").append(renderMSTemplate(elog_child_template, entry, { elog_chid_body_content: elog_chid_body_content } ));
+	    clicked_elem.closest(".edat").find(".followup").on("click", followup_function);
+        clicked_elem.closest(".edat").find(".delete").on("click", delete_elog_entry);
+        clicked_elem.closest(".edat").find(".edit").on("click", edit_elog_entry);
 		_.each(_.sortBy(_.map(entry["c_children"], function(chid) { return $("#elog_tab").data("entries")[chid]; }), function(s) { return s["inserted_time"]; }).reverse(), function(ch_entry) {
-		    var rendered = renderMSTemplate(elog_main_template, ch_entry);
+		    var rendered = renderMSTemplate(elog_main_template, ch_entry, { main_content_tmpl: elog_main_content_template });
 		    rendered.data("entry", ch_entry).addClass("edesc");
-		    clicked_elem.parents(".edat:first").find(".panel-body").append(rendered);
+		    clicked_elem.closest(".edat").find(".panel-body").append(rendered);
 		    rendered.find(".elog-expand").on("click", expandFunction);
 		});
     	$(this).html('<i class="fa fa-minus expand_ctrl"></i>');
@@ -165,16 +212,29 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       if(parent != null && _.has(id2entry, parent)) {
     	  var pey = id2entry[parent];
    		  _.defaults(pey, {"c_children": []});
-   		  pey["c_children"].push(entry["_id"]);
+   		  pey["c_children"] = _.union(pey["c_children"], [ entry["_id"] ]);
       }
       if(root != null && _.has(id2entry, root)) {
     	  var rey = id2entry[root];
    		  _.defaults(rey, {"c_desc": []});
-   		  rey["c_desc"].push(entry["_id"]);
+   		  rey["c_desc"] = _.union(rey["c_desc"], [ entry["_id"] ]);
       }
-
+      entry.roles = roles;
       id2entry[entry["_id"]] = entry;
   }
+
+  var reattach_children = function(elog_entry) { // When getting a socket request, we may get an update on the pareant without getting an update on the children. Loop thru and reattach children
+      _.each(id2entry, function(entry, key){
+          var myid = elog_entry["_id"], root = _.get(entry, "root", null), parent = _.get(entry, "parent", null);
+          if(parent != null && myid == parent) {
+       		  elog_entry["c_children"] = _.union(elog_entry["c_children"], [ entry["_id"] ]);
+          }
+          if(root != null && myid == root) {
+       		  elog_entry["c_desc"] = _.union(elog_entry["c_desc"], [ entry["_id"] ]);
+          }
+      });
+  }
+
   $("#elog_tab").data("entries", id2entry);
 
   var processElogResponse = function(data) {
@@ -182,7 +242,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   	$("#elog_content").html(elog_header);
   	_.each(_.sortBy(_.filter(data.value, function(f) { return !_.has(f, "root") }), function(s) { return s["inserted_time"]}).reverse(), function(entry) { // Show only the top level entries in descending order
   		if(! _.has(entry, "root")) {
-  		    var rendered = renderMSTemplate(elog_main_template, entry);
+  		    var rendered = renderMSTemplate(elog_main_template, entry, { main_content_tmpl: elog_main_content_template });
   		    rendered.data("entry", entry).addClass("etop");
   		    $("#elog_content").append(rendered);
   		}
@@ -212,15 +272,26 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
   load_elog_function();
 
-  $(document).on('elog', function(event, elogData) {
+  $(document).on('elog', function(event, elogEvent) {
       if(skip_websocket_elog_messages) { console.log("Skipping elog message from server."); return; }
-      console.log("Processing elog event for experiment " + experiment_name);
+      var elogData = elogEvent.value;
+      console.log("Processing elog event for experiment " + experiment_name + " id=" + elogData["_id"]);
       processNewEntry(elogData);
+      reattach_children(elogData);
       var entryinserted = false;
       var newentrydt = moment(elogData['insert_time']);
-      var rendered = renderMSTemplate(elog_main_template, elogData);
+      var rendered = renderMSTemplate(elog_main_template, elogData, { main_content_tmpl: elog_main_content_template });
       rendered.data("entry", elogData).addClass("etop");
       rendered.find(".elog-expand").on("click", expandFunction);
+      var existingElem = $("#"+elogData["_id"]);
+      if(existingElem.length > 0) {
+          existingElem.data("entry", elogData);
+          existingElem.find(".elog_main_content").first().replaceWith(renderMSTemplate(elog_main_content_template, elogData));
+          existingElem.find(".elog-chid pre").first().text(elogData["content"]);
+          existingElem.find(".elog_chid_body_content").first().replaceWith(renderMSTemplate(elog_chid_body_content, elogData));
+          entryinserted = true;
+          return;
+      }
       if (!_.has(elogData, 'root') && !_.has(elogData, 'parent')) {
           $.each($("#elog_content").find(".etop"), function(i, entry) {
               var existing_entry = $(this).data("entry");
@@ -240,18 +311,18 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
           }
       } else {
           console.log("Child row of " + elogData["parent"]);
-          $.each($("div[data-entry-id='"+elogData["parent"]+"']").find(".edat"), function() {
+          $.each($("#"+elogData["parent"]).find(".edat"), function() {
               var existing_entry = $(this).data("entry");
               var existing_entry_dt = moment(existing_entry['insert_time']);
               if (newentrydt.isAfter(existing_entry_dt)) {
                   $(this).before(rendered);
-                  entryinserted = true
+                  entryinserted = true;
                   return false;
               }
           });
           if(!entryinserted) {
               console.log("Inserting possible first child entry");
-              $("div[data-entry-id='"+elogData["parent"]+"']").find(".panel-body").append(rendered);
+              $("#"+elogData["parent"]).find(".panel-body").append(rendered);
               entryinserted = true;
           }
       }
@@ -265,6 +336,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
   $("#elog_new_entry_modal_post").on("click", function (e) {
 	  var formData = new FormData($('#elog_new_entry_form')[0]);
+      if(_.isEmpty($.trim($("#elog_new_entry_log_text").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
 	  $.ajax({
 		    url: 'ws/new_elog_entry',
 		    data: formData,
@@ -327,8 +399,9 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
 $("#elog_tab").on("lg.shown.bs.tab", function() {
     var tab_toolbar = `<input type="text" placeholder="Search/Run/Run-Run" id="elog_search_text">
-    <i class="fa fa-plus fa-lg" id="elog_new_entry"></i>
-    <i class="fa fa-paperclip fa-lg" id="elog_attachments_only"></i>`;
+    <i class="fa fa-plus fa-lg" id="elog_new_entry" title="Post a new elog entry"></i>
+    <i class="fa fa-paperclip fa-lg" id="elog_attachments_only" title="Toggle attachments only"></i>
+    <i class="fa fa-strikethrough fa-lg" id="elog_deleted_entries" title="Toggle deleted entries"></i>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
     $("#elog_new_entry").on("click", $("#elog_tab").data("new_entry_click"));
@@ -341,6 +414,14 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
             skip_websocket_elog_messages = true;
         }
         $("#elog_attachments_only").toggleClass("pushedin");
+    });
+    $("#elog_deleted_entries").on("click", function() {
+        if($("#elog_deleted_entries").hasClass("pushedin")) {
+            $("#elog_tab").find(".elog_deleted").closest(".edat").removeClass("hidden");
+        } else {
+            $("#elog_tab").find(".elog_deleted").closest(".edat").addClass("hidden");
+        }
+        $("#elog_deleted_entries").toggleClass("pushedin");
     });
     $("#elog_search_text").on("input", $("#elog_tab").data("search_text_input"));
 });

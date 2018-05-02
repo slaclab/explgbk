@@ -20,7 +20,11 @@ __author__ = 'mshankar@slac.stanford.edu'
 
 logger = logging.getLogger(__name__)
 
+all_experiment_names = set()
+
 def init_app(app):
+    if 'experiments' not in list(logbookclient['explgbk_cache'].collection_names()):
+        logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] );
     scheduler = sched.scheduler()
     def __refresh_cache_periodically():
         scheduler.enter(60*60*24, 1, refresh_cache_periodically)
@@ -44,6 +48,25 @@ def get_experiments():
     """
     return list(logbookclient['explgbk_cache']['experiments'].find({}))
 
+def does_experiment_exist(experiment_name):
+    """
+    Checks for the existence of the experiment_name.
+    This is meant mostly for validation of the experiment_name; we assume that this is going to be called many times.
+    So, we are avoiding a hit to the database by caching just the names themselves in memory.
+    """
+    global all_experiment_names
+    return experiment_name in all_experiment_names
+
+def text_search_for_experiments(search_terms):
+    """
+    Search the experiment cache for experiments matching the search terms.
+    Use search terms separated by spaces. The backslash escapes the space for literal searches.
+    Use the minus character to suppress a word.
+    """
+    matching_entries = list(logbookclient['explgbk_cache']['experiments'].find({ "$text": { "$search": search_terms }}))
+    return sorted(matching_entries, key=lambda x : x["name"])
+
+
 def __update_experiments_info():
     """
     Since we are using an database per experiment, getting basic information that spans experiments can take some time.
@@ -59,10 +82,12 @@ def __update_single_experiment_info(experiment_name):
     """
     Load a single experiment's info and return the info as a dict
     """
+    global all_experiment_names
     logger.debug("Gathering the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     expdb = logbookclient[experiment_name]
     collnames = list(expdb.collection_names())
     if 'info' in collnames:
+        all_experiment_names.add(experiment_name)
         expinfo = { "_id": experiment_name }
         info = expdb["info"].find_one({}, {"latest_setup": 0})
         if 'runs' in collnames:
