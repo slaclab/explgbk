@@ -55,7 +55,14 @@ def does_experiment_exist(experiment_name):
     So, we are avoiding a hit to the database by caching just the names themselves in memory.
     """
     global all_experiment_names
-    return experiment_name in all_experiment_names
+    if experiment_name in all_experiment_names: # Check the cache first.
+        return True
+    expdb = logbookclient[experiment_name]
+    collnames = list(expdb.collection_names())
+    if 'info' in collnames:
+        return True
+
+    return False
 
 def text_search_for_experiments(search_terms):
     """
