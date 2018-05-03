@@ -359,7 +359,7 @@ def delete_elog_entry(experiment_name, entry_id, userid):
     result = expdb['elog'].update_one({"_id": ObjectId(entry_id)}, {"$set": { "deleted_by": userid, "deleted_time": datetime.datetime.utcnow()}})
     return result.modified_count > 0
 
-def modify_elog_entry(experiment_name, entry_id, userid, new_content, files):
+def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, files):
     """
     Change the content for the specified elog entry.
     We have to retain the history of the change; so we clone the existing entry but make the clone a child of the existing entry.
@@ -386,6 +386,8 @@ def modify_elog_entry(experiment_name, entry_id, userid, new_content, files):
         }}
         if attachments:
             modification["$push"] = { "attachments": { "$each": attachments }}
+        if email_to:
+            modification.setdefault("$push", {})["email_to"] = { "$each": email_to }
         result = expdb['elog'].update_one({"_id": current_entry["_id"]}, modification)
         return result.modified_count > 0
     return False
