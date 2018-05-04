@@ -105,3 +105,19 @@ var getURLParameter = function(paramName) {
 	}
     return null;
 }
+
+
+var content_editable_trigger_change = function(rowRendered) {
+  rowRendered.find("[contenteditable]").on('focus', function() {
+      var $this = $(this);
+      $this.data('before', $this.html());
+      return $this;
+  }).on('focusout', function() {
+      var $this = $(this);
+      if ($this.data('before') !== $this.html()) {
+          $this.data('before', $this.html());
+          $this.trigger('change');
+      }
+      return $this;
+  });
+}

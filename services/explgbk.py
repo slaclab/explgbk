@@ -518,8 +518,6 @@ def svc_post_new_elog_entry(experiment_name):
 
     logger.debug("Optional args %s ", optional_args)
 
-
-
     files = []
     for upload in request.files.getlist("files"):
         filename = upload.filename.rsplit("/")[0]
@@ -548,6 +546,8 @@ def svc_modify_elog_entry(experiment_name):
     log_content = request.form["log_text"]
     log_emails = request.form.get("log_emails", None)
     email_to = log_emails.split() if log_emails else None
+    log_tags_str = request.form.get("log_tags", None)
+    tags = log_tags_str.split() if log_tags_str else []
     if not entry_id or not log_content:
         return logAndAbort("Please pass in the _id of the elog entry for " + experiment_name + " and the new content")
 
@@ -558,7 +558,7 @@ def svc_modify_elog_entry(experiment_name):
             logger.info(filename)
             files.append((filename, upload))
 
-    status = modify_elog_entry(experiment_name, entry_id, context.security.get_current_user_id(), log_content, email_to, files)
+    status = modify_elog_entry(experiment_name, entry_id, context.security.get_current_user_id(), log_content, email_to, tags, files)
     if status:
         modified_entry = get_specific_elog_entry(experiment_name, entry_id)
         context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": modified_entry})
