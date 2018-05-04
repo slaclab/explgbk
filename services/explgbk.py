@@ -546,6 +546,8 @@ def svc_post_new_elog_entry(experiment_name):
 def svc_modify_elog_entry(experiment_name):
     entry_id = request.args.get("_id", None)
     log_content = request.form["log_text"]
+    log_emails = request.form.get("log_emails", None)
+    email_to = log_emails.split() if log_emails else None
     if not entry_id or not log_content:
         return logAndAbort("Please pass in the _id of the elog entry for " + experiment_name + " and the new content")
 
@@ -556,12 +558,18 @@ def svc_modify_elog_entry(experiment_name):
             logger.info(filename)
             files.append((filename, upload))
 
-    status = modify_elog_entry(experiment_name, entry_id, context.security.get_current_user_id(), log_content, files)
+    status = modify_elog_entry(experiment_name, entry_id, context.security.get_current_user_id(), log_content, email_to, files)
     if status:
-        entry = get_specific_elog_entry(experiment_name, entry_id)
-        context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": entry})
-        previous_version = get_specific_elog_entry(experiment_name, entry["previous_version"])
+        modified_entry = get_specific_elog_entry(experiment_name, entry_id)
+        context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": modified_entry})
+        previous_version = get_specific_elog_entry(experiment_name, modified_entry["previous_version"])
         context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Create", "value": previous_version})
+
+        email_to = modified_entry.get("email_to", None)
+        if not email_to and "root" in modified_entry:
+            email_to = get_specific_elog_entry(experiment_name, modified_entry["root"]).get("email_to", None)
+        if email_to:
+            send_elog_as_email(experiment_name, modified_entry, email_to)
 
     return JSONEncoder().encode({"success": status})
 
