@@ -724,8 +724,7 @@ def svc_start_run(experiment_name):
 
     run_doc = start_run(experiment_name, run_type, user_specified_run_number)
 
-    run_doc['experiment_name'] = experiment_name
-    context.kafka_producer.send("runs", run_doc)
+    context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Insert", "value": run_doc})
     logger.debug("Published the new run for %s", experiment_name)
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
@@ -740,8 +739,7 @@ def svc_end_run(experiment_name):
     End the current run; ending the current run is mostly setting the end time.
     """
     run_doc = end_run(experiment_name)
-    run_doc['experiment_name'] = experiment_name
-    context.kafka_producer.send("runs", run_doc)
+    context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc})
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
 
@@ -777,8 +775,9 @@ def svc_add_run_params(experiment_name):
 
     params = request.json
     run_params = {"params." + escape_chars_for_mongo(k) : v for k, v in params.items() }
-
-    return JSONEncoder().encode({"success": True, "value": add_run_params(experiment_name, current_run_doc, run_params)})
+    run_doc_after = add_run_params(experiment_name, current_run_doc, run_params)
+    context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc})
+    return JSONEncoder().encode({"success": True, "value": run_doc_after})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/close_shift", methods=["GET"])
 @context.security.authentication_required

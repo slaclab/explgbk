@@ -324,9 +324,10 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
     """
     expdb = logbookclient[experiment_name]
     attachments = __upload_attachments_to_imagestore_and_return_urls(files)
+    now_ts = datetime.datetime.utcnow()
     elog_doc = {
-        "relevance_time": datetime.datetime.utcnow(),
-        "insert_time": datetime.datetime.utcnow(),
+        "relevance_time": now_ts,
+        "insert_time": now_ts,
         "author": author,
         "content": log_content,
         "content_type": "TEXT"
@@ -370,11 +371,11 @@ def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, 
     current_entry = expdb['elog'].find_one({"_id": ObjectId(entry_id)})
     hist_entry = copy.deepcopy(current_entry)
     del hist_entry["_id"]
-    hist_entry["relevance_time"] = datetime.datetime.utcnow()
     hist_entry["parent"] = current_entry["_id"]
     hist_entry["root"] = current_entry["root"] if "root" in current_entry else current_entry["_id"]
     hist_entry["deleted_by"] = userid
     hist_entry["deleted_time"] = datetime.datetime.utcnow()
+    hist_entry["relevance_time"] = hist_entry["deleted_time"]
     if "previous_version" in current_entry:
         hist_entry["previous_version"] = current_entry["previous_version"]
     hist_result = expdb['elog'].insert_one(hist_entry)
@@ -491,6 +492,7 @@ def get_runtable_sources(experiment_name):
     We combine all of these into a param name --> category+description
     '''
     expdb = logbookclient[experiment_name]
+    sitedb = logbookclient["site"]
     instrument = expdb.info.find_one({})['instrument']
     rtbl_sources = {}
     rtbl_sources["Run Info"] = [{"label": "Begin Time", "description": "The start of the run", "source": "begin_time", "category": "Run Info"},
@@ -515,6 +517,7 @@ def get_runtable_sources(experiment_name):
     for run in expdb.runs.find({}, {"params" : 1}):
         get_leaves_of_a_document(None, run["params"].items(), param_names)
     param_descs = { x["param_name"] : { "label" : x["param_name"], "description": x["description"] if x["description"] else x["param_name"], "category": x['param_name'].split('/')[0] if '/' in x['param_name'] else "EPICS:Additional parameters" } for x in  expdb.run_param_descriptions.find({})}
+    site_param_descs = { x["param_name"] : { "label" : x["param_name"], "description": x["description"] if "description" in x else x["param_name"], "category": x['category'] if 'category' in x else "EPICS:Additional parameters" } for x in  sitedb.run_param_descriptions.find({})}
     # Update the category and description from the instrument_scientists_run_table_defintions if present
     param_names_with_categories = []
     for param_name in sorted(param_names):
@@ -524,11 +527,23 @@ def get_runtable_sources(experiment_name):
                 "category": "EPICS/" + instrument_scientists_run_table_defintions[instrument][param_name]["title"],
                 "description": instrument_scientists_run_table_defintions[instrument][param_name].get("description", param_name),
                 "source": "params." + param_name })
+        elif 'HEADER' in instrument_scientists_run_table_defintions and param_name in instrument_scientists_run_table_defintions['HEADER']:
+            param_names_with_categories.append({
+                "label" : param_name,
+                "category": "EPICS/" + instrument_scientists_run_table_defintions['HEADER'][param_name]["title"],
+                "description": instrument_scientists_run_table_defintions['HEADER'][param_name].get("description", param_name),
+                "source": "params." + param_name })
         elif param_name in param_descs:
             param_names_with_categories.append({
                 "label" : param_name,
                 "category": param_descs[param_name]['category'],
                 "description": param_descs[param_name].get("description", param_name),
+                "source": "params." + param_name })
+        elif param_name in site_param_descs:
+            param_names_with_categories.append({
+                "label" : param_name,
+                "category": site_param_descs[param_name]['category'],
+                "description": site_param_descs[param_name].get("description", param_name),
                 "source": "params." + param_name })
         else:
             param_names_with_categories.append({

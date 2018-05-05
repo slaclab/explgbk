@@ -303,6 +303,12 @@ label {
   color: #6685F4;
   font-weight: bold;
 }
+#elog_tab .elog_run_param_category {
+  background: #efefef;
+}
+#elog_tab .elog_run_param_category .expand_param {
+  padding-right: 0.25em;
+}
 #current_sample_lbl .fa {
   padding-right: 0.25em;
 }

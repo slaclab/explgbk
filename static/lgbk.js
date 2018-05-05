@@ -106,6 +106,11 @@ var getURLParameter = function(paramName) {
     return null;
 }
 
+/*
+A div with the contenteditable attr is more flexible from a run table layout perspective.
+However, this does not plugin to the jQuery change notification framework easily.
+This shim will kick off a change event when the contenteditable has changed.
+*/
 
 var content_editable_trigger_change = function(rowRendered) {
   rowRendered.find("[contenteditable]").on('focus', function() {
