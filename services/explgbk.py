@@ -866,27 +866,20 @@ def svc_get_current_sample(experiment_name):
 def svc_create_update_sample(experiment_name):
     """
     Create/update a sample.
+    If you pass in a _id, then this is an update.
     """
     sample_name = request.args.get("sample_name", None)
     if not sample_name:
         return logAndAbort("We need a sample_name as a parameter")
-
-    create_str = request.args.get("create", None)
-    if not create_str:
-        return logAndAbort("Creating sample must have a boolean create parameter indicating if the sample is created or updated.")
-    createp = create_str.lower() in set(["yes", "true", "t", "1"])
-    logger.debug("Create update sample is %s for %s", createp, create_str)
-
     info = request.json
     if not info:
         return logAndAbort("Creating sample missing info document")
 
-    info["_id"] = sample_name
-
-    necessary_keys = set(['description'])
+    createp = "_id" not in info
+    necessary_keys = set(['name', 'description'])
     missing_keys = necessary_keys - info.keys()
     if missing_keys:
-        return logAndAbort("Creating sample missing keys %s" % missing_keys)
+        return logAndAbort("Create/update sample missing fields %s" % missing_keys)
 
     (status, errormsg) = create_update_sample(experiment_name, sample_name, createp, info)
     if status:

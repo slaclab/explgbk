@@ -61,7 +61,7 @@ var setCurrentUISample = function() {
          $("#current_sample_name").on("click", function(){
              $.when($.ajax("../../static/html/ms/chooseSample.html"), $.getJSON("ws/samples"))
              .done(function(d1, d2){
-                 var tmpl = d1[0], samples = d2[0], sample_names = _.union(_.map(samples.value, "_id"), ["Current Sample", "All Samples"]);
+                 var tmpl = d1[0], samples = d2[0], sample_names = _.union(_.map(samples.value, "name"), ["Current Sample", "All Samples"]);
                  Mustache.parse(tmpl);
                  var rendered = $(Mustache.render(tmpl, samplesDict));
                  rendered.find("#choose_sample tbody").append($(Mustache.render(choose_sample_template, {sample_names: sample_names})));

@@ -44,19 +44,21 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
         });
         if (v_failed) { e.preventDefault(); return; }
         var sample_name = $.trim(formObj.find(".sample_name").val());
-        var sample_name_original = $.trim(formObj.find(".sample_name_original").val());
+        var sample_id_original = $.trim(formObj.find(".sample_id").val());
+        console.log("_id:" + sample_id_original);
         var sample_params = {};
         formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { sample_params[key] = val; }});
         var new_sample_doc = {
-          _id: sample_name,
+          name: sample_name,
           description: $.trim(formObj.find(".sample_description").val()),
           params: sample_params
         };
+        if( !_.isNil(sample_id_original) && $.trim(formObj.find(".sample_id").val()).length > 1 ) { new_sample_doc["_id"] = sample_id_original }
         console.log(new_sample_doc);
         $.ajax({
           type: "POST",
           contentType: "application/json; charset=utf-8",
-          url: "ws/create_update_sample"+ "?sample_name=" + encodeURIComponent(sample_name) + "&create=" + ((sample_name == sample_name_original) ? false : true),
+          url: "ws/create_update_sample"+ "?sample_name=" + encodeURIComponent(sample_name),
           data: JSON.stringify(new_sample_doc),
           dataType: "json"
         })
@@ -79,7 +81,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
   }
   $("#samples_tab").data("edit_sample", edit_sample);
 
-  var sample_tr_tmpl = `{{#value}}<tr {{#current}}class="active_sample"{{/current}}><td>{{ _id }}</td><td>{{ description }}</td><td><i title="Edit sample details" class="fa fa-edit listview-action"></i>{{^current}}<i title="Make this sample the current sample" class="fa fa-anchor listview-action"></i>{{/current}}</td></tr>{{/value}}`;
+  var sample_tr_tmpl = `{{#value}}<tr {{#current}}class="active_sample"{{/current}}><td>{{ name }}</td><td>{{ description }}</td><td><i title="Edit sample details" class="fa fa-edit listview-action"></i>{{^current}}<i title="Make this sample the current sample" class="fa fa-anchor listview-action"></i>{{/current}}</td></tr>{{/value}}`;
   Mustache.parse(sample_tr_tmpl);
   $.getJSON("ws/samples")
   .done(function(data){
@@ -101,7 +103,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
     });
     rendered.find(".fa-edit").on("click", function(){
       var sample_name = $(this).closest("tr").find("td").first().text();
-      var sample_obj = _.find($("#samples_tab").data("samples").value, function(shf){return shf._id == sample_name});
+      var sample_obj = _.find($("#samples_tab").data("samples").value, function(shf){return shf.name == sample_name});
       edit_sample(sample_obj);
     });
     $("#samples_tab .samplestbl tbody").append(rendered);
