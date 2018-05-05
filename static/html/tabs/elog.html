@@ -23,13 +23,15 @@
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="elog_new_entry_email_dest" title="Email this log entry to folks specified in this list:">Email:</label>
-                        <div class="col-sm-4">
+                        <div class="col-sm-8">
                             <input class="form-control" rows="5" name="log_emails" id="elog_new_entry_email_dest" placeholder="email1 email2@institution.edu"></input>
                         </div>
-                        <!--label class="col-sm-2 control-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
                         <div class="col-sm-4">
                             <input class="form-control" rows="5" name="log_tags" id="elog_new_entry_tags" placeholder="Tag1 Tag2 Tag3"></input>
-                        </div-->
+                        </div>
                     </div>
                     <div class="form-group">
                         <label  class="col-sm-2 control-label" for="elog_new_entry_file_upload">File</label>
@@ -59,24 +61,23 @@
 $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
  var elog_header = `<div class="row exp_tab_header">
-  <div class="col-md-3">Posted</div>
+  <div class="col-md-2">Posted</div>
   <div class="col-md-1">Run</div>
-  <div class="col-md-1">Length</div>
   <div class="col-md-5">Content</div>
-  <div class="col-md-2">Author</div>
+  <div class="col-md-3">Tags</div>
+  <div class="col-md-1">Author</div>
  </div>`;
  var elog_main_template = `<div class="edat" id="{{ _id }}"><div class="row">
-  <div class="col-md-3">
+  <div class="col-md-2">
     <span class="elog-expand elog-compressed exp_icons_left"><i class="fa fa-plus expand_ctrl"></i></span>
     {{#c_attach}}<span class="exp_icons_left"><i class="fa fa-paperclip expand_ctrl"></i></span>{{/c_attach}}
     {{#FormatDate}}{{ insert_time }}{{/FormatDate}}
   </div>
   <div class="col-md-1">{{ run_num }}</div>
-  <div class="col-md-1">Length</div>
   {{> main_content_tmpl }}
-  <div class="col-md-2">{{ author }}</div>
+  <div class="col-md-1">{{ author }}</div>
   </div></div>`;
-  var elog_main_content_template = `<div class="col-md-5 elog_main_content text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{ content }}</div>`;
+  var elog_main_content_template = `<div class="elog_main_content"><div class="col-md-5 text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{ content }}</div><div class="col-md-3">{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div></div>`;
 
  var elog_child_template = `<div class="row col-md-12 elog-chid">
    <div class="panel panel-default">
@@ -97,6 +98,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
        <div class="validation_warning"></div>
        <div class="form-group"><label class="col-sm-2 control-label">Text</label><div class="col-sm-8"><textarea class="form-control" rows="5" name="log_text"></textarea></div></div>
        <div class="form-group"><label class="col-sm-2 control-label">Email:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_emails" placeholder="email1 email2@institution.edu"/></div></div>
+       <div class="form-group"><label class="col-sm-2 control-label">Tags:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_tags" placeholder="Tag1 Tag2 Tag3"/></div></div>
        <div class="form-group"><label class="col-sm-2 control-label">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
        <div class="form-group"><button type="button" class="btn btn-default followup_post">Post</button></div>
       </form></div></div></div>`;
@@ -150,6 +152,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  		$(this).closest(".followup_div").remove();
  	});
     rendered.find("textarea").first().text(entry["content"]);
+    rendered.find("input[name='log_tags']").val(_.join(_.get(entry, "tags", []), " "));
  	rendered.find(".followup_post").on("click", function(){
  		var formData = new FormData(rendered.find(".followup_form")[0]);
  		$.ajax({

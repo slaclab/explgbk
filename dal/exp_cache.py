@@ -97,6 +97,10 @@ def __update_single_experiment_info(experiment_name):
         all_experiment_names.add(experiment_name)
         expinfo = { "_id": experiment_name }
         info = expdb["info"].find_one({}, {"latest_setup": 0})
+        roles = [x for x in expdb["roles"].find()]
+        all_players = set()
+        list(map(lambda x : all_players.update(x.get('players', [])), roles))
+        expinfo["players"] = list(all_players)
         if 'runs' in collnames:
             run_count = expdb["runs"].count()
             expinfo['run_count'] = run_count
@@ -126,7 +130,7 @@ def __establish_kafka_consumers():
     """
     def subscribe_kafka():
         consumer = KafkaConsumer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")])
-        consumer.subscribe(["runs", "experiments"])
+        consumer.subscribe(["runs", "experiments", "roles"])
 
         for msg in consumer:
             logger.info("Message from Kafka %s", msg)

@@ -319,6 +319,10 @@ label {
   padding-bottom: 0.1em;
 }
 
+#elog_tab .elog_main_content {
+    text-align: left;
+}
+
 #elog_tab .elog_deleted {
     text-decoration: line-through;
 }
@@ -331,6 +335,15 @@ label {
 
 #elog_tab div.etop:nth-child(odd) {
 	background: @tablezebra;
+}
+
+#elog_tab .elog_tag {
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+}
+
+#elog_tab .elog_tag:not(:first-child) {
+    border-left: thin solid @navbarhover;
 }
 
 #elog_search_text {
@@ -460,6 +473,11 @@ label {
   padding: 5px;
   height: 100px;
 }
+
+#rtbl_content div.rtbl_editable_column {
+    display: inline-block;
+}
+
 
 #rtbl_tab .btn {
   .highlight_mixin;

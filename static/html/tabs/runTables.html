@@ -124,7 +124,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
   }
 
   var update_editable_for_run = function( input_elem ) {
-    $.getJSON({ url: "ws/run_table_editable_update", data: { runnum: input_elem.attr('data-run-num'), source: input_elem.attr('data-column-source'), value: input_elem.val()}})
+    console.log("Updating editable column");
+    $.getJSON({ url: "ws/run_table_editable_update", data: { runnum: input_elem.attr('data-run-num'), source: input_elem.attr('data-column-source'), value: input_elem.html()}})
     .done(function(data, textStatus, jqXHR){ if(data.success) { console.log("Successfully updated editable");} else { alert("Server side exception updating editable " + data.errormsg); }})
     .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception updating editable " + jqXHR.responseText)});
   }
@@ -167,7 +168,9 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
           if(coldef["source"] == "Separator") {
             row_tmpl = row_tmpl + "<td class='rtbl_separator'>&nbsp;</td>";
           } else if (coldef["is_editable"]) {
-            row_tmpl = row_tmpl + "<td><input type='text' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column form-control' value='{{" + coldef["source"] + "}}'></td>";
+            row_tmpl = row_tmpl + "<td><div class='rtbl_editable_column_parent'><div contenteditable='true' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column'>{{" + coldef["source"] + "}}</div></div></td>";
+          } else if (coldef["source"] == "begin_time" || coldef["source"] == "end_time") {
+            row_tmpl = row_tmpl + "<td>{{#FormatDate}}{{" + coldef["source"] + "}}{{/FormatDate}}</td>";
           } else if (_.startsWith(coldef["mime_type"], "image/")) {
             row_tmpl = row_tmpl + "<td><img class='rtbl_thumbnail' src='{{" + coldef["source"] + "}}'></td>";
           } else {
@@ -177,11 +180,13 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         tblRndr.find("thead").append(hdr);
         row_tmpl = "{{#value}}<tr>" + row_tmpl + "</tr>{{/value}}";
         Mustache.parse(row_tmpl);
+        runData.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
         var rowRendered = $(Mustache.render(row_tmpl, runData));
         rowRendered.find("td").hover(
           function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").addClass("tblhighlight"); },
           function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").removeClass("tblhighlight"); });
-        rowRendered.find("input.rtbl_editable_column").change(function(){ update_editable_for_run($(this))});
+        content_editable_trigger_change(rowRendered);
+        rowRendered.find(".rtbl_editable_column").change(function(){ update_editable_for_run($(this))});
         tblRndr.find("tbody").append(rowRendered);
         $("#rtbl_content").html(tblRndr);
       });

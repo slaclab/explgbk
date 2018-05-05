@@ -44,7 +44,7 @@ def start_run(experiment_name, run_type, user_specified_run_number=None):
         "editable_params" : {}}
     current_sample = expdb.current.find_one({"_id": "sample"})
     if current_sample:
-        run_doc["sample"] = current_sample["name"]
+        run_doc["sample"] = ObjectId(current_sample["sample"])
 
     result = expdb['runs'].insert_one(run_doc)
     return expdb['runs'].find_one({"num": next_run_num})

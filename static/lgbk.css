@@ -273,6 +273,9 @@ label {
   padding-top: 0.1em;
   padding-bottom: 0.1em;
 }
+#elog_tab .elog_main_content {
+  text-align: left;
+}
 #elog_tab .elog_deleted {
   text-decoration: line-through;
 }
@@ -283,6 +286,13 @@ label {
 }
 #elog_tab div.etop:nth-child(odd) {
   background: #efefef;
+}
+#elog_tab .elog_tag {
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+}
+#elog_tab .elog_tag:not(:first-child) {
+  border-left: thin solid #1E48DF;
 }
 #elog_search_text {
   padding: 0.1em;
@@ -392,6 +402,9 @@ label {
   border-radius: 4px;
   padding: 5px;
   height: 100px;
+}
+#rtbl_content div.rtbl_editable_column {
+  display: inline-block;
 }
 #rtbl_tab .btn {
   color: white;

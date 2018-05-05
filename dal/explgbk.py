@@ -359,7 +359,7 @@ def delete_elog_entry(experiment_name, entry_id, userid):
     result = expdb['elog'].update_one({"_id": ObjectId(entry_id)}, {"$set": { "deleted_by": userid, "deleted_time": datetime.datetime.utcnow()}})
     return result.modified_count > 0
 
-def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, files):
+def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, tags, files):
     """
     Change the content for the specified elog entry.
     We have to retain the history of the change; so we clone the existing entry but make the clone a child of the existing entry.
@@ -382,6 +382,7 @@ def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, 
         modification = {"$set": {
             "content": new_content,
             "author": userid,
+            "tags": tags,
             "previous_version": hist_result.inserted_id
         }}
         if attachments:
@@ -468,7 +469,8 @@ def get_runtable_data(experiment_name, tableName, sampleName):
     query = {}
     if sampleName:
         logger.debug("Getting run table data for sample %s", sampleName)
-        query = { "sample": sampleName }
+        sample_doc = get_sample_for_experiment_by_name(experiment_name, sampleName)
+        query = { "sample": sample_doc["_id"] } if sample_doc else query
     return [x for x in logbookclient[experiment_name]['runs'].find(query, sources).sort([("num", -1)])] # Use sources as a filter to find
 
 
@@ -649,9 +651,9 @@ def get_samples(experiment_name):
     samples = list(expdb.samples.find({}).sort([("_id", -1)]))
     current_sample = expdb.current.find_one({"_id": "sample"})
     if current_sample:
-        current_sample_name = current_sample["name"]
+        current_sample_id = current_sample["sample"]
         def set_current(x):
-            if x["_id"] == current_sample_name:
+            if x["_id"] == current_sample_id:
                 x["current"] = True
             return x
         samples = list(map(set_current, samples))
@@ -664,16 +666,16 @@ def get_current_sample_name(experiment_name):
     """
     expdb = logbookclient[experiment_name]
     current_sample = expdb.current.find_one({"_id": "sample"})
-    return current_sample['name'] if current_sample else None
+    return expdb.samples.find_one({"_id": current_sample['sample']})['name'] if current_sample else None
 
 def get_sample_for_experiment_by_name(experiment_name, sample_name):
     """
     Get sample for experiment by name
     """
     expdb = logbookclient[experiment_name]
-    requested_sample = expdb.samples.find_one({"_id": sample_name})
+    requested_sample = expdb.samples.find_one({"name": sample_name})
     current_sample = expdb.current.find_one({"_id": "sample"})
-    if current_sample and requested_sample and current_sample["name"] == requested_sample["_id"]:
+    if current_sample and requested_sample and current_sample["sample"] == requested_sample["_id"]:
         requested_sample["current"] = True
     return requested_sample
 
@@ -682,16 +684,17 @@ def create_update_sample(experiment_name, sample_name, createp, info):
     Create or update a sample for an experiment.
     """
     expdb = logbookclient[experiment_name]
-    sample_doc = expdb['samples'].find_one({"_id": sample_name})
-    if sample_doc and createp:
+    if createp and expdb['samples'].find_one({"name": sample_name}):
         return (False, "Sample %s already exists" % sample_name)
-    if not sample_doc and not createp:
+    if not createp and not expdb['samples'].find_one({"_id": ObjectId(info["_id"])}):
         return (False, "Sample %s does not exist" % sample_name)
 
     if createp:
         expdb['samples'].insert_one(info)
     else:
-        expdb['samples'].find_one_and_update({"_id": sample_name}, {"$set": info})
+        sample_id = info["_id"]
+        del info["_id"]
+        expdb['samples'].find_one_and_update({"_id": ObjectId(sample_id)}, {"$set": info})
 
     return (True, "")
 
@@ -700,11 +703,11 @@ def make_sample_current(experiment_name, sample_name):
     Make the sample specified by the sample_name as the current sample.
     """
     expdb = logbookclient[experiment_name]
-    sample_doc = expdb['samples'].find_one({"_id": sample_name})
+    sample_doc = expdb['samples'].find_one({"name": sample_name})
     if not sample_doc:
         return (False, "Sample %s does not exist" % sample_name)
 
-    expdb.current.find_one_and_update({"_id": "sample"}, {"$set": { "_id": "sample", "name" : sample_name }} , upsert=True)
+    expdb.current.find_one_and_update({"_id": "sample"}, {"$set": { "_id": "sample", "sample" : sample_doc["_id"] }} , upsert=True)
     return (True, "")
 
 def register_file_for_experiment(experiment_name, info):
