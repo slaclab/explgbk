@@ -23,6 +23,7 @@ $("#collab_tab").on("lg.loaded.bs.tab", function() {
       $.when($.getJSON("ws/collaborators"), $.getJSON("ws/has_role", {"role_fq_name": "LDAP/Admin"}))
       .done(function(d0, d1){
           var collabs = d0[0], roleAdminPerms = d1[0], hasRoleAdmin = roleAdminPerms.value.hasRole;
+          _.each(collabs.value, function(c){c["id"] = _.replace(c["uid"], "uid:", "")});
           var rendered = $(Mustache.render(collab_tr_tmpl, collabs));
           $("#collab_tab .collabtbl tbody").append(rendered);
           if(hasRoleAdmin) {
