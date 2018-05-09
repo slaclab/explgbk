@@ -681,7 +681,7 @@ def get_current_sample_name(experiment_name):
     """
     expdb = logbookclient[experiment_name]
     current_sample = expdb.current.find_one({"_id": "sample"})
-    return expdb.samples.find_one({"_id": current_sample['sample']})['name'] if current_sample else None
+    return expdb.samples.find_one({"_id": current_sample['sample']})['name'] if current_sample and 'sample' in current_sample else None
 
 def get_sample_for_experiment_by_name(experiment_name, sample_name):
     """

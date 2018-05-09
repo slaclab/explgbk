@@ -703,7 +703,7 @@ def svc_delete_run_table(experiment_name):
 
 
 
-@explgbk_blueprint.route("/run_control/<experiment_name>/ws/start_run", methods=["GET"])
+@explgbk_blueprint.route("/run_control/<experiment_name>/ws/start_run", methods=["GET", "POST"])
 @context.security.authentication_required
 @experiment_exists
 @context.security.authorization_required("post")
@@ -730,7 +730,7 @@ def svc_start_run(experiment_name):
     return JSONEncoder().encode({"success": True, "value": run_doc})
 
 
-@explgbk_blueprint.route("/run_control/<experiment_name>/ws/end_run", methods=["GET"])
+@explgbk_blueprint.route("/run_control/<experiment_name>/ws/end_run", methods=["GET", "POST"])
 @context.security.authentication_required
 @experiment_exists
 @context.security.authorization_required("post")
