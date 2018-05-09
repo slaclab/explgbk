@@ -751,13 +751,12 @@ def get_collaborators(experiment_name):
         is_group = False if player.startswith("uid:") else True
         user_details = usergroups.get_userids_matching_pattern(player.replace("uid:", "")) if not is_group else None
         ret.append({
-            "id": player.replace("uid:", ""),
             "uid": player,
             "is_group": is_group,
             "full_name": user_details[0].get('gecos', "N/A") if user_details else "N/A",
             "roles": players2roles[player]
         })
-    return sorted(ret, key=itemgetter('id'))
+    return sorted(ret, key=lambda x: x["uid"].replace("uid:", ""))
 
 def get_role_object(experiment_name, role_fq_name):
     expdb = logbookclient[experiment_name]
