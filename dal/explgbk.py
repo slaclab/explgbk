@@ -754,6 +754,7 @@ def get_collaborators(experiment_name):
             "uid": player,
             "is_group": is_group,
             "full_name": user_details[0].get('gecos', "N/A") if user_details else "N/A",
+            "uidNumber": user_details[0].get('uidNumber', "N/A") if user_details else "N/A",
             "roles": players2roles[player]
         })
     return sorted(ret, key=lambda x: x["uid"].replace("uid:", ""))

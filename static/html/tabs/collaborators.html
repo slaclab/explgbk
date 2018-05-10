@@ -13,7 +13,7 @@
 
 <script type="text/javascript">
 $("#collab_tab").on("lg.loaded.bs.tab", function() {
-  var collab_tr_tmpl = `{{#value}}<tr data-uid="{{ uid }}"><td>{{#is_group}}<i class="fa fa-users" aria-hidden="true"></i>{{/is_group}}{{^is_group}}<i class="fa fa-user" aria-hidden="true"></i>{{/is_group}}{{ id }}</td><td>{{ full_name }}</td><td class="collab_admin_actions"></td></tr>{{/value}}`;
+  var collab_tr_tmpl = `{{#value}}<tr data-uid="{{ uid }}" title="{{ uidNumber }}"><td>{{#is_group}}<i class="fa fa-users" aria-hidden="true"></i>{{/is_group}}{{^is_group}}<i class="fa fa-user" aria-hidden="true"></i>{{/is_group}}{{ id }}</td><td>{{ full_name }}</td><td class="collab_admin_actions"></td></tr>{{/value}}`;
   var actions_tmpl = `<span title="{{ tooltip }}" data-role-fq-name="{{ rl }}">{{^hasrole}}<i class="fa fa-lg {{ ic }} collab-no-role" aria-hidden="true"></i>{{/hasrole}}
     {{#hasrole}}<span><i class="fa {{ ic }} fa-lg" aria-hidden="true"></i><span class="croxxout">x</span></span>{{/hasrole}}</span>`;
   Mustache.parse(collab_tr_tmpl);

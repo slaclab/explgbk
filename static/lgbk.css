@@ -282,6 +282,9 @@ label {
   padding-top: 0.1em;
   padding-bottom: 0.1em;
 }
+#elog_tab div.followup_div {
+  margin-left: 0.5em;
+}
 #elog_tab .elog_main_content {
   text-align: left;
 }
@@ -317,6 +320,9 @@ label {
 }
 #elog_tab .elog_run_param_category .expand_param {
   padding-right: 0.25em;
+}
+#elog_new_entry_modal {
+  margin-left: 1.0em;
 }
 #current_sample_lbl .fa {
   padding-right: 0.25em;
