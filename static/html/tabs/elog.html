@@ -81,7 +81,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
  var elog_child_template = `<div class="row col-md-12 elog-chid">
    <div class="panel panel-default">
-    <div class="panel-heading text-left"><span class="entry_actions"><i class="fa fa-send fa-lg followup"></i>{{#roles.is_editor}}<i class="fa fa-edit fa-lg edit"></i><i class="fa fa-trash fa-lg delete"></i>{{/roles.is_editor}}</span><pre>{{content}}</pre></div>
+    <div class="panel-heading text-left"><span class="entry_actions">{{^deleted_by}}<i class="fa fa-send fa-lg followup"></i>{{#roles.is_editor}}<i class="fa fa-edit fa-lg edit"></i><i class="fa fa-trash fa-lg delete"></i>{{/roles.is_editor}}{{/deleted_by}}</span><pre>{{content}}</pre></div>
     <div class="panel-body">
       {{> elog_chid_body_content }}
      <div class="row dialog_holder"></div>
@@ -144,6 +144,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   }
 
  var followup_function = function() {
+    if($(this).closest(".edat").find(".followup_div").length > 0) { $(this).closest(".edat").find(".followup_div").remove(); return; }
 	var entry = $(this).closest(".edat").data("entry");
 	var rendered = renderMSTemplate(elog_followup_template, entry);
 	rendered.find(".close").on("click", function(){
@@ -175,6 +176,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  }
 
  var edit_elog_entry = function() {
+    if($(this).closest(".edat").find(".followup_div").length > 0) { $(this).closest(".edat").find(".followup_div").remove(); return; }
     var entry = $(this).closest(".edat").data("entry");
     var rendered = renderMSTemplate(elog_followup_template, entry);
  	rendered.find(".close").on("click", function(){

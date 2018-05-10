@@ -237,26 +237,30 @@ label {
   .bold_text_mixin;
 }
 
-.param_table_header_mixin {
-    .highlight_mixin;
-    padding-left: 2.0em;
+.param_table_mixin {
+     tr th {
+        .highlight_mixin;
+        padding-left: 2.0em;
+    }
+    .fa {
+        opacity: 0.5;
+    }
 }
 
-#ops_instruments_tab .modal .table tr th {
-  .param_table_header_mixin;
+#ops_instruments_tab .modal .table {
+  .param_table_mixin;
 }
 
 #ops_instruments_tab th {
   .highlight_mixin;
 }
 
-
 #ops_exp_searchtext {
     .search_text_mixin;
 }
 
-#register_edit_exp_tab .modal .table tr th {
-  .param_table_header_mixin;
+#register_edit_exp_tab .modal .table {
+  .param_table_mixin;
 }
 
 #experiments_container thead th {

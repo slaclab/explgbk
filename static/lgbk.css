@@ -184,17 +184,23 @@ label {
   color: #6685F4;
   font-weight: bold;
 }
-.param_table_header_mixin {
+.param_table_mixin tr th {
   color: white;
   background: #6685F4;
   font-weight: bold;
   padding-left: 2.0em;
+}
+.param_table_mixin .fa {
+  opacity: 0.5;
 }
 #ops_instruments_tab .modal .table tr th {
   color: white;
   background: #6685F4;
   font-weight: bold;
   padding-left: 2.0em;
+}
+#ops_instruments_tab .modal .table .fa {
+  opacity: 0.5;
 }
 #ops_instruments_tab th {
   color: white;
@@ -213,6 +219,9 @@ label {
   background: #6685F4;
   font-weight: bold;
   padding-left: 2.0em;
+}
+#register_edit_exp_tab .modal .table .fa {
+  opacity: 0.5;
 }
 #experiments_container thead th {
   color: #1E48DF;
