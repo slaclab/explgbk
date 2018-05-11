@@ -237,26 +237,30 @@ label {
   .bold_text_mixin;
 }
 
-.param_table_header_mixin {
-    .highlight_mixin;
-    padding-left: 2.0em;
+.param_table_mixin {
+     tr th {
+        .highlight_mixin;
+        padding-left: 2.0em;
+    }
+    .fa {
+        opacity: 0.5;
+    }
 }
 
-#ops_instruments_tab .modal .table tr th {
-  .param_table_header_mixin;
+#ops_instruments_tab .modal .table {
+  .param_table_mixin;
 }
 
 #ops_instruments_tab th {
   .highlight_mixin;
 }
 
-
 #ops_exp_searchtext {
     .search_text_mixin;
 }
 
-#register_edit_exp_tab .modal .table tr th {
-  .param_table_header_mixin;
+#register_edit_exp_tab .modal .table {
+  .param_table_mixin;
 }
 
 #experiments_container thead th {
@@ -319,6 +323,10 @@ label {
   padding-bottom: 0.1em;
 }
 
+#elog_tab div.followup_div {
+    margin-left: 0.5em;
+}
+
 #elog_tab .elog_main_content {
     text-align: left;
 }
@@ -354,6 +362,17 @@ label {
     width: 15em;
     color: @navbarcolor;
     font-weight: bold;
+}
+
+#elog_tab .elog_run_param_category {
+    background: @tablezebra;
+    .expand_param {
+        padding-right: 0.25em;
+    }
+}
+
+#elog_new_entry_modal {
+    margin-left: 1.0em;
 }
 
 #current_sample_lbl .fa {

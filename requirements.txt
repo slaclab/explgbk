@@ -10,8 +10,7 @@ Flask==0.12.2
 #flask-socket-util==0.1
 git+git://github.com/slaclab/flask_socket_util/#egg=flask-socket-util
 #flask-authnz==0.1
-#https://pswww.slac.stanford.edu/offline/dist/pip/flask_authnz-0.0.9.tar.gz#egg=flask-authnz
-https://pswww.slac.stanford.edu/offline/dist/pip/flask_authnz-0.0.12.tar.gz#egg=flask-authnz
+https://pswww.slac.stanford.edu/offline/dist/pip/flask_authnz-0.0.14.tar.gz#egg=flask-authnz
 Flask-SocketIO==2.9.2
 greenlet==0.4.12
 gunicorn==19.7.1

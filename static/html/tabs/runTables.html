@@ -130,6 +130,18 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
     .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception updating editable " + jqXHR.responseText)});
   }
 
+  var renderRunData = function(tblRndr, runData) {
+      var row_tmpl = tblRndr.data("template");
+      runData.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+      var rowRendered = $(Mustache.render(row_tmpl, runData));
+      rowRendered.find("td").hover(
+        function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").addClass("tblhighlight"); },
+        function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").removeClass("tblhighlight"); });
+      content_editable_trigger_change(rowRendered);
+      rowRendered.find(".rtbl_editable_column").change(function(){ update_editable_for_run($(this))});
+      return rowRendered;
+  }
+
   $.getJSON("ws/run_tables")
   .done(function(tblData){
     _.each(tblData.value, function(tdef){
@@ -147,8 +159,9 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       var tblDef = $("#rtbl_tab").data("tblData")[clkRTblName];
       var rtbl_data_params = {"tableName": clkRTblName};
       if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { rtbl_data_params["sampleName"] = sample_showing_in_UI; }
-      $.getJSON("ws/run_table_data", rtbl_data_params)
-      .done(function(runData){
+      $.when($.getJSON("ws/run_table_data", rtbl_data_params), $.getJSON("ws/samples"))
+      .done(function(d0, d1){
+        var runData = d0[0], sampleData = d1[0];
         if(_.get(tblDef, "table_type") == "histogram") {
           var histDivName = _.get(tblDef, "name") + '_histogram';
           $("#rtbl_content").html("<div id='" + histDivName + "'></div>");
@@ -178,15 +191,10 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
           }
         });
         tblRndr.find("thead").append(hdr);
-        row_tmpl = "{{#value}}<tr>" + row_tmpl + "</tr>{{/value}}";
+        row_tmpl = "{{#value}}<tr data-runnum={{num}}>" + row_tmpl + "</tr>{{/value}}";
         Mustache.parse(row_tmpl);
-        runData.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
-        var rowRendered = $(Mustache.render(row_tmpl, runData));
-        rowRendered.find("td").hover(
-          function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").addClass("tblhighlight"); },
-          function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").removeClass("tblhighlight"); });
-        content_editable_trigger_change(rowRendered);
-        rowRendered.find(".rtbl_editable_column").change(function(){ update_editable_for_run($(this))});
+        tblRndr.data("template", row_tmpl).data("samples", _.fromPairs(_.map(sampleData.value, function(o){return [o["_id"], o["name"]]})));
+        var rowRendered = renderRunData(tblRndr, runData);
         tblRndr.find("tbody").append(rowRendered);
         $("#rtbl_content").html(tblRndr);
       });
@@ -195,8 +203,15 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
     rendered.find( _.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
     sessionStorage.removeItem("runtable_active_tab");
     $(document).on('runs', function(event, runData) {
-      console.log(runData);
-      console.log("Processing web socket event for run " + runData['num'] + " for experiment " + runData['experiment_name']);
+      console.log("Processing web socket event for run " + runData.value['num'] + " for experiment " + runData['experiment_name'] + " CRUD=" + runData["CRUD"]);
+      var tblRndr = $("#rtbl_content").find("table"), runSample = tblRndr.data("samples")[_.get(runData.value, 'sample', "")];
+      if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && runSample != sample_showing_in_UI) { console.log("Skipping updating run table for different sample " + runSample); return; }
+      var rowRendered = renderRunData(tblRndr, runData);
+      if(runData["CRUD"] == "Insert") {
+         tblRndr.find("tbody tr:first").before(rowRendered);
+     } else {
+         tblRndr.find("tbody tr[data-runnum=" + runData.value['num'] +"]").replaceWith(rowRendered);
+     }
     });
 
     $("#rtbl_tab").data("new_rtbl_fn", function(e) { col_defs_dialog(); });
