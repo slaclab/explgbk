@@ -38,7 +38,7 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 	var instrument_template = `{{#value}}<tr">
 	<td>{{ instrument }}</td>
 	<td>{{ station }}</td>
-	<td>{{ name }}</td>
+	<td><a target="_blank" href="{{_id}}/">{{ name }}</a></td>
 	<td>{{ contact_info }}</td>
 	<td>{{ description }}</td>
 	<td>{{#FormatDate}}{{ switch_time }}{{/FormatDate}}</td>
@@ -96,8 +96,8 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
     				var rendered = Mustache.render(exper_template, {value: experiments_for_instrument});
     				$("#choose_experiment_modal table tbody").html(rendered);
     				$('#choose_experiment_modal table').on('click', 'tbody tr', function(event) {
-    					$(this).find("td").addClass('bg-info');
-    					$(this).siblings().find("td").removeClass('bg-info');
+    					$(this).find("td").addClass('rowselect');
+    					$(this).siblings().find("td").removeClass('rowselect');
     					$('#choose_experiment_modal table').data("selected-experiment", {instrument: instr, station: station, experiment_name: $(this).attr("data-expname")});
     				});
     				$("#choose_experiment_modal").modal("show");
