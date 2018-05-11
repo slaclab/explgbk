@@ -104,6 +104,13 @@ def register_new_experiment(experiment_name, incoming_info):
         "params" : {}
         } )
 
+    expdb["roles"].insert_many([
+        {"app" : "LDAP", "name": "Admin", "players": [ "uid:" + info["leader_account"]] },
+        {"app" : "LogBook", "name": "Editor", "players": [ "uid:" + info["leader_account"]] },
+        {"app" : "LogBook", "name": "Writer", "players": [ info["posix_group"]] }
+        ]
+    )
+
     return (True, "")
 
 def update_existing_experiment(experiment_name, incoming_info):

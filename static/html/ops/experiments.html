@@ -96,7 +96,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
             "start_time" : formObj.find('.start_time').data("DateTimePicker").date().toJSON(),
             "end_time" : formObj.find('.end_time').data("DateTimePicker").date().toJSON(),
             "leader_account" : $.trim(formObj.find(".leader_account").val()),
-            "contact_info" : $.trim(formObj.find(".pi_name").val()) + "(" + $.trim($(".pi_email").val()) + ")",
+            "contact_info" : $.trim(formObj.find(".pi_name").val()) + " (" + $.trim($(".pi_email").val()) + ")",
             "posix_group" : $.trim(formObj.find(".posix_group").val()),
             "params": exp_params
         };

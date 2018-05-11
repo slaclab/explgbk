@@ -268,6 +268,11 @@ label {
   background: #6685F4;
   font-weight: bold;
 }
+#expswitch_tab .modal .rowselect {
+  color: #6685F4;
+  font-weight: bold;
+  background: #FFCC57;
+}
 #choose_experiment_modal table td a {
   color: #6685F4;
 }
@@ -528,4 +533,8 @@ label {
 }
 #collab_mdl_holder tbody .fa {
   padding-right: 0.75em;
+}
+#collab_mdl_holder tbody .fa.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
