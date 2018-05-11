@@ -26,9 +26,9 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
         var formObj = $("#samples_tab").find("#mdl_holder").find("form");
         var validations = [
           [function() { return $.trim(formObj.find(".sample_name").val()) == ""; }, "Sample name cannot be blank."],
-          [function() { return !/^[\w/_-]+$/.test($.trim(formObj.find(".sample_name").val())); }, "Please restrict sample names to alphanumeric characters, dashes and underscores."],
+          [function() { return !/^[\w/_-]+$/.test($.trim(formObj.find(".sample_name").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
           [function() { return $.trim(formObj.find(".sample_description").val()) == ""; }, "Sample description cannot be blank."],
-          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() != "" && !/^[\w_]+$/.test($(this).find("input.key").val()); }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Please restrict param names to alphanumeric characters and underscores."],
+          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() != "" && !/^[/\w_-]+$/.test($(this).find("input.key").val()); }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Please restrict param names to alphanumeric characters, dashes, slashes and underscores."],
           [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
           ];
         // Various validations
