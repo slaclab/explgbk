@@ -47,6 +47,12 @@ label {
 #myNavRow li a {
   color: white;
 }
+#myNavRow .logged_in_user_name {
+  padding-right: 0.25em;
+}
+#myNavRow li.session_items.session_timeout a {
+  color: #FFB305;
+}
 .slac_logo {
   height: 28px;
   margin-top: 6px;

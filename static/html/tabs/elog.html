@@ -143,8 +143,13 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
     return $(Mustache.render(template, entry, partials));
   }
 
+  var check_session_timeout = function() {
+      if(auth_expiration_time > 1000000000 && moment.unix(auth_expiration_time).isSameOrBefore(moment().add(5, 'minutes'))) {alert("Your session is about to expire. Please log back in to renew your session."); return true; }
+  }
+
  var followup_function = function() {
     if($(this).closest(".edat").find(".followup_div").length > 0) { $(this).closest(".edat").find(".followup_div").remove(); return; }
+    if(check_session_timeout()) return;
 	var entry = $(this).closest(".edat").data("entry");
 	var rendered = renderMSTemplate(elog_followup_template, entry);
 	rendered.find(".close").on("click", function(){
@@ -177,6 +182,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
  var edit_elog_entry = function() {
     if($(this).closest(".edat").find(".followup_div").length > 0) { $(this).closest(".edat").find(".followup_div").remove(); return; }
+    if(check_session_timeout()) return;
     var entry = $(this).closest(".edat").data("entry");
     var rendered = renderMSTemplate(elog_followup_template, entry);
  	rendered.find(".close").on("click", function(){
@@ -450,6 +456,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
 
   $("#elog_tab").data("new_entry_click", function(e) {
+     if(check_session_timeout()) return;
 	 e.preventDefault();
      $("#elog_new_entry_form")[0].reset();
 	 $("#elog_new_entry_modal").modal();

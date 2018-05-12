@@ -29,6 +29,7 @@
     var current_sample_at_DAQ = {{current_sample_name|json|safe}};
     var sample_showing_in_UI = current_sample_at_DAQ;
     var roles = { is_writer: {{ is_writer }}, is_editor: {{ is_editor}}, is_admin: {{ is_admin }} };
+    var auth_expiration_time = {{ auth_expiration_time }};
   </script>
 
 </head>
@@ -60,7 +61,8 @@
         </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        <li><a href="../experiments"><i class="fa fa-home fa-lg"></i>  Home</a></li>
+          <li class="session_items"><a href="../../../../logout"><span class="logged_in_user_name">{{ logged_in_user }}</span><i class="fa fa-sign-out fa-lg"></i></a></li>
+          <li><a href="../experiments"><i class="fa fa-home fa-lg"></i>  Home</a></li>
       </ul>
     </div>
     <div class="tab_title_bar">
@@ -129,6 +131,21 @@ $(document).ready(function() {
             setCurrentUISample();
         }
     });
+    if(auth_expiration_time > 1000000000) {
+        var msToSessionTimeout = moment.unix(auth_expiration_time).diff(moment());
+        console.log("Session times out in " + msToSessionTimeout + "(ms)");
+        $(".session_items").attr("title", "Your session will expire at " + moment.unix(auth_expiration_time).format("dddd, MMMM Do YYYY, h:mm:ss a"));
+        var on_session_timeout = function() {
+            console.log("Session timed out.");
+            $(".session_items").addClass("session_timeout");
+            $(".session_items").attr("title", "Your session is about to or has already timed out. Please logout and log back in to continue your work.");
+        }
+        if(msToSessionTimeout > 30000) {
+            setTimeout(on_session_timeout, msToSessionTimeout - 30000);
+        } else {
+            on_session_timeout();
+        }
+    }
 });
 
 </script>
