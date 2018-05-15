@@ -85,11 +85,15 @@ def __update_experiments_info():
     for experiment_name in database_names:
         __update_single_experiment_info(experiment_name)
 
-def __update_single_experiment_info(experiment_name):
+def __update_single_experiment_info(experiment_name, crud="Update"):
     """
     Load a single experiment's info and return the info as a dict
     """
     global all_experiment_names
+    if crud == "Delete":
+        all_experiment_names.remove(experiment_name)
+        logbookclient['explgbk_cache']['experiments'].delete_one({"_id": experiment_name})
+        return
     logger.debug("Gathering the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     expdb = logbookclient[experiment_name]
     collnames = list(expdb.collection_names())
@@ -138,8 +142,9 @@ def __establish_kafka_consumers():
             logger.info("JSON from Kafka %s", info)
             message_type = msg.topic
             experiment_name = info['experiment_name']
+            crud = info.get("CRUD", "Update")
             # No matter what the message type is, we reload the experiment info.
-            __update_single_experiment_info(experiment_name)
+            __update_single_experiment_info(experiment_name, crud=crud)
 
     # Create thread for kafka consumer
     kafka_client_thread = threading.Thread(target=subscribe_kafka)

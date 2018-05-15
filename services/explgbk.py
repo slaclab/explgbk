@@ -11,6 +11,7 @@ Use security's authentication_required and authorization_required decorators to 
 import os
 import json
 import logging
+import copy
 
 import requests
 import context
@@ -29,7 +30,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
-    add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment
+    add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -343,6 +344,31 @@ def svc_clone_experiment():
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/ws/rename_experiment", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("edit")
+def svc_rename_experiment():
+    """
+    Rename an existing experiment to a new experiment.
+    """
+    experiment_name = request.args.get("experiment_name", None)
+    if not experiment_name:
+        return logAndAbort("Experiment rename missing experiment_name in query parameters")
+    new_experiment_name = request.args.get("new_experiment_name", None)
+    if not new_experiment_name:
+        return logAndAbort("Experiment clone missing src_experiment_name in query parameters")
+
+    old_info = copy.copy(get_experiment_info(experiment_name))
+
+    (status, errormsg) = rename_experiment(experiment_name, new_experiment_name)
+    if status:
+        context.kafka_producer.send("experiments", {"experiment_name" : new_experiment_name, "CRUD": "Create", "value": get_experiment_info(new_experiment_name) })
+        context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Delete", "value": old_info })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
 
 @explgbk_blueprint.route("/lgbk/ws/reload_experiment_cache", methods=["GET"])
 @context.security.authentication_required
