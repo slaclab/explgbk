@@ -47,6 +47,12 @@ label {
 #myNavRow li a {
   color: white;
 }
+#myNavRow .logged_in_user_name {
+  padding-right: 0.25em;
+}
+#myNavRow li.session_items.session_timeout a {
+  color: #FFB305;
+}
 .slac_logo {
   height: 28px;
   margin-top: 6px;
@@ -179,6 +185,18 @@ label {
   color: white;
   background: #6685F4;
   font-weight: bold;
+}
+#register_edit_exp_tab .ops_exp_icons {
+  white-space: nowrap;
+}
+#register_edit_exp_tab .ops_exp_icons .fa {
+  opacity: .5;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+}
+#register_edit_exp_tab .clone_select_attrs td {
+  text-align: left;
+  padding-left: 2.0em;
 }
 #ops_instruments_tab .instrument_lbl {
   color: #6685F4;

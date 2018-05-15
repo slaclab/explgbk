@@ -61,7 +61,7 @@ def save_new_experiment_setup(experiment_name, setup_document, userid):
     expdb['info'].find_one_and_update({}, {'$set': {'latest_setup': latest_setup_id}})
 
 
-def register_new_experiment(experiment_name, incoming_info):
+def register_new_experiment(experiment_name, incoming_info, create_auto_roles=True):
     """
     Registers a new experiment.
     In mongo, this mostly means creating the info object, the run number counter and various indices.
@@ -104,12 +104,13 @@ def register_new_experiment(experiment_name, incoming_info):
         "params" : {}
         } )
 
-    expdb["roles"].insert_many([
-        {"app" : "LDAP", "name": "Admin", "players": [ "uid:" + info["leader_account"]] },
-        {"app" : "LogBook", "name": "Editor", "players": [ "uid:" + info["leader_account"]] },
-        {"app" : "LogBook", "name": "Writer", "players": [ info["posix_group"]] }
-        ]
-    )
+    if create_auto_roles:
+        expdb["roles"].insert_many([
+            {"app" : "LDAP", "name": "Admin", "players": [ "uid:" + info["leader_account"]] },
+            {"app" : "LogBook", "name": "Editor", "players": [ "uid:" + info["leader_account"]] },
+            {"app" : "LogBook", "name": "Writer", "players": [ info["posix_group"]] }
+            ]
+        )
 
     return (True, "")
 
@@ -130,6 +131,48 @@ def update_existing_experiment(experiment_name, incoming_info):
 
     expdb['info'].update_one({}, { "$set": info })
     return (True, "")
+
+def clone_experiment(experiment_name, source_experiment_name, incoming_info, copy_specs):
+    """
+    Registers a new experiment based on an existing experiment.
+    We use the "info" of the existing experiment as a template for the new experiment.
+    In addition, optionally, we copy over these collections from the source experiment.
+    -- setup
+    -- samples
+    -- run_param_descriptions
+    -- roles
+    This is specified in copy_specs which is a dict of collection names to booleans.
+    """
+    src_exp_db = logbookclient[source_experiment_name]
+
+    if experiment_name in logbookclient.database_names():
+        return (False, "Experiment %s has already been registered" % experiment_name)
+
+    expdb = logbookclient[experiment_name]
+    info = {}
+    info.update(src_exp_db["info"].find_one())
+    info.update(incoming_info)
+    info["_id"]                = experiment_name.replace(" ", "_")
+    info["name"]               = experiment_name
+    if "experiment_name" in info: # Bug from previous releases?
+        del info["experiment_name"]
+
+    status, msg = register_new_experiment(experiment_name, info, create_auto_roles=False)
+    if not status:
+        return (status, msg)
+
+    def copy_collection_from_src_to_clone(collection_name):
+        for doc in src_exp_db[collection_name].find({}):
+            del doc["_id"]
+            expdb[collection_name].insert_one(doc)
+
+    for coll, cp_select in copy_specs.items():
+        if cp_select:
+            logger.info("Copying over collection %s from source experiment %s to dest experiment %s", coll, source_experiment_name, experiment_name)
+            copy_collection_from_src_to_clone(coll)
+
+    return (True, "")
+
 
 def create_update_instrument(instrument_name, createp, incoming_info):
     """
