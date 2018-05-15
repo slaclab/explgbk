@@ -174,6 +174,28 @@ def clone_experiment(experiment_name, source_experiment_name, incoming_info, cop
     return (True, "")
 
 
+def rename_experiment(experiment_name, new_experiment_name):
+    """
+    Renames an experiment with a new name.
+    """
+    if new_experiment_name in logbookclient.database_names():
+        return (False, "Experiment %s has already been registered" % experiment_name)
+
+    logbookclient.admin.command('copydb', check=True, fromdb=experiment_name, todb=new_experiment_name)
+
+    expdb = logbookclient[new_experiment_name]
+    info = {}
+    info.update(expdb["info"].find_one())
+    info["_id"]  = new_experiment_name
+    info["name"] = new_experiment_name
+    expdb["info"].delete_one({"_id": experiment_name})
+    expdb["info"].insert_one(info)
+
+    logbookclient.drop_database(experiment_name)
+
+    return (True, "")
+
+
 def create_update_instrument(instrument_name, createp, incoming_info):
     """
     Create or update an instrument.

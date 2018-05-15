@@ -1,0 +1,38 @@
+<div class="modal fade edit_modal" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+   <div class="modal-content">
+     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+     <div class="modal-header">
+       <h2 class="modal-title">Rename experiment {{ experiment_name }}</h2>
+     </div>
+     <form class="clone_form">
+      <input type="hidden" class="form-control src_experiment_name" value="{{ src_experiment_name }}">
+      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
+       <label for="experiment_name">New Experiment Name:</label>
+       <input type="text" class="form-control experiment_name" value="{{ name }}">
+      </div>
+      <div class="modal-footer">
+          <button class="btn btn-primary panel_btn rename_btn">Rename</button>
+      </div>
+     </form>
+ </div>
+</div>
+</div>
+
+
+<div class="modal fade validation_modal" role="dialog">
+ <div class="modal-dialog">
+  <div class="modal-content">
+   <div class="modal-header">
+     <button type="button" class="close" data-dismiss="modal">&times;</button>
+     <h4 class="modal-title">Validation Error</h4>
+   </div>
+   <div class="modal-body alert alert-danger" role="alert">
+     <p class="validation_message"></p>
+   </div>
+   <div class="modal-footer">
+     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+   </div>
+  </div>
+ </div>
+</div>

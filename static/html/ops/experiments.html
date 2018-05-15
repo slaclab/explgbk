@@ -190,6 +190,58 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     });
   };
 
+  var rename_exp = function() {
+      var src_experiment_name = $(this).closest("tr").find("td").first().find("a").text()
+      console.log("Renaming experiment " + src_experiment_name);
+      $.ajax ("../static/html/ms/exprename.html")
+      .done(function( tmpl ) {
+        Mustache.parse(tmpl);
+        var rendered = $(Mustache.render(tmpl, {src_experiment_name: src_experiment_name}));
+        rendered.find(".rename_btn").on("click", function(e) {
+          e.preventDefault();
+          var formObj = $("#exp_mdl_holder").find("form");
+          var validations = [
+              [function() { return $.trim(formObj.find(".experiment_name").val()) == ""; }, "Experiment name cannot be blank."],
+              [function() { return $.trim(formObj.find(".experiment_name").val()) == formObj.find(".src_experiment_name").val(); }, "Experiment name cannot be the same as the original."],
+            ];
+          // Various validations
+          var v_failed = false;
+          _.each(validations, function(validation, i) {
+            // console.log("Trying validation " + i + "" + validation[1]);
+            if(validation[0]()) {
+                show_validation_message(validation[1]);
+                v_failed = true;
+                return false;
+            }
+          });
+          if (v_failed) { e.preventDefault(); return; }
+          var experiment_name = $.trim(formObj.find(".experiment_name").val());
+          var registration_doc = {};
+
+          $.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            url: rename_experiment_url + "?experiment_name=" + encodeURIComponent(src_experiment_name) + "&new_experiment_name=" + encodeURIComponent(experiment_name),
+            dataType: "json"
+          })
+          .done(function(data, textStatus, jqXHR) {
+            if(data.success) {
+                console.log("Successfully renamed experiment " + src_experiment_name + " to " + experiment_name);
+                $("#exp_mdl_holder").find(".edit_modal").modal("hide");
+                sessionStorage.setItem("ops_active_tab", "experiments");
+                window.location.reload(true);
+            } else {
+              show_validation_message("Server failure: " + data.errormsg);
+            }
+          })
+          .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+        });
+       $("#exp_mdl_holder").append(rendered);
+       $("#exp_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#exp_mdl_holder").empty(); });
+       $("#exp_mdl_holder").find(".edit_modal").modal("show");
+      });
+  }
+
 
 
   var exper_template = `{{#value}}<tr>
@@ -198,7 +250,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
         <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
         <td> {{ contact_info }} </td>
         <td> {{ description }} </td>
-        <td class="ops_exp_icons"><i class="fa fa-edit" title="Edit"></i><i class="fa fa-clone" title="Clone"></i></td>
+        <td class="ops_exp_icons"><i class="fa fa-edit" title="Edit"></i><i class="fa fa-clone" title="Clone"></i><i class="fa fa-suitcase" title="Clone"></i></td>
     </tr>{{/value}}`;
   Mustache.parse(exper_template);
 
@@ -224,6 +276,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     $("#exp_searchresults tbody").html(rendered);
     $("#exp_searchresults .ops_exp_icons .fa-edit").on("click", edit_exp_btn_action);
     $("#exp_searchresults .ops_exp_icons .fa-clone").on("click", clone_exp);
+    $("#exp_searchresults .ops_exp_icons .fa-suitcase").on("click", rename_exp);
     $("#register_edit_exp_tab").data("search_function", function() { // Register the search function.
       if($("#ops_exp_searchtext").val().length > 0) {
         var curname = $("#ops_exp_searchtext").val();
@@ -240,6 +293,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
             $("#exp_searchresults tbody").html(rendered);
             $("#exp_searchresults .ops_exp_icons .fa-edit").on("click", edit_exp_btn_action);
             $("#exp_searchresults .ops_exp_icons .fa-clone").on("click", clone_exp);
+            $("#exp_searchresults .ops_exp_icons .fa-suitcase").on("click", rename_exp);
         }
       } else {
         var rendered = Mustache.render(exper_template, experiments);
