@@ -29,7 +29,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
-    add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry
+    add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -306,6 +306,40 @@ def svc_update_experiment_info():
     (status, errormsg) = update_existing_experiment(experiment_name, info)
     if status:
         context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Update", "value": info})
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/ws/clone_experiment", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("edit")
+def svc_clone_experiment():
+    """
+    Copy/clone an existing experiment as a new experiment.
+    """
+    experiment_name = request.args.get("experiment_name", None)
+    if not experiment_name:
+        return logAndAbort("Experiment clone missing experiment_name in query parameters")
+    src_experiment_name = request.args.get("src_experiment_name", None)
+    if not src_experiment_name:
+        return logAndAbort("Experiment clone missing src_experiment_name in query parameters")
+
+    info = request.json
+    if not info:
+        return logAndAbort("Experiment clone missing info document")
+
+    copy_specs = {k.replace("copy_", "") : v for k,v in info.items() if k.startswith("copy_")}
+    info = {k : v for k,v in info.items() if not k.startswith("copy_")}
+
+    necessary_keys = set(['start_time', 'end_time'])
+    missing_keys = necessary_keys - info.keys()
+    if missing_keys:
+        return logAndAbort("Experiment clone missing keys %s" % missing_keys)
+
+    (status, errormsg) = clone_experiment(experiment_name, src_experiment_name, info, copy_specs)
+    if status:
+        context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
+        context.kafka_producer.send("shifts", {"experiment_name" : experiment_name, "CRUD": "Create", "value": get_latest_shift(experiment_name) })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
