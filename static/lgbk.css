@@ -556,3 +556,11 @@ label {
   opacity: 0.6;
   cursor: not-allowed;
 }
+#logout h2 {
+  background-color: #6685F4;
+  color: white;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  padding-left: 1.0em;
+  text-align: center;
+}

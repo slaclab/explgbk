@@ -2,10 +2,11 @@ import os
 import json
 import logging
 import pkg_resources
+import datetime
 
 import context
 
-from flask import request, Blueprint, render_template, send_file, abort
+from flask import request, Blueprint, render_template, send_file, abort, make_response
 
 from dal.explgbk import get_current_sample_name
 from services.explgbk import experiment_exists
@@ -66,6 +67,13 @@ def register_new_experiment():
 @context.security.authorization_required("edit")
 def experiment_switch():
     return render_template("experiment_switch.html")
+
+@pages_blueprint.route("/lgbk/logout", methods=["GET"])
+@context.security.authentication_required
+def logout():
+    resp = make_response(render_template("logout.html"))
+    resp.set_cookie('webauth_at', ' ', expires=datetime.datetime.fromtimestamp(0))
+    return resp
 
 def __parse_expiration_header__(request):
     expiration = request.headers.get("Webauth-Token-Expiration", "0")
