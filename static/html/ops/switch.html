@@ -35,15 +35,18 @@
 
 <script type="text/javascript">
 $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
-	var instrument_template = `{{#value}}<tr">
+	var instrument_template = `{{#value}}<tr {{#is_standby}}class="exp_switch_standby"{{/is_standby}}">
 	<td>{{ instrument }}</td>
 	<td>{{ station }}</td>
-	<td><a target="_blank" href="{{_id}}/">{{ name }}</a></td>
+	<td>{{#is_standby}}Standby{{/is_standby}}{{^is_standby}}<a target="_blank" href="{{_id}}/">{{ name }}</a>{{/is_standby}}</td>
 	<td>{{ contact_info }}</td>
 	<td>{{ description }}</td>
 	<td>{{#FormatDate}}{{ switch_time }}{{/FormatDate}}</td>
 	<td>{{ requestor_uid }}</td>
-	<td><a class="btn btn-primary expswitch" role="button" data-instrument="{{ instrument }}" data-station="{{ station }}">Switch</a></td>
+	<td class="ops_switch_icons">
+      <i class="fa fa-exchange fa-lg expswitch" aria-hidden="true" data-instrument="{{ instrument }}" data-station="{{ station }}" title="Switch to a new experiment"></i>
+      {{^is_standby}}<i class="fa fa-power-off fa-lg standby" aria-hidden="true" data-instrument="{{ instrument }}" data-station="{{ station }}" title="Put this station in standby mode."></i>{{/is_standby}}
+    </td>
 	</tr>{{/value}}`;
 
 	var exper_template = `{{#value}}<tr data-expname="{{ name }}">
@@ -85,11 +88,11 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
     		active_exps.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
     		var rendered = Mustache.render(instrument_template, active_exps);
     		$("#switch_experiment_div tbody").html(rendered);
-    		$("a.expswitch").on("click", function() {
+    		$(".fa.expswitch").on("click", function() {
     			var instr = $(this).attr("data-instrument");
     			var station = $(this).attr("data-station");
     			console.log("Switch " + instr + "/" + station);
-    			$("#choose_experiment_modal .modal-title").text("Choose new experiment for " + instr + "(" + station + ")");
+    			$("#choose_experiment_modal .modal-title").text("Choose new experiment for " + instr + " Station: " + station + "");
     			$.getJSON(experiments_by_instrument)
     			.done(function(data) {
     				var experiments_for_instrument = data.value[instr];
@@ -105,6 +108,27 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
     				alert("There was an error fetching experiments from the server.");
     			});
     		})
+            $(".fa.standby").on("click", function() {
+                var instr = $(this).attr("data-instrument");
+    			var station = $(this).attr("data-station");
+    			console.log("Putting " + instr + "/" + station + " into standby/maintenance mode.");
+                $.ajax({
+        			type: "POST",
+        			contentType: "application/json; charset=utf-8",
+        			url: instrument_standby_url,
+        			data: JSON.stringify({"instrument": instr, "station": station}),
+        			dataType: "json"
+        		})
+                .done(function(data){
+                    if(data.success) {
+            			console.log("Successfully put "+ instr + "/" + station + " into standby/maintenance mode.");
+            			location.reload();
+        			} else {
+        				alert("Server side exception switching experiment " + data.errormsg);
+        			}
+                })
+                .fail( function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+            });
     	});
     });
 });

@@ -30,7 +30,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
-    add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment
+    add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
+    instrument_standby
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -381,7 +382,6 @@ def svc_reload_experiment_cache():
     return jsonify({'success': True})
 
 
-
 @explgbk_blueprint.route("/lgbk/ws/switch_experiment", methods=["POST"])
 @context.security.authentication_required
 @context.security.authorization_required("edit")
@@ -425,6 +425,40 @@ def svc_switch_experiment():
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
+
+
+@explgbk_blueprint.route("/lgbk/ws/instrument_standby", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("edit")
+def svc_instrument_standby():
+    """
+    Put the specified instrument/station into standby mode.
+    """
+    info = request.json
+    if not info:
+        return jsonify({'success': False, 'errormsg': "No data supplied.."})
+
+    instrument = info.get("instrument", None)
+    if not instrument:
+        return jsonify({'success': False, 'errormsg': "No instrument given"})
+
+    station = info.get("station", None)
+    if not station:
+        return jsonify({'success': False, 'errormsg': "No station given."})
+
+    userid = context.security.get_current_user_id()
+
+    (status, errormsg) = instrument_standby(instrument, station, userid)
+    if status:
+        context.kafka_producer.send("instrument_standby", {"value": {
+            "instrument": instrument,
+            "startion": station,
+            "userid": userid
+        }})
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/has_role", methods=["GET"])
 @context.security.authentication_required

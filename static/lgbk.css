@@ -291,6 +291,18 @@ label {
   font-weight: bold;
   background: #FFCC57;
 }
+#expswitch_tab .ops_switch_icons {
+  white-space: nowrap;
+}
+#expswitch_tab .ops_switch_icons .fa {
+  opacity: .5;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+}
+#expswitch_tab .exp_switch_standby {
+  color: #FFB305;
+  font-weight: bold;
+}
 #choose_experiment_modal table td a {
   color: #6685F4;
 }

@@ -243,7 +243,7 @@ def get_currently_active_experiments():
     for qry in active_queries:
         logger.info("Looking for active experiment for %s", qry)
         for exp in sitedb["experiment_switch"].find(qry).sort([( "switch_time", -1 )]).limit(1):
-            exp_info = get_experiment_info(exp["experiment_name"])
+            exp_info = get_experiment_info(exp["experiment_name"]) if not exp.get("is_standby", False) else { "instrument": qry["instrument"], "is_standby": True }
             exp_info["station"] = qry["station"]
             exp_info["switch_time"] = exp["switch_time"]
             exp_info["requestor_uid"] = exp["requestor_uid"]
@@ -263,6 +263,22 @@ def switch_experiment(instrument, station, experiment_name, userid):
         "station" : int(station),
         "switch_time" : datetime.datetime.utcnow(),
         "requestor_uid" : userid
+        })
+    return (True, "")
+
+def instrument_standby(instrument, station, userid):
+    """
+    Put the instrument into standby mode.
+    This mostly creates an experiment switch entry with the is_standby flag set.
+    """
+    sitedb = logbookclient["site"]
+    sitedb.experiment_switch.insert_one({
+        "experiment_name" : "Standby",
+        "instrument" : instrument,
+        "station" : int(station),
+        "switch_time" : datetime.datetime.utcnow(),
+        "requestor_uid" : userid,
+        "is_standby": True
         })
     return (True, "")
 
