@@ -291,6 +291,18 @@ label {
   font-weight: bold;
   background: #FFCC57;
 }
+#expswitch_tab .ops_switch_icons {
+  white-space: nowrap;
+}
+#expswitch_tab .ops_switch_icons .fa {
+  opacity: .5;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+}
+#expswitch_tab .exp_switch_standby {
+  color: #FFB305;
+  font-weight: bold;
+}
 #choose_experiment_modal table td a {
   color: #6685F4;
 }
@@ -555,4 +567,12 @@ label {
 #collab_mdl_holder tbody .fa.disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+#logout h2 {
+  background-color: #6685F4;
+  color: white;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  padding-left: 1.0em;
+  text-align: center;
 }

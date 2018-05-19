@@ -335,6 +335,18 @@ label {
     }
 }
 
+#expswitch_tab .ops_switch_icons {
+  white-space: nowrap;
+  .fa {
+      .listview_icon_mixin;
+  }
+}
+
+#expswitch_tab .exp_switch_standby {
+    color: @contrastcolor;
+    font-weight: bold;
+}
+
 #choose_experiment_modal table td a {
   color: @navbarcolor;
 }
@@ -634,5 +646,16 @@ label {
     .fa.disabled {
         opacity: 0.6;
         cursor: not-allowed;
+    }
+}
+
+#logout {
+    h2 {
+        background-color: @navbarcolor;
+        color:  @navbartext;
+        padding-top: 0.25em;
+        padding-bottom: 0.25em;
+        padding-left: 1.0em;
+        text-align: center;
     }
 }

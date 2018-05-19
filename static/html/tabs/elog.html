@@ -1,53 +1,5 @@
 <div class="container-fluid text-center tabcontainer" id="elog_tab">
-<div id="elog_new_entry_modal" class="modal fade" role="dialog">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <div class="modal-header">
-                <h4 class="modal-title">Post new eLog entry</h4>
-            </div>
-            <div class="modal-body">
-                <form class="form-horizontal" role="form" id="elog_new_entry_form">
-                    <div class="form-group">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_run_num" title="Specify an optional run number">Run</label>
-                        <div class="col-sm-6">
-                            <input type="text" class="form-control" name="run_num" id="elog_new_entry_run_num"/>
-                        </div>
-                    </div>
-                    <div class="validation_warning"></div>
-                    <div class="form-group">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text*</label>
-                        <div class="col-sm-10">
-                            <textarea class="form-control" rows="5" name="log_text" id="elog_new_entry_log_text"></textarea>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="elog_new_entry_email_dest" title="Email this log entry to folks specified in this list:">Email:</label>
-                        <div class="col-sm-8">
-                            <input class="form-control" rows="5" name="log_emails" id="elog_new_entry_email_dest" placeholder="email1 email2@institution.edu"></input>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
-                        <div class="col-sm-4">
-                            <input class="form-control" rows="5" name="log_tags" id="elog_new_entry_tags" placeholder="Tag1 Tag2 Tag3"></input>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_file_upload">File</label>
-                        <div class="col-sm-10">
-                            <input type="file" class="form-control" name="files" id="elog_new_entry_file_upload" multiple/>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-default" id="elog_new_entry_modal_post">Post</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <div class="container-fluid text-center" id="elog_content">
 </div>
@@ -97,9 +49,9 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
        <input type="hidden" name="parent" value="{{ _id }}">
        <div class="validation_warning"></div>
        <div class="form-group"><label class="col-sm-2 control-label">Text</label><div class="col-sm-8"><textarea class="form-control" rows="5" name="log_text"></textarea></div></div>
-       <div class="form-group"><label class="col-sm-2 control-label">Email:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_emails" placeholder="email1 email2@institution.edu"/></div></div>
+       <div class="form-group"><label class="col-sm-2 control-label">Email:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_emails" placeholder="email1 email2@institution.edu" value="{{ emails_str }}"/></div></div>
        <div class="form-group"><label class="col-sm-2 control-label">Tags:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_tags" placeholder="Tag1 Tag2 Tag3"/></div></div>
-       <div class="form-group"><label class="col-sm-2 control-label">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
+       <div class="form-group files_div"><label class="col-sm-2 control-label">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
        <div class="form-group"><button type="button" class="btn btn-default followup_post">Post</button></div>
       </form></div></div></div>`;
 
@@ -157,6 +109,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 	});
 	rendered.find(".followup_post").on("click", function(){
         if(_.isEmpty($.trim($(this).closest(".followup_form").find("textarea").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+        if($(this).closest(".followup_form").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $(this).closest(".followup_form").find(".files_div").remove(); }
 		var formData = new FormData(rendered.find(".followup_form")[0]);
 		$.ajax({
 			url: 'ws/new_elog_entry',
@@ -191,6 +144,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
     rendered.find("textarea").first().text(entry["content"]);
     rendered.find("input[name='log_tags']").val(_.join(_.get(entry, "tags", []), " "));
  	rendered.find(".followup_post").on("click", function(){
+        if($(this).closest(".followup_form").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $(this).closest(".followup_form").find(".files_div").remove(); }
  		var formData = new FormData(rendered.find(".followup_form")[0]);
  		$.ajax({
  			url: 'ws/modify_elog_entry?_id='+encodeURIComponent(entry["_id"]),
@@ -305,6 +259,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       entry.replaceExistingElogEntryContent = replaceExistingElogEntryContent;
       entry.expandFunction = expandFunction;
       entry["elem_id"] = entry["_id"];
+      entry["emails_str"] = _.join(_.get(entry, "email_to", []), " ");
       id2entry[entry["_id"]] = entry;
   }
 
@@ -458,31 +413,37 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   $("#elog_tab").data("new_entry_click", function(e) {
      if(check_session_timeout()) return;
 	 e.preventDefault();
-     $("#elog_new_entry_form")[0].reset();
-	 $("#elog_new_entry_modal").modal();
+     $.ajax('../../static/html/tabs/elog_new_entry.html')
+     .done(function(modal_txt){
+         var mdl = $(modal_txt);
+         $("#elog_content").prepend(mdl);
+         $("#elog_new_entry_modal_post").on("click", function (e) {
+            if($('#elog_new_entry_form').find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $('#elog_new_entry_form').find(".files_div").remove(); }
+            var formData = new FormData($('#elog_new_entry_form')[0]);
+            if(_.isEmpty($.trim($("#elog_new_entry_log_text").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+            $.ajax({
+                  url: 'ws/new_elog_entry',
+                  data: formData,
+                  type: 'POST',
+                  contentType: false, // Needed
+                  processData: false // Needed
+              })
+              .done(function(data, textStatus, jqXHR) {
+                  data = JSON.parse(data);
+                  if(data.success) {
+                      console.log("Successfully posted elog entry");
+                  } else {
+                      alert("Server side exception posting new elog entry " + data.errormsg);
+                  }
+              })
+              .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception posting new elog entry " + jqXHR.responseText); })
+            $("#elog_new_entry_modal").modal("hide");
+         });
+         $("#elog_new_entry_modal").modal();
+     });
  });
 
-  $("#elog_new_entry_modal_post").on("click", function (e) {
-	  var formData = new FormData($('#elog_new_entry_form')[0]);
-      if(_.isEmpty($.trim($("#elog_new_entry_log_text").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
-	  $.ajax({
-		    url: 'ws/new_elog_entry',
-		    data: formData,
-		    type: 'POST',
-		    contentType: false, // Needed
-		    processData: false // Needed
-		})
-		.done(function(data, textStatus, jqXHR) {
-			data = JSON.parse(data);
-			if(data.success) {
-    			console.log("Successfully posted elog entry");
-			} else {
-				alert("Server side exception posting new elog entry " + data.errormsg);
-			}
-		})
-		.fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception posting new elog entry " + jqXHR.responseText); })
-	  $("#elog_new_entry_modal").modal("hide");
-  });
+
 
   $("#elog_tab").data("search_text_input", function(e) {
       var search_text = $("#elog_search_text").val();

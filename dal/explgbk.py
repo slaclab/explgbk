@@ -2,7 +2,7 @@
 The model level business logic goes here.
 Most of the code here gets a connection to the database, executes a query and formats the results.
 '''
-
+import os
 import json
 import datetime
 import logging
@@ -243,7 +243,7 @@ def get_currently_active_experiments():
     for qry in active_queries:
         logger.info("Looking for active experiment for %s", qry)
         for exp in sitedb["experiment_switch"].find(qry).sort([( "switch_time", -1 )]).limit(1):
-            exp_info = get_experiment_info(exp["experiment_name"])
+            exp_info = get_experiment_info(exp["experiment_name"]) if not exp.get("is_standby", False) else { "instrument": qry["instrument"], "is_standby": True }
             exp_info["station"] = qry["station"]
             exp_info["switch_time"] = exp["switch_time"]
             exp_info["requestor_uid"] = exp["requestor_uid"]
@@ -263,6 +263,22 @@ def switch_experiment(instrument, station, experiment_name, userid):
         "station" : int(station),
         "switch_time" : datetime.datetime.utcnow(),
         "requestor_uid" : userid
+        })
+    return (True, "")
+
+def instrument_standby(instrument, station, userid):
+    """
+    Put the instrument into standby mode.
+    This mostly creates an experiment switch entry with the is_standby flag set.
+    """
+    sitedb = logbookclient["site"]
+    sitedb.experiment_switch.insert_one({
+        "experiment_name" : "Standby",
+        "instrument" : instrument,
+        "station" : int(station),
+        "switch_time" : datetime.datetime.utcnow(),
+        "requestor_uid" : userid,
+        "is_standby": True
         })
     return (True, "")
 
@@ -352,7 +368,7 @@ def get_elogs_for_specified_id(experiment_name, specified_id):
     else:
         return []
 
-def __upload_attachments_to_imagestore_and_return_urls(files):
+def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
     """
     Given a list of file uploads, upload these to the imagestore, generate thumbnails and return a list of attachments objects.
     """
@@ -377,7 +393,7 @@ def __upload_attachments_to_imagestore_and_return_urls(files):
             fd.flush()
             cp = subprocess.run(["convert", "-thumbnail", "128", tfname, tf_thmbname], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=30)
             logger.info(cp)
-            if cp.returncode == 0:
+            if cp.returncode == 0 and os.path.exists(tf_thmbname):
                 with open(tf_thmbname, 'rb') as thmb_s:
                     thmb_isloc = requests.post(imagestoreurl + "dir/assign").json()
                     thmb_imgurl = thmb_isloc['publicUrl'] + thmb_isloc['fid']
@@ -385,6 +401,8 @@ def __upload_attachments_to_imagestore_and_return_urls(files):
                     thmb_files = {'file': (filename, thmb_s, "image/png", {'Content-Disposition' : 'inline; filename=%s' % "preview_" + filename})}
                     requests.put(thmb_imgurl, files=thmb_files)
                     attachment["preview_url"] = thmb_imgurl
+            else:
+                logger.warn("Skipping generating a thumbnail for %s for experiment %s", filename, experiment_name)
 
         attachments.append(attachment)
     return attachments
@@ -395,7 +413,7 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
     Create a new log entry.
     """
     expdb = logbookclient[experiment_name]
-    attachments = __upload_attachments_to_imagestore_and_return_urls(files)
+    attachments = __upload_attachments_to_imagestore_and_return_urls(experiment_name, files)
     now_ts = datetime.datetime.utcnow()
     elog_doc = {
         "relevance_time": now_ts,
@@ -439,7 +457,7 @@ def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, 
     We also set the deleted_by/deleted_time for the clone; so it should show up as deleted.
     """
     expdb = logbookclient[experiment_name]
-    attachments = __upload_attachments_to_imagestore_and_return_urls(files)
+    attachments = __upload_attachments_to_imagestore_and_return_urls(experiment_name, files)
     current_entry = expdb['elog'].find_one({"_id": ObjectId(entry_id)})
     hist_entry = copy.deepcopy(current_entry)
     del hist_entry["_id"]
