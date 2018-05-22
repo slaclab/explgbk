@@ -113,6 +113,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
               console.log("Successfully submitted experiment " + experiment_name);
               $("#exp_mdl_holder").find(".edit_modal").modal("hide");
               sessionStorage.setItem("ops_active_tab", "experiments");
+              sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
               window.location.reload(true);
           } else {
             show_validation_message("Server failure: " + data.errormsg);
@@ -177,6 +178,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
               console.log("Successfully cloned experiment " + experiment_name);
               $("#exp_mdl_holder").find(".edit_modal").modal("hide");
               sessionStorage.setItem("ops_active_tab", "experiments");
+              sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
               window.location.reload(true);
           } else {
             show_validation_message("Server failure: " + data.errormsg);
@@ -229,6 +231,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
                 console.log("Successfully renamed experiment " + src_experiment_name + " to " + experiment_name);
                 $("#exp_mdl_holder").find(".edit_modal").modal("hide");
                 sessionStorage.setItem("ops_active_tab", "experiments");
+                sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
                 window.location.reload(true);
             } else {
               show_validation_message("Server failure: " + data.errormsg);
@@ -244,7 +247,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
 
 
 
-  var exper_template = `{{#value}}<tr>
+  var exper_template = `{{#value}}<tr data-expid="{{_id}}">
         <td> <a target="_blank" href="{{_id}}/">{{ name }}</a> </td>
         <td> {{#FormatDate}}{{first_run.begin_time }}{{/FormatDate}} </td>
         <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
@@ -300,6 +303,12 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
         $("#exp_searchresults tbody").html(rendered);
       }
     });
+    if(sessionStorage.getItem("scroll_to_exp_id") != null) {
+        console.log("Scrolling to " + sessionStorage.getItem("scroll_to_exp_id"));
+        var row = $('#exp_searchresults').find('tr[data-expid="' + sessionStorage.getItem("scroll_to_exp_id") + '"]');
+        if(row.length > 0) { row[0].scrollIntoView(); }
+        sessionStorage.removeItem("scroll_to_exp_id");
+    }
     $("#register_edit_exp_tab").data("register_experiment_function", function() { edit_exp({ contact_info: "", start_time : moment(), end_time : moment().add(2, 'days')}); });
   });
 

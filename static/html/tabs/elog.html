@@ -413,9 +413,9 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   $("#elog_tab").data("new_entry_click", function(e) {
      if(check_session_timeout()) return;
 	 e.preventDefault();
-     $.ajax('../../static/html/tabs/elog_new_entry.html')
-     .done(function(modal_txt){
-         var mdl = $(modal_txt);
+     $.when($.ajax('../../static/html/tabs/elog_new_entry.html'), $.getJSON(current_run_url))
+     .done(function(modal_txt, cur_run){
+         var current_run_num =_.get(cur_run[0], "value.num", ""), mdl = $(Mustache.render(modal_txt[0], { current_run_num: current_run_num }));
          $("#elog_content").prepend(mdl);
          $("#elog_new_entry_modal_post").on("click", function (e) {
             if($('#elog_new_entry_form').find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $('#elog_new_entry_form').find(".files_div").remove(); }

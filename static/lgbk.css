@@ -306,6 +306,14 @@ label {
 #choose_experiment_modal table td a {
   color: #6685F4;
 }
+#choose_experiment_modal .btn-group .btn {
+  margin-top: 0.25em;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+}
 #myTabContainer .exp_tab_header {
   color: white;
   background: #6685F4;
