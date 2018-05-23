@@ -408,7 +408,7 @@ def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
     return attachments
 
 
-def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None):
+def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None, title=None):
     """
     Create a new log entry.
     """
@@ -436,6 +436,8 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
         elog_doc["root"] = root
     if parent:
         elog_doc["parent"] = parent
+    if title:
+        elog_doc["title"] = title
 
     ins_id = expdb['elog'].insert_one(elog_doc).inserted_id
     entry = expdb['elog'].find_one({"_id": ins_id})
@@ -450,7 +452,7 @@ def delete_elog_entry(experiment_name, entry_id, userid):
     result = expdb['elog'].update_one({"_id": ObjectId(entry_id)}, {"$set": { "deleted_by": userid, "deleted_time": datetime.datetime.utcnow()}})
     return result.modified_count > 0
 
-def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, tags, files):
+def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, tags, files, title=None):
     """
     Change the content for the specified elog entry.
     We have to retain the history of the change; so we clone the existing entry but make the clone a child of the existing entry.
@@ -479,7 +481,9 @@ def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, 
         if attachments:
             modification["$push"] = { "attachments": { "$each": attachments }}
         if email_to:
-            modification.setdefault("$push", {})["email_to"] = { "$each": email_to }
+            modification.setdefault("$addToSet", {})["email_to"] = { "$each": email_to }
+        if title:
+            modification["$set"]["title"] = title
         result = expdb['elog'].update_one({"_id": current_entry["_id"]}, modification)
         return result.modified_count > 0
     return False

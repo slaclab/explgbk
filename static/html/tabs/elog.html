@@ -29,11 +29,11 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   {{> main_content_tmpl }}
   <div class="col-md-1">{{ author }}</div>
   </div></div>`;
-  var elog_main_content_template = `<div class="elog_main_content"><div class="col-md-5 text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{ content }}</div><div class="col-md-3">{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div></div>`;
+  var elog_main_content_template = `<div class="elog_main_content"><div class="col-md-5 text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-md-3">{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div></div>`;
 
  var elog_child_template = `<div class="row col-md-12 elog-chid">
    <div class="panel panel-default">
-    <div class="panel-heading text-left"><span class="entry_actions">{{^deleted_by}}<i class="fa fa-send fa-lg followup"></i>{{#roles.is_editor}}<i class="fa fa-edit fa-lg edit"></i><i class="fa fa-trash fa-lg delete"></i>{{/roles.is_editor}}{{/deleted_by}}</span><pre>{{content}}</pre></div>
+    <div class="panel-heading text-left"><span class="entry_actions">{{^deleted_by}}<i class="fa fa-send fa-lg followup"></i>{{#roles.is_editor}}<i class="fa fa-edit fa-lg edit"></i><i class="fa fa-trash fa-lg delete"></i>{{/roles.is_editor}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre>{{content}}</pre>{{/title}}</div>
     <div class="panel-body">
       {{> elog_chid_body_content }}
      <div class="row dialog_holder"></div>
@@ -48,7 +48,8 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
        <button type="button" class="close">&times;</button>
        <input type="hidden" name="parent" value="{{ _id }}">
        <div class="validation_warning"></div>
-       <div class="form-group"><label class="col-sm-2 control-label">Text</label><div class="col-sm-8"><textarea class="form-control" rows="5" name="log_text"></textarea></div></div>
+       <div class="form-group log_title_div hidden"><label class="col-sm-2 control-label">Title*:</label><div class="col-sm-8"><input class="form-control log_title" type="text" name="log_title"/></div></div>
+       <div class="form-group"><label class="col-sm-2 control-label">Text*: <i class="fa fa-table elog_followup_html" title="HTML log entry"></i></label><div class="col-sm-8"><textarea class="form-control elog_followup_textarea" rows="5" name="log_text"></textarea></div></div>
        <div class="form-group"><label class="col-sm-2 control-label">Email:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_emails" placeholder="email1 email2@institution.edu" value="{{ emails_str }}"/></div></div>
        <div class="form-group"><label class="col-sm-2 control-label">Tags:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_tags" placeholder="Tag1 Tag2 Tag3"/></div></div>
        <div class="form-group files_div"><label class="col-sm-2 control-label">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
@@ -90,6 +91,15 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   Mustache.parse(elog_run_child_template);
   Mustache.parse(elog_run_child_expanded_params_template);
 
+  var summernote_options = {toolbar: [
+    // [groupName, [list of button]]
+    ['para', ['ul', 'ol', 'table', 'link', 'hr', 'paragraph', 'style']],
+    ['font', ['fontname', 'fontsize', 'color']],
+    ['style', ['bold', 'italic', 'clear']],
+    ['help', ['codeview', 'help']]
+]};
+
+
   var renderMSTemplate = function(template, entry, partials) { // Convienience method to render time correctly.
     entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
     return $(Mustache.render(template, entry, partials));
@@ -102,14 +112,18 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  var followup_function = function() {
     if($(this).closest(".edat").find(".followup_div").length > 0) { $(this).closest(".edat").find(".followup_div").remove(); return; }
     if(check_session_timeout()) return;
-	var entry = $(this).closest(".edat").data("entry");
+	var entry = $(this).closest(".edat").data("entry"), current_text_mode_html = false;
 	var rendered = renderMSTemplate(elog_followup_template, entry);
-	rendered.find(".close").on("click", function(){
-		$(this).closest(".followup_div").remove();
-	});
+	rendered.find(".close").on("click", function(){ $(this).closest(".followup_div").remove(); });
+    rendered.find(".elog_followup_html").on("click", function(){ $(this).closest(".followup_div").find(".log_title_div").removeClass("hidden"); $(this).closest(".followup_div").find("textarea").summernote(summernote_options); current_text_mode_html=true; $(this).remove(); });
 	rendered.find(".followup_post").on("click", function(){
-        if(_.isEmpty($.trim($(this).closest(".followup_form").find("textarea").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
-        if($(this).closest(".followup_form").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $(this).closest(".followup_form").find(".files_div").remove(); }
+        if(current_text_mode_html) {
+            if(_.isEmpty($.trim($(this).closest(".followup_form").find(".log_title").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter a title for the log message"); return false; }
+            if(_.isEmpty($.trim($($(this).closest(".followup_form").find("textarea").val()).text()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+        } else {
+            if(_.isEmpty($.trim($(this).closest(".followup_form").find("textarea").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+        }
+        if($(this).closest(".followup_form").find(".files_div").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $(this).closest(".followup_form").find(".files_div").remove(); }
 		var formData = new FormData(rendered.find(".followup_form")[0]);
 		$.ajax({
 			url: 'ws/new_elog_entry',
@@ -136,15 +150,28 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  var edit_elog_entry = function() {
     if($(this).closest(".edat").find(".followup_div").length > 0) { $(this).closest(".edat").find(".followup_div").remove(); return; }
     if(check_session_timeout()) return;
-    var entry = $(this).closest(".edat").data("entry");
+    var entry = $(this).closest(".edat").data("entry"), current_text_mode_html = false;
     var rendered = renderMSTemplate(elog_followup_template, entry);
- 	rendered.find(".close").on("click", function(){
- 		$(this).closest(".followup_div").remove();
- 	});
+ 	rendered.find(".close").on("click", function(){ $(this).closest(".followup_div").remove(); });
     rendered.find("textarea").first().text(entry["content"]);
+    if(_.has(entry, "title")) {
+        current_text_mode_html = true;
+        rendered.find(".log_title").val(entry["title"]);
+        rendered.find(".log_title_div").removeClass("hidden");
+        rendered.find(".elog_followup_html").remove();
+        rendered.find("textarea").first().summernote(summernote_options);
+    } else {
+        rendered.find(".elog_followup_html").on("click", function() { $(this).closest(".followup_div").find(".log_title_div").removeClass("hidden"); $(this).closest(".followup_div").find("textarea").summernote(summernote_options); current_text_mode_html=true; $(this).remove(); });
+    }
     rendered.find("input[name='log_tags']").val(_.join(_.get(entry, "tags", []), " "));
  	rendered.find(".followup_post").on("click", function(){
-        if($(this).closest(".followup_form").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $(this).closest(".followup_form").find(".files_div").remove(); }
+        if(current_text_mode_html) {
+            if(_.isEmpty($.trim($(this).closest(".followup_form").find(".log_title").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter a title for the log message"); return false; }
+            if(_.isEmpty($.trim($($(this).closest(".followup_form").find("textarea").val()).text()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+        } else {
+            if(_.isEmpty($.trim($(this).closest(".followup_form").find("textarea").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+        }
+        if($(this).closest(".followup_form").find(".files_div").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $(this).closest(".followup_form").find(".files_div").remove(); }
  		var formData = new FormData(rendered.find(".followup_form")[0]);
  		$.ajax({
  			url: 'ws/modify_elog_entry?_id='+encodeURIComponent(entry["_id"]),
@@ -240,7 +267,13 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
   var replaceExistingElogEntryContent = function(existingElem) { // If we get a update for an edit over web socker, we replace the contents of the elog entry.
       existingElem.find(".elog_main_content").first().replaceWith(renderMSTemplate(elog_main_content_template, this));
-      existingElem.find(".elog-chid pre").first().text(this["content"]);
+      if(_.has(this, "title")) {
+          window.jaja = existingElem; window.jajaobj = this;
+          existingElem.find(".elog-chid").first().find(".chid_title").text(this["title"]);
+          existingElem.find(".elog-chid").first().find(".chid_content").html($(this["content"]));
+      } else {
+          existingElem.find(".elog-chid pre").first().text(this["content"]);
+      }
       existingElem.find(".elog_chid_body_content").first().replaceWith(renderMSTemplate(elog_chid_body_content, this));
   }
 
@@ -415,12 +448,18 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 	 e.preventDefault();
      $.when($.ajax('../../static/html/tabs/elog_new_entry.html'), $.getJSON(current_run_url))
      .done(function(modal_txt, cur_run){
-         var current_run_num =_.get(cur_run[0], "value.num", ""), mdl = $(Mustache.render(modal_txt[0], { current_run_num: current_run_num }));
+         var current_run_num =_.get(cur_run[0], "value.num", ""), mdl = $(Mustache.render(modal_txt[0], { current_run_num: current_run_num })), current_text_mode_html=false;
          $("#elog_content").prepend(mdl);
+         $("#elog_content").find(".elog_html").on("click", function(){ $("#elog_content").find(".log_title_div").removeClass("hidden"); $(this).remove(); $('#elog_new_entry_log_text').summernote(summernote_options); current_text_mode_html=true;});
          $("#elog_new_entry_modal_post").on("click", function (e) {
-            if($('#elog_new_entry_form').find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $('#elog_new_entry_form').find(".files_div").remove(); }
+            if($('#elog_new_entry_form').find(".files_div").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $('#elog_new_entry_form').find(".files_div").remove(); }
             var formData = new FormData($('#elog_new_entry_form')[0]);
-            if(_.isEmpty($.trim($("#elog_new_entry_log_text").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+            if(current_text_mode_html) {
+                if(_.isEmpty($.trim($("#elog_new_entry_log_title").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter a title for the log message"); return false; }
+                if(_.isEmpty($.trim($($("#elog_new_entry_log_text").val()).text()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+            } else {
+                if(_.isEmpty($.trim($("#elog_new_entry_log_text").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+            }
             $.ajax({
                   url: 'ws/new_elog_entry',
                   data: formData,
