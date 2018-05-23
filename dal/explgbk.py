@@ -492,6 +492,13 @@ def get_experiment_files(experiment_name):
     expdb = logbookclient[experiment_name]
     return [file for file in expdb['file_catalog'].find().sort([("run_num", -1), ("create_timestamp", -1)])]
 
+def get_experiment_files_for_run(experiment_name, run_num):
+    '''
+    Get the files for the given experiment for the specified run
+    '''
+    expdb = logbookclient[experiment_name]
+    return [file for file in expdb['file_catalog'].find({"run_num": run_num}).sort([("run_num", -1), ("create_timestamp", -1)])]
+
 
 def get_experiment_runs(experiment_name, include_run_params=False):
     '''

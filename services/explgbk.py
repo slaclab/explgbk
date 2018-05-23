@@ -31,7 +31,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
-    instrument_standby
+    instrument_standby, get_experiment_files_for_run
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -708,6 +708,16 @@ def svc_delete_elog_entry(experiment_name):
 def svc_get_files(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_experiment_files(experiment_name)})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/files", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists
+@context.security.authorization_required("read")
+def svc_get_files_for_run(experiment_name, run_num):
+    try:
+        rnum = int(run_num)
+    except ValueError:
+        rnum = run_num_str # Cryo uses strings for run numbers.
+    return JSONEncoder().encode({"success": True, "value": get_experiment_files_for_run(experiment_name, rnum)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs", methods=["GET"])
 @context.security.authentication_required
