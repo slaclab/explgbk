@@ -355,6 +355,30 @@ def get_elogs_for_run_num_range(experiment_name, start_run_num, end_run_num):
 
     return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
 
+def get_elog_entries_by_author(experiment_name, author):
+    """
+    Get elog entries by the specified author
+    """
+    expdb = logbookclient[experiment_name]
+    matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "author": author })}
+    # Recursively gather all root and parent entries
+    while __get_root_and_parent_entries(experiment_name, matching_entries):
+        pass
+
+    return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+
+def get_elog_entries_by_tag(experiment_name, tag):
+    """
+    Get elog entries with the specified tag
+    """
+    expdb = logbookclient[experiment_name]
+    matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "tags": tag })}
+    # Recursively gather all root and parent entries
+    while __get_root_and_parent_entries(experiment_name, matching_entries):
+        pass
+
+    return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+
 def get_elogs_for_specified_id(experiment_name, specified_id):
     """
     Get the elog entries related to the entry with the specified id.
@@ -367,6 +391,20 @@ def get_elogs_for_specified_id(experiment_name, specified_id):
         return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
     else:
         return []
+
+def get_elogs_for_date_range(experiment_name, start_date, end_date):
+    """
+    Get the elog entries between the specified date range; >= start_date and <= end_date
+    """
+    expdb = logbookclient[experiment_name]
+    logger.debug("Looking for entries between %s and %s", start_date, end_date)
+    matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "relevance_time": { "$gte": start_date, "$lte": end_date } })}
+    # Recursively gather all root and parent entries
+    while __get_root_and_parent_entries(experiment_name, matching_entries):
+        pass
+
+    return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+
 
 def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
     """
@@ -488,6 +526,19 @@ def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, 
         return result.modified_count > 0
     return False
 
+def get_elog_authors(experiment_name):
+    '''
+    Get the distinct authors for the elog entries.
+    '''
+    expdb = logbookclient[experiment_name]
+    return expdb['elog'].distinct("author")
+
+def get_elog_tags(experiment_name):
+    '''
+    Get the distinct tags for the elog entries.
+    '''
+    expdb = logbookclient[experiment_name]
+    return expdb['elog'].distinct("tags")
 
 def get_experiment_files(experiment_name):
     '''

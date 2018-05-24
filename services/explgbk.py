@@ -16,6 +16,7 @@ import copy
 import requests
 import context
 from functools import wraps
+from datetime import datetime
 
 import smtplib
 from email.message import EmailMessage
@@ -31,7 +32,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
-    instrument_standby, get_experiment_files_for_run
+    instrument_standby, get_experiment_files_for_run, get_elog_authors, get_elog_entries_by_author, get_elog_tags, get_elog_entries_by_tag, \
+    get_elogs_for_date_range
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -693,6 +695,8 @@ def svc_search_elog(experiment_name):
     run_num_str   = request.args.get("run_num", None)
     start_run_num_str = request.args.get("start_run_num", None)
     end_run_num_str   = request.args.get("end_run_num", None)
+    start_date_str = request.args.get("start_date", None)
+    end_date_str   = request.args.get("end_date", None)
     id_str = request.args.get("_id", None)
     if run_num_str:
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_run_num(experiment_name, int(run_num_str))})
@@ -700,8 +704,17 @@ def svc_search_elog(experiment_name):
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_run_num_range(experiment_name, int(start_run_num_str), int(end_run_num_str))})
     elif id_str:
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_specified_id(experiment_name, id_str)})
+    elif start_date_str and end_date_str:
+        return JSONEncoder().encode({"success": True, "value": get_elogs_for_date_range(experiment_name, datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'), datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'))})
     else:
-        return JSONEncoder().encode({"success": True, "value": search_elog_for_text(experiment_name, search_text)})
+        combined_results = {}
+        if search_text in get_elog_authors(experiment_name):
+            combined_results.update({ x["_id"] : x for x in get_elog_entries_by_author(experiment_name, search_text) })
+        if search_text in get_elog_tags(experiment_name):
+            combined_results.update({ x["_id"] : x for x in get_elog_entries_by_tag(experiment_name, search_text) })
+
+        combined_results.update({ x["_id"] : x for x in search_elog_for_text(experiment_name, search_text) })
+        return JSONEncoder().encode({"success": True, "value": list(sorted(combined_results.values(), key=lambda x : x["insert_time"]))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_elog_entry", methods=["DELETE"])
 @context.security.authentication_required
