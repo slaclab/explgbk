@@ -86,7 +86,7 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
     expdb["runs"].create_index( [("num", DESCENDING)], unique=True)
     expdb["elog"].create_index( [("root", ASCENDING)])
     expdb["elog"].create_index( [("parent", ASCENDING)])
-    expdb["elog"].create_index( [("content", "text" )]);
+    expdb["elog"].create_index( [("content", "text" ), ("title", "text" )])
     expdb["roles"].create_index( [("app", ASCENDING), ("name", ASCENDING)], unique=True)
     expdb["run_param_descriptions"].create_index( [("param_name", DESCENDING)], unique=True)
     expdb["setup"].create_index( [("modified_by", ASCENDING), ("modified_at", ASCENDING)], unique=True)
