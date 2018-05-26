@@ -14,8 +14,14 @@
                         </div>
                     </div>
                     <div class="validation_warning"></div>
-                    <div class="form-group">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text*</label>
+                    <div class="form-group log_title_div hidden">
+                        <label  class="col-sm-2 control-label" for="elog_new_entry_log_title">Title*</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" name="log_title" id="elog_new_entry_log_title"/>
+                        </div>
+                    </div>
+                    <div class="form-group log_text_div">
+                        <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text* <i class="fa fa-table elog_html" title="HTML log entry"></i></label>
                         <div class="col-sm-10">
                             <textarea class="form-control" rows="5" name="log_text" id="elog_new_entry_log_text"></textarea>
                         </div>

@@ -16,6 +16,7 @@ import copy
 import requests
 import context
 from functools import wraps
+from datetime import datetime
 
 import smtplib
 from email.message import EmailMessage
@@ -31,7 +32,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
-    instrument_standby, get_experiment_files_for_run
+    instrument_standby, get_experiment_files_for_run, get_elog_authors, get_elog_entries_by_author, get_elog_tags, get_elog_entries_by_tag, \
+    get_elogs_for_date_range
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -412,6 +414,9 @@ def svc_switch_experiment():
     if info_from_database["instrument"] != instrument:
         return jsonify({'success': False, 'errormsg': "Trying to switch experiment on instrument %s for experiment on %s" % (instrument, info_from_database["instrument"])})
 
+    if experiment_name in [ x['name'] for x in get_currently_active_experiments() ]:
+        return jsonify({'success': False, 'errormsg': "Trying to switch experiment %s onto instrument %s but it is already currently active" % (experiment_name, instrument)})
+
     userid = context.security.get_current_user_id()
 
     (status, errormsg) = switch_experiment(instrument, station, experiment_name, userid)
@@ -526,8 +531,15 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
             return False
         def generateEMailMsgFromELogDoc(elog_doc):
             msg = EmailMessage()
-            msg.set_content(elog_doc["content"])
-            msg.make_mixed()
+            if 'title' in elog_doc:
+                msg.make_mixed()
+                htmlmsg = EmailMessage()
+                htmlmsg.make_alternative()
+                htmlmsg.add_alternative(elog_doc["content"], subtype='html')
+                msg.attach(htmlmsg)
+            else:
+                msg.set_content(elog_doc["content"])
+                msg.make_mixed()
             for attachment in elog_doc.get("attachments", []):
                 if 'type' in attachment and '/' in attachment['type']:
                     maintype, subtype = attachment['type'].split('/', 1)
@@ -538,7 +550,7 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
             return msg
 
         msg = generateEMailMsgFromELogDoc(elog_doc)
-        msg['Subject'] = '' + "Elog message for " + experiment_name
+        msg['Subject'] = '' + "Elog message for " + experiment_name + " " + elog_doc.get("title", "")
         msg['From'] = 'exp_logbook_robot@slac.stanford.edu'
         msg['To'] = ", ".join(full_email_addresses)
         parent_msg = msg
@@ -570,6 +582,7 @@ def svc_post_new_elog_entry(experiment_name):
     if not log_content or not log_content.strip():
         return logAndAbort("Cannot post empty message")
 
+
     userid = context.security.get_current_user_id()
 
     optional_args = {}
@@ -594,6 +607,10 @@ def svc_post_new_elog_entry(experiment_name):
         if not run_doc:
             return JSONEncoder().encode({'success': False, 'errormsg': "Cannot find run with specified run number - " + str(run_num) + " for experiment " + experiment_name})
         optional_args["run_num"] = run_num
+
+    log_title = request.form.get("log_title", None);
+    if log_title:
+        optional_args["title"] = log_title
 
     shift = request.form.get("shift", None);
     if shift:
@@ -642,6 +659,7 @@ def svc_modify_elog_entry(experiment_name):
     email_to = log_emails.split() if log_emails else None
     log_tags_str = request.form.get("log_tags", None)
     tags = log_tags_str.split() if log_tags_str else []
+    title = request.form.get("log_title", None)
     if not entry_id or not log_content:
         return logAndAbort("Please pass in the _id of the elog entry for " + experiment_name + " and the new content")
 
@@ -652,7 +670,7 @@ def svc_modify_elog_entry(experiment_name):
             logger.info(filename)
             files.append((filename, upload))
 
-    status = modify_elog_entry(experiment_name, entry_id, context.security.get_current_user_id(), log_content, email_to, tags, files)
+    status = modify_elog_entry(experiment_name, entry_id, context.security.get_current_user_id(), log_content, email_to, tags, files, title)
     if status:
         modified_entry = get_specific_elog_entry(experiment_name, entry_id)
         context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": modified_entry})
@@ -677,6 +695,8 @@ def svc_search_elog(experiment_name):
     run_num_str   = request.args.get("run_num", None)
     start_run_num_str = request.args.get("start_run_num", None)
     end_run_num_str   = request.args.get("end_run_num", None)
+    start_date_str = request.args.get("start_date", None)
+    end_date_str   = request.args.get("end_date", None)
     id_str = request.args.get("_id", None)
     if run_num_str:
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_run_num(experiment_name, int(run_num_str))})
@@ -684,8 +704,17 @@ def svc_search_elog(experiment_name):
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_run_num_range(experiment_name, int(start_run_num_str), int(end_run_num_str))})
     elif id_str:
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_specified_id(experiment_name, id_str)})
+    elif start_date_str and end_date_str:
+        return JSONEncoder().encode({"success": True, "value": get_elogs_for_date_range(experiment_name, datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'), datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'))})
     else:
-        return JSONEncoder().encode({"success": True, "value": search_elog_for_text(experiment_name, search_text)})
+        combined_results = {}
+        if search_text in get_elog_authors(experiment_name):
+            combined_results.update({ x["_id"] : x for x in get_elog_entries_by_author(experiment_name, search_text) })
+        if search_text in get_elog_tags(experiment_name):
+            combined_results.update({ x["_id"] : x for x in get_elog_entries_by_tag(experiment_name, search_text) })
+
+        combined_results.update({ x["_id"] : x for x in search_elog_for_text(experiment_name, search_text) })
+        return JSONEncoder().encode({"success": True, "value": list(sorted(combined_results.values(), key=lambda x : x["insert_time"]))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_elog_entry", methods=["DELETE"])
 @context.security.authentication_required

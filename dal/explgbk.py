@@ -86,7 +86,7 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
     expdb["runs"].create_index( [("num", DESCENDING)], unique=True)
     expdb["elog"].create_index( [("root", ASCENDING)])
     expdb["elog"].create_index( [("parent", ASCENDING)])
-    expdb["elog"].create_index( [("content", "text" )]);
+    expdb["elog"].create_index( [("content", "text" ), ("title", "text" )])
     expdb["roles"].create_index( [("app", ASCENDING), ("name", ASCENDING)], unique=True)
     expdb["run_param_descriptions"].create_index( [("param_name", DESCENDING)], unique=True)
     expdb["setup"].create_index( [("modified_by", ASCENDING), ("modified_at", ASCENDING)], unique=True)
@@ -355,6 +355,30 @@ def get_elogs_for_run_num_range(experiment_name, start_run_num, end_run_num):
 
     return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
 
+def get_elog_entries_by_author(experiment_name, author):
+    """
+    Get elog entries by the specified author
+    """
+    expdb = logbookclient[experiment_name]
+    matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "author": author })}
+    # Recursively gather all root and parent entries
+    while __get_root_and_parent_entries(experiment_name, matching_entries):
+        pass
+
+    return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+
+def get_elog_entries_by_tag(experiment_name, tag):
+    """
+    Get elog entries with the specified tag
+    """
+    expdb = logbookclient[experiment_name]
+    matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "tags": tag })}
+    # Recursively gather all root and parent entries
+    while __get_root_and_parent_entries(experiment_name, matching_entries):
+        pass
+
+    return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+
 def get_elogs_for_specified_id(experiment_name, specified_id):
     """
     Get the elog entries related to the entry with the specified id.
@@ -367,6 +391,20 @@ def get_elogs_for_specified_id(experiment_name, specified_id):
         return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
     else:
         return []
+
+def get_elogs_for_date_range(experiment_name, start_date, end_date):
+    """
+    Get the elog entries between the specified date range; >= start_date and <= end_date
+    """
+    expdb = logbookclient[experiment_name]
+    logger.debug("Looking for entries between %s and %s", start_date, end_date)
+    matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "relevance_time": { "$gte": start_date, "$lte": end_date } })}
+    # Recursively gather all root and parent entries
+    while __get_root_and_parent_entries(experiment_name, matching_entries):
+        pass
+
+    return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+
 
 def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
     """
@@ -408,7 +446,7 @@ def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
     return attachments
 
 
-def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None):
+def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None, title=None):
     """
     Create a new log entry.
     """
@@ -436,6 +474,8 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
         elog_doc["root"] = root
     if parent:
         elog_doc["parent"] = parent
+    if title:
+        elog_doc["title"] = title
 
     ins_id = expdb['elog'].insert_one(elog_doc).inserted_id
     entry = expdb['elog'].find_one({"_id": ins_id})
@@ -450,7 +490,7 @@ def delete_elog_entry(experiment_name, entry_id, userid):
     result = expdb['elog'].update_one({"_id": ObjectId(entry_id)}, {"$set": { "deleted_by": userid, "deleted_time": datetime.datetime.utcnow()}})
     return result.modified_count > 0
 
-def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, tags, files):
+def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, tags, files, title=None):
     """
     Change the content for the specified elog entry.
     We have to retain the history of the change; so we clone the existing entry but make the clone a child of the existing entry.
@@ -479,11 +519,26 @@ def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, 
         if attachments:
             modification["$push"] = { "attachments": { "$each": attachments }}
         if email_to:
-            modification.setdefault("$push", {})["email_to"] = { "$each": email_to }
+            modification.setdefault("$addToSet", {})["email_to"] = { "$each": email_to }
+        if title:
+            modification["$set"]["title"] = title
         result = expdb['elog'].update_one({"_id": current_entry["_id"]}, modification)
         return result.modified_count > 0
     return False
 
+def get_elog_authors(experiment_name):
+    '''
+    Get the distinct authors for the elog entries.
+    '''
+    expdb = logbookclient[experiment_name]
+    return expdb['elog'].distinct("author")
+
+def get_elog_tags(experiment_name):
+    '''
+    Get the distinct tags for the elog entries.
+    '''
+    expdb = logbookclient[experiment_name]
+    return expdb['elog'].distinct("tags")
 
 def get_experiment_files(experiment_name):
     '''
