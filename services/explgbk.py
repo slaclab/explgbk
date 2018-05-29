@@ -414,7 +414,7 @@ def svc_switch_experiment():
     if info_from_database["instrument"] != instrument:
         return jsonify({'success': False, 'errormsg': "Trying to switch experiment on instrument %s for experiment on %s" % (instrument, info_from_database["instrument"])})
 
-    if experiment_name in [ x['name'] for x in get_currently_active_experiments() ]:
+    if experiment_name in [ x.get('name', '') for x in get_currently_active_experiments() ]:
         return jsonify({'success': False, 'errormsg': "Trying to switch experiment %s onto instrument %s but it is already currently active" % (experiment_name, instrument)})
 
     userid = context.security.get_current_user_id()
