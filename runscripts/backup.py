@@ -18,6 +18,7 @@ import logging
 import argparse
 import subprocess
 import datetime
+import shutil
 
 # Given a set of backup folders, we'll need to unambigously determine
 # 1) The date the backup was made
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument("--seaweed_master",    help="The hostname of the seaweed master server", required=True)
     parser.add_argument("--seaweed_port",      help="The port to the seaweed master server.", required=True)
     parser.add_argument("--seaweed_path",      help="Full path to the weed command. If not specified, we use weed from the PATH.", default="weed")
-    parser.add_argument("--keep_backups",      help="Keep at least this many complete backups; older backups are deleted.")
+    parser.add_argument("--keep_backups",      help="Keep at least this many complete backups; older backups are deleted.", default=0, type=int)
     parser.add_argument("backup_folder",       help="The folder containing the backups.")
 
     backup_started_at = datetime.datetime.now()
@@ -129,3 +130,19 @@ if __name__ == "__main__":
 
     with open(os.path.join(todays_folder, "backup_done"), 'w') as f:
         f.write("Backup started at {0} completed at {1}".format(backup_started_at.isoformat(), datetime.datetime.now().isoformat()))
+
+    if args.keep_backups > 1:
+        logger.debug("Keeping at most %s backups", args.keep_backups)
+        folders_with_backups = []
+        for p in os.listdir(args.backup_folder):
+            if p.startswith("explgbk_") and os.path.exists(os.path.join(args.backup_folder, p, 'backup_done')) and todays_folder != os.path.join(args.backup_folder, p):
+                folders_with_backups.append(os.path.join(args.backup_folder, p))
+        folders_with_backups = sorted(folders_with_backups)
+        logger.debug("Folders with backups \n  %s", "\n  ".join(folders_with_backups))
+        if len(folders_with_backups) > args.keep_backups:
+            folders_to_delete = folders_with_backups[:-args.keep_backups]
+            logger.debug("Folders to delete \n  %s", "\n  ".join(folders_to_delete))
+            for dp in folders_to_delete:
+                with open(os.path.join(todays_folder, "backup.log"), 'a') as f:
+                    f.write("Deleting older backup folder {0}".format(dp))
+                shutil.rmtree(dp)
