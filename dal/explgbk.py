@@ -865,6 +865,23 @@ def create_update_sample(experiment_name, sample_name, createp, info):
 
     return (True, "")
 
+def clone_sample(experiment_name, existing_sample_name, new_sample_name):
+    """
+    Clone an existing sample.
+    """
+    expdb = logbookclient[experiment_name]
+    if not expdb['samples'].find_one({"name": existing_sample_name}):
+        return (False, "Sample %s does not exist" % existing_sample_name)
+    if expdb['samples'].find_one({"name": new_sample_name}):
+        return (False, "Sample %s already exists" % new_sample_name)
+
+    existing_sample_doc = expdb['samples'].find_one({"name": existing_sample_name})
+    del existing_sample_doc["_id"]
+    existing_sample_doc["name"] = new_sample_name
+    expdb['samples'].insert_one(existing_sample_doc)
+
+    return (True, "")
+
 def make_sample_current(experiment_name, sample_name):
     """
     Make the sample specified by the sample_name as the current sample.

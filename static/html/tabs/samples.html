@@ -79,9 +79,54 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
       $("#samples_tab").find("#mdl_holder").find(".edit_modal").modal("show");
     })
   }
+  var clone_sample = function(existing_sample_name) {
+      $.ajax("../../static/html/ms/sampleclone.html")
+      .done(function(tmpl){
+          Mustache.parse(tmpl);
+          var rendered = $(Mustache.render(tmpl, {existing_sample_name: existing_sample_name}));
+          rendered.find("#sample_clone").on("click", function(e){
+              console.log("Cloning");
+              e.preventDefault();
+              var formObj = $("#samples_tab").find("#mdl_holder").find("form");
+              var validations = [
+                  [function() { return $.trim(formObj.find(".sample_name").val()) == ""; }, "Sample name cannot be blank."],
+                  [function() { return !/^[\w/_-]+$/.test($.trim(formObj.find(".sample_name").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
+                  [function() { return _.find($("#samples_tab").data("samples").value, function(shf){return shf.name == $.trim(formObj.find(".sample_name").val())}) != undefined }, "The sample name already exists."]
+              ];
+              // Various validations
+              var v_failed = false;
+              _.each(validations, function(validation, i) {
+                  console.log("Trying validation " + i + "" + validation[1]);
+                  if(validation[0]()) {
+                      $("#samples_tab").find("#mdl_holder").find(".validation_message").html(validation[1]);
+                      $("#samples_tab").find("#mdl_holder").find(".validation_modal").modal("show");
+                      v_failed = true;
+                      return false;
+                  }
+              });
+              if (v_failed) { e.preventDefault(); return; }
+              var sample_name = $.trim(formObj.find(".sample_name").val());
+              $.getJSON("ws/clone_sample"+ "?existing_sample_name=" + encodeURIComponent(existing_sample_name) + "&new_sample_name=" + encodeURIComponent($.trim(formObj.find(".sample_name").val())))
+              .done(function(data, textStatus, jqXHR) {
+                  if(data.success) {
+                      console.log("Successfully cloned sample " + sample_name);
+                      $("#samples_tab").find("#mdl_holder").find(".edit_modal").modal("hide");
+                      window.location.reload(true);
+                  } else {
+                      alert("Server side exception cloning sample " + data.errormsg);
+                  }
+              })
+              .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure cloning sample " + textStatus); })
+          });
+          $("#samples_tab").find("#mdl_holder").append(rendered);
+          $("#samples_tab").find("#mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#samples_tab").find("#mdl_holder").empty(); });
+          $("#samples_tab").find("#mdl_holder").find(".edit_modal").modal("show");
+      });
+  }
+
   $("#samples_tab").data("edit_sample", edit_sample);
 
-  var sample_tr_tmpl = `{{#value}}<tr {{#current}}class="active_sample"{{/current}}><td>{{ name }}</td><td>{{ description }}</td><td><i title="Edit sample details" class="fa fa-edit listview-action"></i>{{^current}}<i title="Make this sample the current sample" class="fa fa-anchor listview-action"></i>{{/current}}</td></tr>{{/value}}`;
+  var sample_tr_tmpl = `{{#value}}<tr {{#current}}class="active_sample"{{/current}}><td>{{ name }}</td><td>{{ description }}</td><td><i title="Edit sample details" class="fa fa-edit listview-action"></i><i title="Clone sample" class="fa fa-clone listview-action"></i>{{^current}}<i title="Make this sample the current sample" class="fa fa-anchor listview-action"></i>{{/current}}</td></tr>{{/value}}`;
   Mustache.parse(sample_tr_tmpl);
   $.getJSON("ws/samples")
   .done(function(data){
@@ -105,6 +150,10 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
       var sample_name = $(this).closest("tr").find("td").first().text();
       var sample_obj = _.find($("#samples_tab").data("samples").value, function(shf){return shf.name == sample_name});
       edit_sample(sample_obj);
+    });
+    rendered.find(".fa-clone").on("click", function(){
+        var existing_sample_name = $(this).closest("tr").find("td").first().text();
+        clone_sample(existing_sample_name);
     });
     $("#samples_tab .samplestbl tbody").append(rendered);
   });

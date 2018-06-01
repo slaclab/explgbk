@@ -33,7 +33,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
     instrument_standby, get_experiment_files_for_run, get_elog_authors, get_elog_entries_by_author, get_elog_tags, get_elog_entries_by_tag, \
-    get_elogs_for_date_range
+    get_elogs_for_date_range, clone_sample
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -1017,6 +1017,30 @@ def svc_create_update_sample(experiment_name):
     if status:
         sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
         context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Create" if createp else "Update", "value": sample_doc })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/clone_sample", methods=["GET", "POST"])
+@context.security.authentication_required
+@experiment_exists
+@context.security.authorization_required("post")
+def svc_clone_sample(experiment_name):
+    """
+    Clone an existing sample.
+    Pass in the existing sample name and the new sample name.
+    """
+    existing_sample_name = request.args.get("existing_sample_name", None)
+    if not existing_sample_name:
+        return logAndAbort("Please pass in the existing_sample_name as a parameter")
+    new_sample_name = request.args.get("new_sample_name", None)
+    if not new_sample_name:
+        return logAndAbort("Please pass in the new sample name as a parameter")
+
+    (status, errormsg) = clone_sample(experiment_name, existing_sample_name, new_sample_name)
+    if status:
+        sample_doc = get_sample_for_experiment_by_name(experiment_name, new_sample_name)
+        context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Create", "value": sample_doc })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
