@@ -20,14 +20,14 @@
         <thead><tr><th>Param Name</th><th>Param Value</th><th>Actions</th></thead>
         <tbody>
           {{#paramkvs}}
-          <tr><td><input type="text" class="form-control key" value="{{key}}"></td><td><input type="text" class="form-control value" value="{{value}}"></td>
+          <tr><td>{{#has_ss_params}}<div class="input-group">{{/has_ss_params}}<input type="text" class="form-control key" value="{{key}}">{{#has_ss_params}}<span class="input-group-addon"><i class="fa fa-arrow-down fa-lg param_action" aria-hidden="true"></i></span></div>{{/has_ss_params}}</td><td><input type="text" class="form-control value" value="{{value}}"></td>
             <td>
                 <i class="fa fa-trash fa-lg param_action" aria-hidden="true"></i>
                 <i class="fa fa-plus fa-lg param_action" aria-hidden="true"></i>
             </td>
           </tr>
           {{/paramkvs}}
-          <tr><td><input type="text" class="form-control key" value=""></td><td><input type="text" class="form-control value" value=""></td>
+          <tr><td>{{#has_ss_params}}<div class="input-group">{{/has_ss_params}}<input type="text" class="form-control key" value="">{{#has_ss_params}}<span class="input-group-addon"><i class="fa fa-arrow-down fa-lg param_action" aria-hidden="true"></i></span></div>{{/has_ss_params}}</td><td><input type="text" class="form-control value" value=""></td>
             <td>
                 <i class="fa fa-trash fa-lg param_action" aria-hidden="true"></i>
                 <i class="fa fa-plus fa-lg param_action" aria-hidden="true"></i>
@@ -52,6 +52,23 @@
      <h4 class="modal-title">Validation Error</h4>
    </div>
    <div class="modal-body alert alert-danger" role="alert">
+     <p class="validation_message"></p>
+   </div>
+   <div class="modal-footer">
+     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+   </div>
+  </div>
+ </div>
+</div>
+
+<div class="modal fade sample_ss_name_choice_modal" role="dialog">
+ <div class="modal-dialog">
+  <div class="modal-content">
+   <div class="modal-header">
+     <button type="button" class="close" data-dismiss="modal">&times;</button>
+     <h4 class="modal-title">Choose one of the following names</h4>
+   </div>
+   <div class="modal-body" role="alert">
      <p class="validation_message"></p>
    </div>
    <div class="modal-footer">

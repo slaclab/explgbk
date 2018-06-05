@@ -75,6 +75,15 @@ def logout():
     resp.set_cookie('webauth_at', ' ', expires=datetime.datetime.fromtimestamp(0))
     return resp
 
+@pages_blueprint.route("/lgbk/docs/<path:path>", methods=["GET"])
+@context.security.authentication_required
+def docs(path):
+    doc_path = os.path.join(os.path.dirname(__file__), "static", "html", "docs", path)
+    logger.debug("Looking for path %s", doc_path)
+    if os.path.exists(doc_path):
+        return send_file(doc_path)
+    abort(404)
+
 def __parse_expiration_header__(request):
     expiration = request.headers.get("Webauth-Token-Expiration", "0")
     return int(expiration.replace("t=", ""))//1000000 if expiration.startswith("t=") else int(expiration)

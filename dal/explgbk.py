@@ -894,6 +894,13 @@ def make_sample_current(experiment_name, sample_name):
     expdb.current.find_one_and_update({"_id": "sample"}, {"$set": { "_id": "sample", "sample" : sample_doc["_id"] }} , upsert=True)
     return (True, "")
 
+def get_modal_param_definitions(modal_type):
+    """
+    Get the site specific modal param definitions from the site database for the specified modal type.
+    """
+    sitedb = logbookclient["site"]
+    return sitedb["modal_params"].find_one({"_id": modal_type})
+
 def register_file_for_experiment(experiment_name, info):
     """
     Register a file for the experiment.

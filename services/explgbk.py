@@ -33,7 +33,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
     instrument_standby, get_experiment_files_for_run, get_elog_authors, get_elog_entries_by_author, get_elog_tags, get_elog_entries_by_tag, \
-    get_elogs_for_date_range, clone_sample
+    get_elogs_for_date_range, clone_sample, get_modal_param_definitions
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -1201,3 +1201,12 @@ def get_matching_groups(experiment_name):
     if not group_name:
         return logAndAbort("Please specify a group_name")
     return JSONEncoder().encode({"success": True, "value": context.usergroups.get_groups_matching_pattern(group_name)})
+
+@explgbk_blueprint.route("/lgbk/get_modal_param_definitions", methods=["GET"])
+@context.security.authentication_required
+def svc_get_modal_param_definitions():
+    modal_type = request.args.get("modal_type", None)
+    if not modal_type:
+        return logAndAbort("Please specify a modal_type")
+    param_defs = get_modal_param_definitions(modal_type)
+    return JSONEncoder().encode({"success": True, "value": param_defs if param_defs else {}})

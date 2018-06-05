@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Custom Parameters</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="../../js/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="../../js/font-awesome/css/font-awesome.min.css">
+
+  <script type="text/javascript" src="../../js/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
+  <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
+  <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../../js/plotly.js/dist/plotly.min.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <div class="apidoc-header">
+            <h1 class="apidoc-title">Custom Parameters.</h1>
+            <p class="lead apidoc-description">Add custom names to the sample create/edit and other modals.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-8 apidoc-main">
+                <div class="apidoc-post">
+                    <p>The sample create/edit modal (and others as well ) support adding any number of name/value pairs to samples (and other documents).
+                        While this enables great flexibility, we sometimes want to offer the user a site specific set of names as defaults.
+                        In addition, a small amount of validation may also be useful.
+                        The experiment logbook adds support for this with the <code>modal_params</code> collection in the <code>site</code> database.
+                    </p>
+                    <p>
+                        For example, to add <code>imaging_method</code> as a default name in the <code>samples</code> modal, use something like so
+                            <pre>&gt; use site
+<samp>switched to db site</samp>
+&gt; db.modal_params.insertOne({"_id": "samples", "params": [{"param_name": "imaging_method"}]})
+<samp>{ "acknowledged" : true, "insertedId" : "samples" }</samp>
+                            </pre>
+                    </p>
+                    <p>
+                        The <code>modal_params</code> is a collection of documents with <code>_id</code> indicating the modal that the document applies to.
+                        The <code>params</code> attribute contains an array of parameter definitions. Each definition has the following
+                        <dl>
+                            <dt><code>param_name</code></dt><dd>Mandatory, the name of the parameter.</dd>
+                            <dt><code>required</code></dt><dd>Optional, if not specified, defaults to not required.</dd>
+                            <dt><code>param_type</code></dt><dd>Optional - One of the following <code>int</code>, <code>date</code>, <code>datetime</code>, <code>enum</code>, <code>string</code>. Defaults to string.</dd>
+                            <dt><code>options</code></dt><dd>Optional; applies only to <code>enum</code>&quot;s. An array of string options for the enum.</dd>
+                        </dl>
+                    </p>
+                    <p>Here's an example of some custom params for the samples modal.
+                    <pre>{
+	"_id" : "samples",
+	"params" : [
+		{
+			"param_name" : "imaging_method",
+			"required" : true
+		},
+		{
+			"param_name" : "imaging_format",
+			"required" : true,
+			"param_type" : "enum",
+			"options" : [
+				".tif",
+				".png",
+				".jpeg",
+				".bmp"
+			]
+		},
+		{
+			"param_name" : "pixel_density",
+			"required" : true,
+			"param_type" : "int"
+		},
+		{
+			"param_name" : "sample_prep_date",
+			"required" : true,
+			"param_type" : "date"
+		},
+		{
+			"param_name" : "sample_expiration_date",
+			"required" : true,
+			"param_type" : "date"
+		}
+	]
+}</pre>
+                    </p>
+                </div>
+            </div>
+    </div>
+</body>
+</html>
