@@ -378,7 +378,7 @@ def svc_rename_experiment():
 @context.security.authorization_required("edit")
 def svc_reload_experiment_cache():
     """
-    Switch the active experiment at an instrument station.
+    Reload the cached experiment info. This is also done automatically; use if the caches have no caught up for some reason.
     """
     reload_experiment_cache()
     return jsonify({'success': True})
