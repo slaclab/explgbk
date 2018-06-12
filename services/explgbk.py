@@ -800,7 +800,7 @@ def svc_create_update_user_run_table_def(experiment_name):
     return JSONEncoder().encode({"success": True, "status": create_update_user_run_table_def(experiment_name, request.json)})
 
 
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_editable_update")
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_editable_update", methods=["POST"])
 @context.security.authentication_required
 @experiment_exists
 @context.security.authorization_required("post")
@@ -811,9 +811,9 @@ def svc_run_table_editable_update(experiment_name):
     :source: Specify the source using the source parameter.
     :value: The new value
     """
-    runnum = int(request.args.get("runnum"))
-    source = request.args.get("source")
-    value = request.args.get("value")
+    runnum = int(request.form.get("runnum"))
+    source = request.form.get("source")
+    value = request.form.get("value")
     userid = context.security.get_current_user_id()
 
     if not source.startswith('editable_params.'):
@@ -823,7 +823,7 @@ def svc_run_table_editable_update(experiment_name):
     return JSONEncoder().encode({"success": True, "result": update_editable_param_for_run(experiment_name, runnum, source, value, userid)})
 
 
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_run_table", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_run_table", methods=["DELETE"])
 @context.security.authentication_required
 @experiment_exists
 @context.security.authorization_required("post")
@@ -912,7 +912,7 @@ def svc_add_run_params(experiment_name):
     context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc_after})
     return JSONEncoder().encode({"success": True, "value": run_doc_after})
 
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/close_shift", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/close_shift", methods=["GET", "POST"])
 @context.security.authentication_required
 @experiment_exists
 @context.security.authorization_required("post")
@@ -1045,7 +1045,7 @@ def svc_clone_sample(experiment_name):
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
 
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/make_sample_current", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/make_sample_current", methods=["GET", "POST"])
 @context.security.authentication_required
 @experiment_exists
 @context.security.authorization_required("post")
@@ -1126,7 +1126,7 @@ def svc_register_file(experiment_name):
 def svc_get_collaborators(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_collaborators(experiment_name)})
 
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/toggle_role", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/toggle_role", methods=["GET", "POST"])
 @experiment_exists
 @context.ldapadminsecurity.authentication_required
 @context.ldapadminsecurity.authorization_required("manage_groups")
@@ -1148,7 +1148,7 @@ def svc_toggle_role(experiment_name):
 
     return JSONEncoder().encode({"success": status, "message": "Did not match any entries" if not status else ""})
 
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_collaborator", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_collaborator", methods=["GET", "POST"])
 @experiment_exists
 @context.ldapadminsecurity.authentication_required
 @context.ldapadminsecurity.authorization_required("manage_groups")
@@ -1166,7 +1166,7 @@ def svc_add_collaborator(experiment_name):
     return JSONEncoder().encode({"success": status, "message": "Did not match any entries" if not status else ""})
 
 
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/remove_collaborator", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/remove_collaborator", methods=["GET", "POST"])
 @experiment_exists
 @context.ldapadminsecurity.authentication_required
 @context.ldapadminsecurity.authorization_required("manage_groups")

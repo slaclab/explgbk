@@ -35,13 +35,13 @@ $("#collab_tab").on("lg.loaded.bs.tab", function() {
               });
               $("span[data-role-fq-name]").on("click", function(){
                   var role_fq_name = $(this).attr("data-role-fq-name"), uid = $(this).closest("tr").attr("data-uid");
-                  $.getJSON("ws/toggle_role", { uid: uid, role_fq_name: role_fq_name})
+                  $.getJSON({url: "ws/toggle_role?uid=" + encodeURIComponent(uid) + "&role_fq_name=" + encodeURIComponent(role_fq_name), method: "POST"})
                   .done(function() { $("#collab_tab").data("refresh")(); })
                   .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception adding/removing role " + jqXHR.responseText); })
               });
               $(".remove-collab").on("click", function() {
                   var uid = $(this).closest("tr").attr("data-uid");
-                  $.getJSON("ws/remove_collaborator", { uid: uid})
+                  $.getJSON({url: "ws/remove_collaborator?uid=" + encodeURIComponent(uid), method: "POST"})
                   .done(function() { $("#collab_tab").data("refresh")(); })
                   .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception removing collaborator " + jqXHR.responseText); })
               })
@@ -78,7 +78,7 @@ $("#collab_tab").on("lg.shown.bs.tab", function() {
                 }
             });
             $("#collab_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){
-                var add_new_collab_to_role = function(uid, role_fq_name) { return $.getJSON("ws/add_collaborator", { uid: uid, role_fq_name: role_fq_name}); }
+                var add_new_collab_to_role = function(uid, role_fq_name) { return $.getJSON({url: "ws/add_collaborator?uid=" + encodeURIComponent(uid) + "&role_fq_name=" + encodeURIComponent(role_fq_name), method: "POST"}); }
                 var ajax_calls = [];
                 $("#collab_mdl_holder").find("tbody").find(".collab_select:checked").each(function(){var uid = uid_prefix + $(this).closest("tr").attr("data-uid"); ajax_calls.push(add_new_collab_to_role(uid, "LogBook/Writer"));});
                 $.when.apply(this, ajax_calls)

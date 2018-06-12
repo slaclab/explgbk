@@ -154,7 +154,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
     var rendered = $(Mustache.render(sample_tr_tmpl, data));
     rendered.find(".fa-play").on("click", function(){
       var sample_name = $(this).closest("tr").find("td").first().text();
-      $.getJSON("ws/make_sample_current", {sample_name: sample_name})
+      $.getJSON({url: "ws/make_sample_current?sample_name="+encodeURIComponent(sample_name), method: "POST" })
       .done(function(data, textStatus, jqXHR) {
         if(data.success) {
             console.log("Successfully closed sample " + sample_name);

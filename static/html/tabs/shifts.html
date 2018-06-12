@@ -91,7 +91,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
     var rendered = $(Mustache.render(shift_tr_tmpl, shift_data));
     rendered.find(".fa-power-off").on("click", function(){
       var shift_name = $(this).closest("tr").find("td").first().text();
-      $.getJSON("ws/close_shift", {shift_name: shift_name})
+      $.getJSON({url: "ws/close_shift?shift_name="+encodeURIComponent(shift_name), method: "POST"})
       .done(function(data, textStatus, jqXHR) {
         if(data.success) {
             console.log("Successfully closed shift " + shift_name);

@@ -125,7 +125,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 
   var update_editable_for_run = function( input_elem ) {
     console.log("Updating editable column");
-    $.getJSON({ url: "ws/run_table_editable_update", data: { runnum: input_elem.attr('data-run-num'), source: input_elem.attr('data-column-source'), value: input_elem.html()}})
+    $.getJSON({ url: "ws/run_table_editable_update", method: "POST", data: { runnum: input_elem.attr('data-run-num'), source: input_elem.attr('data-column-source'), value: input_elem.html()}})
     .done(function(data, textStatus, jqXHR){ if(data.success) { console.log("Successfully updated editable");} else { alert("Server side exception updating editable " + data.errormsg); }})
     .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception updating editable " + jqXHR.responseText)});
   }
@@ -216,7 +216,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 
     $("#rtbl_tab").data("new_rtbl_fn", function(e) { col_defs_dialog(); });
     $("#rtbl_tab").data("edit_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); col_defs_dialog(clkRTblName); });
-    $("#rtbl_tab").data("del_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); $.getJSON({ url: "ws/delete_run_table", data: { table_name : clkRTblName }}).done(window.location.reload(true))});
+    $("#rtbl_tab").data("del_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); $.getJSON({ url: "ws/delete_run_table?table_name=" + encodeURIComponent(clkRTblName), method: "DELETE"}).done(window.location.reload(true))});
 
     $("#rtbl_tab").on("lg.refresh", function() {
         $("#rtbl_tab").find(_.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
