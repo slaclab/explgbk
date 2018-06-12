@@ -195,6 +195,16 @@ def rename_experiment(experiment_name, new_experiment_name):
 
     return (True, "")
 
+def lock_unlock_experiment(experiment_name):
+    """
+    Toggle an experiment's locked status.
+    """
+    expdb = logbookclient[experiment_name]
+    curr_is_locked = expdb["info"].find_one().get("is_locked", False)
+
+    expdb['info'].update_one({}, { "$set": {"is_locked": False if curr_is_locked else True } })
+    return (True, "")
+
 
 def create_update_instrument(instrument_name, createp, incoming_info):
     """

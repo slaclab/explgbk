@@ -9,7 +9,7 @@ import context
 from flask import request, Blueprint, render_template, send_file, abort, make_response
 
 from dal.explgbk import get_current_sample_name
-from services.explgbk import experiment_exists
+from services.explgbk import experiment_exists_and_unlocked
 
 pages_blueprint = Blueprint('pages_api', __name__)
 
@@ -41,7 +41,7 @@ def send_js(path):
         return None
 
 @pages_blueprint.route("/lgbk/<experiment_name>/templates/<path:path>", methods=["GET"])
-@experiment_exists
+@experiment_exists_and_unlocked
 def templates(experiment_name, path):
     return render_template(path, experiment_name=experiment_name)
 
@@ -89,7 +89,7 @@ def __parse_expiration_header__(request):
     return int(expiration.replace("t=", ""))//1000000 if expiration.startswith("t=") else int(expiration)
 
 @pages_blueprint.route("/lgbk/<experiment_name>/", methods=["GET"])
-@experiment_exists
+@experiment_exists_and_unlocked
 @context.security.authentication_required
 @context.security.authorization_required("read")
 def exp_elog(experiment_name):

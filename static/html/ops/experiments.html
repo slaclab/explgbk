@@ -245,6 +245,26 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
       });
   }
 
+  var lock_unlock_experiment = function() {
+      var experiment_name = $(this).closest("tr").find("td").first().find("a").text()
+      console.log("Locking/unlocking experiment " + experiment_name);
+      $.ajax({
+        type: "POST",
+        url: lock_unlock_experiment_url + "?experiment_name=" + encodeURIComponent(experiment_name),
+        dataType: "json"
+      })
+      .done(function(data, textStatus, jqXHR) {
+        if(data.success) {
+            console.log("Successfully locked experiment " + experiment_name);
+            sessionStorage.setItem("ops_active_tab", "experiments");
+            sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
+            window.location.reload(true);
+        } else {
+          show_validation_message("Server failure: " + data.errormsg);
+        }
+      })
+      .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+  }
 
 
   var exper_template = `{{#value}}<tr data-expid="{{_id}}">
@@ -254,7 +274,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
         <td> {{ contact_info }} </td>
         <td> {{ leader_account }} </td>
         <td> {{ description }} </td>
-        <td class="ops_exp_icons"><i class="fa fa-edit" title="Edit"></i><i class="fa fa-clone" title="Clone"></i><i class="fa fa-suitcase" title="Rename"></i></td>
+        <td class="ops_exp_icons"><i class="fa fa-edit" title="Edit"></i><i class="fa fa-clone" title="Clone"></i><i class="fa fa-suitcase" title="Rename"></i>{{#is_locked}}<i class="fa fa-unlock lock_unlock" title="Unlock"></i>{{/is_locked}}{{^is_locked}}<i class="fa fa-lock lock_unlock" title="Lock"></i>{{/is_locked}}</td>
     </tr>{{/value}}`;
   Mustache.parse(exper_template);
 
@@ -281,6 +301,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     $("#exp_searchresults .ops_exp_icons .fa-edit").on("click", edit_exp_btn_action);
     $("#exp_searchresults .ops_exp_icons .fa-clone").on("click", clone_exp);
     $("#exp_searchresults .ops_exp_icons .fa-suitcase").on("click", rename_exp);
+    $("#exp_searchresults .ops_exp_icons .lock_unlock").on("click", lock_unlock_experiment);
     $("#register_edit_exp_tab").data("search_function", function() { // Register the search function.
       if($("#ops_exp_searchtext").val().length > 0) {
         var curname = $("#ops_exp_searchtext").val();
@@ -298,6 +319,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
             $("#exp_searchresults .ops_exp_icons .fa-edit").on("click", edit_exp_btn_action);
             $("#exp_searchresults .ops_exp_icons .fa-clone").on("click", clone_exp);
             $("#exp_searchresults .ops_exp_icons .fa-suitcase").on("click", rename_exp);
+            $("#exp_searchresults .ops_exp_icons .lock_unlock").on("click", lock_unlock_experiment);
         }
       } else {
         var rendered = Mustache.render(exper_template, experiments);
