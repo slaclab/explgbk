@@ -21,7 +21,7 @@ from datetime import datetime
 import smtplib
 from email.message import EmailMessage
 
-from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context, send_file, abort
+from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context, send_file, abort, redirect
 
 from dal.explgbk import get_experiment_info, save_new_experiment_setup, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
@@ -539,6 +539,19 @@ def svc_get_elog_attachment(experiment_name):
                 return resp
 
     return Response("Cannot find attachment " + attachment_id , status=404)
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/ext_preview/<path:path>", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_ext_preview(experiment_name, path):
+    """
+    Send a redirect to path after setting a cookie.
+    Used to serve large previews from a web server.
+    Authorization is performed in this method and a HTTP redirect is sent to PREVIEW_PREFIX/path with a cookie.
+    """
+    return redirect(context.PREVIEW_PREFIX + "/" + path)
+
 
 def send_elog_as_email(experiment_name, elog_doc, email_to):
     """

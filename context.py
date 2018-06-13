@@ -32,6 +32,10 @@ MONGODB_ADMIN_PASSWORD=os.environ['MONGODB_ADMIN_PASSWORD'] or 'slac123'
 # For example, use LCLS for LCLS, Cryo for Cryo.
 LOGBOOK_SITE = os.environ.get('LOGBOOK_SITE', 'test')
 
+# Support for serving previews from the web server. Previews can get quite large and having python serve them is sometimes not practical.
+# Add run parms using ws/ext_preview. This preview_prefix will then be prepended to the path to serve the image.
+PREVIEW_PREFIX = os.environ.get('PREVIEW_PREFIX', '../../..')
+
 
 # Set up the security manager
 mongorolereaderclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, authSource="admin", tz_aware=True)
