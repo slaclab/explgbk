@@ -80,7 +80,7 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
     expdb['info'].insert_one(info)
 
     # Create the run number counter
-    expdb["counters"].insert_one({'_id': "next_runnum", 'seq': 1})
+    expdb["counters"].insert_one({'_id': "next_runnum", 'seq': 0})
 
     # Now create the various indices
     expdb["runs"].create_index( [("num", DESCENDING)], unique=True)
