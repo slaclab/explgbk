@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>External Previews</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="../../js/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="../../js/font-awesome/css/font-awesome.min.css">
+
+  <script type="text/javascript" src="../../js/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
+  <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
+  <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../../js/plotly.js/dist/plotly.min.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <div class="apidoc-header">
+            <h1 class="apidoc-title">External Previews.</h1>
+            <p class="lead apidoc-description">Serve images from an external source in the run tables.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-8 apidoc-main">
+                <div class="apidoc-post">
+                    <p>To serve images as part of the run tables, first add a <code>run_param_description</code> for the parameter with the type as an <code>image/png</code> or equivalent.
+                        <code>run_param_description</code>s' are typically added on a per-experiment basis to the experiment database.
+                        However, the <code>run_param_description</code>s' can be made system-wide by adding it to the <code>site</code> database.
+                        <pre>&gt; use site
+<samp>switched to db site</samp>
+&gt; db.run_param_descriptions.insertOne(
+ { "param_name" : "preview",
+   "category" : "Previews and other Images",
+   "description" : "The main preview",
+   "type": "image/png"
+ })
+{ "acknowledged" : true, "insertedId" : ObjectId("5b206dc42bbf1f5ee7868e75") }
+</pre></p>
+                    <p>To add an image as a run parameter, add the url to the image as the <code>run_params</code>.
+                        <ul>
+                            <li>Start a new run as part of run control.
+                                <pre>$ curl -s &quot;https://localhost/psdm/run_control/A_Test_Experiment/ws/start_run&quot;
+{"success": true&hellip;</pre>
+                            </li>
+                            <li>Set some run parameters for the current run; the <code>preview</code> parameter is the URL to the image.
+                                <pre>curl -H &quot;Content-Type: application/json&quot; -XPOST &quot;https://localhost/psdm/run_control/A_Test_Experiment/ws/add_run_params&quot; -d '{
+&quot;voltage&quot;:120.0,
+&quot;current&quot;:1.20,
+&quot;resistance&quot;: 0.01,
+&quot;preview&quot;: &quot;https://www6.slac.stanford.edu/sites/www6.slac.stanford.edu/files/SLAC-lab-lowres.jpg&quot;
+}'</pre>
+                            </li>
+                            <li>Terminate the current run once you are done..
+                                <pre>$ curl -s &quot;https://localhost/psdm/run_control/A_Test_Experiment/ws/end_run&quot;
+{"success": true&hellip;</pre>
+                            </li>
+                            <li>Create a run table using the <code>preview</code> attribute as one of the columns.
+                                When serving up the run table, the application will use the <code>img</code> tag to render the <code>preview</code>.
+                            </li>
+                        </ul>
+                    </p>
+                    <p>However, external images are outside the control of the application and thus available to everyone.
+                        There is support for authorization if the images are hosted on the web server serving the application.
+                        To enforce authorization, use the <code>ext_preview</code> web service call.
+                        <ul>
+                            <li>When setting the preview URL, use <code>ws/ext_preview/&lt;<i>path</i>&gt;</code>. For example,
+                            <pre>curl -H &quot;Content-Type: application/json&quot; -XPOST &quot;https://localhost/psdm/run_control/A_Test_Experiment/ws/add_run_params&quot; -d '{
+&quot;voltage&quot;:120.0,
+&quot;current&quot;:1.20,
+&quot;resistance&quot;: 0.01,
+&quot;preview&quot;: &quot;ws/ext_preview/protected_images/&lt;<b><i>experiment_name</i></b>&gt;/sample.png&quot;
+}'</pre> The string &lt;<b><i>experiment_name</i></b>&gt; is replaced with the name of the experiment when computing the final URL.
+Setting the experiment name in this fashion is optional. Since run parameters are tied to an experiment, you can simply hardcode the experiment name when setting the preview URL.
+                            </li>
+                            <li>When the run table is rendered, the image is served from the application using the <code>ws/ext_preview</code> web service call.
+                                In our example, the application receives a request for <code>ws/ext_preview/protected_images/A_Test_Experiment/sample.png</code>
+                            </li>
+                            <li>The application uses two environment variables when to compute the redirect URL for the <code>ext_preview</code>.
+                                <dl>
+                                    <dt><code>PREVIEW_PREFIX</code></dt><dd>This is the prefix to use to compute the redirect. The default value <code>../../..</code> should place the redirect in the root of the web server namespace in typical installations.</dd>
+                                    <dt><code>PREVIEW_PREFIX_SHARED_SECRET</code></dt><dd>This is used to compute the cookie used for basic authorization.</dd>
+                                </dl>
+                            </li>
+                            <li>When the application receives a <code>ext_preview</code>, it computes and sets a cookie and then issues a redirect to <code>PREVIEW_PREFIX</code> + &lt;<i>path</i>&gt;. So in our example, a redirect will be issued to <code>https://localhost/protected_images/A_Test_Experiment/sample.png</code>
+                            </li>
+                            <li>The cookie can be used to enforce basic authorization on the web server. For example, using the latest Apache 2.4.x,
+                                <pre>&lt;LocationMatch "^/protected_images/(?&lt;expname&gt;[^/]+)/(?&lt;filename&gt;.*)$"&gt;
+    Alias "/nfs/slac/dept/protected_images/%{env:MATCH_EXPNAME}/%{env:MATCH_FILENAME}"
+    SetEnvIf Cookie "LGBK_EXT_PREVIEW=([^;]+)" HASHED_PREVIEW_COOKIE=$1
+    Require expr "%{base64:%{md5:%{reqenv:MATCH_EXPNAME}SLACExpLgBk}} == %{unescape:%{reqenv:HASHED_PREVIEW_COOKIE}}"
+&lt;/LocationMatch&gt;</pre> In this case, the web server is serving images from <code>/nfs/slac/dept/protected_images/<b><i>experiment_name</i></b></code>.
+                            </li>
+                        </ul>
+                    </p>
+                </div>
+            </div>
+    </div>
+</body>
+</html>

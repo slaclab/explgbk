@@ -34,7 +34,9 @@ LOGBOOK_SITE = os.environ.get('LOGBOOK_SITE', 'test')
 
 # Support for serving previews from the web server. Previews can get quite large and having python serve them is sometimes not practical.
 # Add run parms using ws/ext_preview. This preview_prefix will then be prepended to the path to serve the image.
+# A hash is added as part of the URL hashed with the PREVIEW_PREFIX_SHARED_SECRET
 PREVIEW_PREFIX = os.environ.get('PREVIEW_PREFIX', '../../..')
+PREVIEW_PREFIX_SHARED_SECRET = os.environ.get('PREVIEW_PREFIX_SHARED_SECRET', "SLACExpLgBk")
 
 
 # Set up the security manager

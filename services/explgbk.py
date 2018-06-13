@@ -17,11 +17,15 @@ import requests
 import context
 from functools import wraps
 from datetime import datetime
+import hashlib
+import urllib
+import base64
 
 import smtplib
 from email.message import EmailMessage
 
-from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context, send_file, abort, redirect
+from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context, send_file, \
+    abort, redirect, make_response
 
 from dal.explgbk import get_experiment_info, save_new_experiment_setup, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
@@ -546,11 +550,19 @@ def svc_get_elog_attachment(experiment_name):
 @context.security.authorization_required("read")
 def svc_get_ext_preview(experiment_name, path):
     """
-    Send a redirect to path after setting a cookie.
+    Send a redirect to an external path, as defined by the PREVIEW_PREFIX environment variable.
     Used to serve large previews from a web server.
-    Authorization is performed in this method and a HTTP redirect is sent to PREVIEW_PREFIX/path with a cookie.
+    Authorization is performed in this method and a HTTP redirect is sent to PREVIEW_PREFIX/path.
+    See docs/external_previews for more details.
     """
-    return redirect(context.PREVIEW_PREFIX + "/" + path)
+    path = path.replace("<experiment_name>", experiment_name)
+    m = hashlib.md5()
+    m.update(experiment_name.encode('utf-8'))
+    m.update(context.PREVIEW_PREFIX_SHARED_SECRET.encode('utf-8'))
+    # path = path.replace("<hash>", urllib.parse.quote(base64.standard_b64encode(m.hexdigest().encode())))
+    response = make_response(redirect(context.PREVIEW_PREFIX + "/" + path))
+    response.set_cookie("LGBK_EXT_PREVIEW", urllib.parse.quote(base64.standard_b64encode(m.hexdigest().encode())))
+    return response
 
 
 def send_elog_as_email(experiment_name, elog_doc, email_to):
