@@ -724,7 +724,8 @@ def create_update_user_run_table_def(experiment_name, table_definition):
     We expect a fully formed table_definition here...
     '''
     expdb = logbookclient[experiment_name]
-    return expdb['run_tables'].update({'name': table_definition['name']}, table_definition, True)
+    expdb['run_tables'].update({'name': table_definition['name']}, table_definition, True)
+    return (True, "")
 
 def delete_run_table(experiment_name, table_name):
     '''
