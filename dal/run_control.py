@@ -64,7 +64,7 @@ def get_run_doc_for_run_num(experiment_name, run_num):
     expdb = logbookclient[experiment_name]
     run_doc = expdb.runs.find_one({"num": run_num})
     if run_doc:
-        return list(run_doc)[0]
+        return run_doc
     return None
 
 def end_run(experiment_name):
