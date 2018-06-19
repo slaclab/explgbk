@@ -917,8 +917,11 @@ def register_file_for_experiment(experiment_name, info):
     Register a file for the experiment.
     """
     expdb = logbookclient[experiment_name]
-    inserted_id = expdb['file_catalog'].insert_one(info).inserted_id
-    return (True, expdb['file_catalog'].find_one({"_id": ObjectId(inserted_id) }))
+    if expdb['file_catalog'].find_one({"path": info["path"], "run_num": info["run_num"]}):
+        expdb['file_catalog'].replace_one({"path": info["path"], "run_num": info["run_num"]}, info)
+    else:
+        expdb['file_catalog'].insert_one(info)
+    return (True, expdb['file_catalog'].find_one({"path": info["path"], "run_num": info["run_num"]}))
 
 def get_collaborators(experiment_name):
     """
