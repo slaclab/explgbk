@@ -197,7 +197,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         var rowRendered = renderRunData(tblRndr, runData);
         tblRndr.find("tbody").append(rowRendered);
         $("#rtbl_content").html(tblRndr);
-      });
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception getting data " + jqXHR.responseText)});
       if(tblDef['is_editable']) { $("#edit_rtbl_btn").show(); $("#del_rtbl_btn").show(); } else { $("#edit_rtbl_btn").hide(); $("#del_rtbl_btn").hide();}
     });
     rendered.find( _.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");

@@ -41,7 +41,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
-from dal.utils import JSONEncoder, escape_chars_for_mongo
+from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
 from dal.exp_cache import get_experiments, does_experiment_exist, reload_cache as reload_experiment_cache, text_search_for_experiments
 
@@ -825,7 +825,7 @@ def svc_get_runtables(experiment_name):
 def svc_get_runtable_data(experiment_name):
     tableName = request.args.get("tableName")
     sampleName = request.args.get("sampleName", None)
-    return JSONEncoder().encode({"success": True, "value": get_runtable_data(experiment_name, tableName, sampleName=sampleName)})
+    return JSONEncoder().encode({"success": True, "value": list(map(replaceInfNan, get_runtable_data(experiment_name, tableName, sampleName=sampleName)))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_sources", methods=["GET"])
 @context.security.authentication_required
