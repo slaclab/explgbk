@@ -3,7 +3,7 @@
     <div id="exp_mdl_holder"></div>
     <div class="table-responsive">
         <table class="table table-condensed table-striped table-bordered" id="exp_searchresults">
-            <thead><tr><th>Name</th><th>First Run</th><th>Last Run</th><th>PI</th><th>Leader Account</th><th>Description</th><th>Edit</th></tr></thead>
+            <thead><tr><th>Name</th><th>Instrument</th><th>First Run</th><th>Last Run</th><th>PI</th><th>Leader Account</th><th>Description</th><th>Edit</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -269,6 +269,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
 
   var exper_template = `{{#value}}<tr data-expid="{{_id}}">
         <td> <a target="_blank" href="{{_id}}/">{{ name }}</a> </td>
+        <td> {{ instrument }} </td>
         <td> {{#FormatDate}}{{first_run.begin_time }}{{/FormatDate}} </td>
         <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
         <td> {{ contact_info }} </td>
