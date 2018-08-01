@@ -6,7 +6,7 @@
  <dl class="dl-horizontal">
     <dt>Name:</dt><dd>{{ info.value.name }}</dd>
     <dt>Instrument:</dt><dd>{{ info.value.instrument }}</dd>
-    <dt>Spokesperson:</dt><dd><span title="{{ info.value.contact_email }}">{{ info.value.contact_name }}</span></dd>
+    <dt>PI:</dt><dd><span><a href="mailto:{{ info.value.contact_email }}">{{ info.value.contact_name }}</a></span></dd>
     <dt>Title:</dt><dd>{{ info.value.description }}</dd>
 </dl>
 
