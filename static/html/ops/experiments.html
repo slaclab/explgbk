@@ -3,7 +3,16 @@
     <div id="exp_mdl_holder"></div>
     <div class="table-responsive">
         <table class="table table-condensed table-striped table-bordered" id="exp_searchresults">
-            <thead><tr><th>Name</th><th>Instrument</th><th>First Run</th><th>Last Run</th><th>PI</th><th>Leader Account</th><th>Description</th><th>Edit</th></tr></thead>
+            <thead><tr>
+                <th data-sort-attr="name">Name<i class="fa fa-sort-desc"></i></th>
+                <th data-sort-attr="instrument">Instrument</th>
+                <th data-sort-attr="first_run.begin_time">First Run</th>
+                <th data-sort-attr="last_run.begin_time">Last Run</th>
+                <th data-sort-attr="contact_info">PI</th>
+                <th data-sort-attr="leader_account">Leader Account</th>
+                <th data-sort-attr="description">Description</th>
+                <th>Edit</th>
+            </tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -126,6 +135,8 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
      $("#exp_mdl_holder").find(".edit_modal").modal("show");
     });
   };
+
+  $("#register_edit_exp_tab").data("register_experiment_function", function() { edit_exp({ contact_info: "", start_time : moment(), end_time : moment().add(2, 'days')}); });
 
   var clone_exp = function() {
     var src_experiment_name = $(this).closest("tr").find("td").first().find("a").text()
@@ -267,6 +278,8 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   }
 
 
+  $("#register_edit_exp_tab").data("cur_sort_attr", "name");
+  $("#register_edit_exp_tab").data("cur_sort_desc", true);
   var exper_template = `{{#value}}<tr data-expid="{{_id}}">
         <td> <a target="_blank" href="{{_id}}/">{{ name }}</a> </td>
         <td> {{ instrument }} </td>
@@ -285,55 +298,68 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     edit_exp($("#register_edit_exp_tab").data("name2info")[expName]);
   };
 
-  $.getJSON ({ url: experiments_url })
-  .done(function( experiments ) {
-    // Prepare for searches...
-    var exp_names = []
-    var name2info = {};
-    _.forOwn(experiments.value, function(exp) {
-        exp_names.push(exp['name']);
-        name2info[exp['name']] = exp;
-    });
-    $("#register_edit_exp_tab").data("exp_names", exp_names);
-    $("#register_edit_exp_tab").data("name2info", name2info);
-    experiments.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
-    var rendered = Mustache.render(exper_template, experiments);
+  var add_exps_to_search_results = function() { // Uses the mustache template to add the contents of data("search_results")
+    var sorted_exps = _.sortBy($("#register_edit_exp_tab").data("search_results"), $("#register_edit_exp_tab").data("cur_sort_attr"));
+    if(!$("#register_edit_exp_tab").data("cur_sort_desc")) { sorted_exps = _.reverse(sorted_exps); }
+    var expdata = { value: sorted_exps };
+    expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+    var rendered = Mustache.render(exper_template, expdata);
     $("#exp_searchresults tbody").html(rendered);
     $("#exp_searchresults .ops_exp_icons .fa-edit").on("click", edit_exp_btn_action);
     $("#exp_searchresults .ops_exp_icons .fa-clone").on("click", clone_exp);
     $("#exp_searchresults .ops_exp_icons .fa-suitcase").on("click", rename_exp);
     $("#exp_searchresults .ops_exp_icons .lock_unlock").on("click", lock_unlock_experiment);
-    $("#register_edit_exp_tab").data("search_function", function() { // Register the search function.
-      if($("#ops_exp_searchtext").val().length > 0) {
-        var curname = $("#ops_exp_searchtext").val();
-        var matchexps = [];
-        _.each($("#register_edit_exp_tab").data("exp_names"), function(exp_name){
-          if(_.startsWith(exp_name, curname)) {
-            matchexps.push($("#register_edit_exp_tab").data("name2info")[exp_name]);
-          }
-        });
-        if(matchexps.length > 0) {
-          var expdata = {value: matchexps};
-            expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
-            var rendered = Mustache.render(exper_template, expdata);
-            $("#exp_searchresults tbody").html(rendered);
-            $("#exp_searchresults .ops_exp_icons .fa-edit").on("click", edit_exp_btn_action);
-            $("#exp_searchresults .ops_exp_icons .fa-clone").on("click", clone_exp);
-            $("#exp_searchresults .ops_exp_icons .fa-suitcase").on("click", rename_exp);
-            $("#exp_searchresults .ops_exp_icons .lock_unlock").on("click", lock_unlock_experiment);
+  }
+
+  $("#register_edit_exp_tab").data("search_function", function() { // Register the search function.
+    if($("#ops_exp_searchtext").val().length > 0) {
+      var curname = $("#ops_exp_searchtext").val();
+      var matchexps = [];
+      _.each($("#register_edit_exp_tab").data("exp_names"), function(exp_name){
+        if(_.startsWith(exp_name, curname)) {
+          matchexps.push($("#register_edit_exp_tab").data("name2info")[exp_name]);
         }
-      } else {
-        var rendered = Mustache.render(exper_template, experiments);
-        $("#exp_searchresults tbody").html(rendered);
+      });
+      if(matchexps.length > 0) {
+        $("#register_edit_exp_tab").data("search_results", matchexps);
+        add_exps_to_search_results();
       }
-    });
+    } else {
+        $("#register_edit_exp_tab").data("search_results", $("#register_edit_exp_tab").data("experiments"));
+        add_exps_to_search_results();
+    }
+  });
+
+  $.getJSON ({ url: experiments_url })
+  .done(function( experiments ) {
+    // Prepare for searches...
+    $("#register_edit_exp_tab").data("experiments", experiments.value);
+    $("#register_edit_exp_tab").data("exp_names", _.map(experiments.value, "name"));
+    $("#register_edit_exp_tab").data("name2info", _.keyBy(experiments.value, "name"));
+    $("#register_edit_exp_tab").data("search_results", $("#register_edit_exp_tab").data("experiments"));
+    add_exps_to_search_results();
+
     if(sessionStorage.getItem("scroll_to_exp_id") != null) {
         console.log("Scrolling to " + sessionStorage.getItem("scroll_to_exp_id"));
         var row = $('#exp_searchresults').find('tr[data-expid="' + sessionStorage.getItem("scroll_to_exp_id") + '"]');
         if(row.length > 0) { row[0].scrollIntoView(); }
         sessionStorage.removeItem("scroll_to_exp_id");
     }
-    $("#register_edit_exp_tab").data("register_experiment_function", function() { edit_exp({ contact_info: "", start_time : moment(), end_time : moment().add(2, 'days')}); });
+  });
+
+  $("#exp_searchresults th[data-sort-attr]").on("click", function() {
+      var curr_attr = $("#register_edit_exp_tab").data("cur_sort_attr");
+      var sel_attr = $(this).attr("data-sort-attr");
+      if(curr_attr == sel_attr) {
+          $("#register_edit_exp_tab").data("cur_sort_desc", !$("#register_edit_exp_tab").data("cur_sort_desc"));
+          $(this).closest("th").find("i.fa").remove();
+      } else {
+          $("#register_edit_exp_tab").data("cur_sort_attr", sel_attr)
+          $("#register_edit_exp_tab").data("cur_sort_desc", true);
+          $(this).closest("thead").find("i.fa").remove();
+      }
+      $(this).closest("th").append($("#register_edit_exp_tab").data("cur_sort_desc") ? $('<i class="fa fa-sort-desc"></i>') : $('<i class="fa fa-sort-asc"></i>'))
+      add_exps_to_search_results();
   });
 
   $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {

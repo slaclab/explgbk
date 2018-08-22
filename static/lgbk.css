@@ -185,6 +185,10 @@ label {
   color: white;
   background: #6685F4;
   font-weight: bold;
+  white-space: nowrap;
+}
+#register_edit_exp_tab th .fa {
+  padding-left: 0.25em;
 }
 #register_edit_exp_tab .ops_exp_icons {
   white-space: nowrap;
