@@ -313,17 +313,12 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
 
   $("#register_edit_exp_tab").data("search_function", function() { // Register the search function.
     if($("#ops_exp_searchtext").val().length > 0) {
-      var curname = $("#ops_exp_searchtext").val();
-      var matchexps = [];
-      _.each($("#register_edit_exp_tab").data("exp_names"), function(exp_name){
-        if(_.startsWith(exp_name, curname)) {
-          matchexps.push($("#register_edit_exp_tab").data("name2info")[exp_name]);
-        }
+      var curnamerx = new RegExp(".*"+$("#ops_exp_searchtext").val()+".*", 'i');
+      var matchexps = _.filter($("#register_edit_exp_tab").data("experiments"), function(exp) {
+          return curnamerx.test(exp["name"]) || curnamerx.test(exp["contact_info"]) || curnamerx.test(exp["description"]);
       });
-      if(matchexps.length > 0) {
-        $("#register_edit_exp_tab").data("search_results", matchexps);
-        add_exps_to_search_results();
-      }
+      $("#register_edit_exp_tab").data("search_results", matchexps);
+      add_exps_to_search_results();
     } else {
         $("#register_edit_exp_tab").data("search_results", $("#register_edit_exp_tab").data("experiments"));
         add_exps_to_search_results();
@@ -334,7 +329,6 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   .done(function( experiments ) {
     // Prepare for searches...
     $("#register_edit_exp_tab").data("experiments", experiments.value);
-    $("#register_edit_exp_tab").data("exp_names", _.map(experiments.value, "name"));
     $("#register_edit_exp_tab").data("name2info", _.keyBy(experiments.value, "name"));
     $("#register_edit_exp_tab").data("search_results", $("#register_edit_exp_tab").data("experiments"));
     add_exps_to_search_results();
