@@ -38,6 +38,7 @@ if app.debug:
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
     logging.getLogger('kafka').setLevel(logging.INFO)
+    logging.getLogger('engineio').setLevel(logging.WARN)
     ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
