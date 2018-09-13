@@ -1,0 +1,7 @@
+[
+    {
+        "id": "workflow",
+        "label": "Workflow",
+        "data-url": "../../static/html/tabs/workflow_iframe.html"
+    }
+]
