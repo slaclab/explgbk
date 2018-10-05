@@ -84,7 +84,7 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
   $("#ops_instruments_tab").data("editcreatefn", editcreatefn);
 
   var instmpl = `{{#value}}<tr>
-        <td class="instrument_lbl" style="color:{{color}};" >{{ _id }}</td>
+        <td class="instrument_lbl" style="background:{{color}}; color:white; " >{{ _id }}</td>
         <td>{{ description }}</td>
         <td>{{ params.num_stations}}</td>
         <td> <a class="editinsbtn" href="#"><i class="fa fa-edit"></i>&nbsp;</a> </td>
