@@ -36,6 +36,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         [function() { return $.trim($("#rtbl_def_name").val()) == ""; }, "Table name cannot be blank."],
         [function() { return $.trim($("#rtbl_def_desc").val()) == ""; }, "Please enter a brief description."],
         [function() { return !/^([a-zA-Z0-9_-]+)$/.test($("#rtbl_def_name").val())}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores only; please don't use spaces, periods etc."],
+        [function() { return !/^([0-9]+)$/.test($("#rtbl_def_bin_count").val())}, "Please enter an integer number of bins."],
         [function() { return $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length <= 0; }, "At least one column definition should have a complete column definition."],
         [function() { return $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find("[name=label]").val() != "" && $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length == 0; }, "If the column name for a column definition is defined, then the column source(s) must be defined as well"],
       ];
@@ -49,6 +50,9 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
        template_tr.find(".rtbl_def_category_select").on("change", function(){
          $(this).parent().next().empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value[$(this).val()]));
        });
+       mdl.find("#rtbl_def_table_type").on("change", function(){
+           if($(this).val() == "histogram") { $(this).closest(".modal").find($("#rtbl_hist_params")).removeClass("hidden"); } else { $(this).closest(".modal").find($("#rtbl_hist_params")).addClass("hidden"); }
+       });
        template_tr.find(".fa-plus").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").after(template_tr.clone(true)); });
        template_tr.find(".fa-trash").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").remove(); });
        template_tr.find(".fa-arrow-up").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").prev().before($(this).closest("tr")); });
@@ -59,6 +63,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
          $("#rtbl_def_name").val(tblDef["name"]);
          $("#rtbl_def_desc").val(tblDef["description"]);
          $("#rtbl_def_table_type").val(_.get(tblDef, "table_type", "table"));
+         if($("#rtbl_def_table_type").val() == "histogram") { $("#rtbl_hist_params").removeClass("hidden"); }
+         $("#rtbl_def_bin_count").val(_.get(tblDef, "bin_count", 100));
          _.each(_.tail(tblDef["coldefs"]), function(coldef, index){
              var coldefrow = template_tr.clone(true);
              coldefrow.find("[name='label']").val(coldef["label"]);
@@ -91,6 +97,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
              table_type: $("#rtbl_def_table_type").val(),
              coldefs: []
            };
+           if(tbl_def['table_type'] == "histogram") { tbl_def['bin_count'] = parseInt($("#rtbl_def_bin_count").val()); }
            $("#rtbl_def_tbl tbody tr").each(function(index, defnrow){
              var colname = $(this).find("[name='label']").val();
              var type = $(this).find("[name='type']").val();
@@ -157,7 +164,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       console.log("Getting data for run table " + clkRTblName);
       sessionStorage['runtable_active_tab'] = clkRTblName;
       var tblDef = $("#rtbl_tab").data("tblData")[clkRTblName];
-      var rtbl_data_params = {"tableName": clkRTblName};
+      var rtbl_data_params = {"tableName": clkRTblName}, binCount = _.get(tblDef, "bin_count", 100);
       if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { rtbl_data_params["sampleName"] = sample_showing_in_UI; }
       $.when($.getJSON("ws/run_table_data", rtbl_data_params), $.getJSON("ws/samples"))
       .done(function(d0, d1){
@@ -168,6 +175,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
           var traces = [];
           _.each(_.tail(tblDef.coldefs), function(coldef, idx) {
             traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram", showlegend: true, name: coldef["label"]});
+            _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
+            _.last(traces)['xbins']['size'] = (_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount;
           });
           Plotly.newPlot(histDivName, traces, {barmode: "overlay"}, {displaylogo: false});
           return;
