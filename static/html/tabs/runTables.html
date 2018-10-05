@@ -169,16 +169,25 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       $.when($.getJSON("ws/run_table_data", rtbl_data_params), $.getJSON("ws/samples"))
       .done(function(d0, d1){
         var runData = d0[0], sampleData = d1[0];
-        if(_.get(tblDef, "table_type") == "histogram") {
-          var histDivName = _.get(tblDef, "name") + '_histogram';
-          $("#rtbl_content").html("<div id='" + histDivName + "'></div>");
-          var traces = [];
-          _.each(_.tail(tblDef.coldefs), function(coldef, idx) {
-            traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram", showlegend: true, name: coldef["label"]});
-            _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
-            _.last(traces)['xbins']['size'] = (_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount;
-          });
-          Plotly.newPlot(histDivName, traces, {barmode: "overlay"}, {displaylogo: false});
+        if(_.get(tblDef, "table_type") == "histogram" || _.get(tblDef, "table_type") == "scatter") {
+          var plotlyDivName = _.get(tblDef, "name") + '_plotlydiv';
+          $("#rtbl_content").html("<div id='" + plotlyDivName + "'></div>");
+          var traces = [], layout = {};
+          if(_.get(tblDef, "table_type") == "histogram") {
+              layout = { barmode: "overlay" };
+              _.each(_.tail(tblDef.coldefs), function(coldef, idx) {
+                traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram", showlegend: true, name: coldef["label"]});
+                _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
+                _.last(traces)['xbins']['size'] = (_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount;
+              });
+          } else if (_.get(tblDef, "table_type") == "scatter") {
+              var dateformatfn = (_.head(_.tail(tblDef.coldefs))["source"] == "begin_time" || _.head(_.tail(tblDef.coldefs))["source"] == "end_time") ? function(d) { return moment(d).toDate() } : function(d) { return d };
+              var xaxisdata = _.map(runData.value, function(rd){return dateformatfn(_.get(rd, _.head(_.tail(tblDef.coldefs))["source"]))});
+              _.each(_.tail(_.tail(tblDef.coldefs)), function(coldef, idx) {
+                traces.push({x: xaxisdata, y: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "scatter", mode: "lines+markers", showlegend: true, name: coldef["label"]});
+              });
+          }
+          Plotly.newPlot(plotlyDivName, traces, layout, {displaylogo: false});
           return;
         }
         var numHdrRows = _.find([[6, 1], [12, 2], [18, 3], [0, 4]], function(v) { return (v[0] == 0 || tblDef.coldefs.length < v[0]); })[1];
