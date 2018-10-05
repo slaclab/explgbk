@@ -38,7 +38,7 @@
 <script type="text/javascript">
 $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 	var instrument_template = `{{#value}}<tr {{#is_standby}}class="exp_switch_standby"{{/is_standby}}">
-	<td>{{ instrument }}</td>
+	<td style="background:{{color}}; color:white; " >{{ instrument }}</td>
 	<td>{{ station }}</td>
 	<td>{{#is_standby}}Standby{{/is_standby}}{{^is_standby}}<a target="_blank" href="{{_id}}/">{{ name }}</a>{{/is_standby}}</td>
     <td>{{ contact_info }}</td>
@@ -84,11 +84,12 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
     		})
     		.fail( function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception switching experiment " + jqXHR.responseText); })
     	});
-    	$.when($.getJSON(active_experiments_url), $.getJSON(instrument_station_list))
-    	.done(function(d1, d2) {
-				var active_exps = d1[0], ins_st_list = d2[0];
-				var others = _.differenceWith(ins_st_list.value, active_exps.value, function(av, ov){ return av['instrument'] == ov['instrument'] && av['station'] == ov['station'] });
-				_.each(others, function(ot){ active_exps.value.push(ot); });
+    	$.when($.getJSON(active_experiments_url), $.getJSON(instrument_station_list), $.getJSON({ url: instruments_url }))
+    	.done(function(d1, d2, d3) {
+			var active_exps = d1[0], ins_st_list = d2[0], instruments = _.keyBy(d3[0].value, "_id");
+			var others = _.differenceWith(ins_st_list.value, active_exps.value, function(av, ov){ return av['instrument'] == ov['instrument'] && av['station'] == ov['station'] });
+			_.each(others, function(ot){ active_exps.value.push(ot); });
+            _.each(active_exps.value, function(exp){ exp["color"] = _.get(instruments, exp["instrument"] + ".color", "inherit"); });
     		active_exps.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
     		var rendered = Mustache.render(instrument_template, active_exps);
     		$("#switch_experiment_div tbody").html(rendered);

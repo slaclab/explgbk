@@ -282,7 +282,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   $("#register_edit_exp_tab").data("cur_sort_desc", true);
   var exper_template = `{{#value}}<tr data-expid="{{_id}}">
         <td> <a target="_blank" href="{{_id}}/">{{ name }}</a> </td>
-        <td> {{ instrument }} </td>
+        <td style="background:{{color}}; color:white; " > {{ instrument }} </td>
         <td> {{#FormatDate}}{{first_run.begin_time }}{{/FormatDate}} </td>
         <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
         <td> {{ contact_info }} </td>
@@ -325,10 +325,11 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     }
   });
 
-  $.getJSON ({ url: experiments_url })
-  .done(function( experiments ) {
-    // Prepare for searches...
-    $("#register_edit_exp_tab").data("experiments", experiments.value);
+  $.when($.getJSON({ url: experiments_url }), $.getJSON({ url: instruments_url }))
+  .done(function(d0, d1) {
+    var experiments = d0[0], instruments = _.keyBy(d1[0].value, "_id");
+    $("#register_edit_exp_tab").data("experiments", experiments.value); // Prepare for searches.
+    _.map($("#register_edit_exp_tab").data("experiments"), function(exp){ exp["color"] = _.get(instruments, exp["instrument"] + ".color", "inherit"); });
     $("#register_edit_exp_tab").data("name2info", _.keyBy(experiments.value, "name"));
     $("#register_edit_exp_tab").data("search_results", $("#register_edit_exp_tab").data("experiments"));
     add_exps_to_search_results();

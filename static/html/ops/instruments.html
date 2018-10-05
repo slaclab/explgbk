@@ -53,6 +53,7 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
         var registration_doc = {
             "_id" : instrument_name,
             "description" : $.trim(formObj.find(".description").val()),
+            "color": $.trim(formObj.find(".instrument_color").val()),
             "params": ins_params
         };
 
@@ -83,7 +84,7 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
   $("#ops_instruments_tab").data("editcreatefn", editcreatefn);
 
   var instmpl = `{{#value}}<tr>
-        <td class="instrument_lbl">{{ _id }}</td>
+        <td class="instrument_lbl" style="color:{{color}};" >{{ _id }}</td>
         <td>{{ description }}</td>
         <td>{{ params.num_stations}}</td>
         <td> <a class="editinsbtn" href="#"><i class="fa fa-edit"></i>&nbsp;</a> </td>
