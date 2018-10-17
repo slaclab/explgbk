@@ -44,7 +44,7 @@
                         <dl>
                             <dt><code>param_name</code></dt><dd>Mandatory, the name of the parameter.</dd>
                             <dt><code>required</code></dt><dd>Optional, if not specified, defaults to not required.</dd>
-                            <dt><code>param_type</code></dt><dd>Optional - One of the following <code>int</code>, <code>date</code>, <code>datetime</code>, <code>enum</code>, <code>string</code>. Defaults to string.</dd>
+                            <dt><code>param_type</code></dt><dd>Optional - One of the following <code>int</code>, <code>float</code>, <code>date</code>, <code>datetime</code>, <code>enum</code>, <code>string</code>. Defaults to string.</dd>
                             <dt><code>options</code></dt><dd>Optional; applies only to <code>enum</code>&quot;s. An array of string options for the enum.</dd>
                         </dl>
                     </p>
@@ -54,32 +54,34 @@
 	"params" : [
 		{
 			"param_name" : "imaging_method",
-			"required" : true
+			"required" : true,
+			"param_type" : "enum",
+			"options" : [ "single-particle", "tomography" ]
+		},
+		{
+			"param_name" : "imaging_software",
+			"param_type" : "enum",
+			"options" : [ "EPU", "SerialEM" ]
 		},
 		{
 			"param_name" : "imaging_format",
-			"required" : true,
 			"param_type" : "enum",
-			"options" : [
-				".tif",
-				".png",
-				".jpeg",
-				".bmp"
-			]
+			"options" : [ ".tif", ".mrc" ]
 		},
 		{
 			"param_name" : "pixel_density",
-			"required" : true,
 			"param_type" : "int"
 		},
 		{
+			"param_name" : "fmdose",
+			"param_type" : "float"
+		},
+		{
 			"param_name" : "sample_prep_date",
-			"required" : true,
 			"param_type" : "date"
 		},
 		{
 			"param_name" : "sample_expiration_date",
-			"required" : true,
 			"param_type" : "date"
 		}
 	]

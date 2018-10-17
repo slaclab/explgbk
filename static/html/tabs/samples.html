@@ -16,24 +16,28 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
     sample_obj.paramkvs = _.map(sample_obj['params'], function(value, key) { return { key: key, value: value };});
     $.when($.ajax("../../static/html/ms/sampleedit.html"), $.getJSON("../get_modal_param_definitions", { modal_type: "samples" }))
     .done(function(d0, d1){
-      var tmpl = d0[0], ss_param_defs = _.get(d1[0], "value.params", {}), ss_required_param_names = _.map(_.filter(ss_param_defs, function(d) { return _.get(d, "required", false) }), "param_name");
+      var tmpl = d0[0], ss_param_defs = _.get(d1[0], "value.params", []), ss_required_param_names = _.map(_.filter(ss_param_defs, function(d) { return _.get(d, "required", false) }), "param_name");
       var ss_options_tmpl = `{{#.}}<option value="{{ param_name }}">{{ param_name }}</option>{{/.}}`, ss_value_options_tmpl = `{{#.}}<option value="{{ . }}">{{ . }}</option>{{/.}}`;
       Mustache.parse(tmpl); Mustache.parse(ss_options_tmpl); Mustache.parse(ss_value_options_tmpl);
       sample_obj.has_ss_params = (ss_required_param_names.length > 0);
       var rendered = $(Mustache.render(tmpl, sample_obj)), param_template_tr = null;
+      rendered.find(".cp_value").each(function() { var ss_type = _.get(_.find(ss_param_defs, ["param_name", $(this).closest("tr").find(".cp_key").val()]), "param_type", null); if(ss_type) { $(this).closest("tr").attr("ss_validate", ss_type)}});
       if(_.has(sample_obj, '_id')) { rendered.find("#sample_create").text("Update");}
       rendered.find(".fa-plus").on("click", function(){ $(this).closest("tr").after(param_template_tr.clone(true))});
       rendered.find(".fa-trash").on("click", function(){ $(this).closest("tr").remove(); });
       rendered.find(".fa-arrow-down").on("click", function() {
-          if($(this).closest("tr").find("input.key").length > 0) {
-              $(this).closest("tr").find("input.key").replaceWith($('<select class="form-control ss_select key"><option></option>' + Mustache.render(ss_options_tmpl, ss_param_defs) + '</select>'));
+          if($(this).closest("tr").find("input.cp_key").length > 0) {
+              var prevVal = $(this).closest("tr").find("input.cp_key").val();
+              $(this).closest("tr").find("input.cp_key").replaceWith($('<select class="form-control ss_select cp_key"><option></option>' + Mustache.render(ss_options_tmpl, ss_param_defs) + '</select>'));
+              $(this).closest("tr").find(".cp_key").val(prevVal);
               $(this).closest("tr").find(".ss_select").on("change", function() {
                   var selected_ss_param = _.find(ss_param_defs, {"param_name": $(this).val()}), ss_type = _.get(selected_ss_param, "param_type", "string");
-                  if(ss_type == "enum") { $(this).closest("tr").find("input.value").replaceWith($('<select class="form-control"><option></option>' + Mustache.render(ss_value_options_tmpl, _.get(selected_ss_param, "options", [])) + '</select>')); }
-                  else if (ss_type == "int" || ss_type == "date" || ss_type == "datetime") { $(this).closest("tr").attr("ss_validate", ss_type)}
+                  if(ss_type == "enum") { $(this).closest("tr").find(".cp_value").replaceWith($('<select class="form-control cp_value"><option></option>' + Mustache.render(ss_value_options_tmpl, _.get(selected_ss_param, "options", [])) + '</select>')); }
+                  else { $(this).closest("tr").find(".cp_value").replaceWith($('<input type="text" class="form-control cp_value" value="">')); }
+                  $(this).closest("table").find(".cp_value").each(function() { var ss_type = _.get(_.find(ss_param_defs, ["param_name", $(this).closest("tr").find(".cp_key").val()]), "param_type", null); if(ss_type) { $(this).closest("tr").attr("ss_validate", ss_type)}});
               })
           } else {
-              $(this).closest("tr").find("select").replaceWith($('<input type="text" class="form-control key" value="">'));
+              $(this).closest("tr").find("select").replaceWith($('<input type="text" class="form-control cp_key" value="">'));
           }});
       param_template_tr = rendered.find("tr:last").clone(true); // Set the template tr for the + icon
       rendered.find("#sample_create").on("click", function(e) {
@@ -43,12 +47,13 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
           [function() { return $.trim(formObj.find(".sample_name").val()) == ""; }, "Sample name cannot be blank."],
           [function() { return !/^[\w/_-]+$/.test($.trim(formObj.find(".sample_name").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
           [function() { return $.trim(formObj.find(".sample_description").val()) == ""; }, "Sample description cannot be blank."],
-          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() != "" && !/^[/\w_-]+$/.test($(this).find("input.key").val()); }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Please restrict param names to alphanumeric characters, dashes, slashes and underscores."],
-          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."],
-          [function() { return !_.every(formObj.find("tbody tr[ss_validate='int']").map(function() { return !isNaN($(this).find("input.value").val()); }).toArray())}, "Expecting an int for parameters <ul><li>" + _.join(_.map(_.filter(ss_param_defs, ["param_type", "int"]), "param_name"), "</li><li>") + "</li></ul>"],
-          [function() { return !_.every(formObj.find("tbody tr[ss_validate='date']").map(function() { return moment($(this).find("input.value").val(), "MM/DD/YYYY", true).isValid(); }).toArray())}, "Expecting an date (MM/DD/YYYY) for parameters <ul><li>" + _.join(_.map(_.filter(ss_param_defs, ["param_type", "date"]), "param_name"), "</li><li>") + "</li></ul>"],
-          [function() { return !_.every(formObj.find("tbody tr[ss_validate='datetime']").map(function() { return moment($(this).find("input.value").val(), "MM/DD/YYYY HH:mm:ss", true).isValid(); }).toArray())}, "Expecting an datetime (MM/DD/YYYY HH:mm:ss) for parameters <ul><li>" + _.join(_.map(_.filter(ss_param_defs, ["param_type", "datetime"]), "param_name"), "</li><li>") + "</li></ul>"],
-          [function() { return _.difference(ss_required_param_names, formObj.find("tbody tr").find(".key").map(function() { return $(this).val()}).get()).length > 0 }, "One or more required parameters was not specified <ul><li>" + _.join(_.difference(ss_required_param_names, formObj.find("tbody tr").find("input.key").map(function() { return $(this).val()}).get()), "</li><li>") + "</li></ul>"]
+          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.cp_key").val() != "" && !/^[/\w_-]+$/.test($(this).find("input.cp_key").val()); }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Please restrict param names to alphanumeric characters, dashes, slashes and underscores."],
+          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.cp_key").val() == "" ^ $(this).find("input.cp_value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."],
+          [function() { return !_.every(formObj.find("tbody tr[ss_validate='int']").map(function() { return _.isInteger(_.toNumber($(this).find("input.cp_value").val())); }).toArray())}, "Expecting an int for parameters <ul><li>" + _.join(_.map(_.filter(ss_param_defs, ["param_type", "int"]), "param_name"), "</li><li>") + "</li></ul>"],
+          [function() { return !_.every(formObj.find("tbody tr[ss_validate='float']").map(function() { return _.isFinite(_.toNumber($(this).find("input.cp_value").val())); }).toArray())}, "Expecting an float for parameters <ul><li>" + _.join(_.map(_.filter(ss_param_defs, ["param_type", "int"]), "param_name"), "</li><li>") + "</li></ul>"],
+          [function() { return !_.every(formObj.find("tbody tr[ss_validate='date']").map(function() { return moment($(this).find("input.cp_value").val(), "MM/DD/YYYY", true).isValid(); }).toArray())}, "Expecting an date (MM/DD/YYYY) for parameters <ul><li>" + _.join(_.map(_.filter(ss_param_defs, ["param_type", "date"]), "param_name"), "</li><li>") + "</li></ul>"],
+          [function() { return !_.every(formObj.find("tbody tr[ss_validate='datetime']").map(function() { return moment($(this).find("input.cp_value").val(), "MM/DD/YYYY HH:mm:ss", true).isValid(); }).toArray())}, "Expecting an datetime (MM/DD/YYYY HH:mm:ss) for parameters <ul><li>" + _.join(_.map(_.filter(ss_param_defs, ["param_type", "datetime"]), "param_name"), "</li><li>") + "</li></ul>"],
+          [function() { return _.difference(ss_required_param_names, formObj.find("tbody tr").find(".cp_key").map(function() { return $(this).val()}).get()).length > 0 }, "One or more required parameters was not specified <ul><li>" + _.join(_.difference(ss_required_param_names, formObj.find("tbody tr").find("input.cp_key").map(function() { return $(this).val()}).get()), "</li><li>") + "</li></ul>"]
           ];
         // Various validations
         var v_failed = false;
@@ -66,7 +71,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
         var sample_id_original = $.trim(formObj.find(".sample_id").val());
         console.log("_id:" + sample_id_original);
         var sample_params = {};
-        formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { sample_params[key] = val; }});
+        formObj.find("tbody tr").map(function() {  var key = $(this).find(".cp_key").val(), val = $(this).find(".cp_value").val(); if(key != "" && val != "") { if(_.includes(["float", "int"], _.get(_.find(ss_param_defs, ["param_name", key]), "param_type", ""))) { sample_params[key] = _.toNumber(val) } else {sample_params[key] = val}; }});
         var new_sample_doc = {
           name: sample_name,
           description: $.trim(formObj.find(".sample_description").val()),
