@@ -6,7 +6,7 @@ import datetime
 
 import context
 
-from flask import request, Blueprint, render_template, send_file, abort, make_response
+from flask import request, Blueprint, render_template, send_file, abort, make_response, jsonify
 
 from dal.explgbk import get_current_sample_name
 from services.explgbk import experiment_exists_and_unlocked
@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 @pages_blueprint.route("/")
 def index():
     return render_template("choose_experiment.html")
+
+@pages_blueprint.route("/status")
+def status():
+    return jsonify({"success": True, "mongo_version": context.logbookclient.server_info()['version']})
+
 
 @pages_blueprint.route('/js/<path:path>')
 def send_js(path):
