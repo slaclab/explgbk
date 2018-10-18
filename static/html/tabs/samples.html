@@ -37,7 +37,8 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
                   $(this).closest("table").find(".cp_value").each(function() { var ss_type = _.get(_.find(ss_param_defs, ["param_name", $(this).closest("tr").find(".cp_key").val()]), "param_type", null); if(ss_type) { $(this).closest("tr").attr("ss_validate", ss_type)}});
               })
           } else {
-              $(this).closest("tr").find("select").replaceWith($('<input type="text" class="form-control cp_key" value="">'));
+              $(this).closest("tr").find(".cp_key").replaceWith($('<input type="text" class="form-control cp_key" value="">'));
+              $(this).closest("tr").find(".cp_value").replaceWith($('<input type="text" class="form-control cp_value" value="">'));
           }});
       param_template_tr = rendered.find("tr:last").clone(true); // Set the template tr for the + icon
       rendered.find("#sample_create").on("click", function(e) {
