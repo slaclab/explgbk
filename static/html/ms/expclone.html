@@ -9,7 +9,7 @@
       <input type="hidden" class="form-control src_experiment_name" value="{{ src_experiment_name }}">
       <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
        <label for="experiment_name">New Experiment Name:</label>
-       <input type="text" class="form-control experiment_name" value="{{ name }}" {{#name}}readonly{{/name}} >
+       <input type="text" class="form-control experiment_name" value="{{ name }}" {{^cloning}}readonly{{/cloning}} >
       </div>
       <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
        <label for="start_time">Start Time:</label>

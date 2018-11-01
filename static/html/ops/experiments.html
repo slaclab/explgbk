@@ -144,7 +144,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     $.ajax ("../static/html/ms/expclone.html")
     .done(function( tmpl ) {
       Mustache.parse(tmpl);
-      var rendered = $(Mustache.render(tmpl, {src_experiment_name: src_experiment_name, clone_attrs: [{k: "Experimental Setup", v: "setup"}, {k: "Samples", v: "samples"}, {k: "Roles", v: "roles"}, {k: "Run Parameter Descriptions", v: "run_param_descriptions"}]}));
+      var rendered = $(Mustache.render(tmpl, {src_experiment_name: src_experiment_name, name: src_experiment_name, cloning: true, clone_attrs: [{k: "Experimental Setup", v: "setup"}, {k: "Samples", v: "samples"}, {k: "Roles", v: "roles"}, {k: "Run Parameter Descriptions", v: "run_param_descriptions"}]}));
       rendered.find(".start_time").datetimepicker({defaultDate: moment(), sideBySide: true });
       rendered.find(".end_time").datetimepicker({defaultDate: moment().add(2, 'days'), sideBySide: true });
       rendered.find(".clone_btn").on("click", function(e) {
