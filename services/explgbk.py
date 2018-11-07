@@ -896,12 +896,14 @@ def svc_start_run(experiment_name):
     """
     run_type = request.args.get("run_type", "DATA")
     user_specified_run_number = request.args.get("run_num", None)
+    user_specified_start_time_str = request.args.get("start_time", None)
+    user_specified_start_time = datetime.strptime(user_specified_start_time_str, '%Y-%m-%dT%H:%M:%S.%fZ') if user_specified_start_time_str else None
 
     # Here's where we can put validations on starting a new run.
     # Currently; there are none (after discussions with the DAQ team)
     # But we may want to make sure the previous run is closed, the specified experiment is the active one etc.
 
-    run_doc = start_run(experiment_name, run_type, user_specified_run_number)
+    run_doc = start_run(experiment_name, run_type, user_specified_run_number, user_specified_start_time)
 
     context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Insert", "value": run_doc})
     logger.debug("Published the new run for %s", experiment_name)
@@ -917,7 +919,9 @@ def svc_end_run(experiment_name):
     """
     End the current run; ending the current run is mostly setting the end time.
     """
-    run_doc = end_run(experiment_name)
+    user_specified_end_time_str = request.args.get("end_time", None)
+    user_specified_end_time = datetime.strptime(user_specified_end_time_str, '%Y-%m-%dT%H:%M:%S.%fZ') if user_specified_end_time_str else None
+    run_doc = end_run(experiment_name, user_specified_end_time)
     context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc})
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
