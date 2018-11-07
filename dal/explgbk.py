@@ -257,6 +257,10 @@ def get_currently_active_experiments():
             exp_info["station"] = qry["station"]
             exp_info["switch_time"] = exp["switch_time"]
             exp_info["requestor_uid"] = exp["requestor_uid"]
+            if 'name' in exp_info:
+                curr_sample = get_current_sample_name(exp_info['name'])
+                if curr_sample:
+                    exp_info['current_sample'] = curr_sample
             ret.append(exp_info)
 
     return ret

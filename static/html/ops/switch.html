@@ -2,7 +2,7 @@
 <div class="row" id="switch_experiment_div">
   <div class="table-responsive">
     <table class="table table-condensed table-striped table-bordered">
-      <thead><tr><th>Instrument</th><th>Station</th><th>Experiment</th><th>PI</th><th>Leader Account</th><th>Description</th><th>Switched at</th><th>Switched by</th><th><i class="fa fa-exchange fa-lg" aria-hidden="true"></i></th></tr></thead>
+      <thead><tr><th>Instrument</th><th>Station</th><th>Experiment</th><th>PI</th><th>Leader Account</th><th>Current Sample</th><th>Description</th><th>Switched at</th><th>Switched by</th><th><i class="fa fa-exchange fa-lg" aria-hidden="true"></i></th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
@@ -43,6 +43,7 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 	<td>{{#is_standby}}Standby{{/is_standby}}{{^is_standby}}<a target="_blank" href="{{_id}}/">{{ name }}</a>{{/is_standby}}</td>
     <td>{{ contact_info }}</td>
     <td>{{ leader_account }}</td>
+    <td>{{ current_sample }}</td>
 	<td>{{ description }}</td>
 	<td>{{#FormatDate}}{{ switch_time }}{{/FormatDate}}</td>
 	<td>{{ requestor_uid }}</td>
