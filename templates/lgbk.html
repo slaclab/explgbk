@@ -9,6 +9,7 @@
   <link rel="stylesheet" type="text/css" href="../../js/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css">
   <link rel="stylesheet" type="text/css" href="../../js/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" type="text/css" href="../../js/summernote/dist/summernote.css">
+  <link rel="stylesheet" type="text/css" href="../../js/selectize/dist/css/selectize.bootstrap3.css">
 
   <script type="text/javascript" src="../../js/jquery/jquery.min.js"></script>
   <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
@@ -21,6 +22,7 @@
   <script type="text/javascript" src="../../js/python/flask_socket_util/websocket_client.js"></script>
   <script type="text/javascript" src="../../js/plotly.js/dist/plotly.min.js"></script>
   <script type="text/javascript" src="../../js/summernote/dist/summernote.min.js"></script>
+  <script type="text/javascript" src="../../js/selectize/dist/js/standalone/selectize.min.js"></script>
 
   <script src="../../static/lgbk.js"></script>
 
@@ -33,6 +35,7 @@
     var roles = { is_writer: {{ is_writer }}, is_editor: {{ is_editor}}, is_admin: {{ is_admin }} };
     var auth_expiration_time = {{ auth_expiration_time }};
     var current_run_url = "../../run_control/{{experiment_name}}/ws/current_run";
+    var elog_emails = "../{{experiment_name}}/ws/elog_emails";
   </script>
 
 </head>

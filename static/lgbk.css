@@ -353,6 +353,15 @@ label {
 #elog_tab .elog_tag:not(:first-child) {
   border-left: thin solid #1E48DF;
 }
+#elog_tab .seloption {
+  color: #6685F4;
+}
+#elog_tab .selectedoption {
+  background: #6685F4;
+  color: white;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+}
 #elog_search_text {
   padding: 0.1em;
   margin: 0;

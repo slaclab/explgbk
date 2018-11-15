@@ -33,7 +33,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
  var elog_child_template = `<div class="row col-md-12 elog-chid">
    <div class="panel panel-default">
-    <div class="panel-heading text-left"><span class="entry_actions">{{^deleted_by}}<i class="fa fa-send fa-lg followup"></i>{{#roles.is_editor}}<i class="fa fa-edit fa-lg edit"></i><i class="fa fa-trash fa-lg delete"></i>{{/roles.is_editor}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre>{{content}}</pre>{{/title}}</div>
+    <div class="panel-heading text-left"><span class="entry_actions">{{^deleted_by}}<i class="fa fa-send fa-lg followup" title="Followup"></i>{{#roles.is_editor}}<i class="fa fa-edit fa-lg edit" title="Edit"></i><i class="fa fa-trash fa-lg delete" title="Delete"></i>{{/roles.is_editor}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre>{{content}}</pre>{{/title}}</div>
     <div class="panel-body">
       {{> elog_chid_body_content }}
      <div class="row dialog_holder"></div>
@@ -50,7 +50,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
        <div class="validation_warning"></div>
        <div class="form-group log_title_div hidden"><label class="col-sm-2 control-label">Title*:</label><div class="col-sm-8"><input class="form-control log_title" type="text" name="log_title"/></div></div>
        <div class="form-group"><label class="col-sm-2 control-label">Text*: <i class="fa fa-table elog_followup_html" title="HTML log entry"></i></label><div class="col-sm-8"><textarea class="form-control elog_followup_textarea" rows="5" name="log_text"></textarea></div></div>
-       <div class="form-group"><label class="col-sm-2 control-label">Email:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_emails" placeholder="email1 email2@institution.edu" value="{{ emails_str }}"/></div></div>
+       <div class="form-group"><label class="col-sm-2 control-label">Email:</label><select class="form-control contacts email_select" rows="10" name="log_emails_shown" placeholder="email1 email2@institution.edu" multiple></select><input class="hidden email_input" name="log_emails" value="{{ emails_str }}"></input></div>
        <div class="form-group"><label class="col-sm-2 control-label">Tags:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_tags" placeholder="Tag1 Tag2 Tag3"/></div></div>
        <div class="form-group files_div"><label class="col-sm-2 control-label">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
        <div class="form-group"><button type="button" class="btn btn-default followup_post">Post</button></div>
@@ -109,11 +109,28 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       if(auth_expiration_time > 1000000000 && moment.unix(auth_expiration_time).isSameOrBefore(moment().add(5, 'minutes'))) {alert("Your session is about to expire. Please log back in to renew your session."); return true; }
   }
 
+  var email_selector = function(content_div) {
+      $.getJSON(elog_emails).done(function(dat){
+          var existing_emails = dat.value;
+          var email_choices = _.map(existing_emails, function(em){ return {email: em}});
+          var selected_items = _.split(content_div.find(".email_input").val(), " ");
+          content_div.find(".email_select").selectize({persist: false, valueField: 'email', labelField: 'email', maxItems: null, options: email_choices, items: selected_items,
+            render: { item: function(item, escape)   { return "<div class='selectedoption'><span>" + escape(item['email']) + "</span></div>"; },
+                      option: function(item, escape) { return "<div class='seloption'><span>" + escape(item["email"]) + "</span></div>"; }
+                  },
+                  create: function(input) { return {email: input }}});
+          content_div.find(".email_select").on("change", function() {
+              content_div.find(".email_input").val(_.join(content_div.find(".email_select").val(), " "));
+          })
+      });
+  }
+
  var followup_function = function() {
     if($(this).closest(".edat").find(".followup_div").length > 0) { $(this).closest(".edat").find(".followup_div").remove(); return; }
     if(check_session_timeout()) return;
 	var entry = $(this).closest(".edat").data("entry"), current_text_mode_html = false;
 	var rendered = renderMSTemplate(elog_followup_template, entry);
+    email_selector(rendered);
 	rendered.find(".close").on("click", function(){ $(this).closest(".followup_div").remove(); });
     rendered.find(".elog_followup_html").on("click", function(){ $(this).closest(".followup_div").find(".log_title_div").removeClass("hidden"); $(this).closest(".followup_div").find("textarea").summernote(summernote_options); current_text_mode_html=true; $(this).remove(); });
 	rendered.find(".followup_post").on("click", function(){
@@ -152,6 +169,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
     if(check_session_timeout()) return;
     var entry = $(this).closest(".edat").data("entry"), current_text_mode_html = false;
     var rendered = renderMSTemplate(elog_followup_template, entry);
+    email_selector(rendered);
  	rendered.find(".close").on("click", function(){ $(this).closest(".followup_div").remove(); });
     rendered.find("textarea").first().text(entry["content"]);
     if(_.has(entry, "title")) {
@@ -450,6 +468,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
      .done(function(modal_txt, cur_run){
          var current_run_num =_.get(cur_run[0], "value.num", ""), mdl = $(Mustache.render(modal_txt[0], { current_run_num: current_run_num })), current_text_mode_html=false;
          $("#elog_content").prepend(mdl);
+         email_selector($("#elog_content"));
          $("#elog_content").find(".elog_html").on("click", function(){ $("#elog_content").find(".log_title_div").removeClass("hidden"); $(this).remove(); $('#elog_new_entry_log_text').summernote(summernote_options); current_text_mode_html=true;});
          $("#elog_new_entry_modal_post").on("click", function (e) {
             if($('#elog_new_entry_form').find(".files_div").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $('#elog_new_entry_form').find(".files_div").remove(); }

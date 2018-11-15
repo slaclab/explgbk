@@ -554,6 +554,21 @@ def get_elog_tags(experiment_name):
     expdb = logbookclient[experiment_name]
     return expdb['elog'].distinct("tags")
 
+def get_elog_emails(experiment_name):
+    '''
+    Get all the email addresses that we sent elog messages to that are recorded in the db.
+    '''
+    expdb = logbookclient[experiment_name]
+    emails = list({x for x in [y for x in [ x['email_to'] for x in filter(lambda x : x, list(expdb['elog'].find({}, { "email_to": 1, "_id": 0 }))) ]  for y in x]})
+    # Add in site and instrument specific email mailing lists.
+    if logbookclient['site']['siteinfo'].find_one({}, {"_id": 0, "params.elog_mailing_lists": 1}):
+        emails.extend(logbookclient['site']['siteinfo'].find_one({}, {"_id": 0, "params.elog_mailing_lists": 1}).get('params', {}).get('elog_mailing_lists', []))
+    ins = get_experiment_info(experiment_name)['instrument']
+    if logbookclient['site']['instruments'].find_one({"_id": ins}, {"_id": 0, "params.elog_mailing_lists": 1}):
+        emails.extend(logbookclient['site']['instruments'].find_one({"_id": ins}, {"_id": 0, "params.elog_mailing_lists": 1}).get('params', {}).get('elog_mailing_lists', []))
+    return sorted(emails)
+
+
 def get_experiment_files(experiment_name):
     '''
     Get the files for the given experiment

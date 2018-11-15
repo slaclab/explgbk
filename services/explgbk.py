@@ -37,7 +37,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
     instrument_standby, get_experiment_files_for_run, get_elog_authors, get_elog_entries_by_author, get_elog_tags, get_elog_entries_by_tag, \
-    get_elogs_for_date_range, clone_sample, get_modal_param_definitions, lock_unlock_experiment
+    get_elogs_for_date_range, clone_sample, get_modal_param_definitions, lock_unlock_experiment, get_elog_emails
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -667,6 +667,7 @@ def svc_post_new_elog_entry(experiment_name):
     log_emails = request.form.get("log_emails", None)
     if log_emails:
         optional_args["email_to"] = log_emails.split()
+        logger.debug("Sending emails to %s", ", ".join(optional_args["email_to"]))
 
     log_tags_str = request.form.get("log_tags", None)
     if log_tags_str:
@@ -775,6 +776,14 @@ def svc_delete_elog_entry(experiment_name):
         entry = get_specific_elog_entry(experiment_name, entry_id)
         context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": entry})
     return JSONEncoder().encode({"success": status})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog_emails", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_elog_emails(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_elog_emails(experiment_name)})
+
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files", methods=["GET"])
 @context.security.authentication_required
