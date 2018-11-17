@@ -380,6 +380,21 @@ label {
 #elog_new_entry_modal {
   margin-left: 1.0em;
 }
+#elog_email_subscriptions {
+  margin-left: 1.0em;
+}
+#elog_email_subscriptions .modal-body {
+  text-align: left;
+}
+#elog_email_subscriptions .uid {
+  font-weight: bold;
+  color: #6685F4;
+  white-space: nowrap;
+}
+#elog_email_subscriptions .btn {
+  background: #6685F4;
+  color: white;
+}
 #current_sample_lbl .fa {
   padding-right: 0.25em;
 }

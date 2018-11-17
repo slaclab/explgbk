@@ -552,7 +552,8 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
     var tab_toolbar = `<input type="text" placeholder="Search/Run etc - see tooltip" title="Search;Author;Tag;Run;Run-Run;date(MM/DD/YYYY);date-date" id="elog_search_text">
     <i class="fa fa-plus fa-lg" id="elog_new_entry" title="Post a new elog entry"></i>
     <i class="fa fa-paperclip fa-lg" id="elog_attachments_only" title="Toggle attachments only"></i>
-    <i class="fa fa-strikethrough fa-lg" id="elog_deleted_entries" title="Toggle deleted entries"></i>`;
+    <i class="fa fa-strikethrough fa-lg" id="elog_deleted_entries" title="Toggle deleted entries"></i>
+    <i class="fa fa-envelope-o fa-lg" id="elog_email_subscribe" title="Email subscription"></i>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
     $("#elog_new_entry").on("click", $("#elog_tab").data("new_entry_click"));
@@ -573,6 +574,19 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
             $("#elog_tab").find(".elog_deleted").closest(".edat").addClass("hidden");
         }
         $("#elog_deleted_entries").toggleClass("pushedin");
+    });
+    $("#elog_email_subscribe").on("click", function(){
+        $.when($.ajax('../../static/html/ms/elog_email_subscriptions.html'), $.getJSON("ws/elog_email_subscriptions"))
+        .done(function(mdltxt, emls){
+            var email_subscription_modal = mdltxt[0], email_subscribers = emls[0].value, current_user_subscription = _.find(email_subscribers, ['subscriber', logged_in_user]);
+            Mustache.parse(email_subscription_modal);
+            var rendered = $(Mustache.render(email_subscription_modal, {experiment_name: experiment_name, logged_in_user: logged_in_user, current_user_subscription: current_user_subscription, email_subscribers: email_subscribers}));
+            $("#elog_content").prepend(rendered);
+            $('#elog_email_subscriptions').on('hidden.bs.modal', function () { $('#elog_email_subscriptions').remove(); });
+            $('#elog_email_subscriptions_subscribe').on("click", function(){ $.getJSON("ws/elog_email_subscribe").done(function(){$('#elog_email_subscriptions').find(".elog_email_subscription_msg").toggleClass("hidden")})});
+            $('#elog_email_subscriptions_unsubscribe').on("click", function(){ $.getJSON("ws/elog_email_unsubscribe").done(function(){$('#elog_email_subscriptions').find(".elog_email_subscription_msg").toggleClass("hidden")})});
+            $("#elog_email_subscriptions").modal();
+        })
     });
     $("#elog_search_text").on("input", $("#elog_tab").data("search_text_input"));
 });

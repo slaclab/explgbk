@@ -568,6 +568,30 @@ def get_elog_emails(experiment_name):
         emails.extend(logbookclient['site']['instruments'].find_one({"_id": ins}, {"_id": 0, "params.elog_mailing_lists": 1}).get('params', {}).get('elog_mailing_lists', []))
     return sorted(emails)
 
+def get_elog_email_subscriptions(experiment_name):
+    '''
+    The logbook will send email messages when new elog messages are posted to the elog.
+    Get all the subscribers who have subscribed to email messages for this experiment.
+    '''
+    expdb = logbookclient[experiment_name]
+    return list(expdb.subscribers.find({}))
+
+def elog_email_subscribe(experiment_name, userid):
+    '''
+    Add the specified user to the email subscriptions
+    '''
+    expdb = logbookclient[experiment_name]
+    result = expdb.subscribers.insert_one({"_id": userid, "subscriber": userid, "email_address": userid + "@slac.stanford.edu", "subscribed_time": datetime.datetime.utcnow() })
+    return result.acknowledged
+
+def elog_email_unsubscribe(experiment_name, userid):
+    '''
+    Remove the specified user from the email subscriptions
+    '''
+    expdb = logbookclient[experiment_name]
+    result = expdb.subscribers.delete_one({"_id": userid})
+    return result.acknowledged
+
 
 def get_experiment_files(experiment_name):
     '''

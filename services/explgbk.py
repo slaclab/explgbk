@@ -37,7 +37,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
     instrument_standby, get_experiment_files_for_run, get_elog_authors, get_elog_entries_by_author, get_elog_tags, get_elog_entries_by_tag, \
-    get_elogs_for_date_range, clone_sample, get_modal_param_definitions, lock_unlock_experiment, get_elog_emails
+    get_elogs_for_date_range, clone_sample, get_modal_param_definitions, lock_unlock_experiment, get_elog_emails, \
+    get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -783,6 +784,27 @@ def svc_delete_elog_entry(experiment_name):
 @context.security.authorization_required("read")
 def svc_get_elog_emails(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_elog_emails(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog_email_subscriptions", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_elog_email_subscriptions(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_elog_email_subscriptions(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog_email_subscribe", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_elog_email_subscribe(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": elog_email_subscribe(experiment_name, context.security.get_current_user_id())})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog_email_unsubscribe", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_elog_email_unsubscribe(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": elog_email_unsubscribe(experiment_name, context.security.get_current_user_id())})
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files", methods=["GET"])
