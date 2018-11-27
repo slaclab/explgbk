@@ -38,7 +38,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
     instrument_standby, get_experiment_files_for_run, get_elog_authors, get_elog_entries_by_author, get_elog_tags, get_elog_entries_by_tag, \
     get_elogs_for_date_range, clone_sample, get_modal_param_definitions, lock_unlock_experiment, get_elog_emails, \
-    get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe
+    get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe, get_elog_email_subscriptions_emails
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
 
@@ -688,10 +688,12 @@ def svc_post_new_elog_entry(experiment_name):
     logger.debug("Published the new elog entry for %s", experiment_name)
 
     # Send an email out if a list of emails was specified.
-    email_to = inserted_doc.get("email_to", None)
+    email_to = inserted_doc.get("email_to", [])
     if not email_to and "root" in inserted_doc:
-        email_to = get_specific_elog_entry(experiment_name, inserted_doc["root"]).get("email_to", None)
+        email_to = get_specific_elog_entry(experiment_name, inserted_doc["root"]).get("email_to", [])
+    email_to.extend(get_elog_email_subscriptions_emails(experiment_name))
     if email_to:
+        logger.debug("Sending emails for new elog entry in experiment %s to %s", experiment_name, ",".join(email_to))
         send_elog_as_email(experiment_name, inserted_doc, email_to)
 
     return JSONEncoder().encode({'success': True, 'value': inserted_doc})

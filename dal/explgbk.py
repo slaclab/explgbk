@@ -576,6 +576,13 @@ def get_elog_email_subscriptions(experiment_name):
     expdb = logbookclient[experiment_name]
     return list(expdb.subscribers.find({}))
 
+def get_elog_email_subscriptions_emails(experiment_name):
+    '''
+    Get an array of email addresses of folks who have subscried to emails for this experiment.
+    '''
+    expdb = logbookclient[experiment_name]
+    return [x['email_address'] for x in list(expdb.subscribers.find({}, {"email_address": 1}))]
+
 def elog_email_subscribe(experiment_name, userid):
     '''
     Add the specified user to the email subscriptions
