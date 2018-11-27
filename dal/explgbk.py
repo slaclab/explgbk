@@ -296,13 +296,26 @@ def instrument_standby(instrument, station, userid):
         })
     return (True, "")
 
-def get_elog_entries(experiment_name):
+def get_elog_entries(experiment_name, sample_name=None):
     """
     Get the elog entries for the experiment as a flat list sorted by inserted time ascending.
     The sort order is important as the UI uses this to optimize tree-building.
     """
     expdb = logbookclient[experiment_name]
-    return [entry for entry in expdb['elog'].find().sort([("insert_time", 1)])]
+    if not sample_name or sample_name == "All Samples":
+        return [entry for entry in expdb['elog'].find().sort([("insert_time", 1)])]
+    else:
+        # We start at samples for performance reasons;
+        return [x for x in expdb.samples.aggregate([
+            { "$match": { "name": sample_name }},
+            { "$lookup": { "from": "runs", "localField": "_id", "foreignField": "sample", "as": "run"}},
+            { "$unwind": "$run" }, # lookup generates an array field, we convert to a list of docs with a single field instead.
+            { "$replaceRoot": { "newRoot": "$run" } },
+            { "$lookup": { "from": "elog", "localField": "num", "foreignField": "run_num", "as": "elog"}},
+            { "$unwind": "$elog" },
+            { "$replaceRoot": { "newRoot": "$elog" } },
+            { "$sort": { "insert_time": 1 }}
+        ])]
 
 def get_specific_elog_entry(experiment_name, id):
     """
@@ -615,16 +628,25 @@ def get_experiment_files_for_run(experiment_name, run_num):
     return [file for file in expdb['file_catalog'].find({"run_num": run_num}).sort([("run_num", -1), ("create_timestamp", -1)])]
 
 
-def get_experiment_runs(experiment_name, include_run_params=False):
+def get_experiment_runs(experiment_name, include_run_params=False, sample_name=None):
     '''
     Get the runs for the given experiment.
     Does not include the run parameters by default
     '''
     expdb = logbookclient[experiment_name]
-    if include_run_params:
-        return [run for run in expdb['runs'].find().sort([("num", -1)])]
+    run_params_projection = { "params": False } if not include_run_params else { "some_non_existent_field": False }
+    if not sample_name or sample_name == "All Samples":
+        return [run for run in expdb['runs'].find(projection=run_params_projection).sort([("num", -1)])]
     else:
-        return [run for run in expdb['runs'].find(projection={ "params": include_run_params }).sort([("num", -1)])]
+        # We start at samples for performance reasons;
+        return [x for x in expdb.samples.aggregate([
+            { "$match": { "name": sample_name }},
+            { "$lookup": { "from": "runs", "localField": "_id", "foreignField": "sample", "as": "run"}},
+            { "$unwind": "$run" }, # lookup generates an array field, we convert to a list of docs with a single field instead.
+            { "$replaceRoot": { "newRoot": "$run" } },
+            { "$project": run_params_projection },
+            { "$sort": { "num": -1 }}
+        ])]
 
 def get_all_run_tables(experiment_name):
     '''

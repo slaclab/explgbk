@@ -40,7 +40,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elogs_for_date_range, clone_sample, get_modal_param_definitions, lock_unlock_experiment, get_elog_emails, \
     get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe, get_elog_email_subscriptions_emails
 
-from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num
+from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
@@ -514,7 +514,7 @@ def svc_has_role(experiment_name):
 @experiment_exists_and_unlocked
 @context.security.authorization_required("read")
 def svc_get_elog_entries(experiment_name):
-    return JSONEncoder().encode({"success": True, "value": get_elog_entries(experiment_name)})
+    return JSONEncoder().encode({"success": True, "value": get_elog_entries(experiment_name, sample_name=request.args.get("sampleName", None))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/attachment", methods=["GET"])
 @context.security.authentication_required
@@ -684,6 +684,10 @@ def svc_post_new_elog_entry(experiment_name):
             logger.info(filename)
             files.append((filename, upload))
     inserted_doc = post_new_log_entry(experiment_name, userid, log_content, files, **optional_args)
+    if 'run_num' in inserted_doc:
+        sample_obj = get_sample_for_run(experiment_name, inserted_doc['run_num'])
+        if sample_obj:
+            inserted_doc['sample'] = sample_obj['name']
     context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Create", "value": inserted_doc})
     logger.debug("Published the new elog entry for %s", experiment_name)
 
@@ -832,8 +836,8 @@ def svc_get_files_for_run(experiment_name, run_num):
 @experiment_exists_and_unlocked
 @context.security.authorization_required("read")
 def svc_get_runs(experiment_name):
-    include_run_params = bool(request.args.get("includeParams", "false"))
-    return JSONEncoder().encode({"success": True, "value": get_experiment_runs(experiment_name, include_run_params)})
+    include_run_params = json.loads(request.args.get("includeParams", "false"))
+    return JSONEncoder().encode({"success": True, "value": get_experiment_runs(experiment_name, include_run_params, sample_name=request.args.get("sampleName", None))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/shifts", methods=["GET"])
 @context.security.authentication_required
@@ -938,6 +942,10 @@ def svc_start_run(experiment_name):
 
     run_doc = start_run(experiment_name, run_type, user_specified_run_number, user_specified_start_time)
 
+    sample_obj = get_sample_for_run(experiment_name, run_doc['num'])
+    if sample_obj:
+        run_doc['sample'] = sample_obj['name']
+
     context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Insert", "value": run_doc})
     logger.debug("Published the new run for %s", experiment_name)
 
@@ -955,6 +963,10 @@ def svc_end_run(experiment_name):
     user_specified_end_time_str = request.args.get("end_time", None)
     user_specified_end_time = datetime.strptime(user_specified_end_time_str, '%Y-%m-%dT%H:%M:%S.%fZ') if user_specified_end_time_str else None
     run_doc = end_run(experiment_name, user_specified_end_time)
+
+    sample_obj = get_sample_for_run(experiment_name, run_doc['num'])
+    if sample_obj:
+        run_doc['sample'] = sample_obj['name']
     context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc})
 
     return JSONEncoder().encode({"success": True, "value": run_doc})

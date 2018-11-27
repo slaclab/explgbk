@@ -69,6 +69,19 @@ def get_run_doc_for_run_num(experiment_name, run_num):
         return run_doc
     return None
 
+def get_sample_for_run(experiment_name, run_num):
+    """
+    Lookup the sample for the specified run
+    """
+    expdb = logbookclient[experiment_name]
+    run_doc = expdb.runs.find_one({"num": run_num})
+    if not run_doc:
+        return None
+    if 'sample' not in run_doc:
+        return None
+    return expdb.samples.find_one({"_id": run_doc["sample"]})
+
+
 def end_run(experiment_name, user_specified_end_time=None):
     '''
     End the current run; this is mostly a matter of filling in the end time

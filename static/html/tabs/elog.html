@@ -431,7 +431,9 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
               skip_websocket_elog_messages = true;
           });
       } else {
-          $.when($.getJSON("ws/elog"), $.getJSON("ws/runs"))
+          var elog_params = {};
+          if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { elog_params["sampleName"] = sample_showing_in_UI; }
+          $.when($.getJSON("ws/elog", elog_params), $.getJSON("ws/runs", elog_params))
           .done(function(d1, d2){
               var elogData = d1[0], runData = d2[0];
               skip_websocket_elog_messages = false;
@@ -440,6 +442,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       }
   };
   $("#elog_tab").data("refresh", load_elog_function);
+  $("#elog_tab").on("lg.refresh", function() { load_elog_function(); });
 
   load_elog_function();
 
@@ -447,6 +450,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       if(skip_websocket_elog_messages) { console.log("Skipping elog message from server."); return; }
       var elogData = elogEvent.value;
       console.log("Processing elog event for experiment " + experiment_name + " id=" + elogData["_id"]);
+      if(_.has(elogData, "sample") && sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && elogData['sample'] != sample_showing_in_UI) { console.log("Skipping updating elog for different sample " + elogData['sample']); return; }
       processNewEntry(elogData);
       attach_children();
       render_elog_entry(elogData, false);
@@ -456,6 +460,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       if(skip_websocket_elog_messages) { console.log("Skipping run message from server."); return; }
       var runData = runEvent.value;
       console.log("Processing run event for experiment " + experiment_name + " id=" + runData["num"]);
+      if(_.has(runData, "sample") && sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && runData['sample'] != sample_showing_in_UI) { console.log("Skipping updating elog runs for different sample " + runData['sample']); return; }
       var newRunEntries = processRunResponse({value: [runData]});
       _.each(newRunEntries, function(r){render_elog_entry(r, false)});
   });
