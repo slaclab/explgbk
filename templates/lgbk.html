@@ -122,7 +122,7 @@ $(document).ready(function() {
     WebSocketConnection.connect();
     $(document).on('samples', function(event, sampleData) {
         if(_.get(sampleData, "CRUD", "") == "Make_Current") {
-            current_sample_at_DAQ = _.get(sampleData, "value._id");
+            current_sample_at_DAQ = _.get(sampleData, "value.name");
             setCurrentUISample();
         }
     });
