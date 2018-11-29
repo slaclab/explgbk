@@ -26,12 +26,21 @@ def init_app(app):
     if 'experiments' not in list(logbookclient['explgbk_cache'].collection_names()):
         logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] );
     scheduler = sched.scheduler()
-    def __refresh_cache_periodically():
-        scheduler.enter(60*60*24, 1, refresh_cache_periodically)
-        __update_experiments_info()
-
-    __update_experiments_info()
     __establish_kafka_consumers()
+
+    def __periodic(scheduler, interval, action, actionargs=()):
+        # This is the function that runs periodically
+        scheduler.enter(interval, 1, __periodic, (scheduler, interval, action, actionargs))
+        action(*actionargs)
+
+    def __kickoff_cache_update_thread():
+        # This runs in a background thread; the scheduler.run is blocking and will block forever.
+        __periodic(scheduler, 24*60*60, __update_experiments_info)
+        scheduler.run()
+
+    __cache_update_thread = threading.Thread(target=__kickoff_cache_update_thread)
+    __cache_update_thread.start()
+
 
 def reload_cache():
     """
@@ -121,6 +130,17 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
                     }
         else:
             logger.debug("No runs in experiment " + experiment_name)
+        if 'file_catalog' in collnames:
+            dataSummary = [x for x in expdb['file_catalog'].aggregate([ { "$group" :
+                { "_id" : None,
+                    "totalDataSize": { "$sum": { "$divide": ["$size", 1024*1024*1024*1.0 ] } },
+                    "totalFiles": { "$sum": 1 }
+                }
+            } ])]
+            if dataSummary:
+                expinfo['totalDataSize'] = dataSummary[0]['totalDataSize']
+                expinfo['totalFiles'] = dataSummary[0]['totalFiles']
+
         expinfo.update(info)
         logbookclient['explgbk_cache']['experiments'].update({"_id": experiment_name}, expinfo, upsert=True)
         logger.info("Updated the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)

@@ -706,8 +706,14 @@ def get_runtable_data(experiment_name, tableName, sampleName):
         logger.debug("Getting run table data for sample %s", sampleName)
         sample_doc = get_sample_for_experiment_by_name(experiment_name, sampleName)
         query = { "sample": sample_doc["_id"] } if sample_doc else query
-    return [x for x in logbookclient[experiment_name]['runs'].find(query, sources).sort([("num", -1)])] # Use sources as a filter to find
-
+    rtdata = [x for x in logbookclient[experiment_name]['runs'].find(query, sources).sort([("num", -1)])] # Use sources as a filter to find
+    if 'sample' in sources.keys():
+        samples = { x["_id"] : x for x in get_samples(experiment_name) }
+        def __replace_with_sample_name(x):
+            x['sample'] = samples[x['sample']]['name']
+            return x
+        rtdata = map(__replace_with_sample_name, rtdata)
+    return rtdata
 
 def get_run_param_descriptions(experiment_name):
     '''

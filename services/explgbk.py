@@ -836,7 +836,7 @@ def svc_get_files_for_run(experiment_name, run_num):
 @experiment_exists_and_unlocked
 @context.security.authorization_required("read")
 def svc_get_runs(experiment_name):
-    include_run_params = json.loads(request.args.get("includeParams", "false"))
+    include_run_params = json.loads(request.args.get("includeParams", "true"))
     return JSONEncoder().encode({"success": True, "value": get_experiment_runs(experiment_name, include_run_params, sample_name=request.args.get("sampleName", None))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/shifts", methods=["GET"])
