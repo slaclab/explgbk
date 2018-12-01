@@ -65,7 +65,7 @@ var setCurrentUISample = function() {
                  Mustache.parse(tmpl);
                  var rendered = $(Mustache.render(tmpl, samplesDict));
                  rendered.find("#choose_sample tbody").append($(Mustache.render(choose_sample_template, {sample_names: sample_names})));
-                 rendered.find("#choose_sample tr").on("click", function(){
+                 rendered.find("#choose_sample tbody tr").on("click", function(){
                      var selected_sample = $(this).attr("data-sample");
                      if(selected_sample == "All Samples") {
                          sample_showing_in_UI = "All Samples";

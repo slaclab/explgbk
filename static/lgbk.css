@@ -621,3 +621,57 @@ label {
   padding-left: 1.0em;
   text-align: center;
 }
+#feedback_tab .fd_section_hdr {
+  color: #6685F4;
+  font-weight: bold;
+  text-align: left;
+  border-bottom: solid thin #6685F4;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+#feedback_tab .fd_plain_hdr {
+  text-align: left;
+  padding-left: 1.0em;
+}
+#feedback_tab .fd_item {
+  text-align: left;
+  padding-left: 1.0em;
+}
+#feedback_tab .fd_input input {
+  border: solid thin black;
+}
+#feedback_tab select {
+  margin-bottom: 0.25em;
+}
+#feedback_tab .fd_notes {
+  text-align: left;
+  padding-left: 1.5em;
+}
+#feedback_tab .fd_survey_notes {
+  text-align: left;
+  padding-left: 1.5em;
+}
+#feedback_tab .fd_callout {
+  margin-top: 1.0em;
+  text-align: left;
+}
+#feedback_tab .fd_instructions {
+  border: solid thin #6685F4;
+  padding: 0.25em;
+}
+#feedback_tab .ins_ls_title {
+  color: #6685F4;
+}
+#feedback_tab .fd_last_modified {
+  margin-top: 2.0em;
+  font-size: : smaller;
+  font-style: italic;
+}
+#feedback_tab .fd_text_instructions {
+  overflow: auto;
+  color: #6685F4;
+  font-style: italic;
+}
+#feedback_tab .survey_item {
+  text-align: left;
+}

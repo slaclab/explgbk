@@ -1,0 +1,930 @@
+[
+    {
+        "id": "basic",
+        "header": "Basic Data",
+        "hint": "Basic Data",
+        "type": "section_header",
+        "groups": [
+            {
+                "id": "basic-scheduled",
+                "header": "Scheduled shifts:",
+                "hint": "Scheduled shifts",
+                "short": "Scheduled shifts",
+                "type": "readonly_text",
+                "value": 1
+            },
+            {
+                "id": "basic-actual",
+                "header": "Actual shifts",
+                "hint": "Actual shifts",
+                "short": "Actual shifts",
+                "type": "input",
+                "value": 0
+            },
+            {
+                "id": "basic-planning",
+                "header": "Was the number of scheduled shifts inappropriate for the work planned?",
+                "hint": "Was the number of scheduled shifts inappropriate for the work planned?",
+                "short": "Inapprop # of shifts",
+                "type": "checkbox",
+                "value": false,
+                "toggler": true,
+                "groups": [
+                    {
+                        "id": "basic-planning-toofew",
+                        "header": "Too <span class=\"term\" >few<\/span> shifts scheduled for the work?",
+                        "hint": "Too few shifts scheduled for the work?",
+                        "short": "2 few shifts",
+                        "type": "checkbox",
+                        "value": false
+                    },
+                    {
+                        "id": "basic-planning-toomany",
+                        "header": "Too <span class=\"term\" >many<\/span> shifts scheduled for the work?",
+                        "hint": "Too many shifts scheduled for the work?",
+                        "short": "2 many shifts",
+                        "type": "checkbox",
+                        "value": false
+                    },
+                    {
+                        "id": "basic-planning-change",
+                        "header": "Was a request made to <span class=\"term\" >change<\/span> the number of shifts?",
+                        "hint": "Was a request made to change the number of shifts?",
+                        "short": "Changed # of shifts",
+                        "type": "checkbox",
+                        "notes": true,
+                        "value": false
+                    }
+                ]
+            },
+            {
+                "id": "basic-standard",
+                "header": "Was this a Standard Configuration experiment?",
+                "hint": "Was this a Standard Configuration experiment?",
+                "short": "Standard Config",
+                "type": "checkbox",
+                "value": false
+            }
+        ]
+    },
+    {
+        "id": "ready",
+        "header": "Getting Ready for the Experiment",
+        "hint": "Getting Ready for the Experiment",
+        "type": "section_header",
+        "groups": [
+            {
+                "id": "ready-instr",
+                "header": "Were the instrument and beamline ready for the experiment?",
+                "hint": "Were the instrument and beamline ready for the experiment?",
+                "short": "Instr ready",
+                "type": "selector",
+                "notes": true,
+                "value": 2
+            },
+            {
+                "id": "ready-user",
+                "header": "Were the users ready for the experiment?",
+                "hint": "Were the users ready for the experiment?",
+                "short": "User ready",
+                "type": "selector",
+                "notes": true,
+                "value": 2
+            },
+            {
+                "id": "use-SSRL",
+                "header": "Did the users use SSRL as part of their preparatory work for beamtime?",
+                "hint": "Did the users use SSRL as part of their preparatory work for beamtime?",
+                "short": "Use SSRL",
+                "type": "checkbox",
+                "notes": false,
+                "value": false
+            },
+            {
+                "id": "ready-effort",
+                "header": "Was an extraordinary LCLS effort needed to get the instrument ready?",
+                "hint": "Was an extraordinary LCLS effort needed to get the instrument ready?",
+                "short": "Extra efforts",
+                "type": "checkbox",
+                "value": false,
+                "toggler": true,
+                "groups": [
+                    {
+                        "id": "ready-effort-engineering",
+                        "header": "Level of <span class=\"term\" >Engineering<\/span> resources required",
+                        "hint": "Level of Engineering resources required",
+                        "short": "Eng resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-technician",
+                        "header": "Level of <span class=\"term\" >Technician<\/span> resources required",
+                        "hint": "Level of Technician resources required",
+                        "short": "Tech resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-daq",
+                        "header": "Level of <span class=\"term\" >DAQ<\/span> resources required",
+                        "hint": "Level of DAQ resources required",
+                        "short": "DAQ resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-controls",
+                        "header": "Level of <span class=\"term\" >Controls<\/span> resources required",
+                        "hint": "Level of Controls resources required",
+                        "short": "Contr resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-software",
+                        "header": "Level of <span class=\"term\" >Software<\/span> resources required",
+                        "hint": "Level of Software resources required",
+                        "short": "Soft resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-it",
+                        "header": "Level of <span class=\"term\" >IT & Networking<\/span> resources required",
+                        "hint": "Level of IT & Networking resources required",
+                        "short": "IT resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-detector",
+                        "header": "Level of <span class=\"term\" >Detector<\/span> resources required",
+                        "hint": "Level of Detector resources required",
+                        "short": "Det resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-sampledelivery",
+                        "header": "Level of <span class=\"term\" >Sample Delivery<\/span> resources required",
+                        "hint": "Level of Sample Delivery resources required",
+                        "short": "Sample resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-laser",
+                        "header": "Level of <span class=\"term\" >Laser<\/span> resources required",
+                        "hint": "Level of Laser resources required",
+                        "short": "Las resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-afterhours",
+                        "header": "Level of <span class=\"term\" >after-hours<\/span> resources required",
+                        "hint": "Level of after-hours resources required",
+                        "short": "After resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "ready-effort-srd",
+                        "header": "Level of <span class=\"term\" >SRD Scientists<\/span> resources required",
+                        "hint": "Level of SRD Scientists resources required",
+                        "short": "SRD resource",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "start",
+        "header": "Starting the Experiment",
+        "hint": "Starting the Experiment",
+        "type": "section_header",
+        "groups": [
+            {
+                "id": "start-stopper",
+                "header": "Was startup delayed because stoppers could not be opened?",
+                "hint": "Was startup delayed because stoppers could not be opened?",
+                "short": "Stopper delay",
+                "type": "checkbox",
+                "notes": true,
+                "value": false
+            },
+            {
+                "id": "start-key",
+                "header": "Was startup delayed due to lack of a search key?",
+                "hint": "Was startup delayed due to lack of a search key?",
+                "short": "Search Key delay",
+                "type": "checkbox",
+                "notes": true,
+                "value": false
+            },
+            {
+                "id": "start-rswcf",
+                "header": "Did an open RSWCF cause delays in startup?",
+                "hint": "Did an open RSWCF cause delays in startup?",
+                "short": "RSWCF delay",
+                "type": "checkbox",
+                "notes": true,
+                "value": false
+            },
+            {
+                "id": "start-config",
+                "header": "Were there any configuration control issues that prevented operation?",
+                "hint": "Were there any configuration control issues that prevented operation?",
+                "short": "Contr issues",
+                "type": "checkbox",
+                "notes": true,
+                "value": false
+            },
+            {
+                "id": "start-onboarding",
+                "header": "Were there any issues with user onboarding that caused problems? ",
+                "hint": "Were there any issues with user onboarding that caused problems? ",
+                "short": "Onboard issues",
+                "type": "checkbox",
+                "notes": true,
+                "value": false
+            },
+            {
+                "id": "start-previous",
+                "header": "Was startup delayed due to the effects of a previous experiment? Something inserted into the beam path or some beamline component left in a non-standard state?",
+                "hint": "Was startup delayed due to the effects of a previous experiment? Something inserted into the beam path or some beamline component left in a non-standard state?",
+                "short": "Prev experim issues",
+                "type": "checkbox",
+                "notes": true,
+                "value": false
+            }
+        ]
+    },
+    {
+        "id": "exec",
+        "header": "Executing the Experiment",
+        "hint": "Executing the Experiment",
+        "type": "section_header",
+        "groups": [
+            {
+                "id": "exec-goals",
+                "header": "Were the goals of the experiment met?",
+                "hint": "Were the goals of the experiment met?",
+                "short": "Goals met",
+                "type": "selector",
+                "notes": true,
+                "value": 2
+            },
+            {
+                "id": "exec-offshiftwork",
+                "header": "Was significant off-shift work required during the experiment?",
+                "hint": "Was significant off-shift work required during the experiment?",
+                "short": "Off-shift required",
+                "type": "checkbox",
+                "value": false,
+                "toggler": true,
+                "groups": [
+                    {
+                        "id": "exec-offshiftwork-engineering",
+                        "header": "Level of <span class=\"term\" >Engineering<\/span> resources required",
+                        "hint": "Level of Engineering resources required",
+                        "short": "Eng resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-technician",
+                        "header": "Level of <span class=\"term\" >Technician<\/span> resources required",
+                        "hint": "Level of Technician resources required",
+                        "short": "Tech resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-daq",
+                        "header": "Level of <span class=\"term\" >DAQ<\/span> resources required",
+                        "hint": "Level of DAQ resources required",
+                        "short": "DAQ resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-controls",
+                        "header": "Level of <span class=\"term\" >Controls<\/span> resources required",
+                        "hint": "Level of Controls resources required",
+                        "short": "Contr resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-software",
+                        "header": "Level of <span class=\"term\" >Software<\/span> resources required",
+                        "hint": "Level of Software resources required",
+                        "short": "Soft resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-it",
+                        "header": "Level of <span class=\"term\" >IT & Networking<\/span> resources required",
+                        "hint": "Level of IT & Networking resources required",
+                        "short": "IT resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-detector",
+                        "header": "Level of <span class=\"term\" >Detector<\/span> resources required",
+                        "hint": "Level of Detector resources required",
+                        "short": "Det resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-sampledelivery",
+                        "header": "Level of <span class=\"term\" >Sample Delivery<\/span> resources required",
+                        "hint": "Level of Sample Delivery resources required",
+                        "short": "Sample Deliv resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-laser",
+                        "header": "Level of <span class=\"term\" >Laser<\/span> resources required",
+                        "hint": "Level of Laser resources required",
+                        "short": "Las resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-afterhours",
+                        "header": "Level of <span class=\"term\" >after-hours<\/span> resources required",
+                        "hint": "Level of after-hours resources required",
+                        "short": "After-hour resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    },
+                    {
+                        "id": "exec-offshiftwork-srd",
+                        "header": "Level of <span class=\"term\" >SRD Scientists<\/span> resources required",
+                        "hint": "Level of SRD Scientists resources required",
+                        "short": "SRD resources",
+                        "type": "selector",
+                        "notes": true,
+                        "value": 1
+                    }
+                ]
+            },
+            {
+                "id": "exec-delay",
+                "header": "Were there any significant delays or inefficiencies due to the following systems:",
+                "hint": "Were there any significant delays or inefficiencies due to the following systems:",
+                "type": "plain-header",
+                "groups": [
+                    {
+                        "id": "exec-delay-production",
+                        "header": "<span class=\"term\" >FEL Beam production<\/span>",
+                        "hint": "FEL Beam production",
+                        "short": "FEE beam prod",
+                        "type": "checkbox",
+                        "value": false,
+                        "toggler": true,
+                        "groups": [
+                            {
+                                "id": "exec-delay-production-accel",
+                                "header": "Accelerator trips",
+                                "hint": "Accelerator trips",
+                                "short": "Accel trip",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-production-hotweather",
+                                "header": "Hot weather",
+                                "hint": "Hot weather",
+                                "short": "Hot weather",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-production-coldweather",
+                                "header": "Cold weather",
+                                "hint": "Cold weather",
+                                "short": "Cold weather",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-production-seeded",
+                                "header": "Tuning in seeded mode",
+                                "hint": "Tuning in seeded mode",
+                                "short": "Seeded tuneup",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-production-2color",
+                                "header": "Tuning in 2-color mode",
+                                "hint": "Tuning in 2-color mode",
+                                "short": "2-color tuneup",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-production-prev",
+                                "header": "Changing parameters from previous shift on different instrument",
+                                "hint": "Changing parameters from previous shift on different instrument",
+                                "short": "Prev shift change",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-production-obj",
+                                "header": "Beam path blocked by unexplained object",
+                                "hint": "Beam path blocked by unexplained object",
+                                "short": "Beam blocked",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            }
+                        ]
+                    },
+                    {
+                        "id": "exec-delay-quality",
+                        "header": "<span class=\"term\" >FEL Beam quality<\/span>",
+                        "hint": "FEL Beam quality",
+                        "short": "FEE quality",
+                        "type": "checkbox",
+                        "value": false,
+                        "toggler": true,
+                        "groups": [
+                            {
+                                "id": "exec-delay-quality-focusspotsize",
+                                "header": "Focus spot size",
+                                "hint": "Focus spot size",
+                                "short": "Focus spot",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-quality-focusalignment",
+                                "header": "Focus alignment",
+                                "hint": "Focus alignment",
+                                "short": "Focus align",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-quality-focuscharacterization",
+                                "header": "Focus characterization",
+                                "hint": "Focus characterization",
+                                "short": "Focus charact",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-quality-spatailstability",
+                                "header": "Spatial stability",
+                                "hint": "Spatial stability",
+                                "short": "Spatial stab",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-quality-temporalstability",
+                                "header": "Temporal stability",
+                                "hint": "Temporal stability",
+                                "short": "Tempor stab",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-quality-spectralstability",
+                                "header": "Spectral stability",
+                                "hint": "Spectral stability",
+                                "short": "Spectr stab",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-quality-monochromator",
+                                "header": "Seeding monochromator alignment",
+                                "hint": "Seeding monochromator alignment",
+                                "short": "Monocr align",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            }
+                        ]
+                    },
+                    {
+                        "id": "exec-delay-pbeamdelivery",
+                        "header": "<span class=\"term\" >Photon Beam delivery<\/span>",
+                        "hint": "Photon Beam delivery",
+                        "short": "Beam deliv",
+                        "type": "checkbox",
+                        "value": false,
+                        "toggler": true,
+                        "groups": [
+                            {
+                                "id": "exec-delay-pbeamdelivery-vacuum",
+                                "header": "Vacuum",
+                                "hint": "Vacuum",
+                                "short": "Vacuum",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-pbeamdelivery-stoppers",
+                                "header": "Stoppers",
+                                "hint": "Stoppers",
+                                "short": "Stoppers",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-pbeamdelivery-monochromator",
+                                "header": "Monochromator",
+                                "hint": "Monochromator",
+                                "short": "Monochrom",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-pbeamdelivery-fee",
+                                "header": "FEE optics",
+                                "hint": "FEE optics",
+                                "short": "FEE optics",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-pbeamdelivery-xrt",
+                                "header": "XRT optics",
+                                "hint": "XRT optics",
+                                "short": "XRT optics",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-pbeamdelivery-other",
+                                "header": "Other hardware",
+                                "hint": "Other hardware",
+                                "short": "Other",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            }
+                        ]
+                    },
+                    {
+                        "id": "exec-delay-pps",
+                        "header": "<span class=\"term\" >PPS<\/span>",
+                        "hint": "PPS",
+                        "short": "PPS",
+                        "type": "checkbox",
+                        "value": false,
+                        "notes": true
+                    },
+                    {
+                        "id": "exec-delay-laser",
+                        "header": "<span class=\"term\" >Laser system<\/span>",
+                        "hint": "Laser system",
+                        "short": "Las",
+                        "type": "checkbox",
+                        "value": false,
+                        "toggler": true,
+                        "groups": [
+                            {
+                                "id": "exec-delay-laser-alignment",
+                                "header": "Alignment",
+                                "hint": "Alignment",
+                                "short": "Align",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-laser-performance",
+                                "header": "Performance",
+                                "hint": "Performance",
+                                "short": "Perf",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-laser-timing",
+                                "header": "Timing system",
+                                "hint": "Timing system",
+                                "short": "Timing",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-laser-timezero",
+                                "header": "Finding time zero",
+                                "hint": "Finding time zero",
+                                "short": "Find t0",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            }
+                        ]
+                    },
+                    {
+                        "id": "exec-delay-pcds",
+                        "header": "<span class=\"term\" >PCDS<\/span>",
+                        "hint": "PCDS",
+                        "type": "checkbox",
+                        "short": "pcds",
+                        "value": false,
+                        "toggler": true,
+                        "groups": [
+                            {
+                                "id": "exec-delay-pcds-controls",
+                                "header": "Controls",
+                                "hint": "Controls",
+                                "short": "Contr",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-pcds-daq",
+                                "header": "DAQ",
+                                "hint": "DAQ",
+                                "short": "DAQ",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-pcds-dataprocessing",
+                                "header": "Data processing",
+                                "hint": "Data processing",
+                                "short": "Data proc",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-pcds-datamanagement",
+                                "header": "Data management",
+                                "hint": "Data management",
+                                "short": "Data mgt",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-pcds-it",
+                                "header": "IT & Networking",
+                                "hint": "IT & Networking",
+                                "short": "IT",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            }
+                        ]
+                    },
+                    {
+                        "id": "exec-delay-detect",
+                        "header": "<span class=\"term\" >Detectors<\/span>",
+                        "hint": "Detectors",
+                        "short": "Detect",
+                        "type": "checkbox",
+                        "value": false,
+                        "toggler": true,
+                        "groups": [
+                            {
+                                "id": "exec-delay-detect-installation",
+                                "header": "Installation",
+                                "hint": "Installation",
+                                "short": "Install",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-detect-calibration",
+                                "header": "Calibration",
+                                "hint": "Calibration",
+                                "short": "Calib",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-detect-dynamicrange",
+                                "header": "Dynamic range",
+                                "hint": "Dynamic range",
+                                "short": "Dyn range",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-detect-noiselevel",
+                                "header": "Noise level",
+                                "hint": "Noise level",
+                                "short": "Noise",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-detect-radiationdamage",
+                                "header": "Radiation damage",
+                                "hint": "Radiation damage",
+                                "short": "Rad damage",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-detect-vacuum",
+                                "header": "Vacuum",
+                                "hint": "Vacuum",
+                                "short": "Vacuum",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-detect-warmuptime",
+                                "header": "Warm-up time",
+                                "hint": "Warm-up time",
+                                "short": "Warm-up",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-detect-cooldowntime",
+                                "header": "Cool-down time",
+                                "hint": "Cool-down time",
+                                "short": "Cool-down",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            }
+                        ]
+                    },
+                    {
+                        "id": "exec-delay-sampleready",
+                        "header": "<span class=\"term\" >Sample readiness<\/span>",
+                        "hint": "Sample readiness",
+                        "short": "Sample ready",
+                        "type": "checkbox",
+                        "value": false,
+                        "toggler": true,
+                        "groups": [
+                            {
+                                "id": "exec-delay-sampleready-user",
+                                "header": "Problems with samples brought by users",
+                                "hint": "Problems with samples brought by users",
+                                "type": "checkbox",
+                                "short": "User sampl",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-sampleready-prepare",
+                                "header": "Issues with sample preparation during the experiment",
+                                "hint": "Issues with sample preparation during the experiment",
+                                "short": "Sample prep",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            }
+                        ]
+                    },
+                    {
+                        "id": "exec-delay-sampledelivery",
+                        "header": "<span class=\"term\" >Sample delivery<\/span>",
+                        "hint": "Sample delivery",
+                        "short": "Delivery",
+                        "type": "checkbox",
+                        "value": false,
+                        "toggler": true,
+                        "groups": [
+                            {
+                                "id": "exec-delay-sampledelivery-injector",
+                                "header": "Injector failure",
+                                "hint": "Injector failure",
+                                "short": "Inject",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-sampledelivery-setup",
+                                "header": "Sample delivery setup",
+                                "hint": "Sample delivery setup",
+                                "short": "Setup",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-sampledelivery-positioning",
+                                "header": "Sample positioning issues",
+                                "hint": "Sample positioning issues",
+                                "short": "Position",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-sampledelivery-temperature",
+                                "header": "Temperature issues",
+                                "hint": "Temperature issues",
+                                "short": "Temper",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-sampledelivery-vacuum",
+                                "header": "Vacuum issues",
+                                "hint": "Vacuum issues",
+                                "short": "Vacuum",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            },
+                            {
+                                "id": "exec-delay-sampledelivery-crystal",
+                                "header": "Crystal alignment",
+                                "hint": "Crystal alignment",
+                                "short": "Crystal align",
+                                "type": "checkbox",
+                                "value": false,
+                                "notes": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "header": "Summary Notes",
+        "hint": "Summary Notes",
+        "type": "section_header",
+        "groups": [
+            {
+                "id": "summary",
+                "header": "Summary Notes (optional)",
+                "hint": "Summary Notes (optional)",
+                "type": "section_header",
+                "short": "Notes",
+                "type": "textarea",
+                "value": ""
+            }
+        ]
+    }
+]

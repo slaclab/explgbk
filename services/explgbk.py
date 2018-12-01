@@ -12,6 +12,7 @@ import os
 import json
 import logging
 import copy
+import math
 
 import requests
 import context
@@ -38,7 +39,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
     instrument_standby, get_experiment_files_for_run, get_elog_authors, get_elog_entries_by_author, get_elog_tags, get_elog_entries_by_tag, \
     get_elogs_for_date_range, clone_sample, get_modal_param_definitions, lock_unlock_experiment, get_elog_emails, \
-    get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe, get_elog_email_subscriptions_emails
+    get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe, get_elog_email_subscriptions_emails, \
+    get_poc_feedback_changes, add_poc_feedback_item
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run
 
@@ -1305,3 +1307,36 @@ def svc_get_modal_param_definitions():
         return logAndAbort("Please specify a modal_type")
     param_defs = get_modal_param_definitions(modal_type)
     return JSONEncoder().encode({"success": True, "value": param_defs if param_defs else {}})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_feedback_document", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def get_feedback_document(experiment_name):
+    """
+    Reconstructs the current feedback document from a questionnaire like history of changes.
+    """
+    poc_feedback_changes = get_poc_feedback_changes(experiment_name)
+    poc_feedback_doc = {}
+    exp_info = get_experiment_info(experiment_name)
+    poc_feedback_doc["basic-scheduled"] = math.ceil((exp_info["end_time"] - exp_info["start_time"]).total_seconds()/(8*3600))
+
+    if poc_feedback_changes:
+        poc_feedback_doc.update({ x['name'] : x['value'] for x in get_poc_feedback_changes(experiment_name) })
+        poc_feedback_doc['last_modified_by'] = poc_feedback_changes[-1]['modified_by']
+        poc_feedback_doc['last_modified_at'] = poc_feedback_changes[-1]['modified_at']
+    return JSONEncoder().encode({"success": True, "value": poc_feedback_doc})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_feedback_item", methods=["POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def add_feedback_item(experiment_name):
+    item_name  = request.form.get("item_name", None)
+    item_value = request.form.get("item_value", None)
+    if not item_name or not item_value:
+        return logAndAbort("Please specify the item name (item_name) and value (item_value)")
+
+    add_poc_feedback_item(experiment_name, item_name, item_value, context.security.get_current_user_id())
+    return JSONEncoder().encode({"success": True})

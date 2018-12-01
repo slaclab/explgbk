@@ -710,7 +710,8 @@ def get_runtable_data(experiment_name, tableName, sampleName):
     if 'sample' in sources.keys():
         samples = { x["_id"] : x for x in get_samples(experiment_name) }
         def __replace_with_sample_name(x):
-            x['sample'] = samples[x['sample']]['name']
+            if 'sample' in x:
+                x['sample'] = samples[x['sample']]['name']
             return x
         rtdata = map(__replace_with_sample_name, rtdata)
     return rtdata
@@ -1056,3 +1057,16 @@ def remove_collaborator_from_role(experiment_name, uid, role_fq_name):
         return False
     result = expdb["roles"].update_one({"app": application_name, "name": role_name}, { "$pull": { "players": uid }})
     return result.matched_count > 0
+
+def get_poc_feedback_changes(experiment_name):
+    """
+    Gets a list of POC feedback items sorted by ascending modified date.
+    To reconstruct the document, simply apply the changes to a dict in sequence.
+    """
+    expdb = logbookclient[experiment_name]
+    return list(expdb["poc_feedback"].find({}).sort([("modified_at", 1)]))
+
+
+def add_poc_feedback_item(experiment_name, item_name, item_value, modified_by):
+    expdb = logbookclient[experiment_name]
+    expdb["poc_feedback"].insert_one({"name": item_name, "value": item_value, "modified_by": modified_by, "modified_at": datetime.datetime.utcnow()})
