@@ -18,6 +18,7 @@ from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
 from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, security, usergroups
+from dal.run_control import get_current_run
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -261,6 +262,9 @@ def get_currently_active_experiments():
                 curr_sample = get_current_sample_name(exp_info['name'])
                 if curr_sample:
                     exp_info['current_sample'] = curr_sample
+                curr_run = get_current_run(exp_info['name'])
+                if curr_run:
+                    exp_info['current_run'] = { x : curr_run[x] for x in ['num', 'begin_time', 'end_time'] if x in curr_run and curr_run[x] }
             ret.append(exp_info)
 
     return ret

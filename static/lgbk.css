@@ -307,6 +307,10 @@ label {
   color: #FFB305;
   font-weight: bold;
 }
+#expswitch_tab .expswitch_run_open {
+  color: #FFB305;
+  font-weight: bold;
+}
 #choose_experiment_modal table td a {
   color: #6685F4;
 }

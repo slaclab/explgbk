@@ -2,7 +2,7 @@
 <div class="row" id="switch_experiment_div">
   <div class="table-responsive">
     <table class="table table-condensed table-striped table-bordered">
-      <thead><tr><th>Instrument</th><th>Station</th><th>Experiment</th><th>PI</th><th>Leader Account</th><th>Current Sample</th><th>Description</th><th>Switched at</th><th>Switched by</th><th><i class="fa fa-exchange fa-lg" aria-hidden="true"></i></th></tr></thead>
+      <thead><tr><th>Instrument</th><th>Station</th><th>Experiment</th><th>PI</th><th>Leader Account</th><th>Current Sample</th><th>Current Run</th><th>Description</th><th>Switched at</th><th>Switched by</th><th><i class="fa fa-exchange fa-lg" aria-hidden="true"></i></th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
@@ -44,6 +44,7 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
     <td>{{ contact_info }}</td>
     <td>{{ leader_account }}</td>
     <td>{{ current_sample }}</td>
+    <td {{#current_run}}{{^current_run.end_time}}class="expswitch_run_open" title="The run is still active as of {{#FormatDateTime}}{{ current_run.begin_time }}{{/FormatDateTime}}"{{/current_run.end_time}}{{#current_run.end_time}} title="The run was marked done at {{#FormatDateTime}}{{ current_run.end_time }}{{/FormatDateTime}}"{{/current_run.end_time}}>{{ current_run.num }}{{/current_run}}</td>
 	<td>{{ description }}</td>
 	<td>{{#FormatDate}}{{ switch_time }}{{/FormatDate}}</td>
 	<td>{{ requestor_uid }}</td>
@@ -91,7 +92,8 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 			var others = _.differenceWith(ins_st_list.value, active_exps.value, function(av, ov){ return av['instrument'] == ov['instrument'] && av['station'] == ov['station'] });
 			_.each(others, function(ot){ active_exps.value.push(ot); });
             _.each(active_exps.value, function(exp){ exp["color"] = _.get(instruments, exp["instrument"] + ".color", "inherit"); });
-    		active_exps.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+            active_exps.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+            active_exps.FormatDateTime = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
     		var rendered = Mustache.render(instrument_template, active_exps);
     		$("#switch_experiment_div tbody").html(rendered);
     		$(".fa.expswitch").on("click", function() {
