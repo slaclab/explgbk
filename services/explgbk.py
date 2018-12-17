@@ -531,6 +531,7 @@ def svc_get_elog_attachment(experiment_name):
     for attachment in entry.get("attachments", None):
         if str(attachment.get("_id", None)) == attachment_id:
             if prefer_preview:
+                file_type = "image/png"
                 if "preview_url" in attachment:
                     remote_url = attachment.get("preview_url", None)
                 else:
@@ -538,9 +539,10 @@ def svc_get_elog_attachment(experiment_name):
             else:
                 logger.debug("Cannot find preview, returning main document.")
                 remote_url = attachment.get("url", None)
+                file_type = attachment['type']
             if remote_url:
                 req = requests.get(remote_url, stream = True)
-                resp = Response(stream_with_context(req.iter_content(chunk_size=1024)), content_type = req.headers['content-type'])
+                resp = Response(stream_with_context(req.iter_content(chunk_size=1024)), content_type = file_type)
                 if not (attachment["type"].startswith("image") or "preview_url" in attachment):
                     resp.headers["Content-Disposition"] = 'attachment; filename="' + attachment["name"] + '"'
                 return resp
