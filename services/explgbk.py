@@ -46,7 +46,8 @@ from dal.run_control import start_run, get_current_run, end_run, add_run_params,
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
-from dal.exp_cache import get_experiments, does_experiment_exist, reload_cache as reload_experiment_cache, text_search_for_experiments
+from dal.exp_cache import get_experiments, does_experiment_exist, reload_cache as reload_experiment_cache, \
+    text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -174,6 +175,21 @@ def svc_get_instruments():
     """
     return jsonify({'success': True, 'value': get_instruments()})
 
+@explgbk_blueprint.route("/lgbk/ws/experiment_stats", methods=["GET"])
+@context.security.authentication_required
+def svc_get_experiment_stats():
+    """
+    Get various experiment stats
+    """
+    return jsonify({'success': True, 'value': get_experiment_stats()})
+
+@explgbk_blueprint.route("/lgbk/ws/experiment_daily_data_breakdown", methods=["GET"])
+@context.security.authentication_required
+def svc_get_experiment_daily_data_breakdown():
+    """
+    Get the daily data breakdown; that is, data moved by day
+    """
+    return JSONEncoder().encode({'success': True, 'value': get_experiment_daily_data_breakdown()})
 
 @explgbk_blueprint.route("/lgbk/ws/instrument_station_list", methods=["GET"])
 @context.security.authentication_required

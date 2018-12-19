@@ -57,6 +57,24 @@ def get_experiments():
     """
     return list(logbookclient['explgbk_cache']['experiments'].find({}))
 
+def get_experiment_stats():
+    """
+    Get various computed/cached stats for the experiments
+    """
+    return list(logbookclient['explgbk_cache']['experiment_stats'].find({}))
+
+def get_experiment_daily_data_breakdown():
+    """
+    Run an aggregate on the daily data breakdown.
+    Data returned is in TB.
+    """
+    return list(logbookclient['explgbk_cache']['experiment_stats'].aggregate([
+      { "$unwind": "$dataDailyBreakdown" },
+      { "$replaceRoot": {"newRoot": "$dataDailyBreakdown" }},
+      { "$group": { "_id": "$_id", "total_size": {"$sum": {"$divide": ["$total_size", 1024]}}}},
+      { "$sort": { "_id": -1 }}
+    ]))
+
 def does_experiment_exist(experiment_name):
     """
     Checks for the existence of the experiment_name.
@@ -140,6 +158,13 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
             if dataSummary:
                 expinfo['totalDataSize'] = dataSummary[0]['totalDataSize']
                 expinfo['totalFiles'] = dataSummary[0]['totalFiles']
+            dataDailyBreakdown = [x for x in expdb['file_catalog'].aggregate([
+                    {"$group": { "_id": {"$dateToParts": { "date": "$create_timestamp"}}, "total_size": {"$sum": "$size"}}},
+                    {"$project": { "_id.year": 1, "_id.month": 1, "_id.day": 1, "total_size": 1 }},
+                    {"$group": { "_id": {"$dateFromParts": { "year": "$_id.year", "month": "$_id.month", "day": "$_id.day" } }, "total_size": {"$sum": {"$divide": [ "$total_size", 1024*1024*1024]}}}}
+                ])]
+            if dataDailyBreakdown:
+                logbookclient['explgbk_cache']['experiment_stats'].update({"_id": experiment_name}, { "_id": experiment_name, "dataDailyBreakdown": dataDailyBreakdown }, upsert=True)
 
         expinfo.update(info)
         logbookclient['explgbk_cache']['experiments'].update({"_id": experiment_name}, expinfo, upsert=True)

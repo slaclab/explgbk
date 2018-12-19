@@ -7,16 +7,7 @@
 
 <script type="text/javascript">
   $("#info_tab").on("lg.loaded.bs.tab", function() {
-	  var context = {};
-	  window.psdm_context = context;
-	  context.postGet = function() {
-		  console.log("Post get");
-		  var contact_info = this.info.value.contact_info;
-		  var parts = contact_info.split(')')[0].split('(');
-		  this.info.value.contact_name = parts[0];
-		  this.info.value.contact_email = parts[1];
-	  }
-	  var save_function = function() {
+      var save_function = function() {
 		  $("#info_tab").find(".lg-autoupdate").prop('readonly', true);
 		  var setup_details = {};
 		  $("#info_tab").find(".lg-autoupdate").each(function() { setup_details[$(this).attr("data-attr")] = $(this).val()});
@@ -39,13 +30,16 @@
 		  $("#info_toolbar").html('<a id="info_save" href="#"><i class="fa fa-save"></i> Save</a>');
 		  $("#info_save").on("click", save_function);
 	  }
-	  context.postRender = function() {
-		  $("#info_edit").on("click", edit_function);
-	  }
-	  var requestobjs = [
-		  { url: "ws/info", ctxnm: "info" }
-	  ];
 
-	  getJSONAndRender({ url: "../../static/html/ms/info_" + logbook_site + ".html" }, requestobjs, context, $("#info_tab").find(".lgcontent"));
+      $.when($.ajax("../../static/html/ms/info_" + logbook_site + ".html"), $.getJSON("ws/info"))
+      .done(function(d0, d1) {
+          var tmpl = d0[0], info = d1[0].value, contact_info = info.contact_info, parts = contact_info.split(')')[0].split('(');
+          info.contact_name = parts[0];
+          info.contact_email = parts[1];
+          Mustache.parse(tmpl);
+          $("#info_tab").find(".lgcontent").html($(Mustache.render(tmpl, {info: info})));
+          $("#info_edit").on("click", edit_function);
+          $("#info_tab").trigger("info_loaded", info);
+      })
   });
 </script>

@@ -229,6 +229,9 @@ label {
   background: #6685F4;
   font-weight: bold;
 }
+#ops_reports_tab .chartrow {
+  height: 80vw;
+}
 #ops_exp_searchtext {
   padding: 0.25em;
   border: thin solid #6685F4;
@@ -328,6 +331,18 @@ label {
   font-weight: bold;
   border: thin black solid;
   padding: 0.2em;
+}
+#info_tab .ques_tabs .sitespecific_iframe {
+  width: 100vw;
+  height: 100vw;
+  padding: 0;
+  border: 0;
+}
+#info_tab .ques_tabs .no_ques {
+  text-align: left;
+  font-style: italic;
+  padding-left: 2.0em;
+  padding-right: 2.0em;
 }
 #elog_tab div.edat {
   padding-top: 0.1em;

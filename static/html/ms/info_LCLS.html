@@ -4,18 +4,46 @@
 
 
  <dl class="dl-horizontal">
-    <dt>Name:</dt><dd>{{ info.value.name }}</dd>
-    <dt>Instrument:</dt><dd>{{ info.value.instrument }}</dd>
-    <dt>PI:</dt><dd><span><a href="mailto:{{ info.value.contact_email }}">{{ info.value.contact_name }}</a></span></dd>
-    <dt>Title:</dt><dd>{{ info.value.description }}</dd>
+    <dt>Name:</dt><dd>{{ info.name }}</dd>
+    <dt>Instrument:</dt><dd>{{ info.instrument }}</dd>
+    <dt>PI:</dt><dd><span><a href="mailto:{{ info.contact_email }}">{{ info.contact_name }}</a></span></dd>
+    <dt>Title:</dt><dd>{{ info.description }}</dd>
 </dl>
 
- <h1>Editable Info</h1>
- <dl class="dl-horizontal">
-    <dt>Photon energy</dt><dd><input type="text" class="form-control lg-autoupdate" data-attr="fel-parameters-0-photonenergy" value="{{ info.value.latest_setup.fel-parameters-0-photonenergy }}" readonly></dd>
-</dl>
+<div class="exp_info">
+ <h1>Questionnaire</h1>
+ <div class="ques_tabs">
+ </div>
+</div>
 
- <h1>Notes</h1>
-<textarea class="form-control lg-autoupdate" rows="5" data-attr="setup-notes" readonly>{{ info.value.latest_setup.setup-notes }}</textarea>
+<script type="text/javascript">
+$("#info_tab").on("info_loaded", function(ev, info){
+    var no_ques_msg = '<p class="no_ques">Unable to load the setup from the questionnaire. If you believe that there was setup information associated with this experiment, please contact LCLS data management to retrieve the setup information for you. </p>';
+    if(_.has(info, "params.PNR")) {
+        $.getJSON("../../../questionnaire_slac/ws/questionnaire/urawidata/" + _.get(info, "params.PNR"))
+        .done(function(ques_data){
+            var addnlGenInfo = `<dt>Abstract:</dt><dd><% info.proposalAbstract %></dd>`;
+            $("#info_tab").find(".dl-horizontal").first().append(Mustache.render(addnlGenInfo, ques_data, {}, ["<%", "%>"]));
+            $("#info_tab").find(".ques_tabs").first().append('<iframe class="sitespecific_iframe" src=../../../questionnaire_slac/proposal_questionnaire/' + _.get(ques_data, "run_period") + '/' + _.get(info, "params.PNR") + '/?hideHeader=true></iframe>');
+            $(document).on("resize_embedded_iframe", function(ev, newh){
+                console.log("Changing embedded IFrame's height to " + newh);
+                $("#info_tab").find(".sitespecific_iframe").height(newh);
+            })
+            $.getJSON("../../../questionnaire_slac/ws/proposal/attribute/" + _.get(ques_data, "run_period") + '/' + _.get(info, "params.PNR"))
+            .done(function(ques_attr){
+                var pocs = _.fromPairs(_.filter(_.map(_.get(ques_attr, "personnel"), function(ps) { if(_.get(ps, "id") ==  "personnel-poc-sci1" || _.get(ps, "id") == "personnel-poc-sci2") return [_.get(ps, "id"), _.get(ps, "val")]; })));
+                var poctmpl = `<%# personnel-poc-sci1 %><dt>POC 1:</dt><dd><% personnel-poc-sci1 %></dd><%/ personnel-poc-sci1 %><%# personnel-poc-sci2 %><dt>POC 2:</dt><dd><% personnel-poc-sci2 %></dd><%/ personnel-poc-sci2 %>`
+                $("#info_tab").find(".dl-horizontal").first().append(Mustache.render(poctmpl, pocs, {}, ["<%", "%>"]));
+            }).fail(function(){ console.log("Cannot get personnel from the questionnaire."); });
+        }).fail(function() {
+            $("#info_tab").find(".ques_tabs").html(no_ques_msg);
+        });
+    } else {
+        var poctmpl = `<%# latest_setup.general-poc1 %><dt>POC 1:</dt><dd><% latest_setup.general-poc1 %></dd><%/ latest_setup.general-poc1 %><%# latest_setup.general-poc2 %><dt>POC 2:</dt><dd><% latest_setup.general-poc2 %></dd><%/ latest_setup.general-poc2 %>`
+        $("#info_tab").find(".dl-horizontal").first().append(Mustache.render(poctmpl, info, {}, ["<%", "%>"]));
+        $("#info_tab").find(".ques_tabs").html(no_ques_msg);
+    }
+});
+</script>
 
 </div>
