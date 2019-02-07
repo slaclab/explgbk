@@ -525,6 +525,11 @@ label {
 }
 #rtbl_content div.rtbl_editable_column {
   display: inline-block;
+  width: 100%;
+  height: 100%;
+}
+#rtbl_content div.rtbl_editable_column:empty::before {
+  content: '\feff';
 }
 #rtbl_tab .btn {
   color: white;
