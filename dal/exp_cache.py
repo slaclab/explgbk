@@ -14,17 +14,20 @@ from bson import ObjectId
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
-from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions
+from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, usergroups
 
 __author__ = 'mshankar@slac.stanford.edu'
 
 logger = logging.getLogger(__name__)
 
 all_experiment_names = set()
+roles_with_post_privileges = []
 
 def init_app(app):
     if 'experiments' not in list(logbookclient['explgbk_cache'].collection_names()):
         logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] );
+    global roles_with_post_privileges
+    roles_with_post_privileges = [x["name"] for x in logbookclient["site"]["roles"].find({"app": "LogBook", "privileges": { "$in": ["post"] }}, {"name": 1, "_id": 0})]
     scheduler = sched.scheduler()
     __establish_kafka_consumers()
 
@@ -56,6 +59,21 @@ def get_experiments():
     Returns basic information and also some info on the first and last runs.
     """
     return list(logbookclient['explgbk_cache']['experiments'].find({}))
+
+def get_experiments_with_post_privileges(userid):
+    """
+    Get the list of experiments that the logged in user has post privileges for.
+    If the logged in user (or one of her groups) is in the site database, we return all experiments.
+    Else we query the experiment cache and return those.
+    """
+    groups = usergroups.get_user_posix_groups(userid)
+    u_a_g = ["uid:" + userid] + groups
+    logger.debug("Looking for experiments with post privileges for %s", u_a_g)
+    site_roles = [ x for x in logbookclient["site"]["roles"].find({"app": "LogBook", "privileges": { "$in": ["post"]}, "players": { "$in": u_a_g }})]
+    if site_roles:
+        logger.debug("User %s has post privileges for all experiments")
+        return get_experiments()
+    return list(logbookclient['explgbk_cache']["experiments"].find({"post_players": {"$in": u_a_g}}))
 
 def get_experiment_stats():
     """
@@ -132,6 +150,9 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
         all_players = set()
         list(map(lambda x : all_players.update(x.get('players', [])), roles))
         expinfo["players"] = list(all_players)
+        post_players = set()
+        list(map(lambda x : post_players.update(x.get('players', [])), expdb["roles"].find({"name": {"$in": roles_with_post_privileges}}, {"_id": 0, "players": 1})))
+        expinfo["post_players"] = list(post_players)
         if 'runs' in collnames:
             run_count = expdb["runs"].count()
             expinfo['run_count'] = run_count

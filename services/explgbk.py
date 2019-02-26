@@ -47,7 +47,8 @@ from dal.run_control import start_run, get_current_run, end_run, add_run_params,
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
 from dal.exp_cache import get_experiments, does_experiment_exist, reload_cache as reload_experiment_cache, \
-    text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown
+    text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
+    get_experiments_with_post_privileges
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -166,6 +167,19 @@ def svc_search_experiment_info():
     """
     search_terms = request.args.get("search_text", "")
     return jsonify({'success': True, 'value': text_search_for_experiments(search_terms)})
+
+
+@explgbk_blueprint.route("/lgbk/ws/postable_experiments", methods=["GET"])
+@context.security.authentication_required
+def svc_get_experiments_with_post_privileges():
+    """
+    Get the list of experiments that the logged in user has post privileges for.
+    The list of players with post privileges is stored in the experiment cache.
+    If the logged in user (or one of her groups) is in the site database, we return all experiments.
+    Else we query the experiment cache and return those.
+    """
+    userid = context.security.get_current_user_id()
+    return jsonify({'success': True, 'value': get_experiments_with_post_privileges(userid)})
 
 @explgbk_blueprint.route("/lgbk/ws/instruments", methods=["GET"])
 @context.security.authentication_required
@@ -666,10 +680,13 @@ def svc_post_new_elog_entry(experiment_name):
 
     run_num_str = request.form.get("run_num", None);
     if run_num_str:
-        try:
-            run_num = int(run_num_str)
-        except ValueError:
-            run_num = run_num_str # Cryo uses strings for run numbers.
+        if run_num_str == "current":
+            run_num = get_current_run(experiment_name)["num"]
+        else:
+            try:
+                run_num = int(run_num_str)
+            except ValueError:
+                run_num = run_num_str # Cryo uses strings for run numbers.
         run_doc = get_run_doc_for_run_num(experiment_name, run_num)
         if not run_doc:
             return JSONEncoder().encode({'success': False, 'errormsg': "Cannot find run with specified run number - " + str(run_num) + " for experiment " + experiment_name})
@@ -831,6 +848,13 @@ def svc_get_elog_email_subscribe(experiment_name):
 @context.security.authorization_required("read")
 def svc_get_elog_email_unsubscribe(experiment_name):
     return JSONEncoder().encode({"success": True, "value": elog_email_unsubscribe(experiment_name, context.security.get_current_user_id())})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_elog_tags", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_elog_tags(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_elog_tags(experiment_name)})
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files", methods=["GET"])
