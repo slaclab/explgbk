@@ -40,6 +40,9 @@ def get_experiment_info(experiment_name):
     """
     expdb = logbookclient[experiment_name]
     info = expdb['info'].find_one()
+    if not info:
+        logger.error("Cannot find info for %s. Was the experiment deleted/renamed?", experiment_name)
+        return {"name": experiment_name}
     setup_oid = info.get("latest_setup", None)
     if setup_oid:
         setup_doc = expdb['setup'].find_one({"_id": setup_oid})
@@ -180,7 +183,9 @@ def rename_experiment(experiment_name, new_experiment_name):
     Renames an experiment with a new name.
     """
     if new_experiment_name in logbookclient.database_names():
-        return (False, "Experiment %s has already been registered" % experiment_name)
+        return (False, "Experiment %s has already been registered" % new_experiment_name)
+    if experiment_name in [x["name"] for x in get_currently_active_experiments()]:
+        return (False, "Experiment %s is currently active" % experiment_name)
 
     logbookclient.admin.command('copydb', check=True, fromdb=experiment_name, todb=new_experiment_name)
 
