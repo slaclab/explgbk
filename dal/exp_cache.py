@@ -1,6 +1,7 @@
 import os
 import json
 import datetime
+import dateutil.relativedelta
 import logging
 import re
 
@@ -170,6 +171,18 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
         else:
             logger.debug("No runs in experiment " + experiment_name)
         if 'file_catalog' in collnames:
+            f_file = list(expdb['file_catalog'].find({}).sort([("create_timestamp", -1)]).limit(1))
+            l_file = list(expdb['file_catalog'].find({}).sort([("create_timestamp", 1)]).limit(1))
+            if f_file and l_file:
+                attrs = ['years', 'months', 'days', 'hours', 'minutes']
+                human_readable_diff = lambda delta: ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1]) for attr in attrs if getattr(delta, attr)]
+                expinfo['file_timestamps']  = {
+                    "first_file_ts": f_file[0]["create_timestamp"],
+                    "last_file_ts": l_file[0]["create_timestamp"],
+                    "duration": (l_file[0]["create_timestamp"] - f_file[0]["create_timestamp"]).total_seconds(),
+                    "hr_duration": human_readable_diff(dateutil.relativedelta.relativedelta (f_file[0]["create_timestamp"], l_file[0]["create_timestamp"]))
+                }
+
             dataSummary = [x for x in expdb['file_catalog'].aggregate([ { "$group" :
                 { "_id" : None,
                     "totalDataSize": { "$sum": { "$divide": ["$size", 1024*1024*1024*1.0 ] } },
