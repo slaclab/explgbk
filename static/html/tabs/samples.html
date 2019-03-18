@@ -166,7 +166,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
             console.log("Successfully closed sample " + sample_name);
             window.location.reload(true);
         } else {
-          alert("Server side exception closing sample " + data.errormsg);
+          alert("Server side exception playing sample " + sample_name + "\n" + data.errormsg);
         }
       })
       .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure closing sample " + textStatus); })

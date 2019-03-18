@@ -954,6 +954,9 @@ def create_update_sample(experiment_name, sample_name, createp, info):
         return (False, "Sample %s already exists" % sample_name)
     if not createp and not expdb['samples'].find_one({"_id": ObjectId(info["_id"])}):
         return (False, "Sample %s does not exist" % sample_name)
+    validation, erromsg = validate_with_modal_params("samples", info)
+    if not validation:
+        return validation, erromsg
 
     if createp:
         expdb['samples'].insert_one(info)
@@ -989,6 +992,9 @@ def make_sample_current(experiment_name, sample_name):
     sample_doc = expdb['samples'].find_one({"name": sample_name})
     if not sample_doc:
         return (False, "Sample %s does not exist" % sample_name)
+    validation, erromsg = validate_with_modal_params("samples", sample_doc)
+    if not validation:
+        return validation, erromsg
 
     expdb.current.find_one_and_update({"_id": "sample"}, {"$set": { "_id": "sample", "sample" : sample_doc["_id"] }} , upsert=True)
     return (True, "")
@@ -999,6 +1005,22 @@ def get_modal_param_definitions(modal_type):
     """
     sitedb = logbookclient["site"]
     return sitedb["modal_params"].find_one({"_id": modal_type})
+
+def validate_with_modal_params(modal_type, business_obj):
+    """
+    Validate a business object against any modal param definitions for this site.
+    Returns a boolean/errormsg tuple.
+    """
+    modal_defs = get_modal_param_definitions(modal_type)
+    for required_param in [ x["param_name"] for x in modal_defs["params"] if x.get("required", False) ]:
+        if required_param not in business_obj["params"]:
+            logger.error("Missing params.%s in %s", required_param, business_obj)
+            return False, "One of the required parameters {} was not specified".format(required_param)
+    for num_param in [ x["param_name"] for x in modal_defs["params"] if x.get("param_type", "string") in ["int", "float"] ]:
+        if not isinstance(business_obj["params"].get(num_param, 0), int) and not isinstance(business_obj["params"].get(num_param, 0), float):
+            logger.error("params.%s is not an int/float in %s", num_param, business_obj)
+            return False, "The parameter {} is not an number".format(num_param)
+    return True, ""
 
 def register_file_for_experiment(experiment_name, info):
     """
