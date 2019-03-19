@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import datetime
 import dateutil.relativedelta
 import logging
@@ -29,6 +30,8 @@ def init_app(app):
         logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] );
     global roles_with_post_privileges
     roles_with_post_privileges = [x["name"] for x in logbookclient["site"]["roles"].find({"app": "LogBook", "privileges": { "$in": ["post"] }}, {"name": 1, "_id": 0})]
+    __load_experiment_names()
+
     scheduler = sched.scheduler()
     __establish_kafka_consumers()
 
@@ -120,6 +123,13 @@ def text_search_for_experiments(search_terms):
     return sorted(matching_entries, key=lambda x : x["name"])
 
 
+def __load_experiment_names():
+    """ We cache the list of experimemt names to speedup authz/other operations.
+    This reloads the cached list of experiment names from the explgbk_cache
+    """
+    global all_experiment_names
+    all_experiment_names.update([x["name"] for x in logbookclient['explgbk_cache']['experiments'].find({}, {"name": 1, "_id":0})])
+
 def __update_experiments_info():
     """
     Since we are using an database per experiment, getting basic information that spans experiments can take some time.
@@ -171,16 +181,25 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
         else:
             logger.debug("No runs in experiment " + experiment_name)
         if 'file_catalog' in collnames:
-            f_file = list(expdb['file_catalog'].find({}).sort([("create_timestamp", -1)]).limit(1))
-            l_file = list(expdb['file_catalog'].find({}).sort([("create_timestamp", 1)]).limit(1))
+            def asTime(val):
+                if not val:
+                    return None
+                elif isinstance(val[0]["create_timestamp"], datetime.datetime):
+                    return val[0]["create_timestamp"]
+                elif isinstance(val[0]["create_timestamp"], str):
+                    return datetime.datetime.strptime(val[0]["create_timestamp"], '%Y-%m-%dT%H:%M:%SZ')
+                else:
+                    return None
+            f_file = asTime(list(expdb['file_catalog'].find({}).sort([("create_timestamp", -1)]).limit(1)))
+            l_file = asTime(list(expdb['file_catalog'].find({}).sort([("create_timestamp", 1)]).limit(1)))
             if f_file and l_file:
                 attrs = ['years', 'months', 'days', 'hours', 'minutes']
                 human_readable_diff = lambda delta: ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1]) for attr in attrs if getattr(delta, attr)]
                 expinfo['file_timestamps']  = {
-                    "first_file_ts": f_file[0]["create_timestamp"],
-                    "last_file_ts": l_file[0]["create_timestamp"],
-                    "duration": (l_file[0]["create_timestamp"] - f_file[0]["create_timestamp"]).total_seconds(),
-                    "hr_duration": human_readable_diff(dateutil.relativedelta.relativedelta (f_file[0]["create_timestamp"], l_file[0]["create_timestamp"]))
+                    "first_file_ts": f_file,
+                    "last_file_ts": l_file,
+                    "duration": (l_file - f_file).total_seconds(),
+                    "hr_duration": human_readable_diff(dateutil.relativedelta.relativedelta (f_file, l_file))
                 }
 
             dataSummary = [x for x in expdb['file_catalog'].aggregate([ { "$group" :

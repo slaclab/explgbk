@@ -12,9 +12,9 @@
                 <th data_attr="file_timestamps.first_file_ts">First File</th>
                 <th data_attr="file_timestamps.last_file_ts">Last File</th>
                 <th data_attr="file_timestamps.duration">Duration</th>
+                <th data_attr="totalDataSize">Total data(GB)</th>
                 <th data_attr="contact_info">PI</th>
                 <th data_attr="leader_account">Leader Account</th>
-                <th data_attr="description">Description</th>
             </tr></thead>
             <tbody></tbody>
         </table>
@@ -33,9 +33,9 @@ $("#exp_summary_tab").on("lg.loaded.bs.tab", function() {
           <td> {{#FormatDate}}{{file_timestamps.first_file_ts }}{{/FormatDate}} </td>
           <td> {{#FormatDate}}{{file_timestamps.last_file_ts}}{{/FormatDate}} </td>
           <td> {{ file_timestamps.hr_duration }} </td>
+          <td> {{#FormatNum}}{{ totalDataSize }}{{/FormatNum}} </td>
           <td> {{ contact_info }} </td>
           <td> {{ leader_account }} </td>
-          <td> {{ description }} </td>
       </tr>{{/value}}`;
     Mustache.parse(exper_template);
 
@@ -44,6 +44,7 @@ $("#exp_summary_tab").on("lg.loaded.bs.tab", function() {
         if(!$("#exp_summary_tab").data("cur_sort_desc")) { sorted_exps = _.reverse(sorted_exps); }
         var expdata = { value: sorted_exps };
         expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+        expdata.FormatNum = function() { return function(numLiteral, render) { var num = render(numLiteral); return _.toNumber(num).toFixed(2)}};
         var rendered = Mustache.render(exper_template, expdata);
         $("#exp_summary_tab tbody").html(rendered);
     }
