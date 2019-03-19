@@ -59,7 +59,7 @@
         <li><a data-toggle="tab" data-url="../static/html/ops/experiments.html" href="#experiments">Experiments</a></li>
         <li><a data-toggle="tab" data-url="../static/html/ops/instruments.html" href="#instruments">Instruments</a></li>
         <li><a data-toggle="tab" data-url="../static/html/ops/exp_summary.html" href="#summary">Summary</a></li>
-        <li><a data-toggle="tab" data-url="../static/html/ops/data_movement.html" href="#data_mov">Data Movement</a></li>
+        <li class="sitespecific"><a data-toggle="tab" data-url="../static/html/ops/data_movement.html" href="#data_mov">Data Movement</a></li>
       </ul>
     </div>
     <div class="tab_title_bar">
@@ -74,12 +74,11 @@
   <div role="tabpanel" class="tab-pane fade" id="experiments"></div>
   <div role="tabpanel" class="tab-pane fade" id="instruments"></div>
   <div role="tabpanel" class="tab-pane fade" id="summary"></div>
-  <div role="tabpanel" class="tab-pane fade" id="data_mov"></div>
+  <div role="tabpanel" class="tab-pane fade sitespecific" id="data_mov"></div>
 </div>
 
 <script type="text/javascript">
-
-$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+var showTab = function (e) {
     var target = $(e.target).attr("href");
     history.pushState(null, null, e.target.hash)
     if ($(target).is(':empty')) {
@@ -103,18 +102,29 @@ $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $("#toolbar_for_tab").empty();
         $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
     }
-});
-
-
-// Code for honoring the hash; for example URL#eLog gets you to the eLog
-if(_.has(sessionStorage, 'ops_active_tab') ) {
-  $('ul.nav a[href="#' + sessionStorage['ops_active_tab'] + '"]').tab('show');
-  sessionStorage.removeItem("ops_active_tab");
-} else if (window.location.hash) {
-  $('ul.nav a[href="' + window.location.hash + '"]').tab('show');
-} else {
-	$('.navbar-nav a:first').tab('show');
 }
+
+$.getJSON('../static/json/sitespecific_ops_tabs_' + logbook_site + ".json")
+.done(function(tabs) {
+    {% raw %}
+    var ssnavtmpl = `{{#.}}<li><a data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
+    var ssnavpnltmpl = `{{#.}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/.}}`;
+    {% endraw %}
+    Mustache.parse(ssnavtmpl); Mustache.parse(ssnavpnltmpl);
+    $("#myNavbar").find(".sitespecific").after(Mustache.render(ssnavtmpl, tabs));
+    $("#myTabContainer").find(".sitespecific").after(Mustache.render(ssnavpnltmpl, tabs));
+}).always(function(){
+    $('a[data-toggle="tab"]').on('shown.bs.tab', showTab);
+    // Code for honoring the hash; for example URL#eLog gets you to the eLog
+    if(_.has(sessionStorage, 'ops_active_tab') ) {
+      $('ul.nav a[href="#' + sessionStorage['ops_active_tab'] + '"]').tab('show');
+      sessionStorage.removeItem("ops_active_tab");
+    } else if (window.location.hash) {
+      $('ul.nav a[href="' + window.location.hash + '"]').tab('show');
+    } else {
+    	$('.navbar-nav a:first').tab('show');
+    }
+});
 
 </script>
 

@@ -1,0 +1,7 @@
+[
+    {
+        "id": "schedule",
+        "label": "Schedule",
+        "data-url": "../static/html/tabs/ops_iframe.html"
+    }
+]
