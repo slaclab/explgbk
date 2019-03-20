@@ -2,6 +2,7 @@ import os
 import json
 import time
 import datetime
+import pytz
 import dateutil.relativedelta
 import logging
 import re
@@ -16,7 +17,7 @@ from bson import ObjectId
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
-from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, usergroups
+from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, usergroups, kafka_producer
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -27,7 +28,10 @@ roles_with_post_privileges = []
 
 def init_app(app):
     if 'experiments' not in list(logbookclient['explgbk_cache'].collection_names()):
-        logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] );
+        logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] )
+    if 'operations' not in list(logbookclient['explgbk_cache'].collection_names()):
+        logbookclient['explgbk_cache']['operations'].create_index( [("name", DESCENDING)], unique=True)
+        logbookclient['explgbk_cache']['operations'].insert_one({"name": "explgbk_cache_rebuild", "initiated": datetime.datetime.utcfromtimestamp(0.0), "completed": datetime.datetime.utcfromtimestamp(0.0)})
     global roles_with_post_privileges
     roles_with_post_privileges = [x["name"] for x in logbookclient["site"]["roles"].find({"app": "LogBook", "privileges": { "$in": ["post"] }}, {"name": 1, "_id": 0})]
     __load_experiment_names()
@@ -38,7 +42,12 @@ def init_app(app):
     def __periodic(scheduler, interval, action, actionargs=()):
         # This is the function that runs periodically
         scheduler.enter(interval, 1, __periodic, (scheduler, interval, action, actionargs))
-        action(*actionargs)
+        last_rebuild = logbookclient['explgbk_cache']['operations'].find_one({"name": "explgbk_cache_rebuild"})
+        db_time_utc = logbookclient["explgbk_cache"].command("serverStatus")["localTime"].replace(tzinfo=pytz.UTC)
+        if (db_time_utc - last_rebuild["initiated"]).total_seconds() > interval:
+            action(*actionargs)
+        else:
+            logger.info("Skipping the periodic cache rebuild as we rebuilt the cache at %s within the specified interval %s", last_rebuild["initiated"], interval)
 
     def __kickoff_cache_update_thread():
         # This runs in a background thread; the scheduler.run is blocking and will block forever.
@@ -138,8 +147,14 @@ def __update_experiments_info():
     """
     logger.info("Updating the experiment info cached in 'explgbk_cache'.")
     database_names = list(logbookclient.database_names())
+    db_time_utc = logbookclient["explgbk_cache"].command("serverStatus")["localTime"].replace(tzinfo=pytz.UTC)
+    logbookclient['explgbk_cache']['operations'].update_one({"name": "explgbk_cache_rebuild"}, {"$set": {"initiated": db_time_utc}})
     for experiment_name in database_names:
         __update_single_experiment_info(experiment_name)
+        db_time_utc = logbookclient["explgbk_cache"].command("serverStatus")["localTime"].replace(tzinfo=pytz.UTC)
+        logbookclient['explgbk_cache']['operations'].update_one({"name": "explgbk_cache_rebuild"}, {"$set": {"completed": db_time_utc}})
+    kafka_producer.send("explgbk_cache", { "cache_rebuild": True } )
+
 
 def __update_single_experiment_info(experiment_name, crud="Update"):
     """
@@ -232,17 +247,20 @@ def __establish_kafka_consumers():
     """
     def subscribe_kafka():
         consumer = KafkaConsumer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")])
-        consumer.subscribe(["runs", "experiments", "roles"])
+        consumer.subscribe(["runs", "experiments", "roles", "explgbk_cache"])
 
         for msg in consumer:
             logger.info("Message from Kafka %s", msg)
             info = json.loads(msg.value)
             logger.info("JSON from Kafka %s", info)
             message_type = msg.topic
-            experiment_name = info['experiment_name']
-            crud = info.get("CRUD", "Update")
-            # No matter what the message type is, we reload the experiment info.
-            __update_single_experiment_info(experiment_name, crud=crud)
+            if message_type == "explgbk_cache":
+                __load_experiment_names()
+            elif 'experiment_name' in info:
+                experiment_name = info['experiment_name']
+                crud = info.get("CRUD", "Update")
+                # No matter what the message type is, we reload the experiment info.
+                __update_single_experiment_info(experiment_name, crud=crud)
 
     # Create thread for kafka consumer
     kafka_client_thread = threading.Thread(target=subscribe_kafka)
