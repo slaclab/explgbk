@@ -212,7 +212,7 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
                 expinfo['totalDataSize'] = dataSummary[0]['totalDataSize']
                 expinfo['totalFiles'] = dataSummary[0]['totalFiles']
             dataDailyBreakdown = [x for x in expdb['file_catalog'].aggregate([
-                    {"$group": { "_id": {"$dateToParts": { "date": "$create_timestamp"}}, "total_size": {"$sum": "$size"}}},
+                    {"$group": { "_id": {"$dateToParts": { "date": {"$convert": { "input": "$create_timestamp", "to": "date" }}}}, "total_size": {"$sum": "$size"}}},
                     {"$project": { "_id.year": 1, "_id.month": 1, "_id.day": 1, "total_size": 1 }},
                     {"$group": { "_id": {"$dateFromParts": { "year": "$_id.year", "month": "$_id.month", "day": "$_id.day" } }, "total_size": {"$sum": {"$divide": [ "$total_size", 1024*1024*1024]}}}}
                 ])]
