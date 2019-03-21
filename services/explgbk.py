@@ -1225,6 +1225,9 @@ def svc_register_file(experiment_name):
             logger.info("Associating file %s with current run %s", flinfo['path'], current_run_num)
             flinfo['run_num'] = current_run_num
 
+    def convert_timestamps(flinfo):
+        flinfo['create_timestamp'] = datetime.strptime(flinfo['create_timestamp'], '%Y-%m-%dT%H:%M:%SZ');
+        flinfo['modify_timestamp'] = datetime.strptime(flinfo['modify_timestamp'], '%Y-%m-%dT%H:%M:%SZ');
 
     if isinstance(info, list):
         ret_status = []
@@ -1235,6 +1238,7 @@ def svc_register_file(experiment_name):
                 continue
 
             attach_current_run(finfo)
+            convert_timestamps(finfo)
 
             (status, errormsg) = register_file_for_experiment(experiment_name, finfo)
             if status:
@@ -1249,6 +1253,7 @@ def svc_register_file(experiment_name):
             return logAndAbort("File registration missing keys %s" % missing_keys)
 
         attach_current_run(info)
+        convert_timestamps(info)
 
         (status, errormsg) = register_file_for_experiment(experiment_name, info)
         if status:
