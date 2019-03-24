@@ -73,6 +73,13 @@ def get_experiments():
     """
     return list(logbookclient['explgbk_cache']['experiments'].find({}))
 
+def get_cached_experiment_names():
+    """
+    Get the cached experiment names. Use for debugging.
+    """
+    global all_experiment_names
+    return list(all_experiment_names)
+
 def get_experiments_with_post_privileges(userid):
     """
     Get the list of experiments that the logged in user has post privileges for.

@@ -48,7 +48,7 @@ from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
 from dal.exp_cache import get_experiments, does_experiment_exist, reload_cache as reload_experiment_cache, \
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
-    get_experiments_with_post_privileges
+    get_experiments_with_post_privileges, get_cached_experiment_names
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -180,6 +180,14 @@ def svc_get_experiments_with_post_privileges():
     """
     userid = context.security.get_current_user_id()
     return jsonify({'success': True, 'value': get_experiments_with_post_privileges(userid)})
+
+@explgbk_blueprint.route("/lgbk/ws/get_cached_experiment_names", methods=["GET"])
+def svc_get_cached_experiment_names():
+    """
+    Get a list of the cached experiment names.
+    Mainly meant for debugging.
+    """
+    return jsonify({'success': True, 'value': get_cached_experiment_names()})
 
 @explgbk_blueprint.route("/lgbk/ws/instruments", methods=["GET"])
 @context.security.authentication_required
