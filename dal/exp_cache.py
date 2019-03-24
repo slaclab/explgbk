@@ -195,44 +195,47 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
                     }
         else:
             logger.debug("No runs in experiment " + experiment_name)
-        if 'file_catalog' in collnames:
-            def asTime(val):
-                if not val:
-                    return None
-                elif isinstance(val[0]["create_timestamp"], datetime.datetime):
-                    return val[0]["create_timestamp"]
-                elif isinstance(val[0]["create_timestamp"], str):
-                    return datetime.datetime.strptime(val[0]["create_timestamp"], '%Y-%m-%dT%H:%M:%SZ')
-                else:
-                    return None
-            f_file = asTime(list(expdb['file_catalog'].find({}).sort([("create_timestamp", -1)]).limit(1)))
-            l_file = asTime(list(expdb['file_catalog'].find({}).sort([("create_timestamp", 1)]).limit(1)))
-            if f_file and l_file:
-                attrs = ['years', 'months', 'days', 'hours', 'minutes']
-                human_readable_diff = lambda delta: ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1]) for attr in attrs if getattr(delta, attr)]
-                expinfo['file_timestamps']  = {
-                    "first_file_ts": f_file,
-                    "last_file_ts": l_file,
-                    "duration": (l_file - f_file).total_seconds(),
-                    "hr_duration": human_readable_diff(dateutil.relativedelta.relativedelta (f_file, l_file))
-                }
+        try:
+            if 'file_catalog' in collnames:
+                def asTime(val):
+                    if not val:
+                        return None
+                    elif isinstance(val[0]["create_timestamp"], datetime.datetime):
+                        return val[0]["create_timestamp"]
+                    elif isinstance(val[0]["create_timestamp"], str):
+                        return datetime.datetime.strptime(val[0]["create_timestamp"], '%Y-%m-%dT%H:%M:%SZ')
+                    else:
+                        return None
+                f_file = asTime(list(expdb['file_catalog'].find({}).sort([("create_timestamp", -1)]).limit(1)))
+                l_file = asTime(list(expdb['file_catalog'].find({}).sort([("create_timestamp", 1)]).limit(1)))
+                if f_file and l_file:
+                    attrs = ['years', 'months', 'days', 'hours', 'minutes']
+                    human_readable_diff = lambda delta: ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1]) for attr in attrs if getattr(delta, attr)]
+                    expinfo['file_timestamps']  = {
+                        "first_file_ts": f_file,
+                        "last_file_ts": l_file,
+                        "duration": (l_file - f_file).total_seconds(),
+                        "hr_duration": human_readable_diff(dateutil.relativedelta.relativedelta (f_file, l_file))
+                    }
 
-            dataSummary = [x for x in expdb['file_catalog'].aggregate([ { "$group" :
-                { "_id" : None,
-                    "totalDataSize": { "$sum": { "$divide": ["$size", 1024*1024*1024*1.0 ] } },
-                    "totalFiles": { "$sum": 1 }
-                }
-            } ])]
-            if dataSummary:
-                expinfo['totalDataSize'] = dataSummary[0]['totalDataSize']
-                expinfo['totalFiles'] = dataSummary[0]['totalFiles']
-            dataDailyBreakdown = [x for x in expdb['file_catalog'].aggregate([
-                    {"$group": { "_id": {"$dateToParts": { "date": {"$convert": { "input": "$create_timestamp", "to": "date" }}}}, "total_size": {"$sum": "$size"}}},
-                    {"$project": { "_id.year": 1, "_id.month": 1, "_id.day": 1, "total_size": 1 }},
-                    {"$group": { "_id": {"$dateFromParts": { "year": "$_id.year", "month": "$_id.month", "day": "$_id.day" } }, "total_size": {"$sum": {"$divide": [ "$total_size", 1024*1024*1024]}}}}
-                ])]
-            if dataDailyBreakdown:
-                logbookclient['explgbk_cache']['experiment_stats'].update({"_id": experiment_name}, { "_id": experiment_name, "dataDailyBreakdown": dataDailyBreakdown }, upsert=True)
+                dataSummary = [x for x in expdb['file_catalog'].aggregate([ { "$group" :
+                    { "_id" : None,
+                        "totalDataSize": { "$sum": { "$divide": ["$size", 1024*1024*1024*1.0 ] } },
+                        "totalFiles": { "$sum": 1 }
+                    }
+                } ])]
+                if dataSummary:
+                    expinfo['totalDataSize'] = dataSummary[0]['totalDataSize']
+                    expinfo['totalFiles'] = dataSummary[0]['totalFiles']
+                dataDailyBreakdown = [x for x in expdb['file_catalog'].aggregate([
+                        {"$group": { "_id": {"$dateToParts": { "date": {"$convert": { "input": "$create_timestamp", "to": "date" }}}}, "total_size": {"$sum": "$size"}}},
+                        {"$project": { "_id.year": 1, "_id.month": 1, "_id.day": 1, "total_size": 1 }},
+                        {"$group": { "_id": {"$dateFromParts": { "year": "$_id.year", "month": "$_id.month", "day": "$_id.day" } }, "total_size": {"$sum": {"$divide": [ "$total_size", 1024*1024*1024]}}}}
+                    ])]
+                if dataDailyBreakdown:
+                    logbookclient['explgbk_cache']['experiment_stats'].update({"_id": experiment_name}, { "_id": experiment_name, "dataDailyBreakdown": dataDailyBreakdown }, upsert=True)
+        except Exception as e:
+            logger.exception("Exception computing the file parameters")
 
         expinfo.update(info)
         logbookclient['explgbk_cache']['experiments'].update({"_id": experiment_name}, expinfo, upsert=True)
@@ -250,17 +253,22 @@ def __establish_kafka_consumers():
         consumer.subscribe(["runs", "experiments", "roles", "explgbk_cache"])
 
         for msg in consumer:
-            logger.info("Message from Kafka %s", msg)
-            info = json.loads(msg.value)
-            logger.info("JSON from Kafka %s", info)
-            message_type = msg.topic
-            if message_type == "explgbk_cache":
-                __load_experiment_names()
-            elif 'experiment_name' in info:
-                experiment_name = info['experiment_name']
-                crud = info.get("CRUD", "Update")
-                # No matter what the message type is, we reload the experiment info.
-                __update_single_experiment_info(experiment_name, crud=crud)
+            try:
+                logger.info("Message from Kafka %s", msg)
+                info = json.loads(msg.value)
+                logger.info("JSON from Kafka %s", info)
+                message_type = msg.topic
+                if message_type == "explgbk_cache":
+                    __load_experiment_names()
+                elif 'experiment_name' in info:
+                    experiment_name = info['experiment_name']
+                    crud = info.get("CRUD", "Update")
+                    # No matter what the message type is, we reload the experiment info.
+                    __update_single_experiment_info(experiment_name, crud=crud)
+                else:
+                    logger.error("Kafka message without an experiment name")
+            except Exception as e:
+                logger.exception("Exception processing Kafka message.")
 
     # Create thread for kafka consumer
     kafka_client_thread = threading.Thread(target=subscribe_kafka)
