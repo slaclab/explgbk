@@ -184,7 +184,7 @@ def rename_experiment(experiment_name, new_experiment_name):
     """
     if new_experiment_name in logbookclient.database_names():
         return (False, "Experiment %s has already been registered" % new_experiment_name)
-    if experiment_name in [x["name"] for x in get_currently_active_experiments()]:
+    if experiment_name in [x["name"] for x in get_currently_active_experiments() if "name" in x]:
         return (False, "Experiment %s is currently active" % experiment_name)
 
     logbookclient.admin.command('copydb', check=True, fromdb=experiment_name, todb=new_experiment_name)
