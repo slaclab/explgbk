@@ -1012,6 +1012,8 @@ def validate_with_modal_params(modal_type, business_obj):
     Returns a boolean/errormsg tuple.
     """
     modal_defs = get_modal_param_definitions(modal_type)
+    if not modal_defs:
+        return True, ""
     for required_param in [ x["param_name"] for x in modal_defs["params"] if x.get("required", False) ]:
         if required_param not in business_obj["params"]:
             logger.error("Missing params.%s in %s", required_param, business_obj)
