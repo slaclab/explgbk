@@ -43,7 +43,7 @@ def init_app(app):
         # This is the function that runs periodically
         scheduler.enter(interval, 1, __periodic, (scheduler, interval, action, actionargs))
         last_rebuild = logbookclient['explgbk_cache']['operations'].find_one({"name": "explgbk_cache_rebuild"})
-        db_time_utc = logbookclient["explgbk_cache"].command("serverStatus")["localTime"].replace(tzinfo=pytz.UTC)
+        db_time_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
         if (db_time_utc - last_rebuild["initiated"]).total_seconds() > interval:
             action(*actionargs)
         else:
@@ -154,11 +154,11 @@ def __update_experiments_info():
     """
     logger.info("Updating the experiment info cached in 'explgbk_cache'.")
     database_names = list(logbookclient.database_names())
-    db_time_utc = logbookclient["explgbk_cache"].command("serverStatus")["localTime"].replace(tzinfo=pytz.UTC)
+    db_time_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
     logbookclient['explgbk_cache']['operations'].update_one({"name": "explgbk_cache_rebuild"}, {"$set": {"initiated": db_time_utc}})
     for experiment_name in database_names:
         __update_single_experiment_info(experiment_name)
-        db_time_utc = logbookclient["explgbk_cache"].command("serverStatus")["localTime"].replace(tzinfo=pytz.UTC)
+        db_time_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
         logbookclient['explgbk_cache']['operations'].update_one({"name": "explgbk_cache_rebuild"}, {"$set": {"completed": db_time_utc}})
     kafka_producer.send("explgbk_cache", { "cache_rebuild": True } )
 
