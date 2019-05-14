@@ -19,8 +19,8 @@ __author__ = 'mshankar@slac.stanford.edu'
 # Application context.
 app = None
 
-MONGODB_HOST=os.environ['MONGODB_HOST'] or "localhost"
-MONGODB_PORT=int(os.environ['MONGODB_PORT']) or 27017
+MONGODB_HOST=os.environ.get('MONGODB_HOST', "localhost")
+MONGODB_PORT=int(os.environ.get('MONGODB_PORT'], 27017))
 MONGODB_HOSTS=os.environ.get("MONGODB_HOSTS", None)
 if MONGODB_HOSTS:
     MONGODB_HOSTS = MONGODB_HOSTS.split(",")
