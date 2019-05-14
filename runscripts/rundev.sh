@@ -37,7 +37,7 @@ export SERVER_IP_PORT=${SERVER_IP_PORT:-"0.0.0.0:5000"}
 
 
 # The exec assumes you are calling this from supervisord. If you call this from the command line; your bash shell is proabably gone and you need to log in.
-exec gunicorn start:app -b ${SERVER_IP_PORT} --worker-class eventlet --reload \
+exec gunicorn start:app -b ${SERVER_IP_PORT} --worker-class eventlet --no-sendfile --reload \
        --log-level=DEBUG --env DEBUG=TRUE --capture-output --enable-stdio-inheritance \
        --timeout 300 --graceful-timeout 1 \
        --access-logfile - --access-logformat "${ACCESS_LOG_FORMAT}"
