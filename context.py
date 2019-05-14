@@ -19,8 +19,13 @@ __author__ = 'mshankar@slac.stanford.edu'
 # Application context.
 app = None
 
-MONGODB_HOST=os.environ['MONGODB_HOST'] or localhost
+MONGODB_HOST=os.environ['MONGODB_HOST'] or "localhost"
 MONGODB_PORT=int(os.environ['MONGODB_PORT']) or 27017
+MONGODB_HOSTS=os.environ.get("MONGODB_HOSTS", None)
+if MONGODB_HOSTS:
+    MONGODB_HOSTS = MONGODB_HOSTS.split(",")
+else:
+    MONGODB_HOSTS = [ MONGODB_HOST + ":" + str(MONGODB_PORT) ]
 MONGODB_USERNAME=os.environ['MONGODB_USERNAME'] or 'roleReader'
 MONGODB_PASSWORD=os.environ['MONGODB_PASSWORD'] or 'slac123'
 
@@ -40,13 +45,13 @@ PREVIEW_PREFIX_SHARED_SECRET = os.environ.get('PREVIEW_PREFIX_SHARED_SECRET', "S
 
 
 # Set up the security manager
-mongorolereaderclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, authSource="admin", tz_aware=True)
+mongorolereaderclient = MongoClient(host=MONGODB_HOSTS, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, authSource="admin", tz_aware=True)
 usergroups = UserGroups()
 roleslookup = MongoDBRoles(mongorolereaderclient, usergroups)
 security = FlaskAuthnz(roleslookup, "LogBook")
 ldapadminsecurity = FlaskAuthnz(roleslookup, "LDAP")
 
-logbookclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_ADMIN_USERNAME, password=MONGODB_ADMIN_PASSWORD, authSource="admin", tz_aware=True)
+logbookclient = MongoClient(host=MONGODB_HOSTS, username=MONGODB_ADMIN_USERNAME, password=MONGODB_ADMIN_PASSWORD, authSource="admin", tz_aware=True)
 
 
 def __getKafkaProducer():
