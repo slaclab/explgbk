@@ -455,7 +455,7 @@ def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
         imgurl = isloc['publicUrl'] + isloc['fid']
         logger.info("Posting attachment %s to URL %s", filename, imgurl)
         files = {'file': (filename, filestorage.stream, filestorage.mimetype, {'Content-Disposition' : 'inline; filename=%s' % filename})}
-        requests.put(imgurl, files=files)
+        requests.post(imgurl, files=files)
         attachment = {"_id": ObjectId(), "name" : filename, "type": filestorage.mimetype, "url" : imgurl }
 
         # We get the data back from the image server; this is to make sure the content did make it there; also the stream is probably in an inconsistent state
@@ -473,7 +473,7 @@ def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
                     thmb_imgurl = thmb_isloc['publicUrl'] + thmb_isloc['fid']
                     logger.info("Posting attachment thumbnail %s to URL %s", tf_thmbname, thmb_imgurl)
                     thmb_files = {'file': (filename, thmb_s, "image/png", {'Content-Disposition' : 'inline; filename=%s' % "preview_" + filename})}
-                    requests.put(thmb_imgurl, files=thmb_files)
+                    requests.post(thmb_imgurl, files=thmb_files)
                     attachment["preview_url"] = thmb_imgurl
             else:
                 logger.warn("Skipping generating a thumbnail for %s for experiment %s", filename, experiment_name)
