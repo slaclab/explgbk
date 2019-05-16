@@ -10,7 +10,7 @@
 <script type="text/javascript">
 $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
   var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}`;
-  var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-responsive table-condensed"><thead></thead><tbody></tbody></table>`;
+  var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-responsive table-condensed sticky-table"><thead></thead><tbody></tbody></table>`;
   var run_tbl_def_tr = `<tr>
     <td><input name="label" class="nonblank"/></td>
     <td><select name="type" class="rtbl_def_category_select nonblank"><option value="">&nbsp;</option></select></td>
@@ -215,6 +215,10 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         var rowRendered = renderRunData(tblRndr, runData);
         tblRndr.find("tbody").append(rowRendered);
         $("#rtbl_content").html(tblRndr);
+        var thead_top = $("#rtbl_content .sticky-table thead")[0].getBoundingClientRect().top;
+        $.each($("#rtbl_content .sticky-table thead th"), function(){
+            $(this).css({"top": $(this)[0].getBoundingClientRect().top - thead_top + "px"});
+        })
       })
       .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception getting data " + jqXHR.responseText)});
       if(tblDef['is_editable']) { $("#edit_rtbl_btn").show(); $("#del_rtbl_btn").show(); } else { $("#edit_rtbl_btn").hide(); $("#del_rtbl_btn").hide();}

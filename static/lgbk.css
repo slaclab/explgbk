@@ -501,6 +501,11 @@ label {
 #rtbl_content table {
   width: 100%;
 }
+#rtbl_content .sticky-table thead tr th {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+}
 #rtbl_content table thead tr th {
   overflow: hidden;
   white-space: nowrap;
