@@ -230,6 +230,24 @@ def svc_get_active_experiments():
     """
     return JSONEncoder().encode({'success': True, 'value': get_currently_active_experiments()})
 
+@explgbk_blueprint.route("/lgbk/ws/activeexperiment_for_instrument_station", methods=["GET"])
+@context.security.authentication_required
+def svc_get_active_experiment_for_instrument_station():
+    """
+    Get the currently active experiment for a particular instrument/station.
+    :param: instrument_name - Name of the instrument, for example XPP
+    :param: station - Station number; defaults to 0.
+    """
+    instrument_name = request.args.get("instrument_name", None)
+    if not instrument_name:
+        return logAndAbort("Please pass in the instrument name, for example, XPP")
+    station_num = int(request.args.get("station", "0"))
+    active_experiment = [x for x in filter(lambda x : x["instrument"] == instrument_name and x["station"] == station_num, get_currently_active_experiments())]
+    if len(active_experiment) == 1:
+        return JSONEncoder().encode({'success': True, 'value': active_experiment[0]})
+    else:
+        return logAndAbort("Cannot find a valid active experiment for %s/%s, found %s" % (instrument_name, station_num, active_experiment))
+
 
 @explgbk_blueprint.route("/lgbk/ws/usergroups", methods=["GET"])
 @context.security.authentication_required
