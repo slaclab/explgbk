@@ -13,6 +13,7 @@ from pymongo import ASCENDING, DESCENDING, ReturnDocument
 from bson import ObjectId
 
 from context import logbookclient
+from dal.utils import escape_chars_for_mongo
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -68,6 +69,17 @@ def get_run_doc_for_run_num(experiment_name, run_num):
     if run_doc:
         return run_doc
     return None
+
+def get_specified_run_params_for_all_runs(experiment_name, run_params):
+    """
+    Get the specified run parameters for all runs in the experiment.
+    For now, this only includes the non-editable parameters submitted by the DAQ.
+    """
+    expdb = logbookclient[experiment_name]
+    projection_op = {"num": 1}
+    for run_param in run_params:
+        projection_op["params." + escape_chars_for_mongo(run_param)] = 1
+    return [x for x in expdb.runs.find({}, projection_op)]
 
 def get_sample_for_run(experiment_name, run_num):
     """

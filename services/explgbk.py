@@ -42,7 +42,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe, get_elog_email_subscriptions_emails, \
     get_poc_feedback_changes, add_poc_feedback_item
 
-from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run
+from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
+    get_specified_run_params_for_all_runs
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
@@ -1413,3 +1414,21 @@ def add_feedback_item(experiment_name):
 
     add_poc_feedback_item(experiment_name, item_name, item_value, context.security.get_current_user_id())
     return JSONEncoder().encode({"success": True})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_run_params_for_all_runs", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_specified_run_params_for_all_runs(experiment_name):
+    """
+    Get the specified run parameters for all runs in the experiment.
+    For now, this only includes the non-editable parameters submitted by the DAQ.
+    Specify the run parameters as a comma separated list in the parameter param_names
+    For EPICS fields, watch out for character encoding issues. 
+    """
+    param_names_str = request.args.get("param_names", None)
+    if not param_names_str:
+        return logAndAbort("Please specify the run parameters as a comma separated list in the parameter param_names)")
+    param_names = param_names_str.split(",")
+    param_values = get_specified_run_params_for_all_runs(experiment_name, param_names)
+    return JSONEncoder().encode({"success": True, "value": param_values})
