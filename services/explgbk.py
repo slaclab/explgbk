@@ -1236,15 +1236,17 @@ def svc_make_sample_current(experiment_name):
 @context.security.authorization_required("post")
 def svc_register_file(experiment_name):
     """
-    Registers a new file with the data management service.
+    Registers a new file with the logbook.
     Pass in the JSON document for the file; this has the path, run_num, checksum, create_timestamp, modify_timestamp and size.
+    The path is a necessary key; the rest are optional.
+    We convert timestamps to Python datetimes; we expect the date time in Javascript UTC format
     If the run_num is not present, we associate the file with the current run.
     """
     info = request.json
     if not info:
         return logAndAbort("Please pass in the file json to register a new file.")
 
-    necessary_keys = set(['path', 'run_num', 'checksum', 'create_timestamp', 'modify_timestamp', 'size'])
+    necessary_keys = set(['path'])
 
     def attach_current_run(flinfo):
         if 'run_num' not in flinfo.keys():
@@ -1253,8 +1255,13 @@ def svc_register_file(experiment_name):
             flinfo['run_num'] = current_run_num
 
     def convert_timestamps(flinfo):
-        flinfo['create_timestamp'] = datetime.strptime(flinfo['create_timestamp'], '%Y-%m-%dT%H:%M:%SZ');
-        flinfo['modify_timestamp'] = datetime.strptime(flinfo['modify_timestamp'], '%Y-%m-%dT%H:%M:%SZ');
+        for k in flinfo.keys():
+            if k.endswith('_timestamp'):
+                flinfo[k] = datetime.strptime(flinfo[k], '%Y-%m-%dT%H:%M:%SZ');
+        if 'create_timestamp' not in flinfo:
+            flinfo['create_timestamp'] = datetime.utcnow()
+        if 'modify_timestamp' not in flinfo:
+            flinfo['modify_timestamp'] = datetime.utcnow()
 
     if isinstance(info, list):
         ret_status = []
@@ -1424,7 +1431,7 @@ def svc_get_specified_run_params_for_all_runs(experiment_name):
     Get the specified run parameters for all runs in the experiment.
     For now, this only includes the non-editable parameters submitted by the DAQ.
     Specify the run parameters as a comma separated list in the parameter param_names
-    For EPICS fields, watch out for character encoding issues. 
+    For EPICS fields, watch out for character encoding issues.
     """
     param_names_str = request.args.get("param_names", None)
     if not param_names_str:
