@@ -1069,8 +1069,8 @@ def svc_add_run_params(experiment_name):
     else:
         current_run_doc = get_current_run(experiment_name)
 
-    if current_run_doc['end_time']:
-        return logAndAbort("The current run %s is closed for experiment %s" % (current_run_doc['num'], experiment_name))
+    # if current_run_doc['end_time']:
+    #     return logAndAbort("The current run %s is closed for experiment %s" % (current_run_doc['num'], experiment_name))
 
     params = request.json
     run_params = {"params." + escape_chars_for_mongo(k) : v for k, v in params.items() }
