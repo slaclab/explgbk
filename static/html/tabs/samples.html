@@ -105,18 +105,18 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
     })
   }
   var clone_sample = function(existing_sample_name) {
-      $.ajax("../../static/html/ms/sampleclone.html")
+      $.ajax("../../static/html/ms/gen_clone.html")
       .done(function(tmpl){
           Mustache.parse(tmpl);
-          var rendered = $(Mustache.render(tmpl, {existing_sample_name: existing_sample_name}));
-          rendered.find("#sample_clone").on("click", function(e){
+          var rendered = $(Mustache.render(tmpl, {object_type: "sample", existing_object_name: existing_sample_name}));
+          rendered.find("#obj_clone_btn").on("click", function(e){
               console.log("Cloning");
               e.preventDefault();
               var formObj = $("#samples_tab").find("#mdl_holder").find("form");
               var validations = [
-                  [function() { return $.trim(formObj.find(".sample_name").val()) == ""; }, "Sample name cannot be blank."],
-                  [function() { return !/^[\w/_-]+$/.test($.trim(formObj.find(".sample_name").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
-                  [function() { return _.find($("#samples_tab").data("samples").value, function(shf){return shf.name == $.trim(formObj.find(".sample_name").val())}) != undefined }, "The sample name already exists."]
+                  [function() { return $.trim(formObj.find(".new_object_name").val()) == ""; }, "Sample name cannot be blank."],
+                  [function() { return !/^[\w/_-]+$/.test($.trim(formObj.find(".new_object_name").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
+                  [function() { return _.find($("#samples_tab").data("samples").value, function(shf){return shf.name == $.trim(formObj.find(".new_object_name").val())}) != undefined }, "The sample name already exists."]
               ];
               // Various validations
               var v_failed = false;
@@ -130,8 +130,8 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
                   }
               });
               if (v_failed) { e.preventDefault(); return; }
-              var sample_name = $.trim(formObj.find(".sample_name").val());
-              $.getJSON("ws/clone_sample"+ "?existing_sample_name=" + encodeURIComponent(existing_sample_name) + "&new_sample_name=" + encodeURIComponent($.trim(formObj.find(".sample_name").val())))
+              var sample_name = $.trim(formObj.find(".new_object_name").val());
+              $.getJSON("ws/clone_sample"+ "?existing_sample_name=" + encodeURIComponent(existing_sample_name) + "&new_sample_name=" + encodeURIComponent($.trim(formObj.find(".new_object_name").val())))
               .done(function(data, textStatus, jqXHR) {
                   if(data.success) {
                       console.log("Successfully cloned sample " + sample_name);

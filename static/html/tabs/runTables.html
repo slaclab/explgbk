@@ -2,14 +2,14 @@
  <ul class="nav nav-pills">
  </ul>
 
-
+<div class="mdl_holder"></div>
 <div class="container-fluid text-left" id="rtbl_content">
 </div>
 </div>
 
 <script type="text/javascript">
 $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
-  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}`;
+  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill {{#is_system_run_table}}rtbl_sys{{/is_system_run_table}}" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}`;
   var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-responsive table-condensed sticky-table"><thead></thead><tbody></tbody></table>`;
   var run_tbl_def_tr = `<tr>
     <td><input name="label" class="nonblank"/></td>
@@ -221,7 +221,19 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         })
       })
       .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception getting data " + jqXHR.responseText)});
-      if(tblDef['is_editable']) { $("#edit_rtbl_btn").show(); $("#del_rtbl_btn").show(); } else { $("#edit_rtbl_btn").hide(); $("#del_rtbl_btn").hide();}
+      if(_.get(roles, "is_editor", false)) {
+          $("#toolbar_for_tab").find(".tlbr").show();
+          $("#make_system_rtbl").hide();
+          if(_.get(tblDef, 'is_system_run_table', false)) {
+              $("#edit_rtbl").hide(); $("#make_system_rtbl").hide();
+          } else {
+              if(_.get(roles, "is_site_admin", false)) {
+                  $("#make_system_rtbl").show();
+              }
+          }
+      } else {
+          $("#toolbar_for_tab").find(".tlbr").hide();
+      }
     });
     rendered.find( _.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
     sessionStorage.removeItem("runtable_active_tab");
@@ -239,7 +251,105 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 
     $("#rtbl_tab").data("new_rtbl_fn", function(e) { col_defs_dialog(); });
     $("#rtbl_tab").data("edit_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); col_defs_dialog(clkRTblName); });
-    $("#rtbl_tab").data("del_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); $.getJSON({ url: "ws/delete_run_table?table_name=" + encodeURIComponent(clkRTblName), method: "DELETE"}).done(window.location.reload(true))});
+    $("#rtbl_tab").data("del_rtbl_fn", function(e) {
+        var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name");
+        $.ajax({ url: "ws/delete_run_table", "data": { table_name: clkRTblName, is_system_run_table: _.get($("#rtbl_tab").data("tblData")[clkRTblName], 'is_system_run_table', false)}, method: "DELETE"})
+        .done(function(data) { if(_.get(data, "success", true)) { window.location.reload(true); } else { alert("Server side error deleting run table " + data.errormsg); }})
+        .fail(function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure deleting run table " + textStatus); })
+    });
+    $("#rtbl_tab").data("clone_rtbl_fn", function(e) {
+        var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name");
+        $.ajax("../../static/html/ms/gen_clone.html")
+        .done(function(tmpl){
+            Mustache.parse(tmpl);
+            var t_tmpl = `Clone run table {{ existing_object_name }}`,
+                title = Mustache.render(t_tmpl, {existing_object_name: clkRTblName}),
+                rendered = $(Mustache.render(tmpl, {title: title, txtlbl: 'New run table name:', btnlbl: "Clone"}));
+            rendered.find("#obj_clone_btn").on("click", function(e){
+                console.log("Cloning a run table definition");
+                e.preventDefault();
+                var formObj = $("#rtbl_tab").find(".mdl_holder").find("form");
+                var validations = [
+                    [function() { return $.trim(formObj.find(".new_object_name").val()) == ""; }, "New object name cannot be blank."],
+                    [function() { return !/^([a-zA-Z0-9_-]+)$/.test($.trim(formObj.find(".new_object_name").val()))}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores only; please don't use spaces, periods etc."],
+                    [function() { return _.find($("#rtbl_tab").data("tblData"), function(shf){return shf.name == $.trim(formObj.find(".new_object_name").val())}) != undefined }, "The run table name already exists."]
+                ];
+                // Various validations
+                var v_failed = false;
+                _.each(validations, function(validation, i) {
+                    console.log("Trying validation " + i + "" + validation[1]);
+                    if(validation[0]()) {
+                        $("#rtbl_tab").find(".mdl_holder").find(".validation_message").html(validation[1]);
+                        $("#rtbl_tab").find(".mdl_holder").find(".validation_modal").modal("show");
+                        v_failed = true;
+                        return false;
+                    }
+                });
+                if (v_failed) { e.preventDefault(); return; }
+                $.getJSON({url: "ws/clone_run_table_def"+ "?existing_run_table_name=" + encodeURIComponent(clkRTblName) + "&new_run_table_name=" + encodeURIComponent($.trim(formObj.find(".new_object_name").val())), method: "POST"})
+                .done(function(data, textStatus, jqXHR) {
+                    if(data.success) {
+                        console.log("Successfully cloned run table " + clkRTblName);
+                        $("#rtbl_tab").find(".mdl_holder").find(".edit_modal").modal("hide");
+                        window.location.reload(true);
+                    } else {
+                        alert("Server side exception cloning run table " + data.errormsg);
+                    }
+                })
+                .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure cloning run table " + textStatus); })
+            });
+
+            $("#rtbl_tab").find(".mdl_holder").append(rendered);
+            $("#rtbl_tab").find(".mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#rtbl_tab").find(".mdl_holder").empty(); });
+            $("#rtbl_tab").find(".mdl_holder").find(".edit_modal").modal("show");
+        });
+    });
+    $("#rtbl_tab").data("make_system_rtbl", function(e) {
+        var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name");
+        $.ajax("../../static/html/ms/gen_clone.html")
+        .done(function(tmpl){
+            Mustache.parse(tmpl);
+            var t_tmpl = `Replace system run table with {{ existing_object_name }}`,
+                title = Mustache.render(t_tmpl, {existing_object_name: clkRTblName}),
+                rendered = $(Mustache.render(tmpl, {title: title, txtlbl: 'System run table name:', btnlbl: "Replace"}));
+            rendered.find("#obj_clone_btn").on("click", function(e){
+                console.log("Replacing system run table");
+                e.preventDefault();
+                var formObj = $("#rtbl_tab").find(".mdl_holder").find("form");
+                var validations = [
+                    [function() { return $.trim(formObj.find(".new_object_name").val()) == ""; }, "New object name cannot be blank."],
+                    [function() { return !/^([a-zA-Z0-9_-]+)$/.test($.trim(formObj.find(".new_object_name").val()))}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores only; please don't use spaces, periods etc."]
+                ];
+                // Various validations
+                var v_failed = false;
+                _.each(validations, function(validation, i) {
+                    console.log("Trying validation " + i + "" + validation[1]);
+                    if(validation[0]()) {
+                        $("#rtbl_tab").find(".mdl_holder").find(".validation_message").html(validation[1]);
+                        $("#rtbl_tab").find(".mdl_holder").find(".validation_modal").modal("show");
+                        v_failed = true;
+                        return false;
+                    }
+                });
+                if (v_failed) { e.preventDefault(); return; }
+                $.getJSON({url: "ws/replace_system_run_table_def"+ "?existing_run_table_name=" + encodeURIComponent(clkRTblName) + "&system_run_table_name=" + encodeURIComponent($.trim(formObj.find(".new_object_name").val())), method: "POST"})
+                .done(function(data, textStatus, jqXHR) {
+                    if(data.success) {
+                        console.log("Successfully replaced system run table with " + clkRTblName);
+                        $("#rtbl_tab").find(".mdl_holder").find(".edit_modal").modal("hide");
+                        window.location.reload(true);
+                    } else {
+                        alert("Server side exception replacing system run table " + data.errormsg);
+                    }
+                })
+                .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure replacing system run table " + textStatus); })
+            });
+
+            $("#rtbl_tab").find(".mdl_holder").append(rendered);
+            $("#rtbl_tab").find(".mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#rtbl_tab").find(".mdl_holder").empty(); });
+            $("#rtbl_tab").find(".mdl_holder").find(".edit_modal").modal("show");
+        });
+    });
 
     $("#rtbl_tab").on("lg.refresh", function() {
         $("#rtbl_tab").find(_.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
@@ -248,14 +358,20 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 });
 
 $("#rtbl_tab").on("lg.shown.bs.tab", function() {
-    var tab_toolbar = `<i class="fa fa-plus fa-lg" id="new_rtbl"></i>
-    <i class="fa fa-edit fa-lg" id="edit_rtbl"></i>
-    <i class="fa fa-trash fa-lg" id="del_rtbl"></i>`;
+    var tab_toolbar = `<i class="fa fa-plus fa-lg tlbr" id="new_rtbl"></i>
+    <i class="fa fa-edit fa-lg tlbr" id="edit_rtbl" title="Edit this run table"></i>
+    <i class="fa fa-clone fa-lg tlbr" id="clone_rtbl" title="Clone this run table"></i>
+    <i class="fa fa-trash fa-lg tlbr" id="del_rtbl" title="Delete this run table"></i>
+    <i class="fa fa-superpowers fa-lg tlbr" id="make_system_rtbl" title="Move this run table to the system run tables. These are visible to all experiments; the move will replace any system run table with the same name. This run table will be removed from this experiment."></i>
+    `;
     var toolbar_rendered = $(tab_toolbar);
+    if(!_.get(roles, "is_site_admin", false)) { toolbar_rendered.find("#make_system_rtbl").remove(); }
     $("#toolbar_for_tab").append(toolbar_rendered);
     $("#new_rtbl").on("click", function(e) { $("#rtbl_tab").data("new_rtbl_fn")(e)});
     $("#edit_rtbl").on("click", function(e) { $("#rtbl_tab").data("edit_rtbl_fn")(e)});
+    $("#clone_rtbl").on("click", function(e) { $("#rtbl_tab").data("clone_rtbl_fn")(e)});
     $("#del_rtbl").on("click", function(e) { $("#rtbl_tab").data("del_rtbl_fn")(e)});
+    $("#make_system_rtbl").on("click", function(e) { $("#rtbl_tab").data("make_system_rtbl")(e)});
 });
 
 </script>

@@ -26,11 +26,11 @@ if MONGODB_HOSTS:
     MONGODB_HOSTS = MONGODB_HOSTS.split(",")
 else:
     MONGODB_HOSTS = [ MONGODB_HOST + ":" + str(MONGODB_PORT) ]
-MONGODB_USERNAME=os.environ['MONGODB_USERNAME'] or 'roleReader'
-MONGODB_PASSWORD=os.environ['MONGODB_PASSWORD'] or 'slac123'
+MONGODB_USERNAME=os.environ.get('MONGODB_USERNAME', None) or 'roleReader'
+MONGODB_PASSWORD=os.environ.get('MONGODB_PASSWORD', None) or 'slac123'
 
-MONGODB_ADMIN_USERNAME=os.environ['MONGODB_ADMIN_USERNAME'] or 'admin'
-MONGODB_ADMIN_PASSWORD=os.environ['MONGODB_ADMIN_PASSWORD'] or 'slac123'
+MONGODB_ADMIN_USERNAME=os.environ.get('MONGODB_ADMIN_USERNAME', None) or 'admin'
+MONGODB_ADMIN_PASSWORD=os.environ.get('MONGODB_ADMIN_PASSWORD', None) or 'slac123'
 
 # This identifies the current deployment site.
 # Functionality that depends on the deployment location is based off this variable.

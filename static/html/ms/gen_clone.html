@@ -3,15 +3,15 @@
    <div class="modal-content">
      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
      <div class="modal-header">
-       <h4 class="modal-title">Clone sample {{ existing_sample_name }}</h4>
+       <h4 class="modal-title">{{title}}</h4>
      </div>
      <form class="register_form">
       <div class="form-group col-lg-8">
-       <label for="sample_name">New Sample Name:</label>
-       <input type="text" class="form-control sample_name">
+       <label for="new_object_name">New {{object_type}} name:</label>
+       <input type="text" class="form-control new_object_name">
       </div>
       <div class="modal-footer">
-          <button id="sample_clone" class="btn btn-default panel_btn">Clone</button>
+          <button id="obj_clone_btn" class="btn btn-default panel_btn">{{btnlbl}}</button>
       </div>
      </form>
  </div>

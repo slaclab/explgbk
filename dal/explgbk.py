@@ -668,7 +668,12 @@ def get_all_run_tables(experiment_name):
     expdb = logbookclient[experiment_name]
     sitedb = logbookclient["site"]
     allRunTables = []
-    allRunTables.extend([ r for r in sitedb["run_tables"].find()])
+    def mark_sys(x):
+        x["is_system_run_table"] = True
+        x["is_editable"] = False
+        return x
+    system_run_tables = [ mark_sys(r) for r in sitedb["run_tables"].find()]
+    allRunTables.extend(system_run_tables)
     summtables = {}
     pdescs = [ x for x in expdb['run_param_descriptions'].find( { "param_name": re.compile(r'.*\/.*') } ) ]
     mimes = { "params." + x["param_name"] : x["type"] for x in sitedb['run_param_descriptions'].find({"type": { "$exists": True }})}
@@ -824,6 +829,51 @@ def delete_run_table(experiment_name, table_name):
     expdb["run_tables"].delete_one({"name": table_name})
     return (True, "")
 
+def delete_system_run_table(experiment_name, table_name):
+    '''
+    Delete the specified system run table.
+    '''
+    sitedb = logbookclient["site"]
+    sitedb["run_tables"].delete_one({"name": table_name})
+    return (True, "")
+
+def clone_run_table_definition(experiment_name, existing_run_table_name, new_run_table_name):
+    """
+    Clone an existing run table definition.
+    """
+    expdb = logbookclient[experiment_name]
+    sitedb = logbookclient["site"]
+    existing_run_table = expdb["run_tables"].find_one({"name": existing_run_table_name})
+    if not existing_run_table:
+        existing_run_table = sitedb["run_tables"].find_one({"name": existing_run_table_name})
+    new_run_table = expdb["run_tables"].find_one({"name": new_run_table_name})
+    system_run_table = sitedb["run_tables"].find_one({"name": new_run_table_name})
+    if not existing_run_table:
+        return (False, "Cannot find existing run table %s " % existing_run_table_name, None)
+    if new_run_table or system_run_table:
+        return (False, "Run table %s already exists" % existing_run_table_name, None)
+    new_run_table = existing_run_table
+    del new_run_table["_id"]
+    new_run_table["name"] = new_run_table_name
+    expdb["run_tables"].insert_one(new_run_table)
+    return (True, "", expdb["run_tables"].find_one({"name": new_run_table_name}))
+
+def replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name):
+    """
+    Replace a system run table (defined in the site database) with a run table from this experiment.
+    This is a means to edit system run tables using the info available from this experiment.
+    """
+    expdb = logbookclient[experiment_name]
+    sitedb = logbookclient["site"]
+    existing_run_table = expdb["run_tables"].find_one({"name": existing_run_table_name})
+    if not existing_run_table:
+        return (False, "Cannot find existing run table %s " % existing_run_table_name, None)
+    new_run_table = existing_run_table
+    del new_run_table["_id"]
+    new_run_table["name"] = system_run_table_name
+    sitedb["run_tables"].replace_one({"name": system_run_table_name}, new_run_table, upsert=True)
+    expdb["run_tables"].delete_one({"name": existing_run_table_name})
+    return (True, "", sitedb["run_tables"].find_one({"name": system_run_table_name}))
 
 def update_editable_param_for_run(experiment_name, runnum, source, value, userid):
     '''

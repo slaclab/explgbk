@@ -21,6 +21,7 @@ from datetime import datetime
 import hashlib
 import urllib
 import base64
+import pytz
 
 import smtplib
 from email.message import EmailMessage
@@ -40,7 +41,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     instrument_standby, get_experiment_files_for_run, get_elog_authors, get_elog_entries_by_author, get_elog_tags, get_elog_entries_by_tag, \
     get_elogs_for_date_range, clone_sample, get_modal_param_definitions, lock_unlock_experiment, get_elog_emails, \
     get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe, get_elog_email_subscriptions_emails, \
-    get_poc_feedback_changes, add_poc_feedback_item
+    get_poc_feedback_changes, add_poc_feedback_item, clone_run_table_definition, replace_system_run_table_definition, \
+    delete_system_run_table
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs
@@ -910,6 +912,36 @@ def svc_get_runs(experiment_name):
     include_run_params = json.loads(request.args.get("includeParams", "true"))
     return JSONEncoder().encode({"success": True, "value": get_experiment_runs(experiment_name, include_run_params, sample_name=request.args.get("sampleName", None))})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs_for_calib", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_legacy_runs(experiment_name):
+    """
+    Accommodate the calibration service; and return run information similar to the old logbook.
+    We return information in the form
+    {
+        "begin_time": 1407350370,
+        "end_time": 1407350373,
+        "run_num": 32,
+        "run_type": "EPICS"
+    }
+    The times are im PDT.
+    """
+    run_infos_src = get_experiment_runs(experiment_name, False, sample_name=None)
+    tz = pytz.timezone('America/Los_Angeles')
+    run_infos = []
+    for ri in run_infos_src:
+        rinf = { "begin_time": int(ri["begin_time"].astimezone(tz).timestamp()),
+            "run_num": ri["num"],
+            "run_type": ri.get("type", "DATA")
+            }
+        if "end_time" in ri and ri["end_time"]:
+            rinf["end_time"] = int(ri["end_time"].astimezone(tz).timestamp())
+        run_infos.append(rinf)
+
+    return JSONEncoder().encode({"success": True, "value": run_infos})
+
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/shifts", methods=["GET"])
 @context.security.authentication_required
 @experiment_exists_and_unlocked
@@ -977,18 +1009,49 @@ def svc_run_table_editable_update(experiment_name):
     return JSONEncoder().encode({"success": True, "result": update_editable_param_for_run(experiment_name, runnum, source, value, userid)})
 
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/clone_run_table_def", methods=["POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_clone_run_table_def(experiment_name):
+    existing_run_table_name = request.args.get("existing_run_table_name", None)
+    new_run_table_name = request.args.get("new_run_table_name", None)
+    if not existing_run_table_name or not new_run_table_name:
+        return logAndAbort("Please specify the a table to clone along with the new name")
+    (status, errormsg, val) = clone_run_table_definition(experiment_name, existing_run_table_name, new_run_table_name)
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/replace_system_run_table_def", methods=["POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_replace_system_run_table_def(experiment_name):
+    existing_run_table_name = request.args.get("existing_run_table_name", None)
+    system_run_table_name = request.args.get("system_run_table_name", None)
+    if not existing_run_table_name or not system_run_table_name:
+        return logAndAbort("Please specify the a table to use as a replacement along with the system run table name")
+    (status, errormsg, val) = replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name)
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
+
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_run_table", methods=["DELETE"])
 @context.security.authentication_required
 @experiment_exists_and_unlocked
 @context.security.authorization_required("post")
 def svc_delete_run_table(experiment_name):
-    table_name = request.args.get("table_name", None)
+    table_name = request.values.get("table_name", None)
     if not table_name:
         return logAndAbort("Please specify the table name to delete.")
-    return JSONEncoder().encode({"success": True, "value": delete_run_table(experiment_name, table_name)})
-
-
-
+    is_system_run_table = json.loads(request.values.get("is_system_run_table", "False"))
+    if is_system_run_table:
+        logger.debug("Deleting system run table")
+        if context.roleslookup.has_slac_user_role(context.security.get_current_user_id(), "LogBook", "Editor", ":"):
+            status, errormsg = delete_system_run_table(experiment_name, table_name)
+            return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": None})
+        else:
+            return {"success": False, "errormsg": "Not enough permissions to perform this operation", "value": None}
+    else:
+        status, errormsg = delete_run_table(experiment_name, table_name)
+        return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": None})
 
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/start_run", methods=["GET", "POST"])
 @context.security.authentication_required
