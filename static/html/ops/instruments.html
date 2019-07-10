@@ -22,8 +22,8 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
       Mustache.parse(tmpl);
       instr_obj.paramkvs = _.map(instr_obj['params'], function(value, key) { return { key: key, value: value };});
       var rendered = $(Mustache.render(tmpl, instr_obj));
-      rendered.find(".fa-plus").on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
-      rendered.find(".fa-trash").on("click", function(){ $(this).closest("tr").remove(); });
+      rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
       if(_.has(instr_obj, '_id')) { rendered.find(".register_btn").text("Update");}
       rendered.find(".register_btn").on("click", function(e) {
         e.preventDefault();
@@ -84,10 +84,10 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
   $("#ops_instruments_tab").data("editcreatefn", editcreatefn);
 
   var instmpl = `{{#value}}<tr>
-        <td class="instrument_lbl" style="background:{{color}}; color:white; " >{{ _id }}</td>
+        <td class="instrument_lbl" style="background:{{color}}; color:{{#color}}white{{/color}}{{^color}}black{{/color}}; " >{{ _id }}</td>
         <td>{{ description }}</td>
         <td>{{ params.num_stations}}</td>
-        <td> <a class="editinsbtn" href="#"><i class="fa fa-edit"></i>&nbsp;</a> </td>
+        <td> <a class="editinsbtn" href="#"><i class="fas fa-edit"></i>&nbsp;</a> </td>
     </tr>{{/value}}`;
   Mustache.parse(instmpl);
   $.getJSON(instruments_url)
@@ -104,7 +104,7 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
   });
 
   $("#ops_instruments_tab").on("lg.shown.bs.tab", function() {
-      var tab_toolbar = `<i class="fa fa-plus fa-lg" id="new_instrument" title="Add a new instrument"></i>`;
+      var tab_toolbar = `<span id="new_instrument" title="Add a new instrument"><i class="fas fa-plus fa-lg"></i></span>`;
       var toolbar_rendered = $(tab_toolbar);
       $("#toolbar_for_tab").append(toolbar_rendered);
       $("#new_instrument").on("click", function(){ $("#ops_instruments_tab").data("editcreatefn")({})});

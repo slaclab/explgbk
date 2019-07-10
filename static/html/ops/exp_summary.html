@@ -4,7 +4,7 @@
     <div class="table-responsive">
         <table class="table table-condensed table-striped table-bordered">
             <thead><tr>
-                <th data_attr="name">Name<i class="fa fa-sort-desc"></i></th>
+                <th data_attr="name">Name<i class="fas fa-sort-down sric"></i></th>
                 <th data_attr="instrument">Instrument</th>
                 <th data_attr="first_run.begin_time">First Run</th>
                 <th data_attr="last_run.begin_time">Last Run</th>
@@ -62,13 +62,13 @@ $("#exp_summary_tab").on("lg.loaded.bs.tab", function() {
           var sel_attr = $(this).attr("data_attr");
           if(curr_attr == sel_attr) {
               $("#exp_summary_tab").data("cur_sort_desc", !$("#exp_summary_tab").data("cur_sort_desc"));
-              $(this).closest("th").find("i.fa").remove();
+              $(this).closest("th").find(".sric").remove();
           } else {
               $("#exp_summary_tab").data("cur_sort_attr", sel_attr)
               $("#exp_summary_tab").data("cur_sort_desc", true);
-              $(this).closest("thead").find("i.fa").remove();
+              $(this).closest("thead").find(".sric").remove();
           }
-          $(this).closest("th").append($("#exp_summary_tab").data("cur_sort_desc") ? $('<i class="fa fa-sort-desc"></i>') : $('<i class="fa fa-sort-asc"></i>'))
+          $(this).closest("th").append($("#exp_summary_tab").data("cur_sort_desc") ? $('<i class="fas fa-sort-down sric"></i>') : $('<i class="fas fa-sort-up sric"></i>'))
           display_experiments();
       });
 

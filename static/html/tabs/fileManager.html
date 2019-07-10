@@ -15,7 +15,7 @@
 $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
 
   var file_main_templ = `<div class="fdat" data-entry-id="{{ _id }}"><div class="row">
-   <div class="col-md-2"><span class="fmgr-expand exp_icons_left"><i class="fa fa-plus expand_ctrl"></i></span>{{ run_num }}</div>
+   <div class="col-md-2"><span class="fmgr-expand exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>{{ run_num }}</div>
    <div class="col-md-3 text-left">{{ run_files.num_files }}</div>
    <div class="col-md-2 text-left">{{ run_files.hrsize }}</div>
    <div class="col-md-2"></div>
@@ -23,8 +23,8 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
    </div></div>`;
 
   var fmgr_child_template = `<div class="row col-md-12 fmgr-chid">
-		   <div class="panel panel-default">
-		    <div class="panel-body">
+		   <div class="card w-100">
+		    <div class="card-body">
           {{#files}}
            <div class="row run_file">
              <div class="col-md-5 text-left fmgr_exp_file_name">{{ name }}</div>
@@ -42,12 +42,12 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
 	 console.log("Processing " + run_files[""]);
      if($(this).hasClass("fmgr-expanded")) {
          $(this).closest(".fdat").find(".fmgr-chid").remove();
-         $(this).html('<i class="fa fa-plus expand_ctrl"></i>');
+         $(this).html('<i class="fas fa-plus expand_ctrl"></i>');
      } else {
          var clicked_elem = $(this);
          run_files.files = _.sortBy(run_files.files, function(fl){ return fl['name']});
          clicked_elem.closest(".fdat").append(renderMSTemplate(fmgr_child_template, run_files));
-         $(this).html('<i class="fa fa-minus expand_ctrl"></i>');
+         $(this).html('<i class="fas fa-minus expand_ctrl"></i>');
        }
 	   $(this).toggleClass("fmgr-expanded");
     };

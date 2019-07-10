@@ -1,55 +1,56 @@
-<div id="elog_new_entry_modal" class="modal fade" role="dialog">
-    <div class="modal-dialog modal-lg">
+<div id="elog_new_entry_modal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
             <div class="modal-header">
-                <h4 class="modal-title">Post new eLog entry</h4>
+                <h4 class="modal-title w-100">Post new eLog entry
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </h4>
             </div>
             <div class="modal-body">
-                <form class="form-horizontal" role="form" id="elog_new_entry_form">
-                    <div class="form-group">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_run_num" title="Specify an optional run number">Run</label>
-                        <div class="col-sm-6">
+                <form role="form" id="elog_new_entry_form">
+                    <div class="row"><span class="w-100 text-center validation_warning"></span></div>
+                    <div class="form-group row">
+                        <label  class="col-2 " for="elog_new_entry_run_num" title="Specify an optional run number">Run</label>
+                        <div class="col-6">
                             <input type="text" class="form-control" name="run_num" id="elog_new_entry_run_num" value="{{current_run_num}}"/>
                         </div>
                     </div>
-                    <div class="validation_warning"></div>
-                    <div class="form-group log_title_div hidden">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_log_title">Title*</label>
-                        <div class="col-sm-10">
+                    <div class="form-group row log_title_div d-none">
+                        <label  class="col-2 " for="elog_new_entry_log_title">Title*</label>
+                        <div class="col-10">
                             <input type="text" class="form-control" name="log_title" id="elog_new_entry_log_title"/>
                         </div>
                     </div>
-                    <div class="form-group log_text_div">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_log_text">Text* <i class="fa fa-table elog_html" title="HTML log entry"></i></label>
-                        <div class="col-sm-10">
+                    <div class="form-group row log_text_div">
+                        <label  class="col-2 " for="elog_new_entry_log_text">Text* <span class="elog_html"><i class="fas fa-table" title="HTML log entry"></i><span></label>
+                        <div class="col-10">
                             <textarea class="form-control" rows="5" name="log_text" id="elog_new_entry_log_text"></textarea>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="elog_new_entry_email_dest" title="Email this log entry to folks specified in this list:">Email:</label>
-                        <div class="col-sm-8">
+                    <div class="form-group row">
+                        <label class="col-2 " for="elog_new_entry_email_dest" title="Email this log entry to folks specified in this list:">Email:</label>
+                        <div class="col-8">
                             <select class="form-control contacts email_select" rows="10" id="elog_new_entry_email_select" name="log_emails_shown" placeholder="email1 email2@institution.edu" multiple></select>
-                            <input class="hidden email_input" name="log_emails" id="elog_new_entry_email_dest"></input>
+                            <input class="d-none email_input" name="log_emails" id="elog_new_entry_email_dest"></input>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
-                        <div class="col-sm-4">
+                    <div class="form-group row">
+                        <label class="col-2 " for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
+                        <div class="col-4">
                             <input class="form-control" rows="5" name="log_tags" id="elog_new_entry_tags" placeholder="Tag1 Tag2 Tag3"></input>
                         </div>
                     </div>
-                    <div class="form-group files_div">
-                        <label  class="col-sm-2 control-label" for="elog_new_entry_file_upload">File</label>
-                        <div class="col-sm-10">
+                    <div class="form-group row files_div">
+                        <label  class="col-2 " for="elog_new_entry_file_upload">File</label>
+                        <div class="col-10">
                             <input type="file" class="form-control" name="files" id="elog_new_entry_file_upload" multiple/>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-default" id="elog_new_entry_modal_post">Post</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="elog_new_entry_modal_post">Post</button>
             </div>
         </div>
     </div>

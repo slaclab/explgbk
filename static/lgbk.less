@@ -47,16 +47,20 @@
 
 .font_family_choices_mixin {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+  font-size: 0.85rem;
 }
 
 .listview_icon_mixin {
   opacity: .5;
-  padding-left: 0.25em;
-  padding-right: 0.25em;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1.0rem
 }
 
 .validation_warning {
     color: @contrastcolor;
+    font-weight: bold;
+    font-size: 1.5rem;
 }
 
 #lgbk_body {
@@ -125,38 +129,17 @@ label {
 #toolbar_for_tab {
     float: right;
     margin-right: 15px;
+    margin-left: 10px;
 }
 
 #toolbar_for_tab .fa.pushedin {
     color: @activewidgetcolor;
 }
 
-#toolbar_for_tab .fa {
+#toolbar_for_tab span {
     color: @navbartext;
     background: @navbarcolor;
 }
-
-.ttip .ttiptext {
-    font-style: normal;
-    background: @navbartext;
-    visibility: hidden;
-    width: 30em;
-    text-align: center;
-    padding: 5px 0;
-    border: @navbarcolor solid thin;
-    border-radius: 6px;
-    position: absolute;
-    z-index: 1;
-    color: black;
-    top: 100%;
-    left: 50%;
-    margin-left: -15em;
-}
-
-.ttip:hover .ttiptext {
-    visibility: visible;
-}
-
 
 .exp_info h1 {
 	font-size: 1.1em;
@@ -182,12 +165,17 @@ label {
     width: 98%;
 }
 
-.dl-horizontal dt {
-	color: @navbarcolor;
-}
-
-.dl-horizontal dd {
-	text-align: left;
+.exp_info {
+    .exp_details {
+        padding-left: 0.5em;
+        span.label {
+            color: @navbarcolor;
+            font-weight: bold;
+        }
+        span {
+            text-align: left;
+        }
+    }
 }
 
 @media screen and (max-width: 767px) {
@@ -240,15 +228,15 @@ label {
   .highlight_mixin;
 }
 
-#register_edit_exp_tab th {
+#exp_searchresults th {
   .highlight_mixin;
   white-space: nowrap;
-  .fa { padding-left: 0.25em; }
+  .fas { padding-left: 0.25em; }
 }
 
 #register_edit_exp_tab .ops_exp_icons {
   white-space: nowrap;
-  .fa {
+  span {
       .listview_icon_mixin;
   }
 }
@@ -268,13 +256,19 @@ label {
         .highlight_mixin;
         padding-left: 2.0em;
     }
-    .fa {
+    .fas {
         opacity: 0.5;
     }
 }
 
 #ops_instruments_tab .modal .table {
   .param_table_mixin;
+
+  .param_action {
+      .listview_icon_mixin;
+      font-size: inherit;
+      color: @navbarhover;
+  }
 }
 
 #ops_instruments_tab th {
@@ -289,11 +283,18 @@ label {
 
 
 #ops_exp_searchtext {
-    .search_text_mixin;
+	border: thin solid @navbarcolor;
+	color: @navbarcolor;
 }
 
-#register_edit_exp_tab .modal .table {
+#register_edit_exp_tab .modal .param_table {
   .param_table_mixin;
+
+  .param_action {
+      .listview_icon_mixin;
+      font-size: inherit;
+      color: @navbarhover;
+  }
 }
 
 #experiments_container thead th {
@@ -313,7 +314,7 @@ label {
   .highlight_mixin;
 }
 
-#experiments_container li.active a {
+#experiments_container li a.active {
   .year_pill_active;
 }
 
@@ -350,7 +351,7 @@ label {
 
 #expswitch_tab .ops_switch_icons {
   white-space: nowrap;
-  .fa {
+  .fas {
       .listview_icon_mixin;
   }
 }
@@ -367,11 +368,18 @@ label {
 
 
 
-#choose_experiment_modal table td a {
-  color: @navbarcolor;
+#expswitch_choose_experiment {
+    table {
+        height: 25rem;
+        display: block;
+        overflow-y: scroll;
+    }
+    table td a {
+      color: @navbarcolor;
+    }
 }
 
-#choose_experiment_modal {
+#expswitch_choose_experiment {
     .btn-group .btn {
         margin-top: 0.25em;
         margin-left: 0.5em;
@@ -382,7 +390,7 @@ label {
 
 #myTabContainer .exp_tab_header {
   .highlight_mixin;
-	border: thin black solid;
+	border: thin @navbarhover solid;
 	padding: 0.2em;
 }
 
@@ -410,6 +418,17 @@ label {
 
 #elog_tab div.followup_div {
     margin-left: 0.5em;
+    width: 100%;
+
+    .email_select {
+        width: inherit;
+    }
+    .col-sm-8 {
+        padding-left: inherit;
+    }
+    .card {
+        border: 3px solid @navbarcolor;
+    }
 }
 
 #elog_tab .elog_main_content {
@@ -484,9 +503,12 @@ label {
         background: @navbarcolor;
         color: @navbartext;
     }
+    pre {
+        background: lightgray;
+    }
 }
 
-#current_sample_lbl .fa {
+#current_sample_lbl .fas {
     padding-right: 0.25em;
 }
 #current_sample_lbl {
@@ -498,6 +520,19 @@ label {
 
 #current_sample_lbl.samples_different {
     color: @activewidgetcolor;
+}
+
+// Sample change tooltip
+.tooltip .tooltip-inner {
+  background-color: @navbarcolor;
+  border: solid thin thin solid @navbarhover;
+  padding: 0.25em;
+}
+
+.tooltip .arrow::before {
+  border-left-color: @navbarcolor;
+  border: solid thin thin solid @navbarhover;
+  padding: 0.25em;
 }
 
 #myTabContainer .expand_ctrl {
@@ -520,7 +555,8 @@ label {
 	font-weight: bold;
 }
 
-#myTabContainer ul.nav-pills li.active a {
+#myTabContainer ul.nav-pills a.active {
+  color: @navbarcolor;
   .highlight_mixin;
 }
 
@@ -540,12 +576,9 @@ label {
 }
 
 #elog_content {
-    padding: 1px;
+    padding: 0px;
     margin: 0px;
     padding-top: 0px;
-}
-#elog_content .fa {
-	opacity: .5;
 }
 
 #elog_content .entry_actions {
@@ -553,11 +586,17 @@ label {
 	font-size: 0.90em;
 	padding-right: 0.25em;
 
-    .fa {
+    span {
         padding-left: 0.15em;
         padding-right: 0.15em;
+        opacity: .5;
     }
 }
+
+#elog_content .elog-chid .card {
+	width: 100%;
+}
+
 
 #fmgr_tab .run_file:nth-child(odd) {
 	background: @tablezebra;
@@ -572,7 +611,7 @@ label {
 	background: @tablezebra;
 }
 
-#fmgr_tab .fa {
+#fmgr_tab .fas {
 	opacity: .5;
 }
 
@@ -586,6 +625,7 @@ label {
 }
 
 #rtbl_content .sticky-table {
+    height: 80vh;
     thead tr th {
         position: -webkit-sticky;
         position: sticky;
@@ -607,8 +647,9 @@ label {
 }
 
 #rtbl_content .rtbldef_action {
-  padding-left: 0.25em;
-  padding-right: 0.25em;
+    .listview_icon_mixin;
+    font-size: inherit;
+    color: @navbarhover;
 }
 
 #rtbl_content td.rtbl_separator {
@@ -658,6 +699,13 @@ label {
   .listview_icon_mixin;
 }
 
+#shifts_tab .param_action {
+    .listview_icon_mixin;
+    font-size: inherit;
+    color: @navbarhover;
+}
+
+
 #shifts_tab .shiftstbl tr.active_shift td {
   .bold_text_mixin;
   background: @activewidgetcolor;
@@ -697,6 +745,12 @@ label {
   padding: 0.1em;
 }
 
+#samples_tab .param_action {
+    .listview_icon_mixin;
+    font-size: inherit;
+    color: @navbarhover;
+}
+
 .note-callout {
     border: thin @navbarcolor solid;
     padding: 0.5em;
@@ -712,7 +766,7 @@ label {
         text-align: left;
         padding-left: 1.0em
     }
-    tbody tr td .fa {
+    tbody tr td .fas {
         padding-right: 1.0em;
     }
     tbody tr td .fa-trash {
@@ -729,7 +783,7 @@ label {
         font-size: small;
         position: relative;
         bottom: -0.25em;
-        right: 1.5em;
+        right: 0.25em;
     }
     .collab-no-role {
         opacity: 0.5;
@@ -737,7 +791,7 @@ label {
 }
 
 #collab_mdl_holder tbody  {
-    .fa {
+    .fas {
         padding-right: 0.75em;
     }
 

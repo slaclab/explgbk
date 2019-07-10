@@ -2,7 +2,7 @@
  * Sets the current sample in the logbook titlebar.
  */
 var setCurrentUISample = function() {
-     var template = `<i class="fa fa-snowflake-o fa-lg" aria-hidden="true"></i>
+     var template = `<span><i class="fas fa-snowflake fa-lg" aria-hidden="true"></i></span>
      <span id="current_sample_name" class="ttip">{{ sample_showing_in_UI }}</span>`;
      Mustache.parse(template);
      var ttip_template = `<span class="ttiptext">
@@ -10,7 +10,7 @@ var setCurrentUISample = function() {
        <p>To change the sample being displayed in the UI, please click on the sample name and choose the current sample.</p>
      </span>`;
      Mustache.parse(ttip_template);
-     var choose_sample_template = `{{#sample_names}}<tr data-sample="{{.}}"><td><i class="fa fa-hand-o-right fa-lg"></i></td><td>{{.}}</td></tr>{{/sample_names}}`;
+     var choose_sample_template = `{{#sample_names}}<tr data-sample="{{.}}"><td><span><i class="far fa-hand-point-right fa-lg"></i><span></td><td>{{.}}</td></tr>{{/sample_names}}`;
      Mustache.parse(choose_sample_template);
      $("#current_sample_lbl").removeClass("samples_different");
      $("#current_sample_lbl").prop("title", "");
@@ -20,7 +20,7 @@ var setCurrentUISample = function() {
          $("#current_sample_lbl").html(rendered);
          if(sample_showing_in_UI != current_sample_at_DAQ) {
              $("#current_sample_lbl").addClass("samples_different");
-             $("#current_sample_name").append(Mustache.render(ttip_template, samplesDict));
+             $("#current_sample_name").tooltip({html: true, delay: 500, title: Mustache.render(ttip_template, samplesDict)});
          }
          $("#current_sample_name").on("click", function(){
              $.when($.ajax("../../static/html/ms/chooseSample.html"), $.getJSON("ws/samples"))

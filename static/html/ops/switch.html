@@ -2,23 +2,20 @@
 <div class="row" id="switch_experiment_div">
   <div class="table-responsive">
     <table class="table table-condensed table-striped table-bordered">
-      <thead><tr><th>Instrument</th><th>Station</th><th>Experiment</th><th>PI</th><th>Leader Account</th><th>Current Sample</th><th>Current Run</th><th>Description</th><th>Switched at</th><th>Switched by</th><th><i class="fa fa-exchange fa-lg" aria-hidden="true"></i></th></tr></thead>
+      <thead><tr><th>Instrument</th><th>Station</th><th>Experiment</th><th>PI</th><th>Leader Account</th><th>Current Sample</th><th>Current Run</th><th>Description</th><th>Switched at</th><th>Switched by</th><th><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
 </div>
 
-<div class="modal fade" tabindex="-1" role="dialog" id="choose_experiment_modal">
+<div class="modal fade" tabindex="-1" role="dialog" id="expswitch_choose_experiment">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
-      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <div class="modal-header">
-        <h4 class="modal-title">Choose an experiment</h4>
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-default" id="switch_experiment">Switch experiment</button>
+        <div class="modal-header">
+          <h4 class="modal-title w-100"><span class="expswitch_choose_experiment_title">Choose an experiment</span>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </h4>
         </div>
-      </div>
       <div class="modal-body">
 	    <div class="table-responsive">
 	      <table class="table table-condensed table-striped table-bordered">
@@ -28,6 +25,10 @@
 	    </div>
       </div>
       <div class="modal-footer">
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-default" id="switch_experiment">Switch experiment</button>
+          </div>
       </div>
     </div>
   </div>
@@ -38,7 +39,7 @@
 <script type="text/javascript">
 $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 	var instrument_template = `{{#value}}<tr {{#is_standby}}class="exp_switch_standby"{{/is_standby}}">
-	<td style="background:{{color}}; color:white; " >{{ instrument }}</td>
+	<td style="background:{{background}}; color:{{color}}; " >{{ instrument }}</td>
 	<td>{{ station }}</td>
 	<td>{{#is_standby}}Standby{{/is_standby}}{{^is_standby}}<a target="_blank" href="{{_id}}/">{{ name }}</a>{{/is_standby}}</td>
     <td>{{ contact_info }}</td>
@@ -49,8 +50,8 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 	<td>{{#FormatDate}}{{ switch_time }}{{/FormatDate}}</td>
 	<td>{{ requestor_uid }}</td>
 	<td class="ops_switch_icons">
-      <i class="fa fa-exchange fa-lg expswitch" aria-hidden="true" data-instrument="{{ instrument }}" data-station="{{ station }}" title="Switch to a new experiment"></i>
-      {{^is_standby}}<i class="fa fa-power-off fa-lg standby" aria-hidden="true" data-instrument="{{ instrument }}" data-station="{{ station }}" title="Put this station in standby mode."></i>{{/is_standby}}
+      <span class="expswitch" data-instrument="{{ instrument }}" data-station="{{ station }}" title="Switch to a new experiment"><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></span>
+      {{^is_standby}}<span class="standby"  data-instrument="{{ instrument }}" data-station="{{ station }}" title="Put this station in standby mode."><i class="fas fa-power-off fa-lg" aria-hidden="true"></i></span>{{/is_standby}}
     </td>
 	</tr>{{/value}}`;
 
@@ -66,9 +67,9 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 
     $(document).ready(function() {
     	$("#switch_experiment").on("click", function(){
-    		var exp_switch_info = $('#choose_experiment_modal table').data("selected-experiment");
+    		var exp_switch_info = $('#expswitch_choose_experiment table').data("selected-experiment");
     		console.log("Switching " + exp_switch_info.instrument + " station " + exp_switch_info.station + " to experiment " + exp_switch_info.experiment_name);
-    		$("#choose_experiment_modal").modal("hide");
+    		$("#expswitch_choose_experiment").modal("hide");
     		$.ajax({
     			type: "POST",
     			contentType: "application/json; charset=utf-8",
@@ -91,32 +92,32 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 			var active_exps = d1[0], ins_st_list = d2[0], instruments = _.keyBy(d3[0].value, "_id");
 			var others = _.differenceWith(ins_st_list.value, active_exps.value, function(av, ov){ return av['instrument'] == ov['instrument'] && av['station'] == ov['station'] });
 			_.each(others, function(ot){ active_exps.value.push(ot); });
-            _.each(active_exps.value, function(exp){ exp["color"] = _.get(instruments, exp["instrument"] + ".color", "inherit"); });
+            _.each(active_exps.value, function(exp){ exp["background"] = _.get(instruments, exp["instrument"] + ".color", "inherit"); exp["color"] = _.has(instruments, exp["instrument"] + ".color") ? "white" : "black"; });
             active_exps.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
             active_exps.FormatDateTime = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
     		var rendered = Mustache.render(instrument_template, active_exps);
     		$("#switch_experiment_div tbody").html(rendered);
-    		$(".fa.expswitch").on("click", function() {
+    		$("span.expswitch").on("click", function() {
     			var instr = $(this).attr("data-instrument");
     			var station = $(this).attr("data-station");
     			console.log("Switch " + instr + "/" + station);
-    			$("#choose_experiment_modal .modal-title").text("Choose new experiment for " + instr + " Station: " + station + "");
+    			$("#expswitch_choose_experiment .expswitch_choose_experiment_title").text("Choose new experiment for " + instr + " Station: " + station + "");
     			$.getJSON(experiments_by_instrument)
     			.done(function(data) {
     				var experiments_for_instrument = data.value[instr];
     				var rendered = Mustache.render(exper_template, {value: experiments_for_instrument});
-    				$("#choose_experiment_modal table tbody").html(rendered);
-    				$('#choose_experiment_modal table').on('click', 'tbody tr', function(event) {
+    				$("#expswitch_choose_experiment table tbody").html(rendered);
+    				$('#expswitch_choose_experiment table').on('click', 'tbody tr', function(event) {
     					$(this).find("td").addClass('rowselect');
     					$(this).siblings().find("td").removeClass('rowselect');
-    					$('#choose_experiment_modal table').data("selected-experiment", {instrument: instr, station: station, experiment_name: $(this).attr("data-expname")});
+    					$('#expswitch_choose_experiment table').data("selected-experiment", {instrument: instr, station: station, experiment_name: $(this).attr("data-expname")});
     				});
-    				$("#choose_experiment_modal").modal("show");
+    				$("#expswitch_choose_experiment").modal("show");
     			}).fail(function() {
     				alert("There was an error fetching experiments from the server.");
     			});
     		})
-            $(".fa.standby").on("click", function() {
+            $("span.standby").on("click", function() {
                 var instr = $(this).attr("data-instrument");
     			var station = $(this).attr("data-station");
     			console.log("Putting " + instr + "/" + station + " into standby/maintenance mode.");

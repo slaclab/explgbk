@@ -1,86 +1,94 @@
-<div class="modal fade edit_modal" role="dialog">
+<div class="modal edit_modal" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
    <div class="modal-content">
-     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-     <div class="modal-header">
-       <h2 class="modal-title">Experiment details</h2>
+      <div class="modal-header">
+         <h4 class="modal-title w-100">Experiment details
+           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+         </h4>
+      </div>
+      <div class="modal-body">
+         <form class="register_form">
+          <input type="hidden" class="form-control experiment_name_original" value="{{ name }}">
+          <div class="row">
+            <div class="form-group col-4">
+              <label for="experiment_name">Experiment Name:</label>
+              <input type="text" class="form-control experiment_name" value="{{ name }}" {{#name}}readonly{{/name}} >
+            </div>
+            <div class="form-group col-4">
+                <label for="instrument">Instrument:</label>
+                <select class="form-control instrument"><option> </option></select>
+            </div>
+            <div class="form-group col-4">
+                <label for="posix_group">Posix Group:</label>
+                <input type="text" class="form-control posix_group" value="{{ posix_group }}">
+            </div>
+          </div>
+          <div class="row">
+              <div class="form-group col-6">
+                   <label for="start_time">Start Time:</label>
+                   <div class='input-group date start_time' id="expreg_start_time_picker" data-target-input="nearest">
+                       <input type="text" class="form-control datetimepicker-input" data-target="#expreg_start_time_picker"/>
+                       <div class="input-group-append" data-target="#expreg_start_time_picker" data-toggle="datetimepicker">
+                           <div class="input-group-text"><i class="far fa-calendar"></i></div>
+                       </div>
+                   </div>
+               </div>
+               <div class="form-group col-6">
+                    <label for="end_time">End Time:</label>
+                    <div class='input-group date end_time' id="expreg_end_time_picker" data-target-input="nearest">
+                        <input type="text" class="form-control datetimepicker-input" data-target="#expreg_end_time_picker"/>
+                        <div class="input-group-append" data-target="#expreg_end_time_picker" data-toggle="datetimepicker">
+                            <div class="input-group-text"><i class="far fa-calendar"></i></div>
+                        </div>
+                    </div>
+               </div>
+          </div>
+
+          <div class="row">
+              <div class="form-group col-4">
+                  <label for="leader_account">Leader Account:</label>
+                  <input type="text" class="form-control leader_account" value="{{ leader_account }}">
+              </div>
+              <div class="form-group col-4">
+               <label for="contact_info">PI's Name:</label>
+               <input type="text" class="form-control pi_name" value="{{ contact_info_name }}">
+              </div>
+              <div class="form-group col-4">
+               <label for="contact_info">PI's email:</label>
+               <input type="email" class="form-control pi_email" value="{{ contact_info_email }}">
+              </div>
+          </div>
+
+          <div class="row">
+              <div class="form-group col-10">
+               <label for="description">Description:</label>
+               <textarea class="form-control description" rows="5">{{ description }}</textarea>
+              </div>
+          </div>
+          <table class="table table-condensed table-striped table-bordered param_table">
+            <thead><tr><th>Param Name</th><th>Param Value</th><th>Actions</th></thead>
+            <tbody>
+              {{#paramkvs}}
+              <tr><td><input type="text" class="form-control key" value="{{key}}"></td><td><input type="text" class="form-control value" value="{{value}}"></td>
+                <td>
+                    <span class="param_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
+                    <span class="param_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
+                </td>
+              </tr>
+              {{/paramkvs}}
+              <tr><td><input type="text" class="form-control key" value=""></td><td><input type="text" class="form-control value" value=""></td>
+                <td>
+                    <span class="param_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
+                    <span class="param_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="modal-footer">
+              <button class="btn btn-primary panel_btn register_btn">Register</button>
+          </div>
+         </form>
      </div>
-     <form class="register_form">
-      <input type="hidden" class="form-control experiment_name_original" value="{{ name }}">
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="experiment_name">Experiment Name:</label>
-       <input type="text" class="form-control experiment_name" value="{{ name }}" {{#name}}readonly{{/name}} >
-      </div>
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="instrument">Instrument:</label>
-       <select class="form-control instrument">
-       <option> </option>
-     </select>
-      </div>
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="posix_group">Posix Group:</label>
-       <input type="text" class="form-control posix_group" value="{{ posix_group }}">
-      </div>
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="start_time">Start Time:</label>
-       <div class='input-group date start_time'>
-         <input type='text' class="form-control" />
-         <span class="input-group-addon">
-             <i class="fa fa-calendar fa-lg"></i>
-         </span>
-       </div>
-      </div>
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="end_time">End Time:</label>
-       <div class='input-group date end_time'>
-         <input type='text' class="form-control" />
-         <span class="input-group-addon">
-             <i class="fa fa-calendar fa-lg"></i>
-         </span>
-       </div>
-      </div>
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="leader_account">Leader Account:</label>
-       <input type="text" class="form-control leader_account" value="{{ leader_account }}">
-      </div>
-      <div class="clearfix"></div>
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="contact_info">PI's Name:</label>
-       <input type="text" class="form-control pi_name" value="{{ contact_info_name }}">
-      </div>
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="contact_info">PI's email:</label>
-       <input type="email" class="form-control pi_email" value="{{ contact_info_email }}">
-      </div>
-      <div class="clearfix"></div>
-      <div class="form-group col-xs-10 col-sm-10 col-md-10 col-lg-10">
-       <label for="description">Description:</label>
-       <textarea class="form-control description" rows="5">{{ description }}</textarea>
-      </div>
-      <div class="clearfix"></div>
-      <table class="table table-condensed table-striped table-bordered">
-        <thead><tr><th>Param Name</th><th>Param Value</th><th>Actions</th></thead>
-        <tbody>
-          {{#paramkvs}}
-          <tr><td><input type="text" class="form-control key" value="{{key}}"></td><td><input type="text" class="form-control value" value="{{value}}"></td>
-            <td>
-                <i class="fa fa-trash fa-lg param_action" aria-hidden="true"></i>
-                <i class="fa fa-plus fa-lg param_action" aria-hidden="true"></i>
-            </td>
-          </tr>
-          {{/paramkvs}}
-          <tr><td><input type="text" class="form-control key" value=""></td><td><input type="text" class="form-control value" value=""></td>
-            <td>
-                <i class="fa fa-trash fa-lg param_action" aria-hidden="true"></i>
-                <i class="fa fa-plus fa-lg param_action" aria-hidden="true"></i>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="modal-footer">
-          <button class="btn btn-primary panel_btn register_btn">Register</button>
-      </div>
-     </form>
  </div>
 </div>
 </div>
@@ -89,10 +97,11 @@
 <div class="modal fade validation_modal" role="dialog">
  <div class="modal-dialog">
   <div class="modal-content">
-   <div class="modal-header">
-     <button type="button" class="close" data-dismiss="modal">&times;</button>
-     <h4 class="modal-title">Validation Error</h4>
-   </div>
+      <div class="modal-header">
+         <h4 class="modal-title w-100">Validation Error
+           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+         </h4>
+      </div>
    <div class="modal-body alert alert-danger" role="alert">
      <p class="validation_message"></p>
    </div>

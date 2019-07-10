@@ -16,10 +16,10 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
     .done(function(tmpl){
       Mustache.parse(tmpl);
       var rendered = $(Mustache.render(tmpl, shift_obj));
-      rendered.find(".start_time").datetimepicker({defaultDate: moment(shift_obj['begin_time']), sideBySide: true });
+      rendered.find("#shift_start_time_picker").datetimepicker({defaultDate: moment(shift_obj['begin_time']), sideBySide: true });
       if(_.has(shift_obj, 'name')) { rendered.find(".register_btn").text("Update");}
-      rendered.find(".fa-plus").on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
-      rendered.find(".fa-trash").on("click", function(){ $(this).closest("tr").remove(); });
+      rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
       rendered.find("#shift_create").on("click", function(e) {
         e.preventDefault();
         var formObj = $("#shifts_tab").find("#mdl_holder").find("form");
@@ -48,7 +48,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
         var new_shift_doc = {
           name: shift_name,
           leader: $.trim(formObj.find(".shift_leader").val()),
-          begin_time: formObj.find('.start_time').data("DateTimePicker").date().toJSON(),
+          begin_time: formObj.find('#shift_start_time_picker').datetimepicker('date').toJSON(),
           end_time: null,
           description: $.trim(formObj.find(".description").val()),
           params: shift_params
@@ -80,7 +80,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
   }
   $("#shifts_tab").data("edit_shift", edit_shift);
 
-  var shift_tr_tmpl = `{{#value}}<tr {{#latest}}class="active_shift"{{/latest}}><td>{{ name }}</td><td>{{#FormatDate}}{{begin_time}}{{/FormatDate}}</td><td>{{#FormatDate}}{{end_time}}{{/FormatDate}}</td><td>{{ leader }}</td><td>{{ description }}</td><td><i title="Edit shift details" class="fa fa-edit listview-action"></i><i title="Close out shift" class="fa fa-power-off listview-action"></i></td></tr>{{/value}}`;
+  var shift_tr_tmpl = `{{#value}}<tr {{#latest}}class="active_shift"{{/latest}}><td>{{ name }}</td><td>{{#FormatDate}}{{begin_time}}{{/FormatDate}}</td><td>{{#FormatDate}}{{end_time}}{{/FormatDate}}</td><td>{{ leader }}</td><td>{{ description }}</td><td><span title="Edit shift details"><i class="fas fa-edit listview-action"></i></span><span title="Close out shift"><i class="fas fa-power-off listview-action"></i></span></td></tr>{{/value}}`;
   Mustache.parse(shift_tr_tmpl);
   $.when($.getJSON("ws/shifts"), $.getJSON("ws/get_latest_shift"))
   .done(function(d0, d1){
@@ -89,7 +89,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
     shift_data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
     $("#shifts_tab").data("shifts", shift_data);
     var rendered = $(Mustache.render(shift_tr_tmpl, shift_data));
-    rendered.find(".fa-power-off").on("click", function(){
+    rendered.find(".fa-power-off").parent().on("click", function(){
       var shift_name = $(this).closest("tr").find("td").first().text();
       $.getJSON({url: "ws/close_shift?shift_name="+encodeURIComponent(shift_name), method: "POST"})
       .done(function(data, textStatus, jqXHR) {
@@ -102,7 +102,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
       })
       .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure closing shift " + textStatus); })
     });
-    rendered.find(".fa-edit").on("click", function(){
+    rendered.find(".fa-edit").parent().on("click", function(){
       var shift_name = $(this).closest("tr").find("td").first().text();
       var shift_obj = _.find($("#shifts_tab").data("shifts").value, function(shf){return shf.name == shift_name});
       edit_shift(shift_obj);
@@ -112,7 +112,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
 });
 
 $("#shifts_tab").on("lg.shown.bs.tab", function() {
-    var tab_toolbar = `<i class="fa fa-plus fa-lg" id="new_shift"></i>`;
+    var tab_toolbar = `<span id="new_shift"><i class="fas fa-plus fa-lg"></i></span>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
     $("#new_shift").on("click", function(e){ $("#shifts_tab").data("edit_shift")({leader: logged_in_user})});

@@ -1,47 +1,53 @@
 <div class="modal fade edit_modal" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
    <div class="modal-content">
-     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-     <div class="modal-header">
-       <h2 class="modal-title">Clone experiment {{ src_experiment_name }}</h2>
-     </div>
-     <form class="clone_form">
-      <input type="hidden" class="form-control src_experiment_name" value="{{ src_experiment_name }}">
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="experiment_name">New Experiment Name:</label>
-       <input type="text" class="form-control experiment_name" value="{{ name }}" {{^cloning}}readonly{{/cloning}} >
-      </div>
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="start_time">Start Time:</label>
-       <div class='input-group date start_time'>
-         <input type='text' class="form-control" />
-         <span class="input-group-addon">
-             <i class="fa fa-calendar fa-lg"></i>
-         </span>
+       <div class="modal-header">
+          <h4 class="modal-title w-100">Clone experiment {{ src_experiment_name }}
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </h4>
        </div>
+       <div class="modal-body">
+         <form class="clone_form">
+          <input type="hidden" class="form-control src_experiment_name" value="{{ src_experiment_name }}">
+          <div class="row">
+              <div class="form-group col-4">
+               <label for="experiment_name">New Experiment Name:</label>
+               <input type="text" class="form-control experiment_name" value="{{ name }}" {{^cloning}}readonly{{/cloning}}/>
+              </div>
+              <div class="form-group col-4">
+                   <label for="start_time">Start Time:</label>
+                   <div class='input-group date start_time' id="expreg_start_time_picker" data-target-input="nearest">
+                       <input type="text" class="form-control datetimepicker-input" data-target="#expreg_start_time_picker"/>
+                       <div class="input-group-append" data-target="#expreg_start_time_picker" data-toggle="datetimepicker">
+                           <div class="input-group-text"><i class="far fa-calendar"></i></div>
+                       </div>
+                   </div>
+               </div>
+               <div class="form-group col-4">
+                    <label for="end_time">End Time:</label>
+                    <div class='input-group date end_time' id="expreg_end_time_picker" data-target-input="nearest">
+                        <input type="text" class="form-control datetimepicker-input" data-target="#expreg_end_time_picker"/>
+                        <div class="input-group-append" data-target="#expreg_end_time_picker" data-toggle="datetimepicker">
+                            <div class="input-group-text"><i class="far fa-calendar"></i></div>
+                        </div>
+                    </div>
+               </div>
+           </div>
+
+          <label>Please select the experimental attributes to copy over</label>
+          <table class="table table-condensed table-striped table-bordered clone_select_attrs">
+            <thead><tr><th>Experiment attribute</th><th>Copy</th></thead>
+            <tbody>
+                {{#clone_attrs}}
+                <tr><td>{{ k }}</td><td><input class="clone_attr" type="checkbox" name="copy_{{v}}" checked></td></tr>
+                {{/clone_attrs}}
+            </tbody>
+          </table>
+          <div class="modal-footer">
+              <button class="btn btn-primary panel_btn clone_btn">Clone</button>
+          </div>
+         </form>
       </div>
-      <div class="form-group col-xs-10 col-sm-4 col-md-4 col-lg-4">
-       <label for="end_time">End Time:</label>
-       <div class='input-group date end_time'>
-         <input type='text' class="form-control" />
-         <span class="input-group-addon">
-             <i class="fa fa-calendar fa-lg"></i>
-         </span>
-       </div>
-      </div>
-      <label>Please select the experimental attributes to copy over</label>
-      <table class="table table-condensed table-striped table-bordered clone_select_attrs">
-        <thead><tr><th>Experiment attribute</th><th>Copy</th></thead>
-        <tbody>
-            {{#clone_attrs}}
-            <tr><td>{{ k }}</td><td><input class="clone_attr" type="checkbox" name="copy_{{v}}" checked></td></tr>
-            {{/clone_attrs}}
-        </tbody>
-      </table>
-      <div class="modal-footer">
-          <button class="btn btn-primary panel_btn clone_btn">Clone</button>
-      </div>
-     </form>
  </div>
 </div>
 </div>
@@ -50,10 +56,11 @@
 <div class="modal fade validation_modal" role="dialog">
  <div class="modal-dialog">
   <div class="modal-content">
-   <div class="modal-header">
-     <button type="button" class="close" data-dismiss="modal">&times;</button>
-     <h4 class="modal-title">Validation Error</h4>
-   </div>
+      <div class="modal-header">
+         <h4 class="modal-title w-100">Validation Error
+           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+         </h4>
+      </div>
    <div class="modal-body alert alert-danger" role="alert">
      <p class="validation_message"></p>
    </div>

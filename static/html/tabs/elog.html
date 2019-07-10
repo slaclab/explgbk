@@ -21,20 +21,20 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  </div>`;
  var elog_main_template = `<div class="edat {{^root}}etop{{/root}}{{#root}}edesc{{/root}}" id="{{ _id }}"><div class="row">
   <div class="col-md-2">
-    <span class="elog-expand elog-compressed exp_icons_left"><i class="fa fa-plus expand_ctrl"></i></span>
-    {{#c_attach}}<span class="exp_icons_left"><i class="fa fa-paperclip expand_ctrl"></i></span>{{/c_attach}}
+    <span class="elog-expand elog-compressed exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>
+    {{#c_attach}}<span class="exp_icons_left"><i class="fas fa-paperclip expand_ctrl"></i></span>{{/c_attach}}
     {{#FormatDate}}{{ relevance_time }}{{/FormatDate}}
   </div>
   <div class="col-md-1">{{ run_num }}</div>
   {{> main_content_tmpl }}
   <div class="col-md-1">{{ author }}</div>
   </div></div>`;
-  var elog_main_content_template = `<div class="elog_main_content"><div class="col-md-5 text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-md-3">{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div></div>`;
+  var elog_main_content_template = `<div class="col-md-5 elog_main_cnt text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-md-3 elog_main_cnt">{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>`;
 
  var elog_child_template = `<div class="row col-md-12 elog-chid">
-   <div class="panel panel-default">
-    <div class="panel-heading text-left"><span class="entry_actions">{{^deleted_by}}<i class="fa fa-send fa-lg followup" title="Followup"></i>{{#roles.is_editor}}<i class="fa fa-edit fa-lg edit" title="Edit"></i><i class="fa fa-trash fa-lg delete" title="Delete"></i>{{/roles.is_editor}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre>{{content}}</pre>{{/title}}</div>
-    <div class="panel-body">
+   <div class="card">
+    <div class="card-header text-left"><span class="entry_actions">{{^deleted_by}}<span class="followup" title="Followup"><i class="fas fa-paper-plane fa-lg"></span></i>{{#roles.is_editor}}<span class="edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span><span class="delete" title="Delete"><i class="fas fa-trash fa-lg"></i></span>{{/roles.is_editor}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre>{{content}}</pre>{{/title}}</div>
+    <div class="card-body">
       {{> elog_chid_body_content }}
      <div class="row dialog_holder"></div>
     </div>
@@ -43,33 +43,33 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  var elog_chid_body_content = `<div class="elog_chid_body_content">{{#deleted_by}}<div class="row elog_deleted_by">Deleted by {{deleted_by}} - {{#FormatDate}}{{ deleted_time }}{{/FormatDate}}</div>{{/deleted_by}}
  <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=False" target="_blank" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div></div>`;
 
- var elog_followup_template = `<div class="row followup_div"><div class="panel col-sm-8"><div class="panel-body">
-      <form class="form-horizontal followup_form" role="form">
+ var elog_followup_template = `<div class="row followup_div"><div class="card col-8"><div class="card-body">
+      <form class="followup_form" role="form">
        <button type="button" class="close">&times;</button>
        <input type="hidden" name="parent" value="{{ _id }}">
-       <div class="validation_warning"></div>
-       <div class="form-group log_title_div hidden"><label class="col-sm-2 control-label">Title*:</label><div class="col-sm-8"><input class="form-control log_title" type="text" name="log_title"/></div></div>
-       <div class="form-group"><label class="col-sm-2 control-label">Text*: <i class="fa fa-table elog_followup_html" title="HTML log entry"></i></label><div class="col-sm-8"><textarea class="form-control elog_followup_textarea" rows="5" name="log_text"></textarea></div></div>
-       <div class="form-group"><label class="col-sm-2 control-label">Email:</label><select class="form-control contacts email_select" rows="10" name="log_emails_shown" placeholder="email1 email2@institution.edu" multiple></select><input class="hidden email_input" name="log_emails" value="{{ emails_str }}"></input></div>
-       <div class="form-group"><label class="col-sm-2 control-label">Tags:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_tags" placeholder="Tag1 Tag2 Tag3"/></div></div>
-       <div class="form-group files_div"><label class="col-sm-2 control-label">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
-       <div class="form-group"><button type="button" class="btn btn-default followup_post">Post</button></div>
+       <div class="validation_warning d-none"></div>
+       <div class="form-group row log_title_div d-none"><label class="col-sm-2 col-form-label text-right">Title*:</label><div class="col-sm-8"><input class="form-control log_title" type="text" name="log_title"/></div></div>
+       <div class="form-group row"><label class="col-sm-2 col-form-label text-right">Text*: <span class="elog_followup_html"><i class="fas fa-table" title="HTML log entry"></i><span></label><div class="col-sm-8"><textarea class="form-control elog_followup_textarea" rows="5" name="log_text"></textarea></div></div>
+       <div class="form-group row"><label class="col-sm-2 col-form-label text-right">Email:</label><select class="form-control contacts email_select" rows="10" name="log_emails_shown" placeholder="email1 email2@institution.edu" multiple></select><input class="invisible email_input" name="log_emails" value="{{ emails_str }}"></input></div>
+       <div class="form-group row"><label class="col-sm-2 col-form-label text-right">Tags:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_tags" placeholder="Tag1 Tag2 Tag3"/></div></div>
+       <div class="form-group row files_div"><label class="col-sm-2 col-form-label text-right">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
+       <div class="form-group row justify-content-center"><button type="button" class="btn btn-primary followup_post">Post</button></div>
       </form></div></div></div>`;
 
   var elog_run_main_template = `<div class="edat etop" id="{{ elem_id }}"><div class="row">
        <div class="col-md-2">
-         <span class="elog-expand elog-compressed exp_icons_left"><i class="fa fa-plus expand_ctrl"></i></span>
+         <span class="elog-expand elog-compressed exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>
          {{#FormatDate}}{{relevance_time}}{{/FormatDate}}
        </div>
        <div class="col-md-1">{{ num }}</div>
-       <div class="elog_main_content"><div class="col-md-5 text_truncate">{{ content }}</div></div>
+       <div class="elog_main_cnt col-md-5 text_truncate">{{ content }}</div>
        </div></div>`;
 
    var elog_run_child_template = `<div class="row col-md-12 elog-chid">
-     <div class="panel panel-default">
-      <div class="panel-body">
+     <div class="card">
+      <div class="card-body">
         {{#param_list}}
-          <div class="elog_run_param_category text-left" data-category="{{k}}"><i class="fa fa-plus expand_param"></i>{{k}}<div class="elog_run_params_expanded"></div></div>
+          <div class="elog_run_param_category text-left" data-category="{{k}}"><span class="expand_param expand_plus"><i class="fas fa-plus"></i></span>{{k}}<div class="elog_run_params_expanded"></div></div>
         {{/param_list}}
         {{^param_list}}<div class="text-left">This run has no params</div>{{/param_list}}
       </div>
@@ -132,13 +132,14 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 	var rendered = renderMSTemplate(elog_followup_template, entry);
     email_selector(rendered);
 	rendered.find(".close").on("click", function(){ $(this).closest(".followup_div").remove(); });
-    rendered.find(".elog_followup_html").on("click", function(){ $(this).closest(".followup_div").find(".log_title_div").removeClass("hidden"); $(this).closest(".followup_div").find("textarea").summernote(summernote_options); current_text_mode_html=true; $(this).remove(); });
+    rendered.find(".elog_followup_html").on("click", function(){ $(this).closest(".followup_div").find(".log_title_div").removeClass("d-none"); $(this).closest(".followup_div").find("textarea").summernote(summernote_options); current_text_mode_html=true; $(this).remove(); });
 	rendered.find(".followup_post").on("click", function(){
+        var val_alert = function(th, msg) { th.closest(".followup_form").find(".validation_warning").html("Please enter a title for the log message").removeClass("d-none"); return false;  }
         if(current_text_mode_html) {
-            if(_.isEmpty($.trim($(this).closest(".followup_form").find(".log_title").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter a title for the log message"); return false; }
-            if(_.isEmpty($.trim($($(this).closest(".followup_form").find("textarea").val()).text()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+            if(_.isEmpty($.trim($(this).closest(".followup_form").find(".log_title").val()))) { return val_alert($(this), "Please enter a title for the log message"); }
+            if(_.isEmpty($.trim($($(this).closest(".followup_form").find("textarea").val()).text()))) { return val_alert($(this), "Please enter some text for the log message"); }
         } else {
-            if(_.isEmpty($.trim($(this).closest(".followup_form").find("textarea").val()))) { $(this).closest(".followup_form").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+            if(_.isEmpty($.trim($(this).closest(".followup_form").find("textarea").val()))) { return val_alert($(this), "Please enter some text for the log message");}
         }
         if($(this).closest(".followup_form").find(".files_div").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $(this).closest(".followup_form").find(".files_div").remove(); }
 		var formData = new FormData(rendered.find(".followup_form")[0]);
@@ -224,7 +225,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 	console.log("Expand/contract " + entry["_id"]);
 	if($(this).hasClass("elog-expanded")) {
 		$(this).closest(".edat").find(".elog-chid").remove();
-    	$(this).html('<i class="fa fa-plus expand_ctrl"></i>');
+    	$(this).html('<i class="fas fa-plus expand_ctrl"></i>');
 	} else {
 		var clicked_elem = $(this);
 	    clicked_elem.closest(".edat").append(renderMSTemplate(elog_child_template, entry, { elog_chid_body_content: elog_chid_body_content } ));
@@ -234,10 +235,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 		_.each(_.sortBy(_.map(entry["c_children"], function(chid) { return $("#elog_tab").data("entries")[chid]; }), function(s) { return s["relevance_time"]; }).reverse(), function(ch_entry) {
 		    var rendered = renderMSTemplate(elog_main_template, ch_entry, { main_content_tmpl: elog_main_content_template });
 		    rendered.data("entry", ch_entry).data("ts", moment(ch_entry["relevance_time"]));
-		    clicked_elem.closest(".edat").find(".panel-body").append(rendered);
+		    clicked_elem.closest(".edat").find(".card-body").append(rendered);
 		    rendered.find(".elog-expand").on("click", expandFunction);
 		});
-    	$(this).html('<i class="fa fa-minus expand_ctrl"></i>');
+    	$(this).html('<i class="fas fa-minus expand_ctrl"></i>');
 	}
 	$(this).toggleClass("elog-expanded elog-compressed");
  };
@@ -247,7 +248,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
      console.log("Expand/contract run " + entry["num"]);
      if($(this).hasClass("elog-expanded")) {
          $(this).closest(".edat").find(".elog-chid").remove();
-         $(this).html('<i class="fa fa-plus expand_ctrl"></i>');
+         $(this).html('<i class="fas fa-plus expand_ctrl"></i>');
      } else {
          var clicked_elem = $(this);
          $.getJSON("ws/run_table_sources")
@@ -262,18 +263,18 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
              var rendered = renderMSTemplate(elog_run_child_template, { param_list: cat_params_list });
              rendered.find(".expand_param").on("click", function(){
                  var clickedElem = $(this).closest(".elog_run_param_category");
-                 if($(this).hasClass("fa-plus")) {
+                 if($(this).hasClass("expand_plus")) {
                      var paramsrendered = renderMSTemplate(elog_run_child_expanded_params_template, { params: _.sortBy(categorized_params[clickedElem.attr("data-category")], function(o){ return o['k']})});
                      clickedElem.find(".elog_run_params_expanded").append(paramsrendered);
-                     clickedElem.find("fa-plus").remove();
-                     $(this).removeClass("fa-plus").addClass("fa-minus");
+                     $(this).find("svg").replaceWith($('<i class="fas fa-minus"></i>'));
                  } else {
                      clickedElem.find(".elog_run_params_expanded").empty();
-                     $(this).removeClass("fa-minus").addClass("fa-plus");
+                     $(this).find("svg").replaceWith($('<i class="fas fa-plus"></i>'));
                  }
+                 $(this).toggleClass("expand_plus")
              });
              clicked_elem.closest(".edat").append(rendered);
-             $(this).html('<i class="fa fa-minus expand_ctrl"></i>');
+             $(this).html('<i class="fas fa-minus expand_ctrl"></i>');
          });
      }
      $(this).toggleClass("elog-expanded elog-compressed");
@@ -284,7 +285,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   }
 
   var replaceExistingElogEntryContent = function(existingElem) { // If we get a update for an edit over web socker, we replace the contents of the elog entry.
-      existingElem.find(".elog_main_content").first().replaceWith(renderMSTemplate(elog_main_content_template, this));
+      existingElem.find(".elog_main_cnt").replaceWith(renderMSTemplate(elog_main_content_template, this));
       if(_.has(this, "title")) {
           window.jaja = existingElem; window.jajaobj = this;
           existingElem.find(".elog-chid").first().find(".chid_title").text(this["title"]);
@@ -378,7 +379,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
           });
           if(!entryinserted) {
               console.log("Inserting possible first child entry");
-              $("#"+elogData["parent"]).find(".panel-body").append(rendered);
+              $("#"+elogData["parent"]).find(".card-body").append(rendered);
               entryinserted = true;
           }
       }
@@ -474,9 +475,8 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
          var current_run_num =_.get(cur_run[0], "value.num", ""), mdl = $(Mustache.render(modal_txt[0], { current_run_num: current_run_num })), current_text_mode_html=false;
          $("#elog_content").prepend(mdl);
          email_selector($("#elog_content"));
-         $("#elog_content").find(".elog_html").on("click", function(){ $("#elog_content").find(".log_title_div").removeClass("hidden"); $(this).remove(); $('#elog_new_entry_log_text').summernote(summernote_options); current_text_mode_html=true;});
+         $("#elog_content").find(".elog_html").on("click", function(){ $("#elog_content").find(".log_title_div").removeClass("d-none"); $(this).remove(); $('#elog_new_entry_log_text').summernote(summernote_options); current_text_mode_html=true;});
          $("#elog_new_entry_modal_post").on("click", function (e) {
-            if($('#elog_new_entry_form').find(".files_div").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $('#elog_new_entry_form').find(".files_div").remove(); }
             var formData = new FormData($('#elog_new_entry_form')[0]);
             if(current_text_mode_html) {
                 if(_.isEmpty($.trim($("#elog_new_entry_log_title").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter a title for the log message"); return false; }
@@ -484,6 +484,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
             } else {
                 if(_.isEmpty($.trim($("#elog_new_entry_log_text").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
             }
+            if($('#elog_new_entry_form').find(".files_div").find("[name='files']")[0].files.length <= 0) { console.log("No files specified; removing control to cater to Safari."); $('#elog_new_entry_form').find(".files_div").remove(); }
             $.ajax({
                   url: 'ws/new_elog_entry',
                   data: formData,
@@ -555,10 +556,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
 $("#elog_tab").on("lg.shown.bs.tab", function() {
     var tab_toolbar = `<input type="text" placeholder="Search/Run etc - see tooltip" title="Search;Author;Tag;Run;Run-Run;date(MM/DD/YYYY);date-date" id="elog_search_text">
-    <i class="fa fa-plus fa-lg" id="elog_new_entry" title="Post a new elog entry"></i>
-    <i class="fa fa-paperclip fa-lg" id="elog_attachments_only" title="Toggle attachments only"></i>
-    <i class="fa fa-strikethrough fa-lg" id="elog_deleted_entries" title="Toggle deleted entries"></i>
-    <i class="fa fa-envelope-o fa-lg" id="elog_email_subscribe" title="Email subscription"></i>`;
+    <span id="elog_new_entry"><i class="fas fa-plus fa-lg" title="Post a new elog entry"></i></span>
+    <span id="elog_attachments_only"><i class="fas fa-paperclip fa-lg" title="Toggle attachments only"></i></span>
+    <span id="elog_deleted_entries"><i class="fas fa-strikethrough fa-lg" title="Toggle deleted entries"></i></span>
+    <span id="elog_email_subscribe"><i class="fas fa-envelope-open fa-lg" title="Email subscription"></i></span>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
     $("#elog_new_entry").on("click", $("#elog_tab").data("new_entry_click"));
@@ -574,9 +575,9 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
     });
     $("#elog_deleted_entries").on("click", function() {
         if($("#elog_deleted_entries").hasClass("pushedin")) {
-            $("#elog_tab").find(".elog_deleted").closest(".edat").removeClass("hidden");
+            $("#elog_tab").find(".elog_deleted").closest(".edat").removeClass("d-none");
         } else {
-            $("#elog_tab").find(".elog_deleted").closest(".edat").addClass("hidden");
+            $("#elog_tab").find(".elog_deleted").closest(".edat").addClass("d-none");
         }
         $("#elog_deleted_entries").toggleClass("pushedin");
     });
@@ -588,8 +589,8 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
             var rendered = $(Mustache.render(email_subscription_modal, {experiment_name: experiment_name, logged_in_user: logged_in_user, current_user_subscription: current_user_subscription, email_subscribers: email_subscribers}));
             $("#elog_content").prepend(rendered);
             $('#elog_email_subscriptions').on('hidden.bs.modal', function () { $('#elog_email_subscriptions').remove(); });
-            $('#elog_email_subscriptions_subscribe').on("click", function(){ $.getJSON("ws/elog_email_subscribe").done(function(){$('#elog_email_subscriptions').find(".elog_email_subscription_msg").toggleClass("hidden")})});
-            $('#elog_email_subscriptions_unsubscribe').on("click", function(){ $.getJSON("ws/elog_email_unsubscribe").done(function(){$('#elog_email_subscriptions').find(".elog_email_subscription_msg").toggleClass("hidden")})});
+            $('#elog_email_subscriptions_subscribe').on("click", function(){ $.getJSON("ws/elog_email_subscribe").done(function(){$('#elog_email_subscriptions').find(".elog_email_subscription_msg").toggleClass("d-none")})});
+            $('#elog_email_subscriptions_unsubscribe').on("click", function(){ $.getJSON("ws/elog_email_unsubscribe").done(function(){$('#elog_email_subscriptions').find(".elog_email_subscription_msg").toggleClass("d-none")})});
             $("#elog_email_subscriptions").modal();
         })
     });

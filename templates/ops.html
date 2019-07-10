@@ -6,16 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../static/lgbk.css">
   <link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap.min.css">
-  <link rel=stylesheet type=text/css href="../js/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css">
-  <link rel=stylesheet type=text/css href="../js/font-awesome/css/font-awesome.min.css">
+  <link rel=stylesheet type=text/css href="../js/tempusdominus-bootstrap-4/build/css/tempusdominus-bootstrap-4.min.css">
+  <link rel=stylesheet type=text/css href="../js/@fortawesome/fontawesome-free/css/all.min.css">
+  <link rel=stylesheet type=text/css href="../js/noty/lib/noty.css">
 
   <script type="text/javascript" src="../js/jquery/jquery.min.js"></script>
   <script type="text/javascript" src="../js/mustache/mustache.min.js"></script>
   <script type="text/javascript" src="../js/lodash/lodash.min.js"></script>
   <script type="text/javascript" src="../js/moment/min/moment-with-locales.min.js"></script>
-  <script type="text/javascript" src="../js/jquery.noty.packaged.js/jquery.noty.packaged.js"></script>
+  <script type="text/javascript" src="../js/noty/lib/noty.min.js"></script>
   <script type="text/javascript" src="../js/bootstrap/js/bootstrap.min.js"></script>
-  <script type="text/javascript" src="../js/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+  <script type="text/javascript" src="../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
+  <script type="text/javascript" src="../js/tempusdominus-bootstrap-4/build/js/tempusdominus-bootstrap-4.min.js"></script>
   <script type="text/javascript" src="../js/socket.io-client/dist/socket.io.js"></script>
   <script type="text/javascript" src="../js/python/flask_socket_util/websocket_client.js"></script>
   <script type="text/javascript" src="../js/plotly.js/dist/plotly.min.js"></script>
@@ -44,22 +46,18 @@
 </head>
 <body id="lgbk_body">
 
-<nav class="navbar navbar-default" role="navigation" id="myNavRow">
+<nav class="navbar navbar-expand-lg navbar-light" role="navigation" id="myNavRow">
   <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
       </button>
-    </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li><a data-toggle="tab" data-url="../static/html/ops/switch.html" href="#switch">Switch</a></li>
-        <li><a data-toggle="tab" data-url="../static/html/ops/experiments.html" href="#experiments">Experiments</a></li>
-        <li><a data-toggle="tab" data-url="../static/html/ops/instruments.html" href="#instruments">Instruments</a></li>
-        <li><a data-toggle="tab" data-url="../static/html/ops/exp_summary.html" href="#summary">Summary</a></li>
-        <li class="sitespecific"><a data-toggle="tab" data-url="../static/html/ops/data_movement.html" href="#data_mov">Data Movement</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/switch.html" href="#switch">Switch</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/experiments.html" href="#experiments">Experiments</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/instruments.html" href="#instruments">Instruments</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/exp_summary.html" href="#summary">Summary</a></li>
+        <li class="nav-item sitespecific"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/data_movement.html" href="#data_mov">Data Movement</a></li>
       </ul>
     </div>
     <div class="tab_title_bar">
@@ -107,7 +105,7 @@ var showTab = function (e) {
 $.getJSON('../static/json/sitespecific_ops_tabs_' + logbook_site + ".json")
 .done(function(tabs) {
     {% raw %}
-    var ssnavtmpl = `{{#.}}<li><a data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
+    var ssnavtmpl = `{{#.}}<li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
     var ssnavpnltmpl = `{{#.}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/.}}`;
     {% endraw %}
     Mustache.parse(ssnavtmpl); Mustache.parse(ssnavpnltmpl);

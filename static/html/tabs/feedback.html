@@ -2,9 +2,9 @@
 <div class="container-fluid text-center">
 
 
-<div class="col-sm-9 feedback_content">
+<div class="row">
+<div class="col-9 feedback_content">
 </div>
-
 <div class="fd_callout col-sm-3">
 <div class="fd_instructions">
 <div class="ins_ls_title">Use these definitions for the numbers.</div>
@@ -22,7 +22,7 @@ To save a note, please click outside (or tab out of) the text area.
 </div>
 <div class="fd_last_modified"></div>
 </div>
-
+</div>
 </div>
 </div>
 
@@ -36,7 +36,7 @@ var survey_templates = {
     "checkbox": `<div class="fd_item fd_input col-sm-9"><span class="col-sm-8">{{{header}}}</span><input type="checkbox" data-attr-id="{{id}}"></div>`,
     "selector": `<div class="fd_item fd_input col-sm-9"><span class="col-sm-8">{{{header}}}</span><select data-attr-id="{{id}}"><option val="1">1</option><option val="2" selected>2</option><option val="3">3</option><option val="4">4</option><option val="5">5</option></select></div>`,
     "textarea": `<div class="fd_item col-sm-9"><span class="col-sm-8">{{{header}}}</span></div><div class="fd_item fd_notes col-sm-9"><textarea class="col-sm-8" rows="8" cols="80" data-attr-id="{{id}}"></textarea></div>`
-}, notes_template = `<div class="fd_survey_notes hidden"><textarea rows="4" cols="60" data-attr-id="{{id}}-notes"></textarea></div>`,
+}, notes_template = `<div class="fd_survey_notes d-none"><textarea rows="4" cols="60" data-attr-id="{{id}}-notes"></textarea></div>`,
 last_changed_template = `<div>{{#last_modified_by}}Last modified by {{last_modified_by}}</div><div> at {{#FormatDate}}{{last_modified_at}}{{/FormatDate}}{{/last_modified_by}}</div>`;
 _.each(survey_templates, function(v, k){ Mustache.parse(v); });
 Mustache.parse(notes_template); Mustache.parse(last_changed_template);
@@ -46,8 +46,8 @@ var renderSurveyItem = function(survey_elem, currentDOMelem) {
     if(_.has(survey_elem, 'groups')) {
         var chid_container = $('<div class="fd_subitem"></div>');
         if(_.get(survey_elem, 'toggler', false)) {
-            chid_container.addClass("hidden");
-            rendered.find("input[type=checkbox]").on("change", function(){ if($(this).is(':checked')){ $(this).closest(".fd_item").find(".fd_subitem").removeClass('hidden'); } else { $(this).closest(".fd_item").find(".fd_subitem").addClass('hidden') }});
+            chid_container.addClass("d-none");
+            rendered.find("input[type=checkbox]").on("change", function(){ if($(this).is(':checked')){ $(this).closest(".fd_item").find(".fd_subitem").removeClass('d-none'); } else { $(this).closest(".fd_item").find(".fd_subitem").addClass('d-none') }});
         }
         _.each(_.get(survey_elem, 'groups'), function(si){
             renderSurveyItem(si, chid_container);
@@ -57,9 +57,9 @@ var renderSurveyItem = function(survey_elem, currentDOMelem) {
     if(_.get(survey_elem, 'notes', false)) {
         rendered.append(Mustache.render(notes_template, survey_elem));
         if(survey_elem['type'] == "selector") {
-            rendered.find("select").on("change", function(){ if(parseInt($(this).val()) >= 4){ $(this).closest(".fd_item").find(".fd_survey_notes").removeClass('hidden'); } else { $(this).closest(".fd_item").find(".fd_survey_notes").addClass('hidden') }});
+            rendered.find("select").on("change", function(){ if(parseInt($(this).val()) >= 4){ $(this).closest(".fd_item").find(".fd_survey_notes").removeClass('d-none'); } else { $(this).closest(".fd_item").find(".fd_survey_notes").addClass('d-none') }});
         } else {
-            rendered.find("input").on("change", function(){ if($(this).is(':checked')){ $(this).closest(".fd_item").find(".fd_survey_notes").removeClass('hidden'); } else { $(this).closest(".fd_item").find(".fd_survey_notes").addClass('hidden') }});
+            rendered.find("input").on("change", function(){ if($(this).is(':checked')){ $(this).closest(".fd_item").find(".fd_survey_notes").removeClass('d-none'); } else { $(this).closest(".fd_item").find(".fd_survey_notes").addClass('d-none') }});
         }
     }
 
@@ -70,14 +70,14 @@ var update_survey_val = function(attr_name, attr_val) {
     console.log("Updating " + attr_name + " to value " + attr_val);
     $.getJSON({url: "ws/add_feedback_item", data: {item_name: attr_name, item_value: attr_val}, method: "POST"})
     .done(function(){
-        noty( { text: "Updated", layout: "topRight", type: "success", timeout: 500 });
+        new Noty( { text: "Updated", theme: "sunset", layout: "topRight", type: "success", timeout: 500 }).show();
         $.getJSON("ws/get_feedback_document").done(function(data){
             var feedback_doc = data.value;
             feedback_doc.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
             $("#feedback_tab").find(".fd_last_modified").empty().append(Mustache.render(last_changed_template, feedback_doc));
         })
     })
-    .fail(function(){noty( { text: "Failed", layout: "topRight", type: "error", timeout: 500 })})
+    .fail(function(){new Noty( { text: "Failed", theme: "sunset", layout: "topRight", type: "error", timeout: 500 }).show();})
 }
 
 $("#feedback_tab").on("lg.loaded.bs.tab", function() {

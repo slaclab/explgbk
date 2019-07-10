@@ -1,10 +1,10 @@
 <div class="container-fluid text-center tabcontainer" id="register_edit_exp_tab">
+<div id="exp_mdl_holder"></div>
 <div class="row">
-    <div id="exp_mdl_holder"></div>
     <div class="table-responsive">
         <table class="table table-condensed table-striped table-bordered" id="exp_searchresults">
             <thead><tr>
-                <th data-sort-attr="name">Name<i class="fa fa-sort-desc"></i></th>
+                <th data-sort-attr="name">Name<i class="fas fa-sort-down sric"></i></th>
                 <th data-sort-attr="instrument">Instrument</th>
                 <th data-sort-attr="first_run.begin_time">First Run</th>
                 <th data-sort-attr="last_run.begin_time">Last Run</th>
@@ -43,8 +43,8 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
       rendered.find(".end_time").datetimepicker({defaultDate: moment(expInfo['end_time']), sideBySide: true });
       rendered.find(".instrument").append($(Mustache.render(options, instruments)));
       rendered.find(".instrument").val(expInfo['instrument']);
-      rendered.find(".fa-plus").on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
-      rendered.find(".fa-trash").on("click", function(){ $(this).closest("tr").remove(); });
+      rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
+      rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
       rendered.find(".experiment_name").on("change", function(){
         console.log("Checking to see if experiment " + $(this).val() + " is registered in URAWI");
         $.getJSON(lookup_experiment_in_urawi, {"experiment_name": $(this).val()})
@@ -55,8 +55,8 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
             rendered.find(".pi_name").val(_.get(expdata.value, 'spokesPerson.firstName') + " " + _.get(expdata.value,'spokesPerson.lastName'));
             rendered.find(".pi_email").val(_.get(expdata.value, 'spokesPerson.email'));
             rendered.find(".leader_account").val(_.get(expdata.value, 'spokesPerson.account[0].unixName'));
-            if (_.get(expdata.value, "startDate") != "") { rendered.find('.start_time').data("DateTimePicker").date(moment(_.get(expdata.value, "startDate"))) };
-            if (_.get(expdata.value, "stopDate") != "") { rendered.find('.end_time').data("DateTimePicker").date(moment(_.get(expdata.value, "stopDate"))) };
+            if (_.get(expdata.value, "startDate") != "") { rendered.find('.start_time').datetimepicker('date').date(moment(_.get(expdata.value, "startDate"))) };
+            if (_.get(expdata.value, "stopDate") != "") { rendered.find('.end_time').datetimepicker('date').date(moment(_.get(expdata.value, "stopDate"))) };
           }
         });
       });
@@ -70,7 +70,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
             [function() { return $.trim(formObj.find(".posix_group").val()) == ""; }, "Please choose a posix group for authorization."],
             [function() { return $.trim(formObj.find(".start_time input").val()) == ""; }, "Please choose a valid start time."],
             [function() { return $.trim(formObj.find(".end_time input").val()) == ""; }, "Please choose a valid end time."],
-            [function() { return formObj.find('.end_time').data("DateTimePicker").date().isSameOrBefore(formObj.find('.start_time').data("DateTimePicker").date(), 'minute') ; }, "The end time should be after the start time."],
+            [function() { return formObj.find('.end_time').datetimepicker('date').isSameOrBefore(formObj.find('.start_time').datetimepicker('date'), 'minute') ; }, "The end time should be after the start time."],
             [function() { return $.trim(formObj.find(".leader_account").val()) == ""; }, "Please specify the UNIX account of the leader for the experiment."],
             [function() { return $.trim(formObj.find(".pi_name").val()) == ""; }, "Please specify the full name of the principal investigator."],
             [function() { return $.trim(formObj.find(".pi_email").val()) == ""; }, "Please specify the email address for the principal investigator."],
@@ -102,8 +102,8 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
             "name" : experiment_name,
             "instrument" : $.trim(formObj.find(".instrument").val()),
             "description" : $.trim(formObj.find(".description").val()),
-            "start_time" : formObj.find('.start_time').data("DateTimePicker").date().toJSON(),
-            "end_time" : formObj.find('.end_time').data("DateTimePicker").date().toJSON(),
+            "start_time" : formObj.find('.start_time').datetimepicker('date').toJSON(),
+            "end_time" : formObj.find('.end_time').datetimepicker('date').toJSON(),
             "leader_account" : $.trim(formObj.find(".leader_account").val()),
             "contact_info" : $.trim(formObj.find(".pi_name").val()) + " (" + $.trim($(".pi_email").val()) + ")",
             "posix_group" : $.trim(formObj.find(".posix_group").val()),
@@ -155,7 +155,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
             [function() { return $.trim(formObj.find(".experiment_name").val()) == formObj.find(".src_experiment_name").val(); }, "Experiment name cannot be the same as the original."],
             [function() { return $.trim(formObj.find(".start_time input").val()) == ""; }, "Please choose a valid start time."],
             [function() { return $.trim(formObj.find(".end_time input").val()) == ""; }, "Please choose a valid end time."],
-            [function() { return formObj.find('.end_time').data("DateTimePicker").date().isSameOrBefore(formObj.find('.start_time').data("DateTimePicker").date(), 'minute') ; }, "The end time should be after the start time."]
+            [function() { return formObj.find('.end_time').datetimepicker('date').isSameOrBefore(formObj.find('.start_time').datetimepicker('date'), 'minute') ; }, "The end time should be after the start time."]
           ];
         // Various validations
         var v_failed = false;
@@ -171,8 +171,8 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
         var experiment_name = $.trim(formObj.find(".experiment_name").val());
         var registration_doc = {
             "name" : experiment_name,
-            "start_time" : formObj.find('.start_time').data("DateTimePicker").date().toJSON(),
-            "end_time" : formObj.find('.end_time').data("DateTimePicker").date().toJSON()
+            "start_time" : formObj.find('.start_time').datetimepicker('date').toJSON(),
+            "end_time" : formObj.find('.end_time').datetimepicker('date').toJSON()
         };
         formObj.find(".clone_attr:checked").each(function(){ registration_doc[$(this).attr("name")] = true; });
         console.log(registration_doc);
@@ -282,13 +282,13 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   $("#register_edit_exp_tab").data("cur_sort_desc", true);
   var exper_template = `{{#value}}<tr data-expid="{{_id}}">
         <td> <a target="_blank" href="{{_id}}/">{{ name }}</a> </td>
-        <td style="background:{{color}}; color:white; " > {{ instrument }} </td>
+        <td style="background:{{background}}; color:{{color}}; " > {{ instrument }} </td>
         <td> {{#FormatDate}}{{first_run.begin_time }}{{/FormatDate}} </td>
         <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
         <td> {{ contact_info }} </td>
         <td> {{ leader_account }} </td>
         <td> {{ description }} </td>
-        <td class="ops_exp_icons"><i class="fa fa-edit" title="Edit"></i><i class="fa fa-clone" title="Clone"></i><i class="fa fa-suitcase" title="Rename"></i>{{#is_locked}}<i class="fa fa-unlock lock_unlock" title="Unlock"></i>{{/is_locked}}{{^is_locked}}<i class="fa fa-lock lock_unlock" title="Lock"></i>{{/is_locked}}</td>
+        <td class="ops_exp_icons"><span class="exp_edit" title="Edit"><i class="fas fa-edit"></i></span><span class="exp_clone" title="Clone"><i class="far fa-clone"></i></span><span class="exp_rename" title="Rename"><i class="fas fa-suitcase"></i></span>{{#is_locked}}<span class="lock_unlock" title="Unlock"><i class="fas fa-unlock"></i></span>{{/is_locked}}{{^is_locked}}<span class="lock_unlock" title="Lock"><i class="fas fa-lock"></i></span>{{/is_locked}}</td>
     </tr>{{/value}}`;
   Mustache.parse(exper_template);
 
@@ -305,9 +305,9 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
     var rendered = Mustache.render(exper_template, expdata);
     $("#exp_searchresults tbody").html(rendered);
-    $("#exp_searchresults .ops_exp_icons .fa-edit").on("click", edit_exp_btn_action);
-    $("#exp_searchresults .ops_exp_icons .fa-clone").on("click", clone_exp);
-    $("#exp_searchresults .ops_exp_icons .fa-suitcase").on("click", rename_exp);
+    $("#exp_searchresults .ops_exp_icons .exp_edit").on("click", edit_exp_btn_action);
+    $("#exp_searchresults .ops_exp_icons .exp_clone").on("click", clone_exp);
+    $("#exp_searchresults .ops_exp_icons .exp_rename").on("click", rename_exp);
     $("#exp_searchresults .ops_exp_icons .lock_unlock").on("click", lock_unlock_experiment);
   }
 
@@ -329,7 +329,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   .done(function(d0, d1) {
     var experiments = d0[0], instruments = _.keyBy(d1[0].value, "_id");
     $("#register_edit_exp_tab").data("experiments", experiments.value); // Prepare for searches.
-    _.map($("#register_edit_exp_tab").data("experiments"), function(exp){ exp["color"] = _.get(instruments, exp["instrument"] + ".color", "inherit"); });
+    _.map($("#register_edit_exp_tab").data("experiments"), function(exp){ exp["background"] = _.get(instruments, exp["instrument"] + ".color", "inherit"); exp["color"] = _.has(instruments, exp["instrument"] + ".color") ? "white" : "black"; });
     $("#register_edit_exp_tab").data("name2info", _.keyBy(experiments.value, "name"));
     $("#register_edit_exp_tab").data("search_results", $("#register_edit_exp_tab").data("experiments"));
     add_exps_to_search_results();
@@ -347,19 +347,19 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
       var sel_attr = $(this).attr("data-sort-attr");
       if(curr_attr == sel_attr) {
           $("#register_edit_exp_tab").data("cur_sort_desc", !$("#register_edit_exp_tab").data("cur_sort_desc"));
-          $(this).closest("th").find("i.fa").remove();
+          $(this).closest("th").find(".sric").remove();
       } else {
           $("#register_edit_exp_tab").data("cur_sort_attr", sel_attr)
           $("#register_edit_exp_tab").data("cur_sort_desc", true);
-          $(this).closest("thead").find("i.fa").remove();
+          $(this).closest("thead").find(".sric").remove();
       }
-      $(this).closest("th").append($("#register_edit_exp_tab").data("cur_sort_desc") ? $('<i class="fa fa-sort-desc"></i>') : $('<i class="fa fa-sort-asc"></i>'))
+      $(this).closest("th").append($("#register_edit_exp_tab").data("cur_sort_desc") ? $('<i class="fas fa-sort-down sric"></i>') : $('<i class="fas fa-sort-up sric"></i>'))
       add_exps_to_search_results();
   });
 
   $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {
       var tab_toolbar = `<input type="text" placeholder="Search" id="ops_exp_searchtext">
-      <i class="fa fa-plus fa-lg" id="register_experiment" title="Register New Experiment"></i>`;
+      <span id="register_experiment" title="Register New Experiment"><i class="fas fa-plus fa-lg"></i></span>`;
       var toolbar_rendered = $(tab_toolbar);
       $("#toolbar_for_tab").append(toolbar_rendered);
       $("#ops_exp_searchtext").on("input", function(){ $("#register_edit_exp_tab").data("search_function")() });

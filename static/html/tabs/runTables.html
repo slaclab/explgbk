@@ -9,17 +9,17 @@
 
 <script type="text/javascript">
 $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
-  var run_tbl_pill_template = `{{#value}}<li><a class="rtbl_pill {{#is_system_run_table}}rtbl_sys{{/is_system_run_table}}" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}`;
+  var run_tbl_pill_template = `{{#value}}<li class="nav-item"><a class="nav-link rtbl_pill {{#is_system_run_table}}rtbl_sys{{/is_system_run_table}}" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}`;
   var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-responsive table-condensed sticky-table"><thead></thead><tbody></tbody></table>`;
   var run_tbl_def_tr = `<tr>
-    <td><input name="label" class="nonblank"/></td>
+    <td><input name="label" class="nonblank w-75"/></td>
     <td><select name="type" class="rtbl_def_category_select nonblank"><option value="">&nbsp;</option></select></td>
     <td><select name="source" class="rtbl_def_pvname_select nonblank"><option value="">&nbsp;</option></select></td>
     <td>
-      <a href="#"><i class="fa fa-arrow-up fa-lg rtbldef_action" aria-hidden="true"></i></a>
-      <a href="#"><i class="fa fa-arrow-down fa-lg rtbldef_action" aria-hidden="true"></i></a>
-      <a href="#"><i class="fa fa-trash fa-lg rtbldef_action" aria-hidden="true"></i></a>
-      <a href="#"><i class="fa fa-plus fa-lg rtbldef_action" aria-hidden="true"></i></a>
+      <span class="rtbldef_action"><i class="fas fa-arrow-up fa-lg" aria-hidden="true"></i></span>
+      <span class="rtbldef_action"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span>
+      <span class="rtbldef_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
+      <span class="rtbldef_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
     </td></tr>`;
   var run_tbl_def_category_selector = `{{#.}}<option value="{{.}}">{{.}}</option>{{/.}}`;
   var run_tbl_def_pvname_selector = `<select name="source" class='rtbl_def_pvname_select nonblank'><option value=''></option>{{#.}}<option value="{{label}}" title="{{param_name}}">{{label}}</option>{{/.}}</select>`;
@@ -51,7 +51,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
          $(this).parent().next().empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value[$(this).val()]));
        });
        mdl.find("#rtbl_def_table_type").on("change", function(){
-           if($(this).val() == "histogram") { $(this).closest(".modal").find($("#rtbl_hist_params")).removeClass("hidden"); } else { $(this).closest(".modal").find($("#rtbl_hist_params")).addClass("hidden"); }
+           if($(this).val() == "histogram") { $(this).closest(".modal").find($("#rtbl_hist_params")).removeClass("d-none"); } else { $(this).closest(".modal").find($("#rtbl_hist_params")).addClass("d-none"); }
        });
        template_tr.find(".fa-plus").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").after(template_tr.clone(true)); });
        template_tr.find(".fa-trash").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").remove(); });
@@ -230,6 +230,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
               if(_.get(roles, "is_site_admin", false)) {
                   $("#make_system_rtbl").show();
               }
+              $("#edit_rtbl").show();
           }
       } else {
           $("#toolbar_for_tab").find(".tlbr").hide();
@@ -250,15 +251,15 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
     });
 
     $("#rtbl_tab").data("new_rtbl_fn", function(e) { col_defs_dialog(); });
-    $("#rtbl_tab").data("edit_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name"); col_defs_dialog(clkRTblName); });
+    $("#rtbl_tab").data("edit_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name"); col_defs_dialog(clkRTblName); });
     $("#rtbl_tab").data("del_rtbl_fn", function(e) {
-        var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name");
+        var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name");
         $.ajax({ url: "ws/delete_run_table", "data": { table_name: clkRTblName, is_system_run_table: _.get($("#rtbl_tab").data("tblData")[clkRTblName], 'is_system_run_table', false)}, method: "DELETE"})
         .done(function(data) { if(_.get(data, "success", true)) { window.location.reload(true); } else { alert("Server side error deleting run table " + data.errormsg); }})
         .fail(function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure deleting run table " + textStatus); })
     });
     $("#rtbl_tab").data("clone_rtbl_fn", function(e) {
-        var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name");
+        var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name");
         $.ajax("../../static/html/ms/gen_clone.html")
         .done(function(tmpl){
             Mustache.parse(tmpl);
@@ -305,7 +306,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         });
     });
     $("#rtbl_tab").data("make_system_rtbl", function(e) {
-        var clkRTblName = $("#rtbl_tab .nav-pills li.active .rtbl_pill").attr("data-rtbl-name");
+        var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name");
         $.ajax("../../static/html/ms/gen_clone.html")
         .done(function(tmpl){
             Mustache.parse(tmpl);
@@ -358,11 +359,11 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 });
 
 $("#rtbl_tab").on("lg.shown.bs.tab", function() {
-    var tab_toolbar = `<i class="fa fa-plus fa-lg tlbr" id="new_rtbl"></i>
-    <i class="fa fa-edit fa-lg tlbr" id="edit_rtbl" title="Edit this run table"></i>
-    <i class="fa fa-clone fa-lg tlbr" id="clone_rtbl" title="Clone this run table"></i>
-    <i class="fa fa-trash fa-lg tlbr" id="del_rtbl" title="Delete this run table"></i>
-    <i class="fa fa-superpowers fa-lg tlbr" id="make_system_rtbl" title="Move this run table to the system run tables. These are visible to all experiments; the move will replace any system run table with the same name. This run table will be removed from this experiment."></i>
+    var tab_toolbar = `<span id="new_rtbl"><i class="fas fa-plus fa-lg tlbr"></i></span>
+    <span id="edit_rtbl" title="Edit this run table"><i class="fas fa-edit fa-lg tlbr"></i></span>
+    <span id="clone_rtbl" title="Clone this run table"><i class="fas fa-clone fa-lg tlbr"></i></span>
+    <span id="del_rtbl" title="Delete this run table"><i class="fas fa-trash fa-lg tlbr"></i></span>
+    <span id="make_system_rtbl" title="Move this run table to the system run tables. These are visible to all experiments; the move will replace any system run table with the same name. This run table will be removed from this experiment."><i class="fab fa-superpowers fa-lg tlbr"></i></span>
     `;
     var toolbar_rendered = $(tab_toolbar);
     if(!_.get(roles, "is_site_admin", false)) { toolbar_rendered.find("#make_system_rtbl").remove(); }

@@ -8,14 +8,14 @@ $(function() {
     		    <td> {{ description }} </td>
     		</tr>{{/value}}`;
 
-    	var instrument_tab_template = `<li><a class="instrument_tab" data-toggle="tab" href="#{{escaped_instr}}">{{ instrument }}</a></li>`;
+    	var instrument_tab_template = `<li class="nav-item"><a class="nav-link instrument_tab" data-toggle="tab" href="#{{escaped_instr}}">{{ instrument }}</a></li>`;
     	var instrument_tab_content_template = `<div role="tabpanel" class="tab-pane fade in" id="{{escaped_instr}}"><div class="tabbable"><ul class="nav nav-pills"></ul></div><div class="tab-content"><div class="table-responsive">
             <table class="table table-condensed table-striped table-bordered">
             <thead><tr><th>Name</th><th>First Run</th><th>Last Run</th><th>Contact</th><th>Description</th></tr></thead>
             <tbody>
             </tbody>
           </table></div></div>`;
-    	var year_pill_template = `<li><a class="year_pill" data-toggle="tab" data-instrument="{{instrument}}" data-year="{{year}}" href="#{{year}}">{{ year }}</a></li>`;
+    	var year_pill_template = `<li class="nav-item"><a class="nav-link year_pill" data-toggle="tab" data-instrument="{{instrument}}" data-year="{{year}}" href="#{{year}}">{{ year }}</a></li>`;
 
 
     	Mustache.parse(exper_template);
@@ -32,6 +32,14 @@ $(function() {
         		$("#activeexperimentsli").after(Mustache.render(instrument_tab_template, { instrument: instr, escaped_instr: escaped_instr }));
         		$("#activeexptab").after(Mustache.render(instrument_tab_content_template, { instrument: instr, escaped_instr: escaped_instr }))
         	});
+            // Bootstrap 4 bug; revist after each release...
+            $('#myNavbar a[data-toggle="tab"]').on('click', function(e) {
+                e.preventDefault();
+                $(this).tab('show');
+                var theThis = $(this);
+                $('#myNavbar a').removeClass('active');
+                theThis.addClass('active');
+            });
         	$(".instrument_tab").on("shown.bs.tab", function(e){
         		var instr = $(e.target).text();
         		var tabtarget = $(e.target).attr("href");

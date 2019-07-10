@@ -16,17 +16,22 @@
 }
 .font_family_choices_mixin {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+  font-size: 0.85rem;
 }
 .listview_icon_mixin {
   opacity: .5;
-  padding-left: 0.25em;
-  padding-right: 0.25em;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
 }
 .validation_warning {
   color: #FFB305;
+  font-weight: bold;
+  font-size: 1.5rem;
 }
 #lgbk_body {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+  font-size: 0.85rem;
 }
 label {
   color: #6685F4;
@@ -80,32 +85,14 @@ label {
 #toolbar_for_tab {
   float: right;
   margin-right: 15px;
+  margin-left: 10px;
 }
 #toolbar_for_tab .fa.pushedin {
   color: #FFCC57;
 }
-#toolbar_for_tab .fa {
+#toolbar_for_tab span {
   color: white;
   background: #6685F4;
-}
-.ttip .ttiptext {
-  font-style: normal;
-  background: white;
-  visibility: hidden;
-  width: 30em;
-  text-align: center;
-  padding: 5px 0;
-  border: #6685F4 solid thin;
-  border-radius: 6px;
-  position: absolute;
-  z-index: 1;
-  color: black;
-  top: 100%;
-  left: 50%;
-  margin-left: -15em;
-}
-.ttip:hover .ttiptext {
-  visibility: visible;
 }
 .exp_info h1 {
   font-size: 1.1em;
@@ -127,10 +114,14 @@ label {
   margin-left: 1%;
   width: 98%;
 }
-.dl-horizontal dt {
-  color: #6685F4;
+.exp_info .exp_details {
+  padding-left: 0.5em;
 }
-.dl-horizontal dd {
+.exp_info .exp_details span.label {
+  color: #6685F4;
+  font-weight: bold;
+}
+.exp_info .exp_details span {
   text-align: left;
 }
 @media screen and (max-width: 767px) {
@@ -184,22 +175,23 @@ label {
   background: #6685F4;
   font-weight: bold;
 }
-#register_edit_exp_tab th {
+#exp_searchresults th {
   color: white;
   background: #6685F4;
   font-weight: bold;
   white-space: nowrap;
 }
-#register_edit_exp_tab th .fa {
+#exp_searchresults th .fas {
   padding-left: 0.25em;
 }
 #register_edit_exp_tab .ops_exp_icons {
   white-space: nowrap;
 }
-#register_edit_exp_tab .ops_exp_icons .fa {
+#register_edit_exp_tab .ops_exp_icons span {
   opacity: .5;
-  padding-left: 0.25em;
-  padding-right: 0.25em;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
 }
 #register_edit_exp_tab .clone_select_attrs td {
   text-align: left;
@@ -215,7 +207,7 @@ label {
   font-weight: bold;
   padding-left: 2.0em;
 }
-.param_table_mixin .fa {
+.param_table_mixin .fas {
   opacity: 0.5;
 }
 #ops_instruments_tab .modal .table tr th {
@@ -224,8 +216,16 @@ label {
   font-weight: bold;
   padding-left: 2.0em;
 }
-#ops_instruments_tab .modal .table .fa {
+#ops_instruments_tab .modal .table .fas {
   opacity: 0.5;
+}
+#ops_instruments_tab .modal .table .param_action {
+  opacity: .5;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
+  font-size: inherit;
+  color: #1E48DF;
 }
 #ops_instruments_tab th {
   color: white;
@@ -236,20 +236,25 @@ label {
   height: 80vw;
 }
 #ops_exp_searchtext {
-  padding: 0.25em;
   border: thin solid #6685F4;
-  margin: 0.25em;
   color: #6685F4;
-  font-size: 17px;
 }
-#register_edit_exp_tab .modal .table tr th {
+#register_edit_exp_tab .modal .param_table tr th {
   color: white;
   background: #6685F4;
   font-weight: bold;
   padding-left: 2.0em;
 }
-#register_edit_exp_tab .modal .table .fa {
+#register_edit_exp_tab .modal .param_table .fas {
   opacity: 0.5;
+}
+#register_edit_exp_tab .modal .param_table .param_action {
+  opacity: .5;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
+  font-size: inherit;
+  color: #1E48DF;
 }
 #experiments_container thead th {
   color: #1E48DF;
@@ -266,7 +271,7 @@ label {
   background: #6685F4;
   font-weight: bold;
 }
-#experiments_container li.active a {
+#experiments_container li a.active {
   color: white;
   background: #6685F4;
   font-weight: bold;
@@ -304,10 +309,11 @@ label {
 #expswitch_tab .ops_switch_icons {
   white-space: nowrap;
 }
-#expswitch_tab .ops_switch_icons .fa {
+#expswitch_tab .ops_switch_icons .fas {
   opacity: .5;
-  padding-left: 0.25em;
-  padding-right: 0.25em;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
 }
 #expswitch_tab .exp_switch_standby {
   color: #FFB305;
@@ -317,10 +323,15 @@ label {
   color: #FFB305;
   font-weight: bold;
 }
-#choose_experiment_modal table td a {
+#expswitch_choose_experiment table {
+  height: 25rem;
+  display: block;
+  overflow-y: scroll;
+}
+#expswitch_choose_experiment table td a {
   color: #6685F4;
 }
-#choose_experiment_modal .btn-group .btn {
+#expswitch_choose_experiment .btn-group .btn {
   margin-top: 0.25em;
   margin-left: 0.5em;
   margin-right: 0.5em;
@@ -332,7 +343,7 @@ label {
   color: white;
   background: #6685F4;
   font-weight: bold;
-  border: thin black solid;
+  border: thin #1E48DF solid;
   padding: 0.2em;
 }
 #info_tab .ques_tabs .sitespecific_iframe {
@@ -353,6 +364,16 @@ label {
 }
 #elog_tab div.followup_div {
   margin-left: 0.5em;
+  width: 100%;
+}
+#elog_tab div.followup_div .email_select {
+  width: inherit;
+}
+#elog_tab div.followup_div .col-sm-8 {
+  padding-left: inherit;
+}
+#elog_tab div.followup_div .card {
+  border: 3px solid #6685F4;
 }
 #elog_tab .elog_main_content {
   text-align: left;
@@ -417,7 +438,10 @@ label {
   background: #6685F4;
   color: white;
 }
-#current_sample_lbl .fa {
+#elog_email_subscriptions pre {
+  background: lightgray;
+}
+#current_sample_lbl .fas {
   padding-right: 0.25em;
 }
 #current_sample_lbl {
@@ -428,6 +452,16 @@ label {
 }
 #current_sample_lbl.samples_different {
   color: #FFCC57;
+}
+.tooltip .tooltip-inner {
+  background-color: #6685F4;
+  border: solid thin thin solid #1E48DF;
+  padding: 0.25em;
+}
+.tooltip .arrow::before {
+  border-left-color: #6685F4;
+  border: solid thin thin solid #1E48DF;
+  padding: 0.25em;
 }
 #myTabContainer .expand_ctrl {
   font-size: 0.75em;
@@ -445,7 +479,8 @@ label {
   color: #6685F4;
   font-weight: bold;
 }
-#myTabContainer ul.nav-pills li.active a {
+#myTabContainer ul.nav-pills a.active {
+  color: #6685F4;
   color: white;
   background: #6685F4;
   font-weight: bold;
@@ -465,21 +500,22 @@ label {
   height: 100%;
 }
 #elog_content {
-  padding: 1px;
+  padding: 0px;
   margin: 0px;
   padding-top: 0px;
-}
-#elog_content .fa {
-  opacity: .5;
 }
 #elog_content .entry_actions {
   float: right;
   font-size: 0.90em;
   padding-right: 0.25em;
 }
-#elog_content .entry_actions .fa {
+#elog_content .entry_actions span {
   padding-left: 0.15em;
   padding-right: 0.15em;
+  opacity: .5;
+}
+#elog_content .elog-chid .card {
+  width: 100%;
 }
 #fmgr_tab .run_file:nth-child(odd) {
   background: #efefef;
@@ -491,7 +527,7 @@ label {
 #fmgr_tab .fdat:nth-child(odd) {
   background: #efefef;
 }
-#fmgr_tab .fa {
+#fmgr_tab .fas {
   opacity: .5;
 }
 #fmgr_tab .fmgr_exp_file_name {
@@ -500,6 +536,9 @@ label {
 }
 #rtbl_content table {
   width: 100%;
+}
+#rtbl_content .sticky-table {
+  height: 80vh;
 }
 #rtbl_content .sticky-table thead tr th {
   position: -webkit-sticky;
@@ -518,8 +557,12 @@ label {
   background-color: #1E48DF;
 }
 #rtbl_content .rtbldef_action {
-  padding-left: 0.25em;
-  padding-right: 0.25em;
+  opacity: .5;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
+  font-size: inherit;
+  color: #1E48DF;
 }
 #rtbl_content td.rtbl_separator {
   background: #efefef;
@@ -561,8 +604,17 @@ label {
 }
 #shifts_tab .listview-action {
   opacity: .5;
-  padding-left: 0.25em;
-  padding-right: 0.25em;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
+}
+#shifts_tab .param_action {
+  opacity: .5;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
+  font-size: inherit;
+  color: #1E48DF;
 }
 #shifts_tab .shiftstbl tr.active_shift td {
   color: #6685F4;
@@ -592,8 +644,9 @@ label {
 }
 #samples_tab .listview-action {
   opacity: .5;
-  padding-left: 0.25em;
-  padding-right: 0.25em;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
 }
 #samples_tab .samplestbl tr.active_sample td {
   color: #6685F4;
@@ -601,6 +654,14 @@ label {
   background: #FFCC57;
   margin: 0.1em;
   padding: 0.1em;
+}
+#samples_tab .param_action {
+  opacity: .5;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
+  font-size: inherit;
+  color: #1E48DF;
 }
 .note-callout {
   border: thin #6685F4 solid;
@@ -617,7 +678,7 @@ label {
   text-align: left;
   padding-left: 1em;
 }
-#collab_tab .collabtbl tbody tr td .fa {
+#collab_tab .collabtbl tbody tr td .fas {
   padding-right: 1.0em;
 }
 #collab_tab .collabtbl tbody tr td .fa-trash {
@@ -634,12 +695,12 @@ label {
   font-size: small;
   position: relative;
   bottom: -0.25em;
-  right: 1.5em;
+  right: 0.25em;
 }
 #collab_tab .collabtbl .collab-no-role {
   opacity: 0.5;
 }
-#collab_mdl_holder tbody .fa {
+#collab_mdl_holder tbody .fas {
   padding-right: 0.75em;
 }
 #collab_mdl_holder tbody .fa.disabled {

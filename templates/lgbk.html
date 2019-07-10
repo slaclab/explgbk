@@ -6,22 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" href="../../static/lgbk.css">
   <link rel="stylesheet" type="text/css" href="../../js/bootstrap/css/bootstrap.min.css">
-  <link rel="stylesheet" type="text/css" href="../../js/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css">
-  <link rel="stylesheet" type="text/css" href="../../js/font-awesome/css/font-awesome.min.css">
-  <link rel="stylesheet" type="text/css" href="../../js/summernote/dist/summernote.css">
+  <link rel="stylesheet" type="text/css" href="../../js/tempusdominus-bootstrap-4/build/css/tempusdominus-bootstrap-4.min.css">
+  <link rel="stylesheet" type="text/css" href="../../js/@fortawesome/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="../../js/noty/lib/noty.css">
+  <link rel="stylesheet" type="text/css" href="../../js/summernote/dist/summernote-bs4.css">
   <link rel="stylesheet" type="text/css" href="../../js/selectize/dist/css/selectize.bootstrap3.css">
 
   <script type="text/javascript" src="../../js/jquery/jquery.min.js"></script>
   <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
   <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
   <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
-  <script type="text/javascript" src="../../js/jquery.noty.packaged.js/jquery.noty.packaged.js"></script>
-  <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.min.js"></script>
-  <script type="text/javascript" src="../../js/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+  <script type="text/javascript" src="../../js/noty/lib/noty.min.js"></script>
+  <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
+  <script type="text/javascript" src="../../js/tempusdominus-bootstrap-4/build/js/tempusdominus-bootstrap-4.min.js"></script>
   <script type="text/javascript" src="../../js/socket.io-client/dist/socket.io.js"></script>
   <script type="text/javascript" src="../../js/python/flask_socket_util/websocket_client.js"></script>
   <script type="text/javascript" src="../../js/plotly.js/dist/plotly.min.js"></script>
-  <script type="text/javascript" src="../../js/summernote/dist/summernote.min.js"></script>
+  <script type="text/javascript" src="../../js/summernote/dist/summernote-bs4.min.js"></script>
   <script type="text/javascript" src="../../js/selectize/dist/js/standalone/selectize.min.js"></script>
 
   <script src="../../static/lgbk.js"></script>
@@ -42,41 +44,38 @@
 </head>
 <body id="lgbk_body">
 
-<nav class="navbar navbar-default" role="navigation" id="myNavRow">
+<nav class="navbar navbar-expand-lg navbar-light" id="myNavRow">
   <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
     <div class="collapse navbar-collapse" id="myNavbar">
-      <ul class="nav navbar-nav">
-        <li><a data-toggle="tab" data-url="../../static/html/tabs/info.html" href="#info">Info</a></li>
-        <li><a data-toggle="tab" data-url="../../static/html/tabs/elog.html" href="#eLog">eLog</a></li>
-        <li><a data-toggle="tab" data-url="../../static/html/tabs/samples.html" href="#samples">Samples</a></li>
-        <li><a data-toggle="tab" data-url="../../static/html/tabs/runTables.html" href="#runTables">Run Tables</a></li>
-        <li><a data-toggle="tab" data-url="../../static/html/tabs/fileManager.html" href="#fileManager">File Manager</a></li>
-        <li><a data-toggle="tab" data-url="../../static/html/tabs/shifts.html" href="#shifts">Shifts</a></li>
-        <li><a data-toggle="tab" data-url="../../static/html/tabs/feedback.html" href="#feedback">Feedback</a></li>
-        <li class="dropdown sitespecific"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Mgmt<span class="caret"></span></a>
-	        <ul class="dropdown-menu">
-	          <li><a data-toggle="tab" data-url="../../static/html/tabs/collaborators.html" href="#collaborators">Collaborators</a></li>
-	        </ul>
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/info.html" href="#info">Info</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/elog.html" href="#eLog">eLog</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/samples.html" href="#samples">Samples</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/runTables.html" href="#runTables">Run Tables</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/fileManager.html" href="#fileManager">File Manager</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/shifts.html" href="#shifts">Shifts</a></li>
+        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/feedback.html" href="#feedback">Feedback</a></li>
+        <li class="nav-item dropdown sitespecific"><a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Mgmt<span class="caret"></span></a>
+	        <div class="dropdown-menu">
+	          <a class="dropdown-item" data-toggle="tab" data-url="../../static/html/tabs/collaborators.html" href="#collaborators">Collaborators</a>
+            </div>
         </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-          <li class="session_items"><a href="../logout"><span class="logged_in_user_name">{{ logged_in_user }}</span><i class="fa fa-sign-out fa-lg"></i></a></li>
-          <li><a href="../experiments"><i class="fa fa-home fa-lg"></i>  Home</a></li>
+          <li class="session_items"><a href="../logout"><span class="logged_in_user_name">{{ logged_in_user }}</span><i class="fas fa-sign-out-alt fa-lg"></i></a></li>
+          <li><a href="../experiments"><i class="fas fa-home fa-lg"></i>  Home</a></li>
       </ul>
-    </div>
-    <div class="tab_title_bar">
-        <span class="exp_title">Logbook for {{ experiment_name }}<span id="current_sample_lbl"></span></span>
-        <span id="toolbar_for_tab"></span>
     </div>
   </div>
 </nav>
+<div class="tab_title_bar">
+    <span class="exp_title">Logbook for {{ experiment_name }}<span id="current_sample_lbl"></span></span>
+    <span id="toolbar_for_tab"></span>
+</div>
 
 <div id="glbl_modals_go_here"></div>
 <div class="tab-content" id="myTabContainer">
@@ -130,7 +129,7 @@ $(document).ready(function() {
     $.getJSON('../../static/json/sitespecific_tabs_' + logbook_site + ".json")
     .done(function(tabs) {
         {% raw %}
-        var ssnavtmpl = `{{#.}}<li><a data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
+        var ssnavtmpl = `{{#.}}<li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
         var ssnavpnltmpl = `{{#.}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/.}}`;
         {% endraw %}
         Mustache.parse(ssnavtmpl); Mustache.parse(ssnavpnltmpl);
@@ -138,12 +137,32 @@ $(document).ready(function() {
         $("#myTabContainer").find(".sitespecific").before(Mustache.render(ssnavpnltmpl, tabs));
     }).always(function(){
         $('a[data-toggle="tab"]').on('shown.bs.tab', showTab);
+        // Bootstrap 4 bug; revist after each release...
+        $('#myNavbar a[data-toggle="tab"]').on('click', function(e) {
+            e.preventDefault();
+            $(this).tab('show');
+            var theThis = $(this);
+            $('#myNavbar a').removeClass('active');
+            theThis.addClass('active');
+        });
+        $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
+          if (!$(this).next().hasClass('show')) {
+            $(this).parents('.dropdown-menu').first().find('.show').removeClass("show");
+          }
+          var $subMenu = $(this).next(".dropdown-menu");
+          $subMenu.toggleClass('show');
+
+          $(this).parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function(e) {
+            $('.dropdown-submenu .show').removeClass("show");
+          });
+          return false;
+        });
         // Code for honoring the hash; for example URL#eLog gets you to the eLog
         var hash = window.location.hash;
         if (hash) {
-          $('ul.nav a[href="' + hash + '"]').tab('show');
+          $('#myNavbar ul.navbar-nav a[href="' + hash + '"]').tab('show');
         } else {
-        	$('.navbar-nav a:first').tab('show');
+        	$('#myNavbar ul.navbar-nav a:first').tab('show');
         }
     });
 
