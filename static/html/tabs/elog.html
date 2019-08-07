@@ -18,8 +18,8 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   <div class="col-md-5">Content</div>
   <div class="col-md-3">Tags</div>
   <div class="col-md-1">Author</div>
- </div>`;
- var elog_main_template = `<div class="edat {{^root}}etop{{/root}}{{#root}}edesc{{/root}}" id="{{ _id }}"><div class="row">
+ </div><div class="spgntr_append"></div>`;
+ var elog_main_template = `<div class="edat {{^root}}etop{{/root}}{{#root}}edesc{{/root}}" id="{{ elem_id }}" data-spgntr="{{elem_id}}"><div class="row">
   <div class="col-md-2">
     <span class="elog-expand elog-compressed exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>
     {{#c_attach}}<span class="exp_icons_left"><i class="fas fa-paperclip expand_ctrl"></i></span>{{/c_attach}}
@@ -56,7 +56,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
        <div class="form-group row justify-content-center"><button type="button" class="btn btn-primary followup_post">Post</button></div>
       </form></div></div></div>`;
 
-  var elog_run_main_template = `<div class="edat etop" id="{{ elem_id }}"><div class="row">
+  var elog_run_main_template = `<div class="edat etop" id="{{ elem_id }}" data-spgntr="{{elem_id}}"><div class="row">
        <div class="col-md-2">
          <span class="elog-expand elog-compressed exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>
          {{#FormatDate}}{{relevance_time}}{{/FormatDate}}
@@ -280,10 +280,6 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
      $(this).toggleClass("elog-expanded elog-compressed");
  };
 
-  var elogEntryRenderFunction = function() {
-      return renderMSTemplate(elog_main_template, this, { main_content_tmpl: elog_main_content_template })
-  }
-
   var replaceExistingElogEntryContent = function(existingElem) { // If we get a update for an edit over web socker, we replace the contents of the elog entry.
       existingElem.find(".elog_main_cnt").replaceWith(renderMSTemplate(elog_main_content_template, this));
       if(_.has(this, "title")) {
@@ -296,21 +292,32 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       existingElem.find(".elog_chid_body_content").first().replaceWith(renderMSTemplate(elog_chid_body_content, this));
   }
 
-  var runRenderFunction = function() {
-      return renderMSTemplate(elog_run_main_template, this);
+  var elogEntryRenderFunction = function() {
+      var rendered = renderMSTemplate(elog_main_template, this, { main_content_tmpl: elog_main_content_template })
+      rendered.data("entry", this).data("ts", moment(this["relevance_time"]));
+      rendered.find(".elog-expand").on("click", this.expandFunction);
+      return rendered;
   }
 
-  var processNewEntry = function(entry) {
+  var runRenderFunction = function() {
+      var rendered = renderMSTemplate(elog_run_main_template, this);
+      rendered.data("entry", this).data("ts", moment(this["relevance_time"]));
+      rendered.find(".elog-expand").on("click", this.expandFunction);
+      return rendered;
+  }
+
+  var processElogEntry = function(entry) {
 	  var root = _.get(entry, "root", null), parent = _.get(entry, "parent", null), attachments = _.get(entry, "attachments", null);
       if(attachments != null) {
     	  entry["c_attach"] = true;
     	  _.each(attachments, function(attachment) { attachment["entry_id"] = entry["_id"]; });
       }
       entry.roles = roles;
-      entry.renderFunction = elogEntryRenderFunction;
+      entry.render = elogEntryRenderFunction;
       entry.replaceExistingElogEntryContent = replaceExistingElogEntryContent;
       entry.expandFunction = expandFunction;
       entry["elem_id"] = entry["_id"];
+      entry["r_time"] = (new Date(entry["relevance_time"])).getTime();
       entry["emails_str"] = _.join(_.get(entry, "email_to", []), " ");
       id2entry[entry["_id"]] = entry;
   }
@@ -331,64 +338,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       });
   }
 
-  var render_elog_entry = function(elogData, skipSearch) { // Optimization - if skipSearch is true, we simply append the template. This assumes that we are pre-sorting the incoming data
-      var entryinserted = false;
-      var newentrydt = moment(elogData['relevance_time']);
-      var rendered = elogData.renderFunction();
-      rendered.data("entry", elogData).data("ts", moment(elogData["relevance_time"]));
-      rendered.find(".elog-expand").on("click", elogData.expandFunction);
-      if(skipSearch) {
-          $("#elog_content").append(rendered);
-          entryinserted = true;
-          return;
-      }
-      var existingElem = $("#"+elogData["elem_id"]);
-      if(existingElem.length > 0) {
-          existingElem.data("entry", elogData).data("ts", moment(elogData["relevance_time"]));
-          elogData.replaceExistingElogEntryContent(existingElem);
-          entryinserted = true;
-          return;
-      }
-      if (!_.has(elogData, 'root') && !_.has(elogData, 'parent')) {
-          $.each($("#elog_content").find(".etop"), function(i, entry) {
-              var existing_entry = $(this).data("entry");
-              var existing_entry_dt = $(this).data("ts");
-              if (!_.has(existing_entry, 'root') && !_.has(existing_entry, 'parent')) {
-                  if (newentrydt.isAfter(existing_entry_dt)) {
-                      $(this).before(rendered);
-                      entryinserted = true
-                      return false;
-                  }
-              } else { alert("We should never be here... Please report this to pcds-datamgt-l"); }
-          });
-          if(!entryinserted) {
-              console.log("Inserting possible first entry");
-              $("#elog_content").append(rendered);
-              entryinserted = true;
-          }
-      } else {
-          console.log("Child row of " + elogData["parent"]);
-          $.each($("#"+elogData["parent"]).find(".edat"), function() {
-              var existing_entry = $(this).data("entry");
-              var existing_entry_dt = moment(existing_entry['relevance_time']);
-              if (newentrydt.isAfter(existing_entry_dt)) {
-                  $(this).before(rendered);
-                  entryinserted = true;
-                  return false;
-              }
-          });
-          if(!entryinserted) {
-              console.log("Inserting possible first child entry");
-              $("#"+elogData["parent"]).find(".card-body").append(rendered);
-              entryinserted = true;
-          }
-      }
-  }
-
   $("#elog_tab").data("entries", id2entry);
 
   var processElogResponse = function(data) {
-    _.each(data.value, function(entry) { processNewEntry(entry); });
+    _.each(data.value, function(entry) { processElogEntry(entry); });
     attach_children();
     return data.value;
   };
@@ -399,8 +352,9 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
           var runData = _.clone(run);
           runData["elem_id"] = "r_"+runData["_id"]+ (run_end==true ? "_e" : "_b");
           runData["relevance_time"] = (run_end==true ? runData['end_time'] : runData['begin_time']);
+          runData["r_time"] = (new Date(runData["relevance_time"])).getTime();
           runData["content"] = (run_end==true ? "Stop" : "Start");
-          runData.renderFunction = runRenderFunction;
+          runData.render = runRenderFunction;
           runData.replaceExistingElogEntryContent = function() {};
           runData.expandFunction = runExpandFunction;
           runEntries.push(runData);
@@ -414,12 +368,16 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
   var renderElogResponse = function(data) {
       $("#elog_content").html(elog_header);
-      _.each(_.sortBy(_.filter(data.value, function(f) { return !_.has(f, "root") }), function(s) { return s["relevance_time"]}).reverse(), function(entry) { // Show only the top level entries in descending order.
-          if(! _.has(entry, "root")) {
-              render_elog_entry(entry, true);
-          }
-      });
+      sortable_paginator($("#elog_content"), "elem_id", "r_time", true, 0, 100, 100);
+      $("#elog_content").data("spgntr").addObjects(_.filter(data.value, function(f) { return !_.has(f, "root") }));
   }
+
+  $(window).scroll(function () {
+      if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+          $("#elog_content").data("spgntr").pageDown();
+      }
+  });
+
 
   var load_elog_function = function() {
       var user_specified_log_entry_id = getURLParameter("_id");
@@ -452,9 +410,30 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       var elogData = elogEvent.value;
       console.log("Processing elog event for experiment " + experiment_name + " id=" + elogData["_id"]);
       if(_.has(elogData, "sample") && sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && elogData['sample'] != sample_showing_in_UI) { console.log("Skipping updating elog for different sample " + elogData['sample']); return; }
-      processNewEntry(elogData);
+      processElogEntry(elogData);
       attach_children();
-      render_elog_entry(elogData, false);
+      console.log(elogData);
+      if(!_.has(elogData, "root")) {
+          $("#elog_content").data("spgntr").addObject(elogData);
+      } else {
+          console.log("Child row of " + elogData["parent"]);
+          let entryinserted = false, newentrydt = moment(elogData['relevance_time']);
+          $.each($("#"+elogData["parent"]).find(".edat"), function() {
+              if(!entryinserted) {
+                  var existing_entry = $(this).data("entry");
+                  var existing_entry_dt = moment(existing_entry['relevance_time']);
+                  if (newentrydt.isAfter(existing_entry_dt)) {
+                      $(this).before(elogData.render());
+                      entryinserted = true;
+                  }
+              }
+            });
+            if(!entryinserted) {
+                console.log("Inserting possible first child entry");
+                $("#"+elogData["parent"]).find(".card-body").append(elogData.render());
+                entryinserted = true;
+            }
+      }
   });
 
   $(document).on('runs', function(event, runEvent) {
@@ -463,7 +442,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       console.log("Processing run event for experiment " + experiment_name + " id=" + runData["num"]);
       if(_.has(runData, "sample") && sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && runData['sample'] != sample_showing_in_UI) { console.log("Skipping updating elog runs for different sample " + runData['sample']); return; }
       var newRunEntries = processRunResponse({value: [runData]});
-      _.each(newRunEntries, function(r){render_elog_entry(r, false)});
+      _.each(newRunEntries, function(r){$("#elog_content").data("spgntr").addObject(r)});
   });
 
 
