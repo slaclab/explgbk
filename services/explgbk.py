@@ -1101,6 +1101,7 @@ def svc_end_run(experiment_name):
     sample_obj = get_sample_for_run(experiment_name, run_doc['num'])
     if sample_obj:
         run_doc['sample'] = sample_obj['name']
+    run_doc["file_catalog"] = get_experiment_files_for_run(experiment_name, run_doc['num'])
     context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc})
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
