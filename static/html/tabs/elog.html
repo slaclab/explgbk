@@ -515,7 +515,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       console.log("Getting data for attachments only");
       $.getJSON("ws/elog")
       .done(function(data){
-          var attachments_only_template = `<div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="?_id={{entry_id}}#eLog" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
+          var attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="?_id={{entry_id}}#eLog" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
           Mustache.parse(attachments_only_template);
           var attachments_flat_list = [];
           _.each(data.value, function(entry) {
