@@ -24,7 +24,7 @@
             </div>
           </div>
           <div class="row">
-              <div class="form-group col-6">
+              <div class="form-group col-4">
                    <label for="start_time">Start Time:</label>
                    <div class='input-group date start_time' id="expreg_start_time_picker" data-target-input="nearest">
                        <input type="text" class="form-control datetimepicker-input" data-target="#expreg_start_time_picker"/>
@@ -33,7 +33,7 @@
                        </div>
                    </div>
                </div>
-               <div class="form-group col-6">
+               <div class="form-group col-4">
                     <label for="end_time">End Time:</label>
                     <div class='input-group date end_time' id="expreg_end_time_picker" data-target-input="nearest">
                         <input type="text" class="form-control datetimepicker-input" data-target="#expreg_end_time_picker"/>
@@ -42,6 +42,12 @@
                         </div>
                     </div>
                </div>
+               {{^name}}
+               <div class="form-group col-4">
+                   <label for="initial_sample">Initial sample:</label>
+                   <input type="text" class="form-control inital_sample" title="Enter the name of the initial sample; a run associated with the initial sample is also created automatically. The sample is created with a generic description and without any parameters.">
+               </div>
+               {{/name}}
           </div>
 
           <div class="row">

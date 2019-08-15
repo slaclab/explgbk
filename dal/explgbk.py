@@ -18,7 +18,7 @@ from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
 from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, security, usergroups
-from dal.run_control import get_current_run
+from dal.run_control import get_current_run, start_run
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -115,6 +115,14 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
             {"app" : "LogBook", "name": "Writer", "players": [ info["posix_group"]] }
             ]
         )
+
+    if "initial_sample" in incoming_info and incoming_info["initial_sample"]:
+        create_update_sample(experiment_name, incoming_info["initial_sample"], True, {
+            "name": incoming_info["initial_sample"],
+            "description": "The initial sample created as part of experiment creation."
+            })
+        make_sample_current(experiment_name, incoming_info["initial_sample"])
+        start_run(experiment_name, "DATA")
 
     return (True, "")
 

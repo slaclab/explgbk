@@ -80,7 +80,8 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
               return !re.test(email.toLowerCase());
               }, "Please specify the email address for the principal investigator."],
             [function() { return $.trim(formObj.find(".description").val()) == ""; }, "A brief description of the experiment is very helpful."],
-            [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
+            [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."],
+            [function() { return !/^[\w/_-]+$/.test($.trim(formObj.find(".inital_sample").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
           ];
         // Various validations
         var v_failed = false;
@@ -109,6 +110,9 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
             "posix_group" : $.trim(formObj.find(".posix_group").val()),
             "params": exp_params
         };
+        if(!updating_existing_experiment && !_.isEmpty($.trim(formObj.find(".inital_sample").val()))) {
+            registration_doc["initial_sample"] = $.trim(formObj.find(".inital_sample").val());
+        }
 
         $.ajax({
           type: "POST",
