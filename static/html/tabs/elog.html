@@ -162,7 +162,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 		$(this).closest(".followup_div").remove();
 	});
 
-	$(this).closest(".elog-chid").find(".dialog_holder").html(rendered);
+	$(this).closest(".elog-chid").find(".dialog_holder").first().html(rendered);
  }
 
  var edit_elog_entry = function() {
