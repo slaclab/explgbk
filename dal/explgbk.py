@@ -908,7 +908,17 @@ def get_experiment_shifts(experiment_name):
     Get the shifts for an experiment.
     """
     expdb = logbookclient[experiment_name]
-    return list(expdb.shifts.find({}).sort([("begin_time", -1)]))
+    shifts = list(expdb.shifts.find({}).sort([("begin_time", -1)]))
+
+    previous_end_time = datetime.datetime.now() + datetime.timedelta(days=10*365)
+    for shift in shifts:
+        if 'end_time' in shift and shift['end_time']:
+            shift['logical_end_time'] = shift['end_time']
+        else:
+            shift['logical_end_time'] = previous_end_time
+        previous_end_time = shift['begin_time']
+
+    return shifts
 
 def get_specific_shift(experiment_name, id):
     """
