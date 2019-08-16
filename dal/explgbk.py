@@ -282,11 +282,19 @@ def get_currently_active_experiments():
 
     return ret
 
+def get_active_experiment_name_for_instrument_station(instrument, station):
+    for active_experiment in get_currently_active_experiments():
+        if 'instrument' in active_experiment and active_experiment['instrument'] == instrument and active_experiment['station'] == int(station):
+            return active_experiment['name']
+    return None
+
 def switch_experiment(instrument, station, experiment_name, userid):
     """
     Switch the currently active experiment on the instrument.
-    This mostly consists inserting an entry into the experiment_switch database
+    This mostly consists inserting an entry into the experiment_switch database.
+    Also switch in/switch out the operator account for the instrument.
     """
+    current_active_experiment = get_active_experiment_name_for_instrument_station(instrument, station)
     sitedb = logbookclient["site"]
     sitedb.experiment_switch.insert_one({
         "experiment_name" : experiment_name,
@@ -295,6 +303,18 @@ def switch_experiment(instrument, station, experiment_name, userid):
         "switch_time" : datetime.datetime.utcnow(),
         "requestor_uid" : userid
         })
+    operator_uid = { x["_id"] : x for x in get_instruments()}[instrument].get("params", {}).get("operator_uid", None)
+
+    if operator_uid:
+        fq_role_name = "LogBook/Writer"
+        if current_active_experiment:
+            logger.debug("Removing post privileges for uid:" + operator_uid + " from " + current_active_experiment)
+            remove_collaborator_from_role(current_active_experiment, "uid:" + operator_uid, fq_role_name)
+        logger.debug("Adding post privileges for uid:" + operator_uid + " to " + experiment_name)
+        add_collaborator_to_role(experiment_name, "uid:" + operator_uid, fq_role_name)
+    else:
+        logger.debug("No operator_uid defined for %s; skipping auto-add of operator accounts", instrument)
+
     return (True, "")
 
 def instrument_standby(instrument, station, userid):
