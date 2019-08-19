@@ -456,6 +456,20 @@ def get_elogs_for_specified_id(experiment_name, specified_id):
     else:
         return []
 
+def get_elog_tree_for_specified_id(experiment_name, specified_id):
+    """
+    Get all the children of the specified elog entry; the result includes the entry also.
+    """
+    expdb = logbookclient[experiment_name]
+    specified_entry = get_specific_elog_entry(experiment_name, specified_id)
+    ret = [ specified_entry ]
+    if specified_entry:
+        ret.extend([x for x in expdb["elog"].find({"root": specified_entry["_id"]})])
+        return list(sorted(ret, key=lambda x : x["insert_time"]))
+    else:
+        return []
+
+
 def get_elogs_for_date_range(experiment_name, start_date, end_date):
     """
     Get the elog entries between the specified date range; >= start_date and <= end_date
@@ -510,7 +524,7 @@ def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
     return attachments
 
 
-def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None, title=None):
+def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None, title=None, post_to_elogs=None):
     """
     Create a new log entry.
     """
@@ -540,6 +554,8 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
         elog_doc["parent"] = parent
     if title:
         elog_doc["title"] = title
+    if post_to_elogs:
+        elog_doc["post_to_elogs"] = post_to_elogs
 
     ins_id = expdb['elog'].insert_one(elog_doc).inserted_id
     entry = expdb['elog'].find_one({"_id": ins_id})
@@ -552,7 +568,14 @@ def delete_elog_entry(experiment_name, entry_id, userid):
     """
     expdb = logbookclient[experiment_name]
     result = expdb['elog'].update_one({"_id": ObjectId(entry_id)}, {"$set": { "deleted_by": userid, "deleted_time": datetime.datetime.utcnow()}})
-    return result.modified_count > 0
+    if result.modified_count <= 0:
+        return False
+    current_entry = expdb['elog'].find_one({"_id": ObjectId(entry_id)})
+    if "post_to_elogs" in current_entry and current_entry["post_to_elogs"]:
+        for post_to_elog in current_entry["post_to_elogs"]:
+            logger.debug("Deleting instrument elog entry in %s", post_to_elog)
+            logbookclient[post_to_elog]["elog"].update_one({"src_id": current_entry["_id"], "src_expname": experiment_name}, {"$set": { "deleted_by": userid, "deleted_time": datetime.datetime.utcnow()}})
+    return True
 
 def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, tags, files, title=None):
     """
@@ -587,8 +610,59 @@ def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, 
         if title:
             modification["$set"]["title"] = title
         result = expdb['elog'].update_one({"_id": current_entry["_id"]}, modification)
-        return result.modified_count > 0
+        if result.modified_count <= 0:
+            return False
+        if "post_to_elogs" in current_entry and current_entry["post_to_elogs"]:
+            del modification["$set"]["previous_version"]
+            for post_to_elog in current_entry["post_to_elogs"]:
+                logger.debug("Updating instrument elog entry in %s", post_to_elog)
+                logbookclient[post_to_elog]["elog"].update_one({"src_id": current_entry["_id"], "src_expname": experiment_name}, modification)
+        return True
     return False
+
+def post_related_elog_entry(related_experiment, src_experiment, src_elog_entry_id):
+    '''
+    Copy an elog entry into a related elog; typically an instrument elog
+    When we copy, we maintain the source experiment and source elog entry id to make it easier to tie children to the parent.
+    For now attachments are not copied over as attachments are URL's into an external image store.
+    '''
+    expdb = logbookclient[related_experiment]
+    src_expdb = logbookclient[src_experiment]
+    src_elog_entry = get_specific_elog_entry(src_experiment, src_elog_entry_id)
+    if "root" not in src_elog_entry and "parent" not in src_elog_entry and related_experiment not in src_elog_entry.get("post_to_elogs", []):
+        expdb["elog"].update_one({"_id": src_elog_entry["_id"]}, {"$addToSet": {"post_to_elogs": related_experiment}})
+    del src_elog_entry["_id"]
+    if "post_to_elogs" in src_elog_entry:
+        del src_elog_entry["post_to_elogs"]
+    src_elog_entry["src_expname"] = src_experiment
+    src_elog_entry["src_id"] = src_elog_entry_id
+    def __check_and_link__(attr):
+        if attr in src_elog_entry:
+            rel_entry = expdb['elog'].find_one({"src_expname": src_experiment, "src_id": src_elog_entry[attr]})
+            if not rel_entry:
+                logger.error("Cannot find related entry %s with id %s in %s", attr, src_elog_entry[attr], related_experiment)
+            else:
+                src_elog_entry[attr] = rel_entry["_id"]
+    __check_and_link__("root")
+    __check_and_link__("parent")
+
+    ins_id = expdb['elog'].insert_one(src_elog_entry).inserted_id
+    entry = expdb['elog'].find_one({"_id": ins_id})
+    return entry
+
+def get_related_instrument_elog_entries(experiment_name, entry_id):
+    '''
+    Get the related instrument elog entries for a given elog entry if they are present.
+    Returns a dict of experiment/elog name with the related entry.
+    '''
+    current_entry = get_specific_elog_entry(experiment_name, entry_id)
+    ret = {}
+    if current_entry and "post_to_elogs" in current_entry and current_entry["post_to_elogs"]:
+        for post_to_elog in current_entry["post_to_elogs"]:
+            related_entry = logbookclient[post_to_elog]["elog"].find_one({"src_id": current_entry["_id"], "src_expname": experiment_name})
+            if related_entry:
+                ret[post_to_elog] = related_entry
+    return ret
 
 def get_elog_authors(experiment_name):
     '''
@@ -649,6 +723,22 @@ def elog_email_unsubscribe(experiment_name, userid):
     result = expdb.subscribers.delete_one({"_id": userid})
     return result.acknowledged
 
+def get_instrument_elogs(experiment_name):
+    '''
+    Get the associated elogs for experiment.
+    This consists of the elog for the instrument (instrument param elog in the instrument object)
+    And global experiment_spanning_elogs logs (like the LCLS sample delivery elog) in the site's info object.
+    '''
+    exp_info = get_experiment_info(experiment_name)
+    sitedb = logbookclient["site"]
+    instrument_elog = sitedb["instruments"].find_one({"_id": exp_info["instrument"]}).get("params", {}).get("elog", None)
+    ret = []
+    if instrument_elog:
+        ret.append(instrument_elog)
+    siteinfo = sitedb["info"].find_one()
+    if siteinfo and 'experiment_spanning_elogs' in siteinfo and siteinfo['experiment_spanning_elogs']:
+        ret.extend(siteinfo['experiment_spanning_elogs'])
+    return ret
 
 def get_experiment_files(experiment_name):
     '''

@@ -1,6 +1,7 @@
 <div class="container-fluid text-center tabcontainer" id="elog_tab">
 
 
+<div class="mdl_holder"></div>
 <div class="container-fluid text-center" id="elog_content">
 </div>
 
@@ -29,11 +30,11 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   {{> main_content_tmpl }}
   <div class="col-md-1">{{ author }}</div>
   </div></div>`;
-  var elog_main_content_template = `<div class="col-md-5 elog_main_cnt text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-md-3 elog_main_cnt">{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>`;
+  var elog_main_content_template = `<div class="col-md-5 elog_main_cnt text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-md-3 elog_main_cnt">{{#src_expname}}{{.}}{{#tagcount}}|{{/tagcount}}{{/src_expname}}{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>`;
 
  var elog_child_template = `<div class="row col-md-12 elog-chid">
    <div class="card">
-    <div class="card-header text-left"><span class="entry_actions">{{^deleted_by}}<span class="followup" title="Followup"><i class="fas fa-paper-plane fa-lg"></span></i>{{#roles.is_editor}}<span class="edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span><span class="delete" title="Delete"><i class="fas fa-trash fa-lg"></i></span>{{/roles.is_editor}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre>{{content}}</pre>{{/title}}</div>
+    <div class="card-header text-left"><span class="entry_actions">{{^deleted_by}}<span class="followup" title="Followup"><i class="fas fa-paper-plane fa-lg"></i></span>{{#roles.is_editor}}<span class="edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span>{{^parent}}<span class="ins_elogs" title="Post to instrument elogs"><i class="fas fa-mail-bulk fa-lg"></i></span>{{/parent}}<span class="delete" title="Delete"><i class="fas fa-trash fa-lg"></i></span>{{/roles.is_editor}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre>{{content}}</pre>{{/title}}</div>
     <div class="card-body">
       {{> elog_chid_body_content }}
      <div class="row dialog_holder"></div>
@@ -220,6 +221,30 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
      .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception deleting elog entry " + jqXHR.responseText); })
  }
 
+ var post_to_instrument_elogs = function() {
+     var entry = $(this).closest(".edat").data("entry");
+     $.when($.ajax('../../static/html/ms/choose_few_of_many.html'), $.getJSON("ws/get_instrument_elogs")).done(function(d0, d1){
+         var instrument_elogs = d1[0].value, choose_tmpl = d0[0]; Mustache.parse(choose_tmpl);
+         if(_.isEmpty(instrument_elogs)) { alert("There are no elogs configured for this instrument."); return; }
+         instrument_elogs = _.difference(instrument_elogs, _.get(entry, "post_to_elogs", []));
+         if(_.isEmpty(instrument_elogs)) { alert("All related elogs seem to have this entry"); return; }
+         var rendered = renderMSTemplate(choose_tmpl, { title: "Cross-post this entry to these related elogs", submit_label: "Post", choices: instrument_elogs });
+         rendered.find(".c_f_o_m_submit").on("click", function(){
+             var post_to_elogs = $("#elog_tab").find(".mdl_holder").find(".modal").find("input:checked").map(function() { return $(this).attr("name"); }).toArray();
+             console.log(post_to_elogs);
+             $("#elog_tab").find(".mdl_holder").find(".modal").modal("hide");
+             if(!_.isEmpty(post_to_elogs)) {
+                 $.getJSON({url: "ws/cross_post_elogs", data: {_id: entry["_id"], post_to_elogs: _.join(post_to_elogs, ",") }})
+                 .done(function(){})
+                 .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception cross posting elog entry " + jqXHR.responseText); })
+             }
+         })
+         $("#elog_tab").find(".mdl_holder").append(rendered);
+         $("#elog_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#elog_tab").find(".mdl_holder").empty(); });
+         $("#elog_tab").find(".mdl_holder").find(".modal").modal();
+     })
+ }
+
  var expandFunction = function() {
 	var entry = $(this).closest(".edat").data("entry");
 	console.log("Expand/contract " + entry["_id"]);
@@ -232,6 +257,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 	    clicked_elem.closest(".edat").find(".followup").on("click", followup_function);
         clicked_elem.closest(".edat").find(".delete").on("click", delete_elog_entry);
         clicked_elem.closest(".edat").find(".edit").on("click", edit_elog_entry);
+        clicked_elem.closest(".edat").find(".ins_elogs").on("click", post_to_instrument_elogs);
 		_.each(_.sortBy(_.map(entry["c_children"], function(chid) { return $("#elog_tab").data("entries")[chid]; }), function(s) { return s["relevance_time"]; }).reverse(), function(ch_entry) {
 		    var rendered = renderMSTemplate(elog_main_template, ch_entry, { main_content_tmpl: elog_main_content_template });
 		    rendered.data("entry", ch_entry).data("ts", moment(ch_entry["relevance_time"]));
@@ -316,6 +342,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       entry.render = elogEntryRenderFunction;
       entry.replaceExistingElogEntryContent = replaceExistingElogEntryContent;
       entry.expandFunction = expandFunction;
+      entry.tagcount = _.get(entry, "tags", []).length;
       entry["elem_id"] = entry["_id"];
       entry["r_time"] = (new Date(entry["relevance_time"])).getTime();
       entry["emails_str"] = _.join(_.get(entry, "email_to", []), " ");
@@ -449,9 +476,9 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   $("#elog_tab").data("new_entry_click", function(e) {
      if(check_session_timeout()) return;
 	 e.preventDefault();
-     $.when($.ajax('../../static/html/tabs/elog_new_entry.html'), $.getJSON(current_run_url))
-     .done(function(modal_txt, cur_run){
-         var current_run_num =_.get(cur_run[0], "value.num", ""), mdl = $(Mustache.render(modal_txt[0], { current_run_num: current_run_num })), current_text_mode_html=false;
+     $.when($.ajax('../../static/html/tabs/elog_new_entry.html'), $.getJSON(current_run_url), $.getJSON("ws/get_instrument_elogs"))
+     .done(function(modal_txt, cur_run, inselgsresp){
+         var current_run_num =_.get(cur_run[0], "value.num", ""), ins_elogs = inselgsresp[0].value, mdl = $(Mustache.render(modal_txt[0], { current_run_num: current_run_num, post_to_instrument_elogs: (ins_elogs.length > 0), instrument_elogs: ins_elogs })), current_text_mode_html=false;
          $("#elog_content").prepend(mdl);
          email_selector($("#elog_content"));
          $("#elog_content").find(".elog_html").on("click", function(){ $("#elog_content").find(".log_title_div").removeClass("d-none"); $(this).remove(); $('#elog_new_entry_log_text').summernote(summernote_options); current_text_mode_html=true;});

@@ -1,0 +1,27 @@
+<div class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title w-100">{{title}}
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </h5>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                <div class="form-group">
+                    <div class="form-check">
+                        {{#choices}}
+                        <div class="row pl-4">
+                            <label class="form-check-label">{{.}}</label><input class="form-check-input" type="checkbox" name="{{.}}">
+                        </div>
+                        {{/choices}}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary c_f_o_m_submit">{{submit_label}}</button>
+            </div>
+        </div>
+    </div>
+</div>

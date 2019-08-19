@@ -42,7 +42,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elogs_for_date_range, clone_sample, get_modal_param_definitions, lock_unlock_experiment, get_elog_emails, \
     get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe, get_elog_email_subscriptions_emails, \
     get_poc_feedback_changes, add_poc_feedback_item, clone_run_table_definition, replace_system_run_table_definition, \
-    delete_system_run_table
+    delete_system_run_table, get_instrument_elogs, post_related_elog_entry, get_related_instrument_elog_entries, \
+    get_elog_tree_for_specified_id
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs
@@ -692,7 +693,6 @@ def svc_post_new_elog_entry(experiment_name):
     if not log_content or not log_content.strip():
         return logAndAbort("Cannot post empty message")
 
-
     userid = context.security.get_current_user_id()
 
     optional_args = {}
@@ -741,6 +741,10 @@ def svc_post_new_elog_entry(experiment_name):
         tags = log_tags_str.split()
         optional_args["tags"] = tags
 
+    post_to_elogs = [ k.replace('post_to_elog_', '') for k, v in request.form.items() if k.startswith('post_to_elog_') and v.lower() == "on" ]
+    if post_to_elogs:
+        optional_args["post_to_elogs"] = post_to_elogs
+
     logger.debug("Optional args %s ", optional_args)
 
     files = []
@@ -765,6 +769,17 @@ def svc_post_new_elog_entry(experiment_name):
     if email_to:
         logger.debug("Sending emails for new elog entry in experiment %s to %s", experiment_name, ",".join(email_to))
         send_elog_as_email(experiment_name, inserted_doc, email_to)
+
+    if "root" in inserted_doc:
+        root_posted = get_specific_elog_entry(experiment_name, inserted_doc["root"]).get("post_to_elogs", [])
+        if root_posted:
+            post_to_elogs.extend(root_posted)
+
+    for post_to_elog in post_to_elogs:
+        logger.debug("Cross posting entry to %s", post_to_elog)
+        rel_ins_doc = post_related_elog_entry(post_to_elog, experiment_name, inserted_doc["_id"])
+        if rel_ins_doc:
+            context.kafka_producer.send("elog", {"experiment_name" : post_to_elog, "CRUD": "Create", "value": rel_ins_doc})
 
     return JSONEncoder().encode({'success': True, 'value': inserted_doc})
 
@@ -796,6 +811,8 @@ def svc_modify_elog_entry(experiment_name):
         context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": modified_entry})
         previous_version = get_specific_elog_entry(experiment_name, modified_entry["previous_version"])
         context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Create", "value": previous_version})
+        for instr_elog_name, instr_elog_entry in get_related_instrument_elog_entries(experiment_name, entry_id).items():
+            context.kafka_producer.send("elog", {"experiment_name" : instr_elog_name, "CRUD": "Update", "value": instr_elog_entry})
 
         email_to = modified_entry.get("email_to", None)
         if not email_to and "root" in modified_entry:
@@ -848,7 +865,38 @@ def svc_delete_elog_entry(experiment_name):
     if status:
         entry = get_specific_elog_entry(experiment_name, entry_id)
         context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": entry})
+        for instr_elog_name, instr_elog_entry in get_related_instrument_elog_entries(experiment_name, entry_id).items():
+            context.kafka_producer.send("elog", {"experiment_name" : instr_elog_name, "CRUD": "Update", "value": instr_elog_entry})
     return JSONEncoder().encode({"success": status})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/cross_post_elogs", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_cross_post_elog_entry(experiment_name):
+    """
+    Cross post an existing elog entry to a instrument elog.
+    """
+    entry_id = request.args.get("_id", None)
+    if not entry_id:
+        return logAndAbort("Please pass in the _id of the elog entry for " + experiment_name)
+    existing_entry = get_specific_elog_entry(experiment_name, entry_id)
+    if not existing_entry:
+        return logAndAbort("Cannot find log entry in " + experiment_name)
+    post_to_elogs_str = request.args.get("post_to_elogs", None)
+    if not post_to_elogs_str:
+        return logAndAbort("Please pass in the names of the instrument elogs as post_to_elogs")
+    post_to_elogs = post_to_elogs_str.split(",")
+    all_elogs_for_id = get_elog_tree_for_specified_id(experiment_name, existing_entry["_id"])
+    for post_to_elog in post_to_elogs:
+        logger.debug("Cross posting entry to %s", post_to_elog)
+        for elog_for_id in all_elogs_for_id:
+            logger.debug("Cross posting entry to %s %s", post_to_elog, elog_for_id["_id"])
+            rel_ins_doc = post_related_elog_entry(post_to_elog, experiment_name, elog_for_id["_id"])
+            if rel_ins_doc:
+                context.kafka_producer.send("elog", {"experiment_name" : post_to_elog, "CRUD": "Create", "value": rel_ins_doc})
+    return JSONEncoder().encode({"success": True})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog_emails", methods=["GET"])
 @context.security.authentication_required
@@ -885,6 +933,12 @@ def svc_get_elog_email_unsubscribe(experiment_name):
 def svc_get_elog_tags(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_elog_tags(experiment_name)})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_instrument_elogs", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_instrument_elogs(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_instrument_elogs(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files", methods=["GET"])
 @context.security.authentication_required

@@ -35,10 +35,28 @@
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label class="col-2 " for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
-                        <div class="col-4">
-                            <input class="form-control" rows="5" name="log_tags" id="elog_new_entry_tags" placeholder="Tag1 Tag2 Tag3"></input>
+                        <div class="col">
+                            <div class="form-group row">
+                                <label class="{{^post_to_instrument_elogs}}col-2{{/post_to_instrument_elogs}}{{#post_to_instrument_elogs}}col-4{{/post_to_instrument_elogs}}" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
+                                <div class="col-8">
+                                    <input class="form-control" rows="5" name="log_tags" id="elog_new_entry_tags" placeholder="Tag1 Tag2 Tag3"></input>
+                                </div>
+                            </div>
                         </div>
+                        {{#post_to_instrument_elogs}}
+                        <div class="col">
+                            <div class="form-group row">
+                                <label class="col-4">Also post to elogs:</label>
+                                <div class="col-8 form-check">
+                                    {{#instrument_elogs}}
+                                    <div class="row">
+                                        <label class="form-check-label">{{.}}</label><input class="form-check-input" type="checkbox" name="post_to_elog_{{.}}">
+                                    </div>
+                                    {{/instrument_elogs}}
+                                </div>
+                            </div>
+                        </div>
+                        {{/post_to_instrument_elogs}}
                     </div>
                     <div class="form-group row files_div">
                         <label  class="col-2 " for="elog_new_entry_file_upload">File</label>
