@@ -106,6 +106,7 @@ def exp_elog(experiment_name):
         is_editor=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "Editor", experiment_name)),
         is_admin=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LDAP", "Admin", experiment_name)),
         is_site_admin=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "Editor", ":")), # Use a dummy experiment to determine if site admin
+        is_lab_personnel=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "LabPersonnel", experiment_name)),
         current_sample_name=get_current_sample_name(experiment_name),
         auth_expiration_time=__parse_expiration_header__(request),
         logbook_site=context.LOGBOOK_SITE

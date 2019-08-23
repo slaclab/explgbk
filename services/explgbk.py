@@ -1514,7 +1514,7 @@ def svc_get_modal_param_definitions():
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_feedback_document", methods=["GET"])
 @context.security.authentication_required
 @experiment_exists_and_unlocked
-@context.security.authorization_required("read")
+@context.security.authorization_required("feedback_read")
 def get_feedback_document(experiment_name):
     """
     Reconstructs the current feedback document from a questionnaire like history of changes.
@@ -1534,7 +1534,7 @@ def get_feedback_document(experiment_name):
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_feedback_item", methods=["POST"])
 @context.security.authentication_required
 @experiment_exists_and_unlocked
-@context.security.authorization_required("post")
+@context.security.authorization_required("feedback_write")
 def add_feedback_item(experiment_name):
     item_name  = request.form.get("item_name", None)
     item_value = request.form.get("item_value", None)
