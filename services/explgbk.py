@@ -27,7 +27,7 @@ import smtplib
 from email.message import EmailMessage
 
 from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context, send_file, \
-    abort, redirect, make_response
+    abort, redirect, make_response, g
 
 from dal.explgbk import get_experiment_info, save_new_experiment_setup, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
@@ -72,10 +72,14 @@ def experiment_exists_and_unlocked(wrapped_function):
     def function_interceptor(*args, **kwargs):
         experiment_name = kwargs.get('experiment_name', None)
         if experiment_name and does_experiment_exist(experiment_name):
-            if get_experiment_info(experiment_name).get("is_locked", False) and set(["POST", "PUT", "DELETE"]) & set(request.url_rule.methods):
+            exp_info = get_experiment_info(experiment_name)
+            if exp_info.get("is_locked", False) and set(["POST", "PUT", "DELETE"]) & set(request.url_rule.methods):
                 logger.error("Experiment %s is locked; methods that modify data are not allowed. To change data, please unlock the experiment.", experiment_name)
                 abort(423) # Webdav locked.
                 return None
+            g.experiment_name = experiment_name
+            g.instrument = exp_info["instrument"]
+            g.exp_info = exp_info
             return wrapped_function(*args, **kwargs)
         else:
             logger.error("Experiment %s does not exist in the experiment cache", experiment_name)
