@@ -46,7 +46,7 @@ $(function() {
         		console.log("Showing experiments for instrument " + instr + " in tab " + tabtarget);
         		if ($(tabtarget + " .tabbable ul").find(".year_pill").length <= 0) {
         			console.log("Adding year pills for " + instr);
-        			_.each(_.keys(data.value[instr]).sort(function(a, b){ return b - a }), function(year) {
+        			_.each(_.reverse(_.sortBy(_.keys(data.value[instr]), function(x){ return _.includes([ "null" ], x) ? 0 : _.toNumber(x)})), function(year) {
 	            		$(tabtarget + " .tabbable ul").append(Mustache.render(year_pill_template, { instrument: instr, year: (year == "null") ? "None" : year }));
 	        		});
 	        		$(tabtarget + " .tabbable ul").find(".year_pill").on("shown.bs.tab", function() {
