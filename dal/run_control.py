@@ -103,6 +103,15 @@ def end_run(experiment_name, user_specified_end_time=None):
     end_time = user_specified_end_time if user_specified_end_time else datetime.datetime.utcnow()
     return expdb.runs.find_one_and_update({"num": current_run_doc["num"]}, {'$set': {'end_time': end_time}}, return_document=ReturnDocument.AFTER)
 
+def is_run_closed(experiment_name, run_num):
+    '''
+    Check if the specified run is closed
+    '''
+    expdb = logbookclient[experiment_name]
+    run_doc = expdb.runs.find_one({"num": run_num})
+    if run_doc and run_doc.get('end_time', None):
+        return True
+    return False
 
 def add_run_params(experiment_name, run_doc, run_params):
     '''

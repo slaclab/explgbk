@@ -18,7 +18,7 @@ from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
 from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, security, usergroups
-from dal.run_control import get_current_run, start_run
+from dal.run_control import get_current_run, start_run, is_run_closed
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -1124,7 +1124,7 @@ def get_sample_for_experiment_by_name(experiment_name, sample_name):
         requested_sample["current"] = True
     return requested_sample
 
-def create_update_sample(experiment_name, sample_name, createp, info):
+def create_update_sample(experiment_name, sample_name, createp, info, automatically_create_associated_run=False):
     """
     Create or update a sample for an experiment.
     """
@@ -1139,6 +1139,12 @@ def create_update_sample(experiment_name, sample_name, createp, info):
 
     if createp:
         expdb['samples'].insert_one(info)
+        if automatically_create_associated_run:
+            current_run = get_current_run(experiment_name)
+            if not is_run_closed(experiment_name, current_run["num"]):
+                return False, ("Cannot switch to and create a run if the current run %s is still open %s" % (current_run["num"], experiment_name))
+            make_sample_current(experiment_name, sample_name)
+            start_run(experiment_name, "DATA")
     else:
         sample_id = info["_id"]
         del info["_id"]

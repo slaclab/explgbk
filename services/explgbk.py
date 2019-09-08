@@ -46,7 +46,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elog_tree_for_specified_id
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
-    get_specified_run_params_for_all_runs
+    get_specified_run_params_for_all_runs, is_run_closed
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
@@ -1300,8 +1300,16 @@ def svc_create_update_sample(experiment_name):
     missing_keys = necessary_keys - info.keys()
     if missing_keys:
         return logAndAbort("Create/update sample missing fields %s" % missing_keys)
+    if createp and 'create_associated_run' in info and info['create_associated_run']:
+        current_run = get_current_run(experiment_name)
+        if not is_run_closed(experiment_name, current_run["num"]):
+            return jsonify({'success': False, 'errormsg': ("Cannot switch to and create a run if the current run %s is still open %s" % (current_run["num"], experiment_name))})
+        del info['create_associated_run']
+        automatically_create_associated_run = True
+    else:
+        automatically_create_associated_run = False
 
-    (status, errormsg) = create_update_sample(experiment_name, sample_name, createp, info)
+    (status, errormsg) = create_update_sample(experiment_name, sample_name, createp, info, automatically_create_associated_run)
     if status:
         sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
         context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Create" if createp else "Update", "value": sample_doc })

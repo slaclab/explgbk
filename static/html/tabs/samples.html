@@ -79,6 +79,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
           params: sample_params
         };
         if( !_.isNil(sample_id_original) && $.trim(formObj.find(".sample_id").val()).length > 1 ) { new_sample_doc["_id"] = sample_id_original }
+        if(_.isEmpty(sample_id_original) && formObj.find(".create_run").is(':checked')) { new_sample_doc["create_associated_run"] = true; }
         console.log(new_sample_doc);
         $.ajax({
           type: "POST",

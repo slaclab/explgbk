@@ -10,9 +10,17 @@
      <form class="register_form">
       <input type="hidden" class="form-control sample_id" value="{{ _id }}">
       <div class="row">
-      <div class="form-group col-4">
-       <label for="sample_name">Sample Name:</label>
-       <input type="text" class="form-control sample_name" value="{{ name }}">
+      <div class="col-4">
+        <div class="pl-2 form-group row">
+          <label for="sample_name">Sample Name:</label>
+          <input type="text" class="form-control sample_name" value="{{ name }}">
+        </div>
+       {{^_id}}
+       <div class="pl-2 form-inline row" title="Automatically switch to this sample and initiate a run. Valid only if the current run is closed.">
+           <label class="pr-2">Switch to and create run:</label>
+           <input type="checkbox" class="form-control create_run">
+       </div>
+       {{/_id}}
       </div>
       <div class="form-group col-8">
        <label for="description">Sample Description:</label>
