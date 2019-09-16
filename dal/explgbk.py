@@ -18,7 +18,7 @@ from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
 from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, security, usergroups
-from dal.run_control import get_current_run, start_run, is_run_closed
+from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -1145,6 +1145,7 @@ def create_update_sample(experiment_name, sample_name, createp, info, automatica
                 return False, ("Cannot switch to and create a run if the current run %s is still open %s" % (current_run["num"], experiment_name))
             make_sample_current(experiment_name, sample_name)
             start_run(experiment_name, "DATA")
+            end_run(experiment_name)
     else:
         sample_id = info["_id"]
         del info["_id"]
