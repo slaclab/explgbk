@@ -81,7 +81,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
               }, "Please specify the email address for the principal investigator."],
             [function() { return $.trim(formObj.find(".description").val()) == ""; }, "A brief description of the experiment is very helpful."],
             [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."],
-            [function() { return _.isEmpty($.trim(formObj.find(".experiment_name_original").val())) && !/^[\w/_-]+$/.test($.trim(formObj.find(".inital_sample").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
+            [function() { return _.isEmpty($.trim(formObj.find(".experiment_name_original").val())) && !_.isEmpty($.trim(formObj.find(".inital_sample").val())) && !/^[\w/_-]+$/.test($.trim(formObj.find(".inital_sample").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
           ];
         // Various validations
         var v_failed = false;
