@@ -58,6 +58,14 @@ __author__ = 'mshankar@slac.stanford.edu'
 
 explgbk_blueprint = Blueprint('experiment_logbook_api', __name__)
 
+def addHeaders(resp):
+    # We don't send html with this blueprint; so we use that as a default. 
+    if 'Content-Type' not in resp.headers or resp.headers['Content-Type'].startswith('text/html'):
+        resp.headers['Content-Type'] = 'application/json; charset=utf-8'
+    return resp
+
+explgbk_blueprint.after_request(addHeaders)
+
 logger = logging.getLogger(__name__)
 
 def logAndAbort(error_msg):
