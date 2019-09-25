@@ -245,6 +245,7 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
             logger.exception("Exception computing the file parameters")
 
         expinfo.update(info)
+        expinfo["_id"] = experiment_name
         logbookclient['explgbk_cache']['experiments'].update({"_id": experiment_name}, expinfo, upsert=True)
         logger.info("Updated the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     else:
