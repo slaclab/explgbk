@@ -176,9 +176,12 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
     expdb = logbookclient[experiment_name]
     collnames = list(expdb.collection_names())
     if 'info' in collnames:
+        info = expdb["info"].find_one({}, {"latest_setup": 0})
+        if 'name' not in info or 'instrument' not in info:
+            logger.debug("Database %s has a info collection but the info object does not have an instrument or name", experiment_name)
+            return
         all_experiment_names.add(experiment_name)
         expinfo = { "_id": experiment_name }
-        info = expdb["info"].find_one({}, {"latest_setup": 0})
         roles = [x for x in expdb["roles"].find()]
         all_players = set()
         list(map(lambda x : all_players.update(x.get('players', [])), roles))
