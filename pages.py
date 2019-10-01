@@ -8,7 +8,7 @@ import context
 
 from flask import request, Blueprint, render_template, send_file, abort, make_response, jsonify
 
-from dal.explgbk import get_current_sample_name
+from dal.explgbk import get_current_sample_name, get_experiment_info
 from services.explgbk import experiment_exists_and_unlocked
 
 pages_blueprint = Blueprint('pages_api', __name__)
@@ -99,8 +99,11 @@ def __parse_expiration_header__(request):
 @context.security.authorization_required("read")
 def exp_elog(experiment_name):
     logged_in_user=context.security.get_current_user_id()
+    exp_info = get_experiment_info(experiment_name)
+    instrument_name = exp_info.get("instrument", None) if exp_info else None
     return render_template("lgbk.html",
         experiment_name=experiment_name,
+        instrument_name=instrument_name,
         logged_in_user=logged_in_user,
         is_writer=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "Writer", experiment_name)),
         is_editor=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "Editor", experiment_name)),

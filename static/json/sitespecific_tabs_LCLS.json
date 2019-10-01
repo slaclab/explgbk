@@ -3,5 +3,10 @@
         "id": "workflow",
         "label": "Workflow",
         "data-url": "../../static/html/tabs/workflow_iframe.html"
+    },
+    {
+        "id": "summaries",
+        "label": "Summaries",
+        "data-url": "https://pswww.slac.stanford.edu/experiment_results/{{instrument_name}}/0-{{experiment_name}}"
     }
 ]
