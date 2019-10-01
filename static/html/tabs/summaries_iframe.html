@@ -1,0 +1,11 @@
+<div class="container-fluid text-center tabcontainer sitespecific_iframe_parent" id="summaries_tab">
+</div>
+
+<script type="text/javascript">
+$("#summaries_tab").on("lg.loaded.bs.tab", function() {
+  var smtmpl = `<iframe class="sitespecific_iframe" src="../../../experiment_results/{{instrument_name}}/0-{{experiment_name}}"></iframe>`;
+  Mustache.parse(smtmpl);
+  var rendered = Mustache.render(smtmpl, {experiment_name: experiment_name, instrument_name, instrument_name})
+  $("#summaries_tab").empty().append(rendered);
+});
+</script>

@@ -136,7 +136,6 @@ $(document).ready(function() {
 
     $.getJSON('../../static/json/sitespecific_tabs_' + logbook_site + ".json")
     .done(function(tabs) {
-        _.each(tabs, function(t){ t["data-url"] = Mustache.render(t["data-url"], {"experiment_name": experiment_name, "instrument_name": instrument_name });})
         {% raw %}
         var ssnavtmpl = `{{#.}}<li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
         var ssnavpnltmpl = `{{#.}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/.}}`;

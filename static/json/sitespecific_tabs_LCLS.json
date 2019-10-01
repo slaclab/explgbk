@@ -7,6 +7,6 @@
     {
         "id": "summaries",
         "label": "Summaries",
-        "data-url": "https://pswww.slac.stanford.edu/experiment_results/{{instrument_name}}/0-{{experiment_name}}"
+        "data-url": "../../static/html/tabs/summaries_iframe.html"
     }
 ]
