@@ -59,7 +59,7 @@ __author__ = 'mshankar@slac.stanford.edu'
 explgbk_blueprint = Blueprint('experiment_logbook_api', __name__)
 
 def addHeaders(resp):
-    # We don't send html with this blueprint; so we use that as a default. 
+    # We don't send html with this blueprint; so we use that as a default.
     if 'Content-Type' not in resp.headers or resp.headers['Content-Type'].startswith('text/html'):
         resp.headers['Content-Type'] = 'application/json; charset=utf-8'
     return resp
@@ -1204,6 +1204,10 @@ def svc_add_run_params(experiment_name):
     params = request.json
     run_params = {"params." + escape_chars_for_mongo(k) : v for k, v in params.items() }
     run_doc_after = add_run_params(experiment_name, current_run_doc, run_params)
+    sample_obj = get_sample_for_run(experiment_name, run_doc_after['num'])
+    if sample_obj:
+        run_doc_after['sample'] = sample_obj['name']
+
     context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc_after})
     return JSONEncoder().encode({"success": True, "value": run_doc_after})
 

@@ -240,7 +240,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
     sessionStorage.removeItem("runtable_active_tab");
     $(document).on('runs', function(event, runData) {
       console.log("Processing web socket event for run " + runData.value['num'] + " for experiment " + runData['experiment_name'] + " CRUD=" + runData["CRUD"]);
-      var tblRndr = $("#rtbl_content").find("table"), runSample = tblRndr.data("samples")[_.get(runData.value, 'sample', "")];
+      var tblRndr = $("#rtbl_content").find("table"), runSample = _.get(runData.value, 'sample', "");
       if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && runSample != sample_showing_in_UI) { console.log("Skipping updating run table for different sample " + runSample); return; }
       var rowRendered = renderRunData(tblRndr, runData);
       if(runData["CRUD"] == "Insert") {
