@@ -68,9 +68,9 @@ explgbk_blueprint.after_request(addHeaders)
 
 logger = logging.getLogger(__name__)
 
-def logAndAbort(error_msg):
+def logAndAbort(error_msg, ret_status=500):
     logger.error(error_msg)
-    return Response(error_msg, status=500)
+    return Response(error_msg, status=ret_status)
 
 def experiment_exists_and_unlocked(wrapped_function):
     """
@@ -1180,7 +1180,14 @@ def svc_current_run(experiment_name):
     """
     Get the run document for the current run.
     """
-    return JSONEncoder().encode({"success": True, "value": get_current_run(experiment_name)})
+    skipClosedRuns = json.loads(request.args.get("skipClosedRuns", "false"))
+    run_doc = get_current_run(experiment_name)
+    if not run_doc:
+        return logAndAbort("Current run for experiment %s does not exist" % experiment_name, ret_status=404)
+    if skipClosedRuns and run_doc.get("end_time", None):
+        return logAndAbort("Current run for experiment %s is already closed" % experiment_name, ret_status=404)
+
+    return JSONEncoder().encode({"success": True, "value": run_doc})
 
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/add_run_params", methods=["POST"])
 @context.security.authentication_required
