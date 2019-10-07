@@ -1183,9 +1183,11 @@ def svc_current_run(experiment_name):
     skipClosedRuns = json.loads(request.args.get("skipClosedRuns", "false"))
     run_doc = get_current_run(experiment_name)
     if not run_doc:
-        return logAndAbort("Current run for experiment %s does not exist" % experiment_name, ret_status=404)
+        logger.error("Current run for experiment %s does not exist", experiment_name)
+        return JSONEncoder().encode({"success": False, "value": None})
     if skipClosedRuns and run_doc.get("end_time", None):
-        return logAndAbort("Current run for experiment %s is already closed" % experiment_name, ret_status=404)
+        logger.error("Current run %s for experiment %s is already closed", run_doc.get("num", ""), experiment_name)
+        return JSONEncoder().encode({"success": False, "value": None})
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
 
