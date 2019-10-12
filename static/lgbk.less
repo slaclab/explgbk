@@ -394,6 +394,20 @@ label {
 	padding: 0.2em;
 }
 
+#myTabContainer .listview-action {
+  .listview_icon_mixin;
+}
+
+#myTabContainer .param_action {
+    .listview_icon_mixin;
+    font-size: inherit;
+    color: @navbarhover;
+}
+
+#myTabContainer .modal .btn {
+  .highlight_mixin;
+}
+
 #info_tab {
     .ques_tabs {
         .sitespecific_iframe {
@@ -681,14 +695,6 @@ label {
 }
 
 
-#rtbl_tab .btn {
-  .highlight_mixin;
-}
-
-#shifts_tab .btn {
-  .highlight_mixin;
-}
-
 #shifts_tab .table th {
   .highlight_mixin;
 }
@@ -697,17 +703,6 @@ label {
 #shifts_tab .btnbar {
   margin-left: 0.5em;
   text-align: left;
-}
-
-
-#shifts_tab .listview-action {
-  .listview_icon_mixin;
-}
-
-#shifts_tab .param_action {
-    .listview_icon_mixin;
-    font-size: inherit;
-    color: @navbarhover;
 }
 
 
@@ -724,10 +719,6 @@ label {
     padding-top: 0px;
 }
 
-#samples_tab .btn {
-  .highlight_mixin;
-}
-
 #samples_tab .table th {
   .highlight_mixin;
 }
@@ -738,22 +729,11 @@ label {
   text-align: left;
 }
 
-
-#samples_tab .listview-action {
-  .listview_icon_mixin;
-}
-
 #samples_tab .samplestbl tr.active_sample td {
   .bold_text_mixin;
   background: @activewidgetcolor;
   margin: 0.1em;
   padding: 0.1em;
-}
-
-#samples_tab .param_action {
-    .listview_icon_mixin;
-    font-size: inherit;
-    color: @navbarhover;
 }
 
 .note-callout {
@@ -886,4 +866,54 @@ select {
     text-align: left;
 }
 
+}
+
+#lcls_wf_ctrls_tab {
+    .wfj_runnum {
+        border-bottom: 0;
+    }
+
+    .ctrls_hdr {
+        .bold_text_mixin;
+    }
+
+    .ctrls_content {
+        border: thin black solid;
+        .runrow {
+            border-bottom: thin black solid;
+        }
+        .runhdr span {
+            margin-top: 0.25em;
+        }
+        .runrow:nth-child(even) {
+            background: #efefef;
+        }
+    }
+
+    .wf_counters {
+        text-align: left;
+
+        ul {
+            margin-bottom: 0em;
+        }
+        .wf_counter_key {
+            font-weight: bold;
+        }
+        .wf_counter_value {
+            padding-left: 0.25rem;
+        }
+
+        .red {
+            color:red;
+        }
+        .yellow {
+            color:yellow;
+        }
+        .green {
+            color:green;
+        }
+        .blue {
+            color:blue;
+        }
+    }
 }

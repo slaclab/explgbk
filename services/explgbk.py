@@ -43,7 +43,9 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe, get_elog_email_subscriptions_emails, \
     get_poc_feedback_changes, add_poc_feedback_item, clone_run_table_definition, replace_system_run_table_definition, \
     delete_system_run_table, get_instrument_elogs, post_related_elog_entry, get_related_instrument_elog_entries, \
-    get_elog_tree_for_specified_id
+    get_elog_tree_for_specified_id, get_workflow_definitions, get_workflow_locations, get_workflow_triggers, \
+    create_update_wf_definition, get_workflow_jobs, get_workflow_job_doc, create_wf_job, delete_wf_job, update_wf_job, \
+    file_available_at_location
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -95,6 +97,26 @@ def experiment_exists_and_unlocked(wrapped_function):
             return None
 
     return function_interceptor
+
+def instrument_exists(wrapped_function):
+    """
+    Decorator to pull the instrument name from the request in the absence of an experiment.
+    For example, when switching an experiment etc.
+    """
+    @wraps(wrapped_function)
+    def function_interceptor(*args, **kwargs):
+        info = request.json
+        if info:
+            instrument = info.get("instrument", None)
+            if instrument:
+                g.instrument = instrument
+            return wrapped_function(*args, **kwargs)
+        else:
+            logger.error("No instrument specified in call")
+            abort(404)
+            return None
+    return function_interceptor
+
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/info", methods=["GET"])
 @context.security.authentication_required
@@ -485,7 +507,8 @@ def svc_reload_experiment_cache():
 
 @explgbk_blueprint.route("/lgbk/ws/switch_experiment", methods=["POST"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@instrument_exists
+@context.security.authorization_required("switch")
 def svc_switch_experiment():
     """
     Switch the active experiment at an instrument station.
@@ -533,7 +556,8 @@ def svc_switch_experiment():
 
 @explgbk_blueprint.route("/lgbk/ws/instrument_standby", methods=["POST"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@instrument_exists
+@context.security.authorization_required("switch")
 def svc_instrument_standby():
     """
     Put the specified instrument/station into standby mode.
@@ -1145,7 +1169,7 @@ def svc_start_run(experiment_name):
     if sample_obj:
         run_doc['sample'] = sample_obj['name']
 
-    context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Insert", "value": run_doc})
+    context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Create", "value": run_doc})
     logger.debug("Published the new run for %s", experiment_name)
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
@@ -1446,6 +1470,20 @@ def svc_register_file(experiment_name):
         else:
             return jsonify({'success': False, 'errormsg': errormsg})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/file_available_at_location", methods=["GET", "POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_file_available_at_location(experiment_name):
+    location = request.args.get("location", None)
+    if not location:
+        return logAndAbort("Please specify the location.")
+    file_path = request.args.get("file_path", None)
+    if not file_path:
+        return logAndAbort("Please specify the file path.")
+    file_info = file_available_at_location(experiment_name, file_path, location)
+    context.kafka_producer.send("file_catalog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": file_info })
+    return jsonify({'success': True})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/collaborators", methods=["GET"])
 @context.security.authentication_required
@@ -1589,3 +1627,173 @@ def svc_get_specified_run_params_for_all_runs(experiment_name):
     param_names = param_names_str.split(",")
     param_values = get_specified_run_params_for_all_runs(experiment_name, param_names)
     return JSONEncoder().encode({"success": True, "value": param_values})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_definitions", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_wf_definitions(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_workflow_definitions(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_locations", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_wf_locations(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_workflow_locations(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_triggers", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_wf_triggers(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_workflow_triggers(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_update_workflow_def", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_create_update_wf_definition(experiment_name):
+    """
+    Create/update a workflow definition.
+    """
+    info = request.json
+    if not info:
+        return logAndAbort("Please pass in the workflow definition as a JSON document.")
+
+    necessary_keys = set(['name', 'executable', 'trigger', 'location', 'parameters'])
+    missing_keys = necessary_keys - info.keys()
+    if missing_keys:
+        return JSONEncoder().encode({"success": False, "errormsg": "Create/update workflow missing keys %s" % missing_keys, "value": None})
+    if info['trigger'] not in [x["value"] for x in get_workflow_triggers(experiment_name)]:
+        return JSONEncoder().encode({"success": False, "errormsg": "Invalid trigger %s in create/update workflow" % info['trigger'], "value": None})
+    if info['location'] not in [ x["name"] for x in get_workflow_locations(experiment_name) ]:
+        return JSONEncoder().encode({"success": False, "errormsg": "Invalid location %s in create/update workflow" % info['location'], "value": None})
+    info["run_as_user"] = context.security.get_current_user_id()
+
+    (status, errormsg, val) = create_update_wf_definition(experiment_name, info)
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_jobs", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_wf_jobs(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_workflow_jobs(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow/<job_id>/<path:action>", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_wf_job_action(experiment_name, job_id, action):
+    """
+    Make a call to the workflow JID for a particular action and proxy the results...
+    """
+    wf_job = get_workflow_job_doc(experiment_name, job_id)
+    if not wf_job:
+        return logAndAbort("Cannot find workflow in experiment %s for id %s" % (experiment_name, job_id), 404)
+    def proxy_JID(location):
+        logger.debug("Calling the JID at %s", (location["prefix"]+"jid/ws/"+action))
+        req = requests.post(location["prefix"]+"jid/ws/"+action, data=JSONEncoder().encode(wf_job), stream=True, headers={"Content-Type": "application/json"})
+        resp = Response(stream_with_context(req.iter_content(chunk_size=1024)))
+        return resp
+
+    location = { x["name"] : x for x in get_workflow_locations(experiment_name) }.get(wf_job['def']['location'], None)
+    if not location:
+        return logAndAbort("Cannot determine workflow location in experiment %s for id %s %s" % (experiment_name, job_id, wf_job), 500)
+
+    return proxy_JID(location)
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_workflow_job", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_create_workflow_job(experiment_name):
+    """
+    Create/update a workflow job.
+    """
+    info = request.json
+    if not info:
+        return logAndAbort("Please pass in the workflow job as a JSON document.")
+
+    necessary_keys = set(['job_name', 'run_num'])
+    missing_keys = necessary_keys - info.keys()
+    if missing_keys:
+        return JSONEncoder().encode({"success": False, "errormsg": "Create/update workflow job missing keys %s" % missing_keys, "value": None})
+
+    def_id = { x["name"]: x for x in get_workflow_definitions(experiment_name) }.get(info["job_name"], {}).get("_id", None)
+    if not def_id:
+        return JSONEncoder().encode({"success": False, "errormsg": "Cannot find job definition for %s " % info["job_name"], "value": None})
+    wf_job_doc = { "run_num": int(info["run_num"]), "def_id": def_id, "user": context.security.get_current_user_id(), "status": "START" }
+
+    (status, errormsg, val) = create_wf_job(experiment_name, wf_job_doc)
+    if status:
+        context.kafka_producer.send("workflow_jobs", {"experiment_name" : experiment_name, "CRUD": "Create", "value": val })
+
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_workflow_job", methods=["GET", "POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_delete_workflow_job(experiment_name):
+    """
+    Delete a workflow job entry given the job _id.
+    """
+    job_id = request.args.get("job_id", None)
+    if not job_id:
+        return logAndAbort("Please pass in the workflow job id.")
+
+    (status, errormsg, val) = delete_wf_job(experiment_name, job_id)
+    if status:
+        context.kafka_producer.send("workflow_jobs", {"experiment_name" : experiment_name, "CRUD": "Delete", "value": val })
+
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/update_workflow_job", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_update_workflow_job(experiment_name):
+    """
+    Update a workflow job entry; only certain fields can be updated.
+    These are - status, counters, tool_id, log_file_path.
+    status is an enumeration.
+    counters is an array of label/value pairs, the labels and values are both HTML fragments.
+    tool_id is a LSF ID/SLURM ID/HPC workload management infrastructure id.
+    log_file_path is a path to the log file.
+    """
+    info = request.json
+    if not info:
+        return logAndAbort("Please pass in the workflow job as a JSON document.")
+    wf_id = info.get("_id", None)
+    if not wf_id:
+        return logAndAbort("Please pass in the job _id in a JSON document.")
+
+    allowed_keys = ['status', 'counters', 'tool_id', 'log_file_path']
+    wf_updates = { k: info[k] for k in allowed_keys if k in info and info[k] }
+
+    (status, errormsg, val) = update_wf_job(experiment_name, wf_id, wf_updates)
+    if status:
+        context.kafka_producer.send("workflow_jobs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": val })
+
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/kill_workflow_job", methods=["GET", "POST"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_kill_workflow_job(experiment_name):
+    """
+    Kill/terminate a running workflow job.
+    """
+    job_id = request.args.get("job_id", None)
+    if not job_id:
+        return logAndAbort("Please pass in the workflow job id.")
+    wf_job = get_workflow_job_doc(experiment_name, job_id)
+    location_config = { x["name"] : x for x in get_workflow_locations(experiment_name)}
+    loc_info = location_config[wf_job["def"]["location"]]
+    resp = requests.post(loc_info["prefix"] + "jid/ws/kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json"})
+    respdoc = resp.json()["value"]
+    (status, errormsg, val) = update_wf_job(experiment_name, job_id, {"status": respdoc.get("status", wf_job["status"])})
+    if status:
+        context.kafka_producer.send("workflow_jobs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": val })
+
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})

@@ -85,7 +85,7 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
     				alert("Server side exception switching experiment " + data.errormsg);
     			}
     		})
-    		.fail( function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception switching experiment " + jqXHR.responseText); })
+    		.fail( function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); if(jqXHR.status == 403){ alert("You don't seem to have permissions for this operation. Please contact the site administrators."); return;}; alert("Server side exception switching experiment " + jqXHR.responseText); })
     	});
     	$.when($.getJSON(active_experiments_url), $.getJSON(instrument_station_list), $.getJSON({ url: instruments_url }))
     	.done(function(d1, d2, d3) {

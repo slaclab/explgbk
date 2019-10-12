@@ -19,7 +19,7 @@
   font-size: 0.85rem;
 }
 .listview_icon_mixin {
-  opacity: .5;
+  opacity: 0.5;
   padding-left: 0.1rem;
   padding-right: 0.1rem;
   font-size: 1rem;
@@ -65,7 +65,7 @@ label {
   height: 28px;
   margin-top: 6px;
   float: right;
-  padding-right: 2.0em;
+  padding-right: 2em;
   padding-bottom: 0.5em;
 }
 .tab_title_bar {
@@ -100,7 +100,7 @@ label {
   color: #6685F4;
   border-bottom: thin solid #6685F4;
   text-align: left;
-  padding-left: 1.0em;
+  padding-left: 1em;
 }
 .exp_info .group .header {
   font-weight: bold;
@@ -134,7 +134,7 @@ label {
 #info_toolbar {
   float: right;
   color: white;
-  padding-right: 1.0em;
+  padding-right: 1em;
 }
 .search_text_mixin {
   padding: 0.25em;
@@ -154,8 +154,8 @@ label {
   color: white;
   background: #6685F4;
   font-weight: bold;
-  padding-left: 1.0em;
-  padding-right: 1.0em;
+  padding-left: 1em;
+  padding-right: 1em;
   padding-top: 0.25em;
   padding-bottom: 0.25em;
 }
@@ -188,14 +188,14 @@ label {
   white-space: nowrap;
 }
 #register_edit_exp_tab .ops_exp_icons span {
-  opacity: .5;
+  opacity: 0.5;
   padding-left: 0.1rem;
   padding-right: 0.1rem;
   font-size: 1rem;
 }
 #register_edit_exp_tab .clone_select_attrs td {
   text-align: left;
-  padding-left: 2.0em;
+  padding-left: 2em;
 }
 #ops_instruments_tab .instrument_lbl {
   color: #6685F4;
@@ -205,7 +205,7 @@ label {
   color: white;
   background: #6685F4;
   font-weight: bold;
-  padding-left: 2.0em;
+  padding-left: 2em;
 }
 .param_table_mixin .fas {
   opacity: 0.5;
@@ -214,13 +214,13 @@ label {
   color: white;
   background: #6685F4;
   font-weight: bold;
-  padding-left: 2.0em;
+  padding-left: 2em;
 }
 #ops_instruments_tab .modal .table .fas {
   opacity: 0.5;
 }
 #ops_instruments_tab .modal .table .param_action {
-  opacity: .5;
+  opacity: 0.5;
   padding-left: 0.1rem;
   padding-right: 0.1rem;
   font-size: 1rem;
@@ -243,13 +243,13 @@ label {
   color: white;
   background: #6685F4;
   font-weight: bold;
-  padding-left: 2.0em;
+  padding-left: 2em;
 }
 #register_edit_exp_tab .modal .param_table .fas {
   opacity: 0.5;
 }
 #register_edit_exp_tab .modal .param_table .param_action {
-  opacity: .5;
+  opacity: 0.5;
   padding-left: 0.1rem;
   padding-right: 0.1rem;
   font-size: 1rem;
@@ -310,7 +310,7 @@ label {
   white-space: nowrap;
 }
 #expswitch_tab .ops_switch_icons .fas {
-  opacity: .5;
+  opacity: 0.5;
   padding-left: 0.1rem;
   padding-right: 0.1rem;
   font-size: 1rem;
@@ -346,6 +346,25 @@ label {
   border: thin #1E48DF solid;
   padding: 0.2em;
 }
+#myTabContainer .listview-action {
+  opacity: 0.5;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
+}
+#myTabContainer .param_action {
+  opacity: 0.5;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1rem;
+  font-size: inherit;
+  color: #1E48DF;
+}
+#myTabContainer .modal .btn {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+}
 #info_tab .ques_tabs .sitespecific_iframe {
   width: 100vw;
   height: 100vw;
@@ -355,8 +374,8 @@ label {
 #info_tab .ques_tabs .no_ques {
   text-align: left;
   font-style: italic;
-  padding-left: 2.0em;
-  padding-right: 2.0em;
+  padding-left: 2em;
+  padding-right: 2em;
 }
 #elog_tab div.edat {
   padding-top: 0.1em;
@@ -425,10 +444,10 @@ label {
   padding-right: 0.25em;
 }
 #elog_new_entry_modal {
-  margin-left: 1.0em;
+  margin-left: 1em;
 }
 #elog_email_subscriptions {
-  margin-left: 1.0em;
+  margin-left: 1em;
 }
 #elog_email_subscriptions .modal-body {
   text-align: left;
@@ -452,7 +471,7 @@ label {
   font-weight: lighter;
   font-size: small;
   font-style: italic;
-  margin-left: 1.0em;
+  margin-left: 1em;
 }
 #current_sample_lbl.samples_different {
   color: #FFCC57;
@@ -510,13 +529,13 @@ label {
 }
 #elog_content .entry_actions {
   float: right;
-  font-size: 0.90em;
+  font-size: 0.9em;
   padding-right: 0.25em;
 }
 #elog_content .entry_actions span {
   padding-left: 0.15em;
   padding-right: 0.15em;
-  opacity: .5;
+  opacity: 0.5;
 }
 #elog_content .elog-chid .card {
   width: 100%;
@@ -532,10 +551,10 @@ label {
   background: #efefef;
 }
 #fmgr_tab .fas {
-  opacity: .5;
+  opacity: 0.5;
 }
 #fmgr_tab .fmgr_exp_file_name {
-  padding-left: 2.0em;
+  padding-left: 2em;
   word-break: break-all;
 }
 #rtbl_content table {
@@ -554,14 +573,14 @@ label {
   white-space: nowrap;
   background: #6685F4;
   color: white;
-  opacity: .75;
+  opacity: 0.75;
   font-weight: normal;
 }
 #rtbl_content .tblhighlight {
   background-color: #1E48DF;
 }
 #rtbl_content .rtbldef_action {
-  opacity: .5;
+  opacity: 0.5;
   padding-left: 0.1rem;
   padding-right: 0.1rem;
   font-size: 1rem;
@@ -587,16 +606,6 @@ label {
 #rtbl_content div.rtbl_editable_column:empty::before {
   content: '\feff';
 }
-#rtbl_tab .btn {
-  color: white;
-  background: #6685F4;
-  font-weight: bold;
-}
-#shifts_tab .btn {
-  color: white;
-  background: #6685F4;
-  font-weight: bold;
-}
 #shifts_tab .table th {
   color: white;
   background: #6685F4;
@@ -605,20 +614,6 @@ label {
 #shifts_tab .btnbar {
   margin-left: 0.5em;
   text-align: left;
-}
-#shifts_tab .listview-action {
-  opacity: .5;
-  padding-left: 0.1rem;
-  padding-right: 0.1rem;
-  font-size: 1rem;
-}
-#shifts_tab .param_action {
-  opacity: .5;
-  padding-left: 0.1rem;
-  padding-right: 0.1rem;
-  font-size: 1rem;
-  font-size: inherit;
-  color: #1E48DF;
 }
 #shifts_tab .shiftstbl tr.active_shift td {
   color: #6685F4;
@@ -632,11 +627,6 @@ label {
   margin: 0px;
   padding-top: 0px;
 }
-#samples_tab .btn {
-  color: white;
-  background: #6685F4;
-  font-weight: bold;
-}
 #samples_tab .table th {
   color: white;
   background: #6685F4;
@@ -646,26 +636,12 @@ label {
   margin-left: 0.5em;
   text-align: left;
 }
-#samples_tab .listview-action {
-  opacity: .5;
-  padding-left: 0.1rem;
-  padding-right: 0.1rem;
-  font-size: 1rem;
-}
 #samples_tab .samplestbl tr.active_sample td {
   color: #6685F4;
   font-weight: bold;
   background: #FFCC57;
   margin: 0.1em;
   padding: 0.1em;
-}
-#samples_tab .param_action {
-  opacity: .5;
-  padding-left: 0.1rem;
-  padding-right: 0.1rem;
-  font-size: 1rem;
-  font-size: inherit;
-  color: #1E48DF;
 }
 .note-callout {
   border: thin #6685F4 solid;
@@ -683,7 +659,7 @@ label {
   padding-left: 1em;
 }
 #collab_tab .collabtbl tbody tr td .fas {
-  padding-right: 1.0em;
+  padding-right: 1em;
 }
 #collab_tab .collabtbl tbody tr td .fa-trash {
   opacity: 0.7;
@@ -716,7 +692,7 @@ label {
   color: white;
   padding-top: 0.25em;
   padding-bottom: 0.25em;
-  padding-left: 1.0em;
+  padding-left: 1em;
   text-align: center;
 }
 #feedback_tab .fd_section_hdr {
@@ -729,11 +705,11 @@ label {
 }
 #feedback_tab .fd_plain_hdr {
   text-align: left;
-  padding-left: 1.0em;
+  padding-left: 1em;
 }
 #feedback_tab .fd_item {
   text-align: left;
-  padding-left: 1.0em;
+  padding-left: 1em;
 }
 #feedback_tab .fd_input input {
   border: solid thin black;
@@ -750,7 +726,7 @@ label {
   padding-left: 1.5em;
 }
 #feedback_tab .fd_callout {
-  margin-top: 1.0em;
+  margin-top: 1em;
   text-align: left;
 }
 #feedback_tab .fd_instructions {
@@ -761,7 +737,7 @@ label {
   color: #6685F4;
 }
 #feedback_tab .fd_last_modified {
-  margin-top: 2.0em;
+  margin-top: 2em;
   font-size: : smaller;
   font-style: italic;
 }
@@ -772,4 +748,47 @@ label {
 }
 #feedback_tab .survey_item {
   text-align: left;
+}
+#lcls_wf_ctrls_tab .wfj_runnum {
+  border-bottom: 0;
+}
+#lcls_wf_ctrls_tab .ctrls_hdr {
+  color: #6685F4;
+  font-weight: bold;
+}
+#lcls_wf_ctrls_tab .ctrls_content {
+  border: thin black solid;
+}
+#lcls_wf_ctrls_tab .ctrls_content .runrow {
+  border-bottom: thin black solid;
+}
+#lcls_wf_ctrls_tab .ctrls_content .runhdr span {
+  margin-top: 0.25em;
+}
+#lcls_wf_ctrls_tab .ctrls_content .runrow:nth-child(even) {
+  background: #efefef;
+}
+#lcls_wf_ctrls_tab .wf_counters {
+  text-align: left;
+}
+#lcls_wf_ctrls_tab .wf_counters ul {
+  margin-bottom: 0em;
+}
+#lcls_wf_ctrls_tab .wf_counters .wf_counter_key {
+  font-weight: bold;
+}
+#lcls_wf_ctrls_tab .wf_counters .wf_counter_value {
+  padding-left: 0.25rem;
+}
+#lcls_wf_ctrls_tab .wf_counters .red {
+  color: red;
+}
+#lcls_wf_ctrls_tab .wf_counters .yellow {
+  color: yellow;
+}
+#lcls_wf_ctrls_tab .wf_counters .green {
+  color: green;
+}
+#lcls_wf_ctrls_tab .wf_counters .blue {
+  color: blue;
 }

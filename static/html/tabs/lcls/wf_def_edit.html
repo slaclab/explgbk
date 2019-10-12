@@ -1,0 +1,57 @@
+<div class="modal edit_modal" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+   <div class="modal-content">
+     <div class="modal-header">
+         <h4 class="modal-title w-100">Workflow definition
+             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+         </h4>
+     </div>
+     <div class="modal-body">
+     <form class="register_form">
+      <div class="pl-2 pr-2 alert-warning row validation_message d-none"></div>
+      <input type="hidden" class="form-control wf_def_id" value="{{ _id }}">
+       <div class="row">
+        <div class="pl-2 pr-2 form-group col-4">
+          <label>Name:</label>
+          <input type="text" class="form-control wf_def_name" value="{{ name }}">
+        </div>
+        <div class="pl-2 pr-2 form-group col-4">
+          <label>Trigger:</label>
+          <select class="form-control wf_def_trigger">{{#triggers}}<option value="{{value}}">{{label}}</option>{{/triggers}}</select>
+        </div>
+        <div class="pl-2 pr-2 form-group col-4">
+          <label>Location:</label>
+          <select class="form-control wf_def_location">{{#locations}}<option value="{{.}}">{{.}}</option>{{/locations}}</select>
+        </div>
+       </div>
+       <div class="pl-2 pr-2 form-group row">
+          <label>Executable:</label>
+          <input type="text" class="form-control wf_def_executable" value="{{ executable }}">
+       </div>
+      <table class="table table-condensed table-striped table-bordered">
+        <thead><tr><th>Param Name</th><th>Param Value</th><th>Actions</th></thead>
+        <tbody>
+          {{#paramkvs}}
+          <tr><td>{{#has_ss_params}}<div class="input-group">{{/has_ss_params}}<input type="text" class="form-control cp_key" value="{{key}}">{{#has_ss_params}}<span class="input-group-addon param_action"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span></div>{{/has_ss_params}}</td><td><input type="text" class="form-control cp_value" value="{{value}}"></td>
+            <td>
+                <span class="param_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
+                <span class="param_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
+            </td>
+          </tr>
+          {{/paramkvs}}
+          <tr><td>{{#has_ss_params}}<div class="input-group">{{/has_ss_params}}<input type="text" class="form-control cp_key" value="">{{#has_ss_params}}<span class="input-group-addon param_action"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span></div>{{/has_ss_params}}</td><td><input type="text" class="form-control cp_value" value=""></td>
+            <td>
+                <span class="param_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
+                <span class="param_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="modal-footer">
+          <button class="btn btn-default panel_btn submit_btn">{{#_id}}Update{{/_id}}{{^_id}}Create{{/_id}}</button>
+      </div>
+     </form>
+     </div>
+ </div>
+</div>
+</div>

@@ -98,6 +98,7 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
     expdb["shifts"].create_index( [("begin_time", ASCENDING)], unique=True)
     expdb["file_catalog"].create_index( [("path", ASCENDING), ("run_num", DESCENDING)], unique=True)
     expdb["run_tables"].create_index( [("name", ASCENDING)], unique=True)
+    expdb["workflow_definitions"].create_index( [("name", ASCENDING)], unique=True)
 
     # Create a default shift
     expdb["shifts"].insert_one( { "name" : "Default",
@@ -735,7 +736,7 @@ def get_instrument_elogs(experiment_name):
     ret = []
     if instrument_elog:
         ret.append(instrument_elog)
-    siteinfo = sitedb["info"].find_one()
+    siteinfo = sitedb["site_config"].find_one()
     if siteinfo and 'experiment_spanning_elogs' in siteinfo and siteinfo['experiment_spanning_elogs']:
         ret.extend(siteinfo['experiment_spanning_elogs'])
     return ret
@@ -1221,6 +1222,14 @@ def register_file_for_experiment(experiment_name, info):
         expdb['file_catalog'].insert_one(info)
     return (True, expdb['file_catalog'].find_one({"path": info["path"], "run_num": info["run_num"]}))
 
+def file_available_at_location(experiment_name, file_path, location):
+    """
+    Mark a file as being available at the specified location.
+    """
+    expdb = logbookclient[experiment_name]
+    expdb['file_catalog'].update_one({"path": file_path}, {"$addToSet": {"locations": location}})
+    return expdb['file_catalog'].find_one({"path": file_path})
+
 def get_collaborators(experiment_name):
     """
     Get the list of collaborators and their permissions for the experiment.
@@ -1289,3 +1298,71 @@ def get_poc_feedback_changes(experiment_name):
 def add_poc_feedback_item(experiment_name, item_name, item_value, modified_by):
     expdb = logbookclient[experiment_name]
     expdb["poc_feedback"].insert_one({"name": item_name, "value": item_value, "modified_by": modified_by, "modified_at": datetime.datetime.utcnow()})
+
+
+def get_workflow_definitions(experiment_name):
+    expdb = logbookclient[experiment_name]
+    return list(expdb["workflow_definitions"].find({}).sort([("name", 1)]))
+
+def get_workflow_locations(experiment_name):
+    sitedb = logbookclient["site"]
+    siteinfo = sitedb["site_config"].find_one()
+    ret = []
+    if siteinfo and 'workflow_locations' in siteinfo and siteinfo['workflow_locations']:
+        ret.extend(siteinfo['workflow_locations'])
+    return ret
+
+def get_workflow_triggers(experiment_name):
+    return [{"value": "MANUAL", "label": "Manually triggered"}, {"value": "START_OF_RUN", "label": "Start of a run"}, {"value": "END_OF_RUN", "label": "End of a run"}, {"value": "FIRST_FILE_TRANSFERRED", "label": "First file transfer"}, {"value": "ALL_FILES_TRANSFERRED", "label": "All files transferred"}]
+
+def create_update_wf_definition(experiment_name, wf_obj):
+    expdb = logbookclient[experiment_name]
+    if "_id" in wf_obj:
+        logger.debug("Updating workflow definition %s", wf_obj["_id"])
+        cur_wf_obj = expdb["workflow_definitions"].find_one({"_id": ObjectId(wf_obj["_id"])})
+        if not cur_wf_obj:
+            return False, "Cannot find workflow definition with id %s " % wf_obj["_id"], None
+        wf_obj["_id"] = cur_wf_obj["_id"]
+        expdb["workflow_definitions"].replace_one({"_id": ObjectId(wf_obj["_id"])}, wf_obj)
+        return True, "", expdb["workflow_definitions"].find_one({"_id": ObjectId(wf_obj["_id"])})
+    else:
+        wf_id = expdb["workflow_definitions"].insert_one(wf_obj).inserted_id
+        return True, "", expdb["workflow_definitions"].find_one({"_id": wf_id})
+
+def get_workflow_jobs(experiment_name):
+    expdb = logbookclient[experiment_name]
+    return [x for x in expdb["workflow_jobs"].aggregate([
+        { "$lookup": { "from": "workflow_definitions", "localField": "def_id", "foreignField": "_id", "as": "def"}},
+        { "$unwind": "$def" },
+        { "$addFields": { "experiment": experiment_name }},
+        { "$sort": { "run_num": -1, "name": 1}}
+    ])]
+
+def get_workflow_job_doc(experiment_name, job_id):
+    expdb = logbookclient[experiment_name]
+    wf_doc = expdb["workflow_jobs"].find_one({"_id": ObjectId(job_id)})
+    if wf_doc and 'def_id' in wf_doc:
+        wf_doc["experiment"] = experiment_name
+        wf_doc["def"] = expdb["workflow_definitions"].find_one({"_id": wf_doc["def_id"]})
+    return wf_doc
+
+def create_wf_job(experiment_name, wf_job_doc):
+    expdb = logbookclient[experiment_name]
+    wf_id = expdb["workflow_jobs"].insert_one(wf_job_doc).inserted_id
+    return True, "", get_workflow_job_doc(experiment_name, wf_id)
+
+def delete_wf_job(experiment_name, job_id):
+    expdb = logbookclient[experiment_name]
+    wf_doc = expdb["workflow_jobs"].find_one({"_id": ObjectId(job_id)})
+    if not wf_doc:
+        return False, "Cannot find workflow job", None
+    expdb["workflow_jobs"].delete_one({"_id": ObjectId(job_id)})
+    return True, "", wf_doc
+
+def update_wf_job(experiment_name, job_id, wf_updates):
+    expdb = logbookclient[experiment_name]
+    wf_doc = expdb["workflow_jobs"].find_one({"_id": ObjectId(job_id)})
+    if not wf_doc:
+        return False, "Cannot find workflow job", None
+    expdb["workflow_jobs"].update_one({"_id": ObjectId(job_id)}, {"$set": wf_updates })
+    return True, "", get_workflow_job_doc(experiment_name, job_id)

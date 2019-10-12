@@ -52,6 +52,7 @@ def templates(experiment_name, path):
 
 @pages_blueprint.route("/lgbk/ops", methods=["GET"])
 @context.security.authentication_required
+@context.security.authorization_required("edit")
 def operator_dashboard():
     return render_template("ops.html", logbook_site=context.LOGBOOK_SITE)
 

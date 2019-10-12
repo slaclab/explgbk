@@ -137,8 +137,10 @@ $(document).ready(function() {
     $.getJSON('../../static/json/sitespecific_tabs_' + logbook_site + ".json")
     .done(function(tabs) {
         {% raw %}
-        var ssnavtmpl = `{{#.}}<li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
-        var ssnavpnltmpl = `{{#.}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/.}}`;
+        var ssnavtmpl = `{{#.}}{{^dropdown}}<li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/dropdown}}
+        {{#dropdown}}<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{label}}<span class="caret"></span></a><div class="dropdown-menu">{{#submenu}}<a class="dropdown-item" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a>{{/submenu}}</div></li>{{/dropdown}}{{/.}}`;
+        var ssnavpnltmpl = `{{#.}}{{^dropdown}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/dropdown}}
+        {{#dropdown}}{{#submenu}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/submenu}}{{/dropdown}}{{/.}}`;
         {% endraw %}
         Mustache.parse(ssnavtmpl); Mustache.parse(ssnavpnltmpl);
         $("#myNavbar").find(".sitespecific").before(Mustache.render(ssnavtmpl, tabs));

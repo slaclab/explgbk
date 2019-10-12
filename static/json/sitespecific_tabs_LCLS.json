@@ -2,7 +2,19 @@
     {
         "id": "workflow",
         "label": "Workflow",
-        "data-url": "../../static/html/tabs/workflow_iframe.html"
+        "dropdown": true,
+        "submenu": [
+            {
+                "id": "lcls_wf_defs",
+                "label": "Definitions",
+                "data-url": "../../static/html/tabs/lcls/workflow_definitions.html"
+            },
+            {
+                "id": "lcls_wf_jobs",
+                "label": "Control",
+                "data-url": "../../static/html/tabs/lcls/workflow_jobs.html"
+            }
+        ]
     },
     {
         "id": "summaries",
