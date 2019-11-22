@@ -43,7 +43,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elog_email_subscriptions, elog_email_subscribe, elog_email_unsubscribe, get_elog_email_subscriptions_emails, \
     get_poc_feedback_changes, add_poc_feedback_item, clone_run_table_definition, replace_system_run_table_definition, \
     delete_system_run_table, get_instrument_elogs, post_related_elog_entry, get_related_instrument_elog_entries, \
-    get_elog_tree_for_specified_id, get_workflow_definitions, get_workflow_locations, get_workflow_triggers, \
+    get_elog_tree_for_specified_id, get_workflow_definitions, get_dm_locations, get_workflow_triggers, \
     create_update_wf_definition, get_workflow_jobs, get_workflow_job_doc, create_wf_job, delete_wf_job, update_wf_job, \
     file_available_at_location
 
@@ -1478,12 +1478,46 @@ def svc_file_available_at_location(experiment_name):
     location = request.args.get("location", None)
     if not location:
         return logAndAbort("Please specify the location.")
+    if not location in [x["name"] for x in get_dm_locations(experiment_name)]:
+        return logAndAbort("Please specify a valid location")
     file_path = request.args.get("file_path", None)
     if not file_path:
         return logAndAbort("Please specify the file path.")
     file_info = file_available_at_location(experiment_name, file_path, location)
     context.kafka_producer.send("file_catalog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": file_info })
     return jsonify({'success': True})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/check_and_move_file_to_location", methods=["GET", "POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_check_and_move_file_to_location(experiment_name):
+    location = request.args.get("location", None)
+    if not location:
+        return logAndAbort("Please specify the location.")
+    if not location in [x["name"] for x in get_dm_locations(experiment_name)]:
+        return logAndAbort("Please specify a valid location")
+    file_path = request.args.get("file_path", None)
+    if not file_path:
+        return logAndAbort("Please specify the file path.")
+    # Make a call to the data mover here....
+    return jsonify({'success': True, "message": "The request to move %s to %s has been submitted to the data movers. Please check back later." % (file_path, location)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/check_and_move_run_files_to_location", methods=["GET", "POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_check_and_move_run_files_to_location(experiment_name):
+    location = request.args.get("location", None)
+    if not location:
+        return logAndAbort("Please specify the location.")
+    if not location in [x["name"] for x in get_dm_locations(experiment_name)]:
+        return logAndAbort("Please specify a valid location")
+    run_num = request.args.get("run_num", None)
+    if not run_num:
+        return logAndAbort("Please specify the run number")
+    # Make a call to the data mover here....
+    return jsonify({'success': True, "message": "The request to move files in run %s to %s has been submitted to the data movers. Please check back later." % (run_num, location)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/collaborators", methods=["GET"])
 @context.security.authentication_required
@@ -1628,6 +1662,12 @@ def svc_get_specified_run_params_for_all_runs(experiment_name):
     param_values = get_specified_run_params_for_all_runs(experiment_name, param_names)
     return JSONEncoder().encode({"success": True, "value": param_values})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/dm_locations", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_dm_locations(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_dm_locations(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_definitions", methods=["GET"])
 @context.security.authentication_required
@@ -1635,13 +1675,6 @@ def svc_get_specified_run_params_for_all_runs(experiment_name):
 @context.security.authorization_required("read")
 def svc_get_wf_definitions(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_workflow_definitions(experiment_name)})
-
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_locations", methods=["GET"])
-@context.security.authentication_required
-@experiment_exists_and_unlocked
-@context.security.authorization_required("read")
-def svc_get_wf_locations(experiment_name):
-    return JSONEncoder().encode({"success": True, "value": get_workflow_locations(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_triggers", methods=["GET"])
 @context.security.authentication_required
@@ -1667,7 +1700,7 @@ def svc_create_update_wf_definition(experiment_name):
         return JSONEncoder().encode({"success": False, "errormsg": "Create/update workflow missing keys %s" % missing_keys, "value": None})
     if info['trigger'] not in [x["value"] for x in get_workflow_triggers(experiment_name)]:
         return JSONEncoder().encode({"success": False, "errormsg": "Invalid trigger %s in create/update workflow" % info['trigger'], "value": None})
-    if info['location'] not in [ x["name"] for x in get_workflow_locations(experiment_name) ]:
+    if info['location'] not in [ x["name"] for x in get_dm_locations(experiment_name) if "jid_prefix" in x and x["jid_prefix"] ]:
         return JSONEncoder().encode({"success": False, "errormsg": "Invalid location %s in create/update workflow" % info['location'], "value": None})
     info["run_as_user"] = context.security.get_current_user_id()
 
@@ -1693,12 +1726,12 @@ def svc_get_wf_job_action(experiment_name, job_id, action):
     if not wf_job:
         return logAndAbort("Cannot find workflow in experiment %s for id %s" % (experiment_name, job_id), 404)
     def proxy_JID(location):
-        logger.debug("Calling the JID at %s", (location["prefix"]+"jid/ws/"+action))
-        req = requests.post(location["prefix"]+"jid/ws/"+action, data=JSONEncoder().encode(wf_job), stream=True, headers={"Content-Type": "application/json"})
+        logger.debug("Calling the JID at %s", (location["jid_prefix"]+"jid/ws/"+action))
+        req = requests.post(location["jid_prefix"]+"jid/ws/"+action, data=JSONEncoder().encode(wf_job), stream=True, headers={"Content-Type": "application/json"})
         resp = Response(stream_with_context(req.iter_content(chunk_size=1024)))
         return resp
 
-    location = { x["name"] : x for x in get_workflow_locations(experiment_name) }.get(wf_job['def']['location'], None)
+    location = { x["name"] : x for x in get_dm_locations(experiment_name) }.get(wf_job['def']['location'], None)
     if not location:
         return logAndAbort("Cannot determine workflow location in experiment %s for id %s %s" % (experiment_name, job_id, wf_job), 500)
 
@@ -1788,9 +1821,9 @@ def svc_kill_workflow_job(experiment_name):
     if not job_id:
         return logAndAbort("Please pass in the workflow job id.")
     wf_job = get_workflow_job_doc(experiment_name, job_id)
-    location_config = { x["name"] : x for x in get_workflow_locations(experiment_name)}
+    location_config = { x["name"] : x for x in get_dm_locations(experiment_name)}
     loc_info = location_config[wf_job["def"]["location"]]
-    resp = requests.post(loc_info["prefix"] + "jid/ws/kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json"})
+    resp = requests.post(loc_info["jid_prefix"] + "jid/ws/kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json"})
     respdoc = resp.json()["value"]
     (status, errormsg, val) = update_wf_job(experiment_name, job_id, {"status": respdoc.get("status", wf_job["status"])})
     if status:

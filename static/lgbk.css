@@ -29,6 +29,11 @@
   font-weight: bold;
   font-size: 1.5rem;
 }
+.small_btn_mixin {
+  font-size: 0.5rem;
+  padding: 1px;
+  margin: 1px;
+}
 #lgbk_body {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
   font-size: 0.85rem;
@@ -556,6 +561,16 @@ label {
 #fmgr_tab .fmgr_exp_file_name {
   padding-left: 2em;
   word-break: break-all;
+}
+#fmgr_tab .fileloc-btn {
+  font-size: 0.5rem;
+  padding: 1px;
+  margin: 1px;
+}
+#fmgr_tab .runloc-btn {
+  font-size: 0.5rem;
+  padding: 1px;
+  margin: 1px;
 }
 #rtbl_content table {
   width: 100%;

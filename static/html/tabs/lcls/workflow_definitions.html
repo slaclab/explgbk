@@ -12,9 +12,9 @@
 
 <script type="text/javascript">
   var create_edit_wf_def = function(wf_id) {
-      $.when($.ajax("../../static/html/tabs/lcls/wf_def_edit.html"), $.getJSON('ws/workflow_definitions'), $.getJSON('ws/workflow_locations'), $.getJSON('ws/workflow_triggers'))
+      $.when($.ajax("../../static/html/tabs/lcls/wf_def_edit.html"), $.getJSON('ws/workflow_definitions'), $.getJSON('ws/dm_locations'), $.getJSON('ws/workflow_triggers'))
       .done(function(d0, d1, d2, d3){
-          let wf_def = ( _.isNil(wf_id) ? {} : _.find(d1[0].value, ["_id", wf_id])), lc = _.set(wf_def, "locations", _.map(d2[0].value, "name")), lt = _.set(wf_def, "triggers", d3[0].value), lp = _.set(wf_def, "paramkvs", _.map(_.get(wf_def, "parameters", {}), function(value, key){ return {"key": key, "value": value}})), rendered = $(Mustache.render(d0[0], wf_def));
+          let wf_def = ( _.isNil(wf_id) ? {} : _.find(d1[0].value, ["_id", wf_id])), lc = _.set(wf_def, "locations", _.map(_.filter(d2[0].value, "jid_prefix"), "name")), lt = _.set(wf_def, "triggers", d3[0].value), lp = _.set(wf_def, "paramkvs", _.map(_.get(wf_def, "parameters", {}), function(value, key){ return {"key": key, "value": value}})), rendered = $(Mustache.render(d0[0], wf_def));
           rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
           rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
           rendered.find(".wf_def_trigger").val(_.get(wf_def, "trigger", _.first(d3[0].value)["value"]));

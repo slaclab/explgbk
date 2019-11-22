@@ -63,6 +63,12 @@
     font-size: 1.5rem;
 }
 
+.small_btn_mixin {
+    font-size: 0.5rem;
+    padding: 1px;
+    margin: 1px;
+}
+
 #lgbk_body {
   .font_family_choices_mixin;
 }
@@ -616,27 +622,31 @@ label {
 	width: 100%;
 }
 
+#fmgr_tab {
+    .run_file:nth-child(odd) {
+    	background: @tablezebra;
+    }
+    .fdat {
+        padding-top: 0.1em;
+        padding-bottom: 0.1em;
+    }
+    .fdat:nth-child(odd) {
+    	background: @tablezebra;
+    }
+    .fas {
+    	opacity: .5;
+    }
+    .fmgr_exp_file_name {
+        padding-left: 2.0em;
+        word-break: break-all;
+    }
+    .fileloc-btn {
+        .small_btn_mixin;
+    }
+    .runloc-btn {
+        .small_btn_mixin;
+    }
 
-#fmgr_tab .run_file:nth-child(odd) {
-	background: @tablezebra;
-}
-
-#fmgr_tab .fdat {
-  padding-top: 0.1em;
-  padding-bottom: 0.1em;
-}
-
-#fmgr_tab .fdat:nth-child(odd) {
-	background: @tablezebra;
-}
-
-#fmgr_tab .fas {
-	opacity: .5;
-}
-
-#fmgr_tab .fmgr_exp_file_name {
-  padding-left: 2.0em;
-  word-break: break-all;
 }
 
 #rtbl_content table {

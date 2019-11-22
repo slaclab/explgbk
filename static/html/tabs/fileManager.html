@@ -1,44 +1,27 @@
 <div class="container-fluid text-center tabcontainer" id="fmgr_tab">
 
+<div class="mdl_holder"></div>
 <div class="container-fluid text-left" id="fmgr_content">
 <div class="row exp_tab_header">
-  <div class="col-md-2">Run</div>
-  <div class="col-md-3">File</div>
-  <div class="col-md-2">Size</div>
-  <div class="col-md-2">Created</div>
-  <div class="col-md-3">Checksum</div>
+  <div class="col-md-2">Run</div><div class="col-md-3">File</div><div class="col-md-2">Size</div><div class="col-md-2">Created</div><div class="col-md-3">Locations</div>
 </div>
+<div class="spgntr_append"></div>
 </div>
 </div>
 
 <script type="text/javascript">
 $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
 
-  var file_main_templ = `<div class="fdat" data-entry-id="{{ _id }}"><div class="row">
-   <div class="col-md-2"><span class="fmgr-expand exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>{{ run_num }}</div>
-   <div class="col-md-3 text-left">{{ run_files.num_files }}</div>
-   <div class="col-md-2 text-left">{{ run_files.hrsize }}</div>
-   <div class="col-md-2"></div>
-   <div class="col-md-3"></div>
-   </div></div>`;
+  var file_main_templ = `<div class="fdat" data-entry-id="{{ _id }}" data-spgntr="{{run_num}}" ><div class="row">
+      <div class="col-md-2"><span class="fmgr-expand exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>{{ run_num }}</div><div class="col-md-3 text-left">{{ num_files }}</div><div class="col-md-2 text-left">{{ hrsize }}</div><div class="col-md-2"></div><div class="col-md-3 d-flex flex-wrap">
+          {{#fstat}}<button type="button" class="btn btn-sm runloc-btn {{#all}}btn-primary{{/all}}{{^all}}{{#some}}btn-warning{{/some}}{{^some}}btn-secondary{{/some}}{{/all}}" title="{{#all}}All{{/all}}{{^all}}{{#some}}Some{{/some}}{{^some}}No{{/some}}{{/all}} files in this run may be present at this location" data-loc-name="{{name}}">{{name}}</button>{{/fstat}}</div></div></div>`;
 
-  var fmgr_child_template = `<div class="row col-md-12 fmgr-chid">
-		   <div class="card w-100">
-		    <div class="card-body">
-          {{#files}}
-           <div class="row run_file">
-             <div class="col-md-5 text-left fmgr_exp_file_name">{{ name }}</div>
-             <div class="col-md-2 text-left">{{ hrsize }}</div>
-             <div class="col-md-2 text-left">{{#FormatDate}}{{ create_timestamp }}{{/FormatDate}}</div>
-             <div class="col-md-3 text-left">{{ checksum }}</div>
-           </div>
-          {{/files}}
-		    </div>
-		   </div>
-		 </div>`;
+  var fmgr_child_template = `<div class="row col-md-12 fmgr-chid"><div class="card w-100"><div class="card-body">
+      {{#files}}<div class="row run_file" data-file-path="{{path}}"><div class="col-md-5 text-left fmgr_exp_file_name">{{ name }}</div><div class="col-md-2 text-left">{{ hrsize }}</div><div class="col-md-2 text-left">{{#FormatDate}}{{ create_timestamp }}{{/FormatDate}}</div>
+      <div class="col-md-3 d-flex flex-wrap">{{#dm_locations}}<button type="button" class="btn btn-sm fileloc-btn {{#present}}btn-primary{{/present}}{{^present}}btn-secondary{{/present}}" {{#present}}title="This file was present at this location as of {{#FormatDate}}{{asof}}{{/FormatDate}}. Click to check if it is still there."{{/present}}{{^present}}title="This file may not be available at this location. Click to make it available at this location."{{/present}} data-loc-name="{{name}}">{{name}}</button>{{/dm_locations}}</div></div>{{/files}}</div></div></div>`;
 
   var expandFunction = function() {
-  var run_files =  $(this).closest(".fdat").data("run_files");
+     var run_files =  $(this).closest(".fdat").data("run_files");
 	 console.log("Processing " + run_files[""]);
      if($(this).hasClass("fmgr-expanded")) {
          $(this).closest(".fdat").find(".fmgr-chid").remove();
@@ -46,53 +29,113 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
      } else {
          var clicked_elem = $(this);
          run_files.files = _.sortBy(run_files.files, function(fl){ return fl['name']});
-         clicked_elem.closest(".fdat").append(renderMSTemplate(fmgr_child_template, run_files));
+         let rendered = renderMSTemplate(fmgr_child_template, run_files);
+         clicked_elem.closest(".fdat").append(rendered);
+         rendered.find(".fileloc-btn").on("click", function(){
+             let file_path = $(this).closest(".run_file").attr("data-file-path"), loc_name = $(this).attr("data-loc-name");
+             console.log("Clicked on " + file_path + " for location " + loc_name);
+             $.when($.getJSON("ws/check_and_move_file_to_location", data={file_path: file_path, location: loc_name}), $.ajax("../../static/html/ms/generic_msg.html"))
+             .done(function(d0, d1){
+                 let rendered = $(Mustache.render(d1[0], {title: "Moving " + file_path + " to " + loc_name, message: d0[0].message}));
+                 $("#fmgr_tab").find(".mdl_holder").empty().append(rendered);
+                 $("#fmgr_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#lcls_wf_ctrls_tab").find(".mdl_holder").empty(); });
+                 $("#fmgr_tab").find(".mdl_holder").find(".modal").modal("show");
+             })
+         })
          $(this).html('<i class="fas fa-minus expand_ctrl"></i>');
        }
 	   $(this).toggleClass("fmgr-expanded");
-    };
+  };
 
   Mustache.parse(file_main_templ);
   Mustache.parse(fmgr_child_template);
+  var renderMSTemplate = function(template, entry) { // Convienience method to render time correctly.
+      entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+      return $(Mustache.render(template, entry));
+  }
 
+  sortable_paginator($("#fmgr_content"), "run_num", "run_num", true, 0, 50, 50);
+  $(window).scroll(function () {
+      if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+          $("#fmgr_content").data("spgntr").pageDown();
+      }
+  });
 
-	var renderMSTemplate = function(template, entry) { // Convienience method to render time correctly.
-	   entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
-	   return $(Mustache.render(template, entry));
-	 }
+  var run_loc_click = function() {
+      let run_num = $(this).closest("[data-spgntr]").attr("data-spgntr"), loc_name = $(this).attr("data-loc-name");
+      console.log("Clicked on " + run_num + " for location " + loc_name);
+      $.when($.getJSON("ws/check_and_move_run_files_to_location", data={run_num: run_num, location: loc_name}), $.ajax("../../static/html/ms/generic_msg.html"))
+      .done(function(d0, d1){
+          let rendered = $(Mustache.render(d1[0], {title: "Moving run " + run_num + " to " + loc_name, message: d0[0].message}));
+          $("#fmgr_tab").find(".mdl_holder").empty().append(rendered);
+          $("#fmgr_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#lcls_wf_ctrls_tab").find(".mdl_holder").empty(); });
+          $("#fmgr_tab").find(".mdl_holder").find(".modal").modal("show");
+      })
+  }
 
-   var human_readable_size = function(size_in_bytes) {
-     var units = ["B", "KB", "MB", "GB", "TB", "PB", "EB"];
-     var hr = size_in_bytes;
-     for (var i = 0; i < units.length; i++) {
-       if(_.inRange(hr, 0, 1001)) {
-         return hr.toFixed(2) + " " + units[i];
-       }
-       hr = hr/1024;
-     }
-     return size_in_bytes + " bytes";
-   }
+  var human_readable_size = function(size_in_bytes) {
+      var units = ["B", "KB", "MB", "GB", "TB", "PB", "EB"];
+      var hr = size_in_bytes;
+      for (var i = 0; i < units.length; i++) {
+          if(_.inRange(hr, 0, 1001)) { return hr.toFixed(2) + " " + units[i]; }
+          hr = hr/1024;
+      }
+      return size_in_bytes + " bytes";
+  }
+  var prep_run_file = function(run, dm_locations) {
+      let rf =  {run_num: run["num"], num_files: 0, total_size: 0, files: [], dm_locations: dm_locations, fstat: _.map(dm_locations, function(x){ return { name: x, all: false, some: false }}) };
+      rf.render = function() {
+          this.updateStat();
+          var rendered = renderMSTemplate(file_main_templ, this);
+		  rendered.data("run_files", rf);
+          rendered.find(".fmgr-expand").on("click", expandFunction);
+          rendered.find(".runloc-btn").on("click", run_loc_click);
+          return rendered;
+      }
+      rf.updateStat = function() {
+          let rf = this;
+          _.forOwn(rf.fstat, function(v,k,o){ o[k].all = rf.files.length != 0 && _.every(_.map(rf.files, "dm_locations." + k + ".present"))});
+          _.forOwn(rf.fstat, function(v,k,o){ o[k].some = rf.files.length != 0 && _.some(_.map(rf.files, "dm_locations." + k + ".present"))});
+          rf.num_files = rf.files.length;
+          rf.total_size = _.sum(_.map(rf.files, function(f){return _.get(f, "size", 0)}));
+          rf.hrsize = human_readable_size(rf.total_size);
+      }
+      return rf;
+  }
+  var add_file_to_run_files = function(file, run_files) {
+      file.dm_locations = _.map(run_files.dm_locations, function(x){ return {name : x, present: _.includes(_.keys(_.get(file, "locations")), x), "asof": _.get(file, "locations."+x+".asof")}});
+      run_files.files.push(file);
+  }
 
-
-	$.getJSON("ws/files")
-	.done(function(data){
-	  var files = {};
-	  _.each(data.value, function(file) {
-		 file.name = _.last(_.split(file.path, "/"));
-     file.hrsize = human_readable_size(file.size);
-		 if(!_.has(files, file["run_num"])) { files[file["run_num"]] = { num_files: 0, total_size: 0, files: []}};
-		 var run_files = files[file["run_num"]];
-		 run_files.files.push(file);
-		 run_files.num_files = run_files.num_files  + 1;
-		 run_files.total_size = run_files.total_size + file.size;
-     run_files.hrsize = human_readable_size(run_files.total_size);
-		 });
-	  _.forOwnRight(files, function(run_files, run_num){
-		  var rendered = renderMSTemplate(file_main_templ, {run_files: run_files, run_num: run_num});
-		  rendered.data("run_files", run_files);
-		  $("#fmgr_content").append(rendered);
-		  });
-	  $("#fmgr_content .fmgr-expand").on("click", expandFunction);
-	});
+  $.when($.getJSON("ws/files"), $.getJSON("ws/runs?includeParams=false"), $.getJSON('ws/dm_locations'))
+  .done(function(d0, d1, d2){
+      let dm_locations = _.map(d2[0].value, "name"), files = _.fromPairs(_.map(d1[0].value, function(x){ return [x["num"], prep_run_file(x, dm_locations)]}));
+	  _.each(d0[0].value, function(file) {
+		 file.name = (file.path.length < 64) ? file.path : "..." + file.path.substr(-64) ;
+         file.hrsize = human_readable_size(file.size);
+         add_file_to_run_files(file, files[file["run_num"]])
+     });
+     $("#fmgr_content").data("spgntr").addObjects(_.values(files));
+     $(document).on('runs', function(event, rundoc) {
+         // console.log("WS run update "); console.log(rundoc);
+         let rf = prep_run_file(rundoc.value, dm_locations);
+         $.getJSON("ws/"+rf["run_num"]+"/files")
+         .done(function(d0){
+             _.each(d0.value, function(file) {
+                 file.name = (file.path.length < 64) ? file.path : "..." + file.path.substr(-64);
+                 file.hrsize = human_readable_size(file.size);
+                 add_file_to_run_files(file, rf)
+            });
+            $("#fmgr_content").data("spgntr").addObject(rf);
+         })
+     });
+     $(document).on('file_catalog', function(event, fdoc) {
+         console.log("WS file_catalog update "); console.log(fdoc);
+         let run_num = fdoc.value["run_num"], run_files = $("#fmgr_content").find("[data-spgntr="+run_num+"]").data("run_files");
+         _.remove(run_files.files, ["path", fdoc.value["path"]]);
+         add_file_to_run_files(fdoc.value, run_files)
+         $("#fmgr_content").data("spgntr").addObject(run_files);
+     });
+  });
 });
 </script>

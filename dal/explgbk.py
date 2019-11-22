@@ -1227,7 +1227,7 @@ def file_available_at_location(experiment_name, file_path, location):
     Mark a file as being available at the specified location.
     """
     expdb = logbookclient[experiment_name]
-    expdb['file_catalog'].update_one({"path": file_path}, {"$addToSet": {"locations": location}})
+    expdb['file_catalog'].update_one({"path": file_path}, {"$set": {"locations."+location+".asof": datetime.datetime.utcnow()}})
     return expdb['file_catalog'].find_one({"path": file_path})
 
 def get_collaborators(experiment_name):
@@ -1304,13 +1304,19 @@ def get_workflow_definitions(experiment_name):
     expdb = logbookclient[experiment_name]
     return list(expdb["workflow_definitions"].find({}).sort([("name", 1)]))
 
-def get_workflow_locations(experiment_name):
+def get_dm_locations(experiment_name):
     sitedb = logbookclient["site"]
+    expdb = logbookclient[experiment_name]
     siteinfo = sitedb["site_config"].find_one()
-    ret = []
-    if siteinfo and 'workflow_locations' in siteinfo and siteinfo['workflow_locations']:
-        ret.extend(siteinfo['workflow_locations'])
-    return ret
+    ret = {}
+    if siteinfo and 'dm_locations' in siteinfo and siteinfo['dm_locations']:
+        ret.update({x["name"]: x for x in siteinfo['dm_locations'] if x.get("all_experiments", False)})
+        exp_specific_dm_locations = expdb["info"].find_one().get("params", {}).get("dm_locations", "").split()
+        for exp_specific_dm_location in exp_specific_dm_locations:
+            if exp_specific_dm_location in [x["name"] for x in siteinfo['dm_locations']]:
+                ret[exp_specific_dm_location] = [x for x in siteinfo['dm_locations'] if x["name"] == exp_specific_dm_location][0]
+
+    return list(ret.values())
 
 def get_workflow_triggers(experiment_name):
     return [{"value": "MANUAL", "label": "Manually triggered"}, {"value": "START_OF_RUN", "label": "Start of a run"}, {"value": "END_OF_RUN", "label": "End of a run"}, {"value": "FIRST_FILE_TRANSFERRED", "label": "First file transfer"}, {"value": "ALL_FILES_TRANSFERRED", "label": "All files transferred"}]
