@@ -10,7 +10,7 @@
 <script type="text/javascript">
 $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
   var run_tbl_pill_template = `{{#value}}<li class="nav-item"><a class="nav-link rtbl_pill {{#is_system_run_table}}rtbl_sys{{/is_system_run_table}}" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}`;
-  var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-condensed sticky-table"><thead></thead><tbody></tbody></table>`;
+  var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-condensed sticky-table"><thead></thead><tbody class="spgntr_append"></tbody></table>`;
   var run_tbl_def_tr = `<tr>
     <td><input name="label" class="nonblank w-75"/></td>
     <td><select name="type" class="rtbl_def_category_select nonblank"><option value="">&nbsp;</option></select></td>
@@ -137,10 +137,10 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
     .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception updating editable " + jqXHR.responseText)});
   }
 
-  var renderRunData = function(tblRndr, runData) {
-      var row_tmpl = tblRndr.data("template");
-      runData.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
-      var rowRendered = $(Mustache.render(row_tmpl, runData));
+  var rtnl_row_tmpl; // Set later below.
+  var renderRunData = function() {
+      this.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+      var rowRendered = $(Mustache.render(rtnl_row_tmpl, this));
       rowRendered.find("td").hover(
         function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").addClass("tblhighlight"); },
         function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").removeClass("tblhighlight"); });
@@ -184,7 +184,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
               var dateformatfn = (_.head(_.tail(tblDef.coldefs))["source"] == "begin_time" || _.head(_.tail(tblDef.coldefs))["source"] == "end_time") ? function(d) { return moment(d).toDate() } : function(d) { return d };
               var xaxisdata = _.map(runData.value, function(rd){return dateformatfn(_.get(rd, _.head(_.tail(tblDef.coldefs))["source"]))});
               _.each(_.tail(_.tail(tblDef.coldefs)), function(coldef, idx) {
-                traces.push({x: xaxisdata, y: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "scatter", mode: "lines+markers", showlegend: true, name: coldef["label"]});
+                traces.push({x: xaxisdata, y: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "scatter", mode: "markers", showlegend: true, name: coldef["label"]});
               });
           }
           Plotly.newPlot(plotlyDivName, traces, layout, {displaylogo: false});
@@ -208,26 +208,32 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
             row_tmpl = row_tmpl + "<td>{{" + coldef["source"] + "}}</td>";
           }
         });
-        tblRndr.find("thead").append(hdr);
-        row_tmpl = "{{#value}}<tr data-runnum={{num}}>" + row_tmpl + "</tr>{{/value}}";
-        Mustache.parse(row_tmpl);
-        tblRndr.data("template", row_tmpl).data("samples", _.fromPairs(_.map(sampleData.value, function(o){return [o["_id"], o["name"]]})));
-        var rowRendered = renderRunData(tblRndr, runData);
-        tblRndr.find("tbody").append(rowRendered);
+        tblRndr.find("thead").empty().append(hdr);
+        tblRndr.data("samples", _.fromPairs(_.map(sampleData.value, function(o){return [o["_id"], o["name"]]})));
         $("#rtbl_content").html(tblRndr);
+        sortable_paginator($("#rtbl_content").find("table"), "num", "num", true, 0, 50, 50);
+
+        rtnl_row_tmpl = "<tr data-runnum={{num}} data-spgntr={{num}}>" + row_tmpl + "</tr>";
+        Mustache.parse(rtnl_row_tmpl);
+        _.each(runData.value, function(r){ r.render = renderRunData})
+        $("#rtbl_content").find("table").data("spgntr").addObjects(runData.value);
         var thead_top = $("#rtbl_content .sticky-table thead")[0].getBoundingClientRect().top;
         $.each($("#rtbl_content .sticky-table thead th"), function(){
             $(this).css({"top": $(this)[0].getBoundingClientRect().top - thead_top + "px"});
         })
+        $(window).scroll(function () {
+          if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+          $("#rtbl_content").find("table").data("spgntr").pageDown();
+        }});
       })
       .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception getting data " + jqXHR.responseText)});
-      if(_.get(roles, "is_editor", false)) {
+      if(_.get(privileges, "edit", false)) {
           $("#toolbar_for_tab").find(".tlbr").show();
           $("#make_system_rtbl").hide();
           if(_.get(tblDef, 'is_system_run_table', false)) {
               $("#edit_rtbl").hide(); $("#make_system_rtbl").hide();
           } else {
-              if(_.get(roles, "is_site_admin", false)) {
+              if(_.get(privileges, "ops_page", false)) {
                   $("#make_system_rtbl").show();
               }
               $("#edit_rtbl").show();
@@ -243,12 +249,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       console.log(runData);
       var tblRndr = $("#rtbl_content").find("table"), runSample = _.get(runData.value, 'sample', "");
       if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && runSample != sample_showing_in_UI) { console.log("Skipping updating run table for different sample " + runSample); return; }
-      var rowRendered = renderRunData(tblRndr, runData);
-      if(runData["CRUD"] == "Insert") {
-         if(tblRndr.find("tbody tr:first").length > 0) { tblRndr.find("tbody tr:first").before(rowRendered) } else { tblRndr.find("tbody").append(rowRendered); };
-     } else {
-         tblRndr.find("tbody tr[data-runnum=" + runData.value['num'] +"]").replaceWith(rowRendered);
-     }
+      runData.value.render = renderRunData;
+      $("#rtbl_content").find("table").data("spgntr").addObject(runData.value);
     });
 
     $("#rtbl_tab").data("new_rtbl_fn", function(e) { col_defs_dialog(); });
@@ -354,7 +356,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
     });
 
     $("#rtbl_tab").on("lg.refresh", function() {
-        $("#rtbl_tab").find(_.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
+        $("#rtbl_tab").find(_.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name='" + sessionStorage['runtable_active_tab'] + "']") : ".rtbl_pill").first().trigger("click");
     });
   });
 });
@@ -367,7 +369,7 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
     <span id="make_system_rtbl" title="Move this run table to the system run tables. These are visible to all experiments; the move will replace any system run table with the same name. This run table will be removed from this experiment."><i class="fab fa-superpowers fa-lg tlbr"></i></span>
     `;
     var toolbar_rendered = $(tab_toolbar);
-    if(!_.get(roles, "is_site_admin", false)) { toolbar_rendered.find("#make_system_rtbl").remove(); }
+    if(!_.get(privileges, "ops_page", false)) { toolbar_rendered.find("#make_system_rtbl").remove(); }
     $("#toolbar_for_tab").append(toolbar_rendered);
     $("#new_rtbl").on("click", function(e) { $("#rtbl_tab").data("new_rtbl_fn")(e)});
     $("#edit_rtbl").on("click", function(e) { $("#rtbl_tab").data("edit_rtbl_fn")(e)});

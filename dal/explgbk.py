@@ -97,6 +97,7 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
     expdb["shifts"].create_index( [("name", ASCENDING)], unique=True)
     expdb["shifts"].create_index( [("begin_time", ASCENDING)], unique=True)
     expdb["file_catalog"].create_index( [("path", ASCENDING), ("run_num", DESCENDING)], unique=True)
+    expdb["file_catalog"].create_index( [("run_num", DESCENDING)])
     expdb["run_tables"].create_index( [("name", ASCENDING)], unique=True)
     expdb["workflow_definitions"].create_index( [("name", ASCENDING)], unique=True)
 
@@ -111,11 +112,15 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
 
     if create_auto_roles:
         expdb["roles"].insert_many([
-            {"app" : "LDAP", "name": "Admin", "players": [ "uid:" + info["leader_account"]] },
-            {"app" : "LogBook", "name": "Editor", "players": [ "uid:" + info["leader_account"]] },
-            {"app" : "LogBook", "name": "Writer", "players": [ info["posix_group"]] }
-            ]
-        )
+            {"app" : "LogBook", "name": "Admin", "players": [ "uid:" + info["leader_account"]] },
+            {"app" : "LogBook", "name": "Editor", "players": [ "uid:" + info["leader_account"]] }
+            ])
+        if "posix_group" in info and len(info["posix_group"]) > 1:
+            expdb["roles"].insert_one({"app" : "LogBook", "name": "Writer", "players": [ info["posix_group"]] })
+        if security.get_current_user_id() != info["leader_account"] and not security.check_privilege_for_experiment("ops_page", None, None):
+            expdb["roles"].update_one({"app" : "LogBook", "name": "Editor"}, {"$addToSet": { "players": "uid:" + security.get_current_user_id() }})
+            expdb["roles"].update_one({"app" : "LogBook", "name": "Admin"}, {"$addToSet": { "players": "uid:" + security.get_current_user_id() }})
+
 
     if "initial_sample" in incoming_info and incoming_info["initial_sample"]:
         create_update_sample(experiment_name, incoming_info["initial_sample"], True, {
@@ -333,6 +338,18 @@ def instrument_standby(instrument, station, userid):
         "is_standby": True
         })
     return (True, "")
+
+def get_global_roles():
+    sitedb = logbookclient["site"]
+    return [x for x in sitedb["roles"].find({"app": "LogBook"})]
+
+def add_player_to_global_role(player, role):
+    sitedb = logbookclient["site"]
+    sitedb["roles"].update_one({"app": "LogBook", "name": role}, {"$addToSet": {"players": player}})
+
+def remove_player_from_global_role(player, role):
+    sitedb = logbookclient["site"]
+    sitedb["roles"].update_one({"app": "LogBook", "name": role}, {"$pull": {"players": player}})
 
 def get_elog_entries(experiment_name, sample_name=None):
     """
@@ -724,6 +741,21 @@ def elog_email_unsubscribe(experiment_name, userid):
     result = expdb.subscribers.delete_one({"_id": userid})
     return result.acknowledged
 
+def get_site_naming_conventions():
+    '''
+    Get the naming conventions from the site config.
+    Naming conventions are object/attribute documents; for example, experiment.name
+    Each document has a placeholder, tooltip and validation_regex attribute.
+    The placeholder is used as the HTML placeholder/example for the attribute.
+    The validation regex will do some basic regex; however, it's probably very difficult to cover all cases with a regex.
+    The tooltip should have enought detail to outlines the naming convention for operators.
+    '''
+    sitedb = logbookclient["site"]
+    s_config = sitedb["site_config"].find_one({})
+    if s_config:
+        return s_config.get("naming_conventions", {})
+    return {}
+
 def get_instrument_elogs(experiment_name):
     '''
     Get the associated elogs for experiment.
@@ -741,12 +773,24 @@ def get_instrument_elogs(experiment_name):
         ret.extend(siteinfo['experiment_spanning_elogs'])
     return ret
 
-def get_experiment_files(experiment_name):
+def get_experiment_files(experiment_name, sample_name=None):
     '''
     Get the files for the given experiment
     '''
     expdb = logbookclient[experiment_name]
-    return [file for file in expdb['file_catalog'].find().sort([("run_num", -1), ("create_timestamp", -1)])]
+    if not sample_name or sample_name == "All Samples":
+        return [file for file in expdb['file_catalog'].find().sort([("run_num", -1), ("create_timestamp", -1)])]
+    else:
+        return [x for x in expdb.samples.aggregate([
+            { "$match": { "name": sample_name }},
+            { "$lookup": { "from": "runs", "localField": "_id", "foreignField": "sample", "as": "run"}},
+            { "$unwind": "$run" },
+            { "$replaceRoot": { "newRoot": "$run" } },
+            { "$lookup": { "from": "file_catalog", "localField": "num", "foreignField": "run_num", "as": "file_catalog"}},
+            { "$unwind": "$file_catalog" },
+            { "$replaceRoot": { "newRoot": "$file_catalog" } },
+            { "$sort": { "run_num": -1 }}
+        ])]
 
 def get_experiment_files_for_run(experiment_name, run_num):
     '''
@@ -1142,7 +1186,7 @@ def create_update_sample(experiment_name, sample_name, createp, info, automatica
         expdb['samples'].insert_one(info)
         if automatically_create_associated_run:
             current_run = get_current_run(experiment_name)
-            if not is_run_closed(experiment_name, current_run["num"]):
+            if current_run and not is_run_closed(experiment_name, current_run["num"]):
                 return False, ("Cannot switch to and create a run if the current run %s is still open %s" % (current_run["num"], experiment_name))
             make_sample_current(experiment_name, sample_name)
             start_run(experiment_name, "DATA")
@@ -1185,6 +1229,22 @@ def make_sample_current(experiment_name, sample_name):
 
     expdb.current.find_one_and_update({"_id": "sample"}, {"$set": { "_id": "sample", "sample" : sample_doc["_id"] }} , upsert=True)
     return (True, "")
+
+def delete_sample_for_experiment(experiment_name, sample_name):
+    """ Delete the sample for an experiment. We only allow deletion of samples if there are no runs associated with the sample and it is not current"""
+    expdb = logbookclient[experiment_name]
+    requested_sample = expdb.samples.find_one({"name": sample_name})
+    current_sample = expdb.current.find_one({"_id": "sample"})
+    if not requested_sample:
+        return False, "Cannot find sample %s" % sample_name, None
+    if current_sample and requested_sample and current_sample["sample"] == requested_sample["_id"]:
+        return False, "Cannot delete sample %s as it is the current sample in the experiment" % sample_name, None
+    runs = get_experiment_runs(experiment_name, include_run_params=False, sample_name=sample_name)
+    if runs and len(runs) > 0:
+        return False, "Cannot delete sample %s as it has %d runs associated with it" % (sample_name, len(runs)), None
+    logger.debug("Actually deleting sample")
+    expdb["samples"].delete_one({"name": sample_name})
+    return True, "", None
 
 def get_modal_param_definitions(modal_type):
     """
@@ -1285,6 +1345,25 @@ def remove_collaborator_from_role(experiment_name, uid, role_fq_name):
         return False
     result = expdb["roles"].update_one({"app": application_name, "name": role_name}, { "$pull": { "players": uid }})
     return result.matched_count > 0
+
+def get_collaborators_list_for_experiment(experiment_name):
+    """
+    Get all the collaborators for an experiment.
+    This computes the collaborators list from the roles.players from this experiment alone.
+    roles.players inherited from the instrument/site database are NOT returned here.
+    Only the roles.players that being with uid: are returned (actual users, not groups).
+    """
+    expdb = logbookclient[experiment_name]
+    roleobjs = [ x for x in expdb["roles"].find({}) ]
+    ret = set()
+    for roleobj in roleobjs:
+        ret.update([x for x in roleobj.get("players", []) if x.startswith("uid:")])
+    # Remove the operator account if present
+    instrument = get_experiment_info(experiment_name)["instrument"]
+    operator_uid = { x["_id"] : x for x in get_instruments()}[instrument].get("params", {}).get("operator_uid", None)
+    if operator_uid and operator_uid in ret:
+        ret.remove(operator_uid)
+    return ret
 
 def get_poc_feedback_changes(experiment_name):
     """

@@ -1,6 +1,6 @@
 <div class="container-fluid text-center tabcontainer" id="info_tab">
   <div class="row content">
-    <div class="lgcontent"></div>
+    <div class="lgcontent col-12"></div>
   </div>
 </div>
 
@@ -37,7 +37,7 @@
           info.contact_name = parts[0];
           info.contact_email = parts[1];
           Mustache.parse(tmpl);
-          $("#info_tab").find(".lgcontent").html($(Mustache.render(tmpl, {info: info})));
+          $("#info_tab").find(".lgcontent").empty().append($(Mustache.render(tmpl, {info: info})));
           $("#info_edit").on("click", edit_function);
           $("#info_tab").trigger("info_loaded", info);
       })

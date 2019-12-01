@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Roles</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" type="text/css" href="../../js/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="../../js/@fortawesome/fontawesome-free/css/all.min.css">
+
+  <script type="text/javascript" src="../../js/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
+  <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
+  <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
+  <script type="text/javascript" src="../../static/spgntr.js"></script>
+
+<style type="text/css">
+body {
+    width: 8.5in;
+    height: 11in;
+    padding: 1.0em;
+}
+</style>
+
+</head>
+<body>
+<div class="container-fluid">
+
+<h4>Role based authorization.</h4>
+<div>
+This application uses role based access control (RBAC) for authorization. Briefly, RBAC uses the concepts of
+<dl>
+ <dt><span class="text-primary">Privileges</span></dt><dd>
+    Privileges are a set of strings that are the units of authorization.
+    API calls and pages in the application are often tagged with a privilege; the logged in user must have that privilege in order to execute the API call/get the contents the page.
+    For example, the <code>switch_experiment</code> API call is tagged with the <code>switch</code> privilege.
+    Thus, only users who have the <code>switch</code> are allowed to make the <code>switch_experiment</code> API call and activate experiments.
+ </dd>
+ <dt><span class="text-primary">Users and Groups</span></dt><dd>
+    The application consults the site LDAP for a list of users, groups and group memberships.
+    For each logged in user, the set of groups that the user belongs to is obtained.
+    The userid of the user is also added to this set by prepending the prefix "uid:" to the userid.
+    For example, if the user <code>jdoe</code> is a member of the groups <code>ps-editors, ps-pocs</code>,
+    the set of groups for the logged in user is computed to be <code>[uid:jdoe, ps-editors, ps-pocs]</code>
+ </dd>
+ <dt><span class="text-primary">Roles</span></dt><dd>
+    Roles are objects that reflect the organizational structure/functional hierarchies in your department/site.
+    For example, in many departments that use this application, there are a group of people who manage/maintain the schedules for the instruments.
+    These folks typically create and switch experiments but may not necessarily be involved in the day to day data gathering.
+    So, there may be a role called <code>LabPersonnel</code> that reflects this function.
+    Another example, in all experiments, there is a principal investigator (PI).
+    The PI is the one who decides who is to be as a collaborator on an specific experiment.
+    So, there is a role called <code>Admin</code> that reflects this function and the PI is automatically added to this role when the experiment is initially registered.
+ </dd>
+</div>
+<p>Roles tie the other two comcepts together.
+Each role has a list of privileges that the users who play that role are entitled to.
+For example, users who play the <code>Admin</code> role inherit these privileges <code>[manage_groups, read, post, edit, delete]</code>.
+The set of privileges associated with the role is defined during application installation and only changes during application upgrades.
+</p>
+<p>Each role is also associated with a list of user/groups who play that role.
+This is a more dynamic list and is controlled using various user interfaces.
+This association is also permitted at different levels of the application.
+An user/LDAP group can be associated with the role at a global, instrument or experiment level.
+<ul>
+    <li>If the association is at an experiment level, then the user inherits the privileges of the role for just that experiment.</li>
+    <li>If the association is at an instrument level, then the user inherits the privileges of the role for all experiments for that instrument.</li>
+    <li>If the association is at an global level, then the user inherits the privileges of the role for all experiments.</li>
+</ul>
+</p>
+This is a list of privileges currently in use in the system.
+<ul>
+    <li><code>read</code> - To read the contents of an experiment.</li>
+    <li><code>post</code> - To post new entries to the log book, run parameters, file catalog etc.</li>
+    <li><code>edit</code> - To change existing entries to the log book, run parameters, file catalog etc.</li>
+    <li><code>delete</code> - To delete existing entries to the log book, run parameters, file catalog etc.</li>
+    <li><code>feedback_read</code> - To read the POC feedback after the experiment completes.</li>
+    <li><code>feedback_write</code> - To edit/change the POC feedback after the experiment completes.</li>
+    <li><code>manage_groups</code> - To add user/groups to a role for the experiment.</li>
+    <li><code>ops_page</code> - To access the ops dashboard.</li>
+    <li><code>switch</code> - To activate an experiment on an instrument.</li>
+    <li><code>experiment_create</code> - To register new experiments.</li>
+    <li><code>experiment_edit</code> - To change already registered experiments.</li>
+    <li><code>instrument_create</code> - To create new instrument.</li>
+</ul>
+
+To see the current list of roles and the privileges associated with them, please see the &quot;Global Roles&quot; tab in the &quot;Ops dashboard&quot;.
+
+</div>
+
+
+</body>
+</html>

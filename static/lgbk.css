@@ -63,6 +63,21 @@ label {
 #myNavRow li.session_items.session_timeout a {
   color: #FFB305;
 }
+#myNavRow .navbar_icon_btn {
+  color: white;
+  background: #6685F4;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+#myNavRow .navbar_icon_btn .btntext {
+  margin-right: 0.5em;
+  margin-left: 0.5em;
+}
+#myNavbar .currently_active {
+  margin-right: 1em;
+  margin-left: 1em;
+  color: white;
+}
 #lgbk_footer {
   left: auto;
 }
@@ -244,6 +259,15 @@ label {
   border: thin solid #6685F4;
   color: #6685F4;
 }
+#myNavRow .ops_user {
+  margin-left: 1rem;
+  float: right;
+}
+#myNavRow .ops_user a {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+}
 #register_edit_exp_tab .modal .param_table tr th {
   color: white;
   background: #6685F4;
@@ -343,6 +367,14 @@ label {
   color: white;
   background: #6685F4;
   font-weight: bold;
+}
+#switch_in_exp_mdl .rowselect {
+  color: #6685F4;
+  font-weight: bold;
+  background: #FFCC57;
+}
+#switch_in_exp_mdl .message {
+  font-size: 1.25em;
 }
 #myTabContainer .exp_tab_header {
   color: white;
@@ -663,6 +695,21 @@ label {
   padding: 0.5em;
   margin-top: 0.25em;
 }
+.collab_msg {
+  padding-left: 1em;
+  padding-bottom: 0.25em;
+  text-align: left;
+}
+#collab_mdl_holder .msg {
+  padding-left: 1em;
+  padding-bottom: 0.25em;
+  text-align: left;
+}
+#glbl_role_mdl_holder .msg {
+  padding-left: 1em;
+  padding-bottom: 0.25em;
+  text-align: left;
+}
 #collab_tab .collabtbl thead tr th {
   text-align: center;
   color: white;
@@ -806,4 +853,7 @@ label {
 }
 #lcls_wf_ctrls_tab .wf_counters .blue {
   color: blue;
+}
+#global_roles_tab .role_check {
+  color: #6685F4;
 }

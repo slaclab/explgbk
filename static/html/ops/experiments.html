@@ -4,10 +4,10 @@
     <div class="table-responsive">
         <table class="table table-condensed table-striped table-bordered" id="exp_searchresults">
             <thead><tr>
-                <th data-sort-attr="name">Name<i class="fas fa-sort-down sric"></i></th>
+                <th data-sort-attr="name">Name</th>
                 <th data-sort-attr="instrument">Instrument</th>
-                <th data-sort-attr="first_run.begin_time">First Run</th>
-                <th data-sort-attr="last_run.begin_time">Last Run</th>
+                <th data-sort-attr="start_time">Experiment start<i class="fas fa-sort-up sric"></i></th>
+                <th data-sort-attr="end_time">Experiment end</th>
                 <th data-sort-attr="contact_info">PI</th>
                 <th data-sort-attr="leader_account">Leader Account</th>
                 <th data-sort-attr="description">Description</th>
@@ -21,126 +21,8 @@
 
 <script type="text/javascript">
 $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
-  var show_validation_message = function(message) {
-      $("#exp_mdl_holder").find(".validation_message").html(message);
-      $("#exp_mdl_holder").find(".validation_modal").modal("show");
-  }
-  var edit_exp = function(expInfo) {
-    if(/.+\(.+\)/.test(expInfo['contact_info'])) {
-      expInfo['contact_info_name'] = expInfo['contact_info'].split("(")[0];
-      expInfo['contact_info_email'] = expInfo['contact_info'].split("(")[1].split(")")[0];
-    } else {
-      expInfo['contact_info_name'] = expInfo['contact_info'];
-      expInfo['contact_info_email'] = expInfo['contact_info'];
-    }
-    expInfo['paramkvs'] = _.map(expInfo['params'], function(value, key) { return { key: key, value: value };});
-    $.when($.ajax ("../static/html/ms/expreg.html"), $.getJSON(instruments_url))
-    .done(function( d1, d2 ) {
-      var tmpl = d1[0], instruments = d2[0], options = `{{#value}}<option value="{{ _id }}">{{ _id }}</option>{{/value}}`;
-      Mustache.parse(tmpl); Mustache.parse(options);
-      var rendered = $(Mustache.render(tmpl, expInfo));
-      rendered.find(".start_time").datetimepicker({defaultDate: moment(expInfo['start_time']), sideBySide: true });
-      rendered.find(".end_time").datetimepicker({defaultDate: moment(expInfo['end_time']), sideBySide: true });
-      rendered.find(".instrument").append($(Mustache.render(options, instruments)));
-      rendered.find(".instrument").val(expInfo['instrument']);
-      rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
-      rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
-      rendered.find(".experiment_name").on("change", function(){
-        console.log("Checking to see if experiment " + $(this).val() + " is registered in URAWI");
-        $.getJSON(lookup_experiment_in_urawi, {"experiment_name": $(this).val()})
-        .done(function (expdata) {
-          console.log(expdata);
-          if(expdata.success) {
-            rendered.find(".description").val(expdata.value['proposalAbstract']);
-            rendered.find(".pi_name").val(_.get(expdata.value, 'spokesPerson.firstName') + " " + _.get(expdata.value,'spokesPerson.lastName'));
-            rendered.find(".pi_email").val(_.get(expdata.value, 'spokesPerson.email'));
-            rendered.find(".leader_account").val(_.get(expdata.value, 'spokesPerson.account[0].unixName'));
-            if (_.get(expdata.value, "startDate") != "") { rendered.find('.start_time').datetimepicker('date').date(moment(_.get(expdata.value, "startDate"))) };
-            if (_.get(expdata.value, "stopDate") != "") { rendered.find('.end_time').datetimepicker('date').date(moment(_.get(expdata.value, "stopDate"))) };
-          }
-        });
-      });
-      if (_.has(expInfo, "name")) { rendered.find(".register_btn").text("Update"); }
-      rendered.find(".register_btn").on("click", function(e) {
-        e.preventDefault();
-        var formObj = $("#exp_mdl_holder").find("form");
-        var validations = [
-            [function() { return $.trim(formObj.find(".experiment_name").val()) == ""; }, "Experiment name cannot be blank."],
-            [function() { return $.trim(formObj.find(".instrument").val()) == ""; }, "Please choose a valid instrument."],
-            [function() { return $.trim(formObj.find(".posix_group").val()) == ""; }, "Please choose a posix group for authorization."],
-            [function() { return $.trim(formObj.find(".start_time input").val()) == ""; }, "Please choose a valid start time."],
-            [function() { return $.trim(formObj.find(".end_time input").val()) == ""; }, "Please choose a valid end time."],
-            [function() { return formObj.find('.end_time').datetimepicker('date').isSameOrBefore(formObj.find('.start_time').datetimepicker('date'), 'minute') ; }, "The end time should be after the start time."],
-            [function() { return $.trim(formObj.find(".leader_account").val()) == ""; }, "Please specify the UNIX account of the leader for the experiment."],
-            [function() { return $.trim(formObj.find(".pi_name").val()) == ""; }, "Please specify the full name of the principal investigator."],
-            [function() { return $.trim(formObj.find(".pi_email").val()) == ""; }, "Please specify the email address for the principal investigator."],
-            [function() {
-              var email = $.trim(formObj.find(".pi_email").val());
-              var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-              return !re.test(email.toLowerCase());
-              }, "Please specify the email address for the principal investigator."],
-            [function() { return $.trim(formObj.find(".description").val()) == ""; }, "A brief description of the experiment is very helpful."],
-            [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."],
-            [function() { return _.isEmpty($.trim(formObj.find(".experiment_name_original").val())) && !_.isEmpty($.trim(formObj.find(".inital_sample").val())) && !/^[\w/_-]+$/.test($.trim(formObj.find(".inital_sample").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
-          ];
-        // Various validations
-        var v_failed = false;
-        _.each(validations, function(validation, i) {
-          // console.log("Trying validation " + i + "" + validation[1]);
-          if(validation[0]()) {
-              show_validation_message(validation[1]);
-              v_failed = true;
-              return false;
-          }
-        });
-        if (v_failed) { e.preventDefault(); return; }
-        var experiment_name = $.trim(formObj.find(".experiment_name").val());
-        var original_experiment_name = $.trim(formObj.find(".experiment_name_original").val());
-        var updating_existing_experiment = (original_experiment_name == experiment_name);
-        var exp_params = {};
-        formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { exp_params[key] = val; }});
-        var registration_doc = {
-            "name" : experiment_name,
-            "instrument" : $.trim(formObj.find(".instrument").val()),
-            "description" : $.trim(formObj.find(".description").val()),
-            "start_time" : formObj.find('.start_time').datetimepicker('date').toJSON(),
-            "end_time" : formObj.find('.end_time').datetimepicker('date').toJSON(),
-            "leader_account" : $.trim(formObj.find(".leader_account").val()),
-            "contact_info" : $.trim(formObj.find(".pi_name").val()) + " (" + $.trim($(".pi_email").val()) + ")",
-            "posix_group" : $.trim(formObj.find(".posix_group").val()),
-            "params": exp_params
-        };
-        if(!updating_existing_experiment && !_.isEmpty($.trim(formObj.find(".inital_sample").val()))) {
-            registration_doc["initial_sample"] = $.trim(formObj.find(".inital_sample").val());
-        }
 
-        $.ajax({
-          type: "POST",
-          contentType: "application/json; charset=utf-8",
-          url: (updating_existing_experiment ? update_experiment_url : register_experiment_url) + "?experiment_name=" + encodeURIComponent(experiment_name),
-          data: JSON.stringify(registration_doc),
-          dataType: "json"
-        })
-        .done(function(data, textStatus, jqXHR) {
-          if(data.success) {
-              console.log("Successfully submitted experiment " + experiment_name);
-              $("#exp_mdl_holder").find(".edit_modal").modal("hide");
-              sessionStorage.setItem("ops_active_tab", "experiments");
-              sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
-              window.location.reload(true);
-          } else {
-            show_validation_message("Server failure: " + data.errormsg);
-          }
-        })
-        .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
-      });
-     $("#exp_mdl_holder").append(rendered);
-     $("#exp_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#exp_mdl_holder").empty(); });
-     $("#exp_mdl_holder").find(".edit_modal").modal("show");
-    });
-  };
-
-  $("#register_edit_exp_tab").data("register_experiment_function", function() { edit_exp({ contact_info: "", start_time : moment(), end_time : moment().add(2, 'days')}); });
+  $("#register_edit_exp_tab").data("register_experiment_function", function() { lgbk_create_edit_exp({ contact_info: "", start_time : moment(), end_time : moment().add(2, 'days')}); });
 
   var clone_exp = function() {
     var src_experiment_name = $(this).closest("tr").find("td").first().find("a").text()
@@ -282,13 +164,13 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   }
 
 
-  $("#register_edit_exp_tab").data("cur_sort_attr", "name");
-  $("#register_edit_exp_tab").data("cur_sort_desc", true);
+  $("#register_edit_exp_tab").data("cur_sort_attr", "start_time");
+  $("#register_edit_exp_tab").data("cur_sort_desc", false);
   var exper_template = `{{#value}}<tr data-expid="{{_id}}">
         <td> <a target="_blank" href="{{_id}}/">{{ name }}</a> </td>
         <td style="background:{{background}}; color:{{color}}; " > {{ instrument }} </td>
-        <td> {{#FormatDate}}{{first_run.begin_time }}{{/FormatDate}} </td>
-        <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
+        <td> {{#FormatDate}}{{start_time }}{{/FormatDate}} </td>
+        <td> {{#FormatDate}}{{end_time}}{{/FormatDate}} </td>
         <td> {{ contact_info }} </td>
         <td> {{ leader_account }} </td>
         <td> {{ description }} </td>
@@ -299,7 +181,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   var edit_exp_btn_action = function(){
     var expName = $(this).closest("tr").find("td").first().find("a").text()
     console.log("Editing experiment " + expName);
-    edit_exp($("#register_edit_exp_tab").data("name2info")[expName]);
+    lgbk_create_edit_exp($("#register_edit_exp_tab").data("name2info")[expName]);
   };
 
   var add_exps_to_search_results = function() { // Uses the mustache template to add the contents of data("search_results")

@@ -46,7 +46,6 @@ db['roles'].insertMany([
 	"privileges" : [
 		"read",
 		"post",
-		"manage_shifts",
 		"edit",
 		"delete"
 	],
@@ -60,7 +59,6 @@ db['roles'].insertMany([
 	"app" : "LogBook",
 	"name" : "Writer",
 	"privileges" : [
-		"manage_shifts",
 		"post",
 		"read"
 	],

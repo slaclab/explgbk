@@ -13,14 +13,14 @@
 
 <script type="text/javascript">
 $("#collab_tab").on("lg.loaded.bs.tab", function() {
-  var collab_tr_tmpl = `{{#value}}<tr data-uid="{{ uid }}" title="{{ uidNumber }}"><td>{{#is_group}}<i class="fas fa-users" aria-hidden="true"></i>{{/is_group}}{{^is_group}}<i class="fas fa-user" aria-hidden="true"></i>{{/is_group}}{{ id }}</td><td>{{ full_name }}</td><td class="collab_admin_actions"></td></tr>{{/value}}`;
+  var collab_tr_tmpl = `{{#value}}<tr data-uid="{{ uid }}"><td>{{#is_group}}<i class="fas fa-users" aria-hidden="true"></i>{{/is_group}}{{^is_group}}<i class="fas fa-user" aria-hidden="true"></i>{{/is_group}}{{ id }}</td><td>{{ full_name }}</td><td class="collab_admin_actions"></td></tr>{{/value}}`;
   var actions_tmpl = `<span title="{{ tooltip }}" data-role-fq-name="{{ rl }}">{{^hasrole}}<i class="fas fa-lg {{ ic }} collab-no-role" aria-hidden="true"></i>{{/hasrole}}
     {{#hasrole}}<span><i class="fas {{ ic }} fa-lg" aria-hidden="true"></i><span class="croxxout">x</span></span>{{/hasrole}}</span>`;
   Mustache.parse(collab_tr_tmpl);
   Mustache.parse(actions_tmpl);
   var refreshFunction = function() {
       $("#collab_tab .collabtbl tbody").empty();
-      $.when($.getJSON("ws/collaborators"), $.getJSON("ws/has_role", {"role_fq_name": "LDAP/Admin"}))
+      $.when($.getJSON("ws/collaborators"), $.getJSON("ws/has_role", {"role_fq_name": "LogBook/Admin"}))
       .done(function(d0, d1){
           var collabs = d0[0], roleAdminPerms = d1[0], hasRoleAdmin = roleAdminPerms.value.hasRole;
           _.each(collabs.value, function(c){c["id"] = _.replace(c["uid"], "uid:", "")});
@@ -28,7 +28,7 @@ $("#collab_tab").on("lg.loaded.bs.tab", function() {
           $("#collab_tab .collabtbl tbody").append(rendered);
           if(hasRoleAdmin) {
               _.each(collabs.value, function(collab) {
-                  _.each([["LogBook/Writer", "fa-pencil-alt", "Write/post log entries; enough for most people"], ["LogBook/Editor", "fa-edit", "Edit/change existing entries"], ["LDAP/Admin", "fa-gavel", "Add/remove collaborators"]], function(rl_ic){
+                  _.each([["LogBook/Writer", "fa-pencil-alt", "Write/post log entries; enough for most people"], ["LogBook/Editor", "fa-edit", "Edit/change existing entries"], ["LogBook/Admin", "fa-gavel", "Add/remove collaborators"]], function(rl_ic){
                         $("tr[data-uid='" + collab["uid"] + "'] td.collab_admin_actions").append(Mustache.render(actions_tmpl, {rl : rl_ic[0], ic: rl_ic[1], hasrole: _.indexOf(collab.roles, rl_ic[0]) != -1, tooltip: rl_ic[2] }));
                   });
                   $("tr[data-uid='" + collab["uid"] + "'] td.collab_admin_actions").append($("<span class='remove-collab'><i class='fas fa-lg fa-trash' aria-hidden='true'></i></span>"));
@@ -53,9 +53,9 @@ $("#collab_tab").on("lg.loaded.bs.tab", function() {
 });
 
 $("#collab_tab").on("lg.shown.bs.tab", function() {
-    if (!roles.is_admin) { console.log("User is not an admin; skipping actions."); return; }
-    var tab_toolbar = `<span id="collab_add_user"><i class="fas fa-user fa-lg"></i></span>
-    <span id="collab_add_group"><i class="fas fa-users fa-lg"></i></span>`;
+    if (!_.get(privileges, "manage_groups", false)) { console.log("User is not an admin; skipping actions."); return; }
+    var tab_toolbar = `<span id="collab_add_user" title="Add a user to the experiment as a collaborator"><i class="fas fa-user fa-lg"></i></span>
+    <span id="collab_add_group" title="Add a user group"><i class="fas fa-users fa-lg"></i></span>`;
     var uid_search_results = `{{#value}}<tr data-uid="{{ uid }}"><td>{{ uid }}</td><td>{{ gecos }}</td><td><input class="collab_select" type="checkbox"></td></tr>{{/value}}`;
     var group_search_results = `{{#value}}<tr data-uid="{{ . }}"><td>{{ . }}</td><td>N/A</td><td><input class="collab_select" type="checkbox"></td></tr>{{/value}}`;
     Mustache.parse(uid_search_results);
@@ -65,7 +65,7 @@ $("#collab_tab").on("lg.shown.bs.tab", function() {
     var search_and_add = function(search_url, param_name, ms_template, uid_prefix) {
         $.ajax('../../static/html/ms/collab_search_and_add.html')
         .done(function(mdltext) {
-            $("#collab_mdl_holder").append(mdltext);
+            $("#collab_mdl_holder").append(Mustache.render(mdltext, {intromsg: "User/groups are added as players to the Writer role. To give them additional privileges, please use the main matrix"}));
             $("#collab_mdl_holder").find(".collab_search").on("input", function() {
                 if($(this).val().length > 2) {
                     var search_params = {}; search_params[param_name] = $(this).val()+"*";
@@ -90,10 +90,10 @@ $("#collab_tab").on("lg.shown.bs.tab", function() {
     };
 
     $("#collab_add_user").on("click", function(){
-        search_and_add("ws/get_matching_uids", "uid", uid_search_results, "uid:");
+        search_and_add("../ws/get_matching_uids", "uid", uid_search_results, "uid:");
     });
     $("#collab_add_group").on("click", function(){
-        search_and_add("ws/get_matching_groups", "group_name", group_search_results, "");
+        search_and_add("../ws/get_matching_groups", "group_name", group_search_results, "");
     });
 });
 </script>

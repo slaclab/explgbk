@@ -36,10 +36,11 @@
     var logbook_site = "{{ logbook_site }}";
     var current_sample_at_DAQ = {{current_sample_name|json|safe}};
     var sample_showing_in_UI = current_sample_at_DAQ;
-    var roles = { is_writer: {{ is_writer }}, is_editor: {{ is_editor}}, is_admin: {{ is_admin }}, is_lab_personnel: {{ is_lab_personnel }}, is_site_admin: {{ is_site_admin }} };
+    var privileges = {{ privileges|safe }};
     var auth_expiration_time = {{ auth_expiration_time }};
     var current_run_url = "../../run_control/{{experiment_name}}/ws/current_run";
     var elog_emails = "../{{experiment_name}}/ws/elog_emails";
+    var show_feedback= {{show_feedback}};
     var feedback_survey_def = "../../static/json/feedback_{{logbook_site}}.json";
   </script>
 
@@ -129,7 +130,7 @@ $(document).ready(function() {
         }
     });
 
-    if(roles.is_lab_personnel) {
+    if(show_feedback && _.get(privileges, "feedback_read", false)) {
         $("#myNavbar").find(".lab_personnel_only").removeClass("d-none");
         $("#myTabContainer").find(".lab_personnel_only").removeClass("d-none");
     }
@@ -175,6 +176,68 @@ $(document).ready(function() {
         	$('#myNavbar ul.navbar-nav a:first').tab('show');
         }
     });
+
+    $.getJSON("../ws/activeexperiments")
+    .done(function(d1) {
+        let c_active = d1.value;
+        if(_.includes(_.map(c_active, "name"), experiment_name)) {
+            let expactinfo = _.find(c_active, ["name", experiment_name]);
+            console.log(expactinfo);
+            {% raw %}
+            let curr_active_tmpl = `<li title="This experiment is currently active on this instrument/station"><span class="currently_active"><span class="instrument">{{instrument}}</span>/<span class="station">{{station}}</span></span></li>`; Mustache.parse(curr_active_tmpl);
+            {% endraw %}
+            let rendered = $(Mustache.render(curr_active_tmpl, expactinfo));
+            $("#myNavbar").find(".session_items").before(rendered);
+        }
+
+        if(!_.get(privileges, "ops_page", false) && _.get(privileges, "switch") && _.get(privileges, "manage_groups")) {
+            if(_.includes(_.map(c_active, "name"), experiment_name)) { console.log("This experiment is already active."); return; }
+            let rendered = $(`<li><button class="navbar_icon_btn switch" title="Make this experiment the current experiment on an instrument"><span class="btntext">Switch</span><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></button></li>`);
+            $("#myNavbar").find(".session_items").before(rendered);
+            rendered.on("click", function(){
+                $.when($.ajax('../../static/html/ms/switch_within_experiment.html'), $.getJSON("../ws/instrument_station_list"))
+                .done(function(d0, d1){
+                    let mdltmpl = d0[0], stations_by_ins = _.groupBy(d1[0].value, "instrument"), msobj = {experiment: experiment_name, instrument: instrument_name};
+                    if(_.get(stations_by_ins, instrument_name, []).length > 1) {
+                        msobj["stations"] = _.get(stations_by_ins, instrument_name);
+                    }
+                    let rendered = $(Mustache.render(mdltmpl, msobj));
+                    rendered.data("selected_station", 0);
+                    let show_message = function(message){
+                        rendered.find(".message").text(message);
+                    }
+                    if(_.get(stations_by_ins, instrument_name, []).length > 1) {
+                        rendered.find("table").parent().removeClass("d-none");
+                        rendered.find("table").find("tr[data-station=0]").addClass("rowselect");
+                        rendered.find(".station").on("click", function(){
+                            $(this).closest("table").find(".rowselect").removeClass("rowselect");
+                            $(this).closest("tr").addClass("rowselect");
+                            rendered.data("selected_station", $(this).closest("tr").attr("data-station"));
+                        })
+                    }
+                    rendered.find(".activate_exp").on("click", function() {
+                        let station = rendered.data("selected_station"), station_data = {instrument: instrument_name, station: station, experiment_name: experiment_name };
+                        console.log("Activating " + experiment_name + " on instrument " + instrument_name + " station " + station);
+                        console.log(station_data);
+                        $.ajax({ type: "POST", contentType: "application/json; charset=utf-8", url: "../ws/switch_experiment", data: JSON.stringify(station_data), dataType: "json"})
+                        .done(function(data, textStatus, jqXHR) {
+                            console.log(data);
+                            if(data.success) {
+                                show_message("Successfully activated " + experiment_name + " on instrument " + instrument_name + " station " + rendered.data("selected_station"));
+                                setTimeout($("#glbl_modals_go_here").find(".modal").modal("hide"), 2000);
+                                location.reload();
+                            } else {
+                                show_message("Server side exception switching experiment " + data.errormsg);
+                            }
+                        })
+                        .fail( function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); if(jqXHR.status == 403){ show_message("You don't seem to have permissions for this operation. Please contact the site administrators."); return;}; show_message("Server side exception switching experiment " + jqXHR.responseText); })
+                    })
+                    $("#glbl_modals_go_here").empty().append(rendered);
+                    $("#glbl_modals_go_here").find(".modal").modal("show");
+                })
+            })
+        }
+    })
 
     if(auth_expiration_time > 1000000000) {
         var msToSessionTimeout = moment.unix(auth_expiration_time).diff(moment());

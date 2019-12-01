@@ -8,6 +8,7 @@
      </div>
      <div class="modal-body">
      <form class="register_form">
+      <div class="d-none row validation_message text-danger pl-2"></div>
       <input type="hidden" class="form-control sample_id" value="{{ _id }}">
       <div class="row">
       <div class="col-4">
@@ -24,21 +25,22 @@
       </div>
       <div class="form-group col-8">
        <label for="description">Sample Description:</label>
-       <textarea class="form-control sample_description" rows="5">{{ description }}</textarea>
+       <textarea class="form-control sample_description" rows="5">{{ sample_description }}</textarea>
       </div>
       </div>
       <table class="table table-condensed table-striped table-bordered">
-        <thead><tr><th>Param Name</th><th>Param Value</th><th>Actions</th></thead>
+        <thead><tr><th>Param Name</th><th>Param Value</th><th></th></thead>
         <tbody>
           {{#paramkvs}}
-          <tr><td>{{#has_ss_params}}<div class="input-group">{{/has_ss_params}}<input type="text" class="form-control cp_key" value="{{key}}">{{#has_ss_params}}<span class="input-group-addon param_action"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span></div>{{/has_ss_params}}</td><td><input type="text" class="form-control cp_value" value="{{value}}"></td>
-            <td>
-                <span class="param_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
-                <span class="param_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
-            </td>
-          </tr>
+          <tr class="defkv" {{#description}}title="{{description}}"{{/description}}><td class="text-left"><span class="cp_key" data-param-name={{param_name}}>{{label}}</span>{{#required}}<span class="pl-1 text-danger lbl-req">*</span>{{/required}}</td><td>
+              {{#is_bool}}<input type="checkbox" class="form-control cp_value" {{#is_checked}}checked{{/is_checked}} ss_validate="bool">{{/is_bool}}
+              {{#is_int}}<input type="text" class="form-control cp_value {{#required}}cp_required{{/required}}" value="{{current_val}}" ss_validate="int">{{/is_int}}
+              {{#is_float}}<input type="text" class="form-control cp_value {{#required}}cp_required{{/required}}" value="{{current_val}}" ss_validate="float">{{/is_float}}
+              {{#is_enum}}<select class="form-control ss_select cp_value {{#required}}cp_required{{/required}}" ss_validate="enum"><option></option>{{#exp_options}}<option value="{{option_value}}" {{#issel}}selected{{/issel}}>{{option_label}}</option>{{/exp_options}}</select>{{/is_enum}}
+              {{#is_string}}<input type="text" class="form-control cp_value {{#required}}cp_required{{/required}}" value="{{current_val}}" ss_validate="string">{{/is_string}}
+          </td></tr>
           {{/paramkvs}}
-          <tr><td>{{#has_ss_params}}<div class="input-group">{{/has_ss_params}}<input type="text" class="form-control cp_key" value="">{{#has_ss_params}}<span class="input-group-addon param_action"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span></div>{{/has_ss_params}}</td><td><input type="text" class="form-control cp_value" value=""></td>
+          <tr class="arbkv"><td><input type="text" class="form-control cp_key" value=""></td><td><input type="text" class="form-control cp_value" value=""></td>
             <td>
                 <span class="param_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
                 <span class="param_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>

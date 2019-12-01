@@ -1,0 +1,65 @@
+db.getSiblingDB("site")["site"].drop() // Drop the empty site collection.
+
+if(db.getSiblingDB("site")["site_config"].find({}).count() < 1) {
+    print("Inserting the site_config object");
+    db.getSiblingDB("site")["site_config"].insertOne({})
+}
+db.getSiblingDB("site")["site_config"].updateOne({}, {"$set": {"naming_conventions": {
+   "experiment" : {
+       "name": {
+         "placeholder": "YYYYMMDD-CXNN",
+         "tooltip": "Use the start date of the experiment and the proposal number to form the experiment name, for example, if the experiment starts on Nov 27 2019 and has a proposal number S02, the experiment name will be 20191127-CS02",
+         "validation_regex": "^\\d{8}-C\\w{3}$"
+}}}}})
+
+// Changes for cryo; mostly dealing with the sample modal params.
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "imaging_method"}, {"$set": {"params.$.label": "Imaging Method"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "imaging_method"}, {"$addToSet": {"params.$.options": "Other"}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "imaging_software"} , {"$set": {"params.$.label": "Imaging Software"}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "imaging_format"} , {"$set": {"params.$.label": "File Format"}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "superres"}, {"$set": {"params.$.label": "Super Resolution"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "superres"}, {"$set": {"params.$.description": "Are the frames saved as super resolution? Note that K3 frames are always saved as super resolution so please choose yes."}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "superres"}, {"$set": {"params.$.options": [{"label": "Yes", "value": 1}, {"label": "No", "value": 0}]}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "apix"}, {"$set": {"params.$.label": "Angstrom per Pixel"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "apix"}, {"$set": {"params.$.description": "This should be the Å/pix at the physical pixel not at the super resolution pixel."}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "fmdose"}, {"$set": {"params.$.label": "Dose per Frame"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "fmdose"}, {"$set": {"params.$.description": "Dose given as e-/Å2/frame"}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "total_dose"}, {"$set": {"params.$.label": "Total Dose"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "total_dose"}, {"$set": {"params.$.description": "Total dose for each micrograph. Note that for tomography this is total dose per tilt angle. Units are e-/Å2/micrograph."}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "frame_duration"}, {"$set": {"params.$.label": "Frame Duration (sec/frame)"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "frame_duration"}, {"$set": {"params.$.description": "Time per frame given as sec/frame"}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "exposure_time"}, {"$set": {"params.$.label": "Exposure Time (sec)"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "exposure_time"}, {"$set": {"params.$.description": "Length of exposure per move given in seconds"}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "phase_plate"}, {"$set": {"params.$.label": "Phase Plate"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "phase_plate"}, {"$set": {"params.$.description": "Are phase plates used for data collection?"}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "particle_size"}, {"$set": {"params.$.label": "Particle Size"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "particle_size"}, {"$set": {"params.$.description": "Diameter of the particle, given in Å, which is used for the particle picking step of the automated processing pipeline."}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "energy_filter/slit_size"}, {"$set": {"params.$.label": "Slit Size (eV)"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "energy_filter/slit_size"}, {"$set": {"params.$.description": "Slit width, given in eV, when using the energy filter."}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "energy_filter/slit_size"}, {"$set": {"params.$.required": false}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/enable"}, {"$set": {"params.$.label": "Enable automated preprocessing pipeline?"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/enable"}, {"$set": {"params.$.options": [{"label": "Yes", "value": 1}, {"label": "No", "value": 0}]}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/align/motioncor2/throw"}, {"$set": {"params.$.label": "Number of initial frames to discard?"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/align/motioncor2/throw"}, {"$set": {"params.$.description": "Number of frames to exclude from the beginning of the exposure, when doing option correction as part of the automated preprocessing pipeline."}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/align/motioncor2/outstk"}, {"$set": {"params.$.label": "Output aligned stack?"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/align/motioncor2/outstk"}, {"$set": {"params.$.options": [{"label": "Yes", "value": 1}, {"label": "No", "value": 0}]}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/align/motioncor2/patch"}, {"$set": {"params.$.label": "MotionCor2 Patch size"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/align/motioncor2/patch"}, {"$set": {"params.$.description": "Number of patches to use in x and y and percentage overlap. For example if you want 5 x 5 patches with an overlap of 20% the input would be: 5 5 20. Note that percentage overlap does not need to be used and the program can accept just the number of patches in x and y"}})
+
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/particle_pick/enable"}, {"$set": {"params.$.label": "Enable particle picking?"}})
+db.getSiblingDB("site").modal_params.updateOne({"_id" : "samples", "params.param_name": "preprocess/particle_pick/enable"}, {"$set": {"params.$.options": [{"label": "Yes", "value": 1}, {"label": "No", "value": 0}]}})

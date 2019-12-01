@@ -90,3 +90,133 @@ var content_editable_trigger_change = function(rowRendered) {
       return $this;
   });
 }
+
+var lgbk_create_edit_exp = function(expInfo) {
+  var show_validation_message = function(message) {
+        $("#exp_mdl_holder").find(".validation_message").html(message);
+        $("#exp_mdl_holder").find(".validation_modal").modal("show");
+  }
+  if(/.+\(.+\)/.test(expInfo['contact_info'])) {
+    expInfo['contact_info_name'] = expInfo['contact_info'].split("(")[0];
+    expInfo['contact_info_email'] = expInfo['contact_info'].split("(")[1].split(")")[0];
+  } else {
+    expInfo['contact_info_name'] = expInfo['contact_info'];
+    expInfo['contact_info_email'] = expInfo['contact_info'];
+  }
+  expInfo['paramkvs'] = _.map(expInfo['params'], function(value, key) { return { key: key, value: value };});
+  $.when($.ajax ("../static/html/ms/expreg.html"), $.getJSON(instruments_url), $.getJSON("naming_conventions"))
+  .done(function( d1, d2, d3) {
+    var tmpl = d1[0], instruments = d2[0], options = `{{#value}}<option value="{{ _id }}">{{ _id }}</option>{{/value}}`, site_naming_conventions = _.get(d3[0], "value", {}), ignore_experiment_name_regex = false;
+    Mustache.parse(tmpl); Mustache.parse(options);
+    if(_.has(site_naming_conventions, "experiment.name.placeholder")) { expInfo.name_placeholder = _.get(site_naming_conventions, "experiment.name.placeholder"); }
+    if(_.has(site_naming_conventions, "experiment.name.tooltip")) { expInfo.name_tooltip = _.get(site_naming_conventions, "experiment.name.tooltip"); }
+    var rendered = $(Mustache.render(tmpl, expInfo));
+    rendered.find(".start_time").datetimepicker({defaultDate: moment(expInfo['start_time']), sideBySide: true });
+    rendered.find(".end_time").datetimepicker({defaultDate: moment(expInfo['end_time']), sideBySide: true });
+    rendered.find(".instrument").append($(Mustache.render(options, instruments)));
+    rendered.find(".instrument").val(expInfo['instrument']);
+    rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
+    rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
+    rendered.find(".experiment_name").on("change", function(){
+      console.log("Checking to see if experiment " + $(this).val() + " is registered in URAWI");
+      $.getJSON(lookup_experiment_in_urawi, {"experiment_name": $(this).val()})
+      .done(function (expdata) {
+        console.log(expdata);
+        if(expdata.success) {
+          rendered.find(".description").val(expdata.value['proposalAbstract']);
+          rendered.find(".pi_name").val(_.get(expdata.value, 'spokesPerson.firstName') + " " + _.get(expdata.value,'spokesPerson.lastName'));
+          rendered.find(".pi_email").val(_.get(expdata.value, 'spokesPerson.email'));
+          rendered.find(".leader_account").val(_.get(expdata.value, 'spokesPerson.account[0].unixName'));
+          if (_.get(expdata.value, "startDate") != "") { rendered.find('.start_time').datetimepicker('date').date(moment(_.get(expdata.value, "startDate"))) };
+          if (_.get(expdata.value, "stopDate") != "") { rendered.find('.end_time').datetimepicker('date').date(moment(_.get(expdata.value, "stopDate"))) };
+        }
+      });
+    });
+    if (_.has(expInfo, "name")) { rendered.find(".register_btn").text("Update"); }
+    rendered.find(".register_btn").on("click", function(e) {
+      e.preventDefault();
+      var formObj = $("#exp_mdl_holder").find("form");
+      var validations = [
+          [function() { return $.trim(formObj.find(".experiment_name").val()) == ""; }, "Experiment name cannot be blank."],
+          [function() { return $.trim(formObj.find(".instrument").val()) == ""; }, "Please choose a valid instrument."],
+          [function() { return $.trim(formObj.find(".start_time input").val()) == ""; }, "Please choose a valid start time."],
+          [function() { return $.trim(formObj.find(".end_time input").val()) == ""; }, "Please choose a valid end time."],
+          [function() { return formObj.find('.end_time').datetimepicker('date').isSameOrBefore(formObj.find('.start_time').datetimepicker('date'), 'minute') ; }, "The end time should be after the start time."],
+          [function() { return $.trim(formObj.find(".leader_account").val()) == ""; }, "Please specify the UNIX account of the leader for the experiment. This user will have privileges to add and remove collaborators from the experiment."],
+          [function() { return $.trim(formObj.find(".pi_name").val()) == ""; }, "Please specify the full name of the principal investigator."],
+          [function() { return $.trim(formObj.find(".pi_email").val()) == ""; }, "Please specify the email address for the principal investigator."],
+          [function() {
+            var email = $.trim(formObj.find(".pi_email").val());
+            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+            return !re.test(email.toLowerCase());
+            }, "Please specify the email address for the principal investigator."],
+          [function() { return $.trim(formObj.find(".description").val()) == ""; }, "A brief description of the experiment is very helpful."],
+          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."],
+          [function() { return _.isEmpty($.trim(formObj.find(".experiment_name_original").val())) && !_.isEmpty($.trim(formObj.find(".inital_sample").val())) && !/^[\w/_-]+$/.test($.trim(formObj.find(".inital_sample").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
+        ];
+      // Various validations
+      var v_failed = false;
+      _.each(validations, function(validation, i) {
+        // console.log("Trying validation " + i + "" + validation[1]);
+        if(validation[0]()) {
+            show_validation_message(validation[1]);
+            v_failed = true;
+            return false;
+        }
+      });
+      if (v_failed) { e.preventDefault(); return; }
+      var experiment_name = $.trim(formObj.find(".experiment_name").val());
+      if(!ignore_experiment_name_regex && _.has(site_naming_conventions, "experiment.name.validation_regex")) {
+          let exp_nam_regex = new RegExp(_.get(site_naming_conventions, "experiment.name.validation_regex"));
+          if(!exp_nam_regex.test(experiment_name)) {
+              $("#exp_mdl_holder").find(".validation_message").html("The experiment name " + experiment_name + " does not match the naming convention for this site.");
+              $("#exp_mdl_holder").find(".ignore_button").removeClass("d-none").on("click", function(){ ignore_experiment_name_regex = true; $("#exp_mdl_holder").find(".validation_modal").modal("hide"); });
+              $("#exp_mdl_holder").find(".validation_modal").modal("show");
+              v_failed = true;
+              return false;
+          }
+      }
+      var original_experiment_name = $.trim(formObj.find(".experiment_name_original").val());
+      var updating_existing_experiment = (original_experiment_name == experiment_name);
+      var exp_params = {};
+      formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { exp_params[key] = val; }});
+      var registration_doc = {
+          "name" : experiment_name,
+          "instrument" : $.trim(formObj.find(".instrument").val()),
+          "description" : $.trim(formObj.find(".description").val()),
+          "start_time" : formObj.find('.start_time').datetimepicker('date').toJSON(),
+          "end_time" : formObj.find('.end_time').datetimepicker('date').toJSON(),
+          "leader_account" : $.trim(formObj.find(".leader_account").val()),
+          "contact_info" : $.trim(formObj.find(".pi_name").val()) + " (" + $.trim($(".pi_email").val()) + ")",
+          "posix_group" : $.trim(formObj.find(".posix_group").val()),
+          "params": exp_params
+      };
+      if(!updating_existing_experiment && !_.isEmpty($.trim(formObj.find(".inital_sample").val()))) {
+          registration_doc["initial_sample"] = $.trim(formObj.find(".inital_sample").val());
+      }
+
+      $.ajax({
+        type: "POST",
+        contentType: "application/json; charset=utf-8",
+        url: (updating_existing_experiment ? update_experiment_url : register_experiment_url) + "?experiment_name=" + encodeURIComponent(experiment_name),
+        data: JSON.stringify(registration_doc),
+        dataType: "json"
+      })
+      .done(function(data, textStatus, jqXHR) {
+        if(data.success) {
+            console.log("Successfully submitted experiment " + experiment_name);
+            $("#exp_mdl_holder").find(".edit_modal").modal("hide");
+            sessionStorage.setItem("ops_active_tab", "experiments");
+            sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
+            window.location.reload(true);
+        } else {
+          show_validation_message("Server failure: " + data.errormsg);
+        }
+      })
+      .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+    });
+   $("#exp_mdl_holder").append(rendered);
+   $("#exp_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#exp_mdl_holder").empty(); });
+   $("#exp_mdl_holder").find(".edit_modal").modal("show");
+  });
+};

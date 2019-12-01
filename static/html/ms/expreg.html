@@ -10,9 +10,9 @@
          <form class="register_form">
           <input type="hidden" class="form-control experiment_name_original" value="{{ name }}">
           <div class="row">
-            <div class="form-group col-4">
+            <div class="form-group col-4" {{#name_tooltip}}title="{{name_tooltip}}"{{/name_tooltip}}>
               <label for="experiment_name">Experiment Name:</label>
-              <input type="text" class="form-control experiment_name" value="{{ name }}" {{#name}}readonly{{/name}} >
+              <input type="text" class="form-control experiment_name" value="{{ name }}" {{#name}}readonly{{/name}}{{^name}}{{#name_placeholder}}placeholder="{{name_placeholder}}"{{/name_placeholder}}{{/name}} >
             </div>
             <div class="form-group col-4">
                 <label for="instrument">Instrument:</label>
@@ -43,16 +43,16 @@
                     </div>
                </div>
                {{^name}}
-               <div class="form-group col-4">
+               <div class="form-group col-4" title="Enter the name of the initial sample; a run associated with the initial sample is also created automatically. The sample is created with a generic description and without any parameters.">
                    <label for="initial_sample">Initial sample:</label>
-                   <input type="text" class="form-control inital_sample" title="Enter the name of the initial sample; a run associated with the initial sample is also created automatically. The sample is created with a generic description and without any parameters.">
+                   <input type="text" class="form-control inital_sample">
                </div>
                {{/name}}
           </div>
 
           <div class="row">
-              <div class="form-group col-4">
-                  <label for="leader_account">Leader Account:</label>
+              <div class="form-group col-4" title="This UNIX account is added to the experiment with admin privileges; that is, this user can add/remove collaborators to the experiment">
+                  <label for="leader_account">Leader UNIX Account:</label>
                   <input type="text" class="form-control leader_account" value="{{ leader_account }}">
               </div>
               <div class="form-group col-4">
@@ -112,6 +112,7 @@
      <p class="validation_message"></p>
    </div>
    <div class="modal-footer">
+     <button type="button" class="btn btn-warn d-none ignore_button">Ignore</button>
      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
    </div>
   </div>

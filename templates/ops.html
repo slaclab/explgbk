@@ -21,9 +21,11 @@
   <script type="text/javascript" src="../js/socket.io-client/dist/socket.io.js"></script>
   <script type="text/javascript" src="../js/python/flask_socket_util/websocket_client.js"></script>
   <script type="text/javascript" src="../js/plotly.js/dist/plotly.min.js"></script>
+  <script type="text/javascript" src="../static/lgbk.js"></script>
 
   <script type="text/javascript">
     var tab_vars = {}; // All state for the tab; for example, search/sort/pagination state etc.
+    var privileges = {{ privileges|safe }};
     var active_experiments_url = "ws/activeexperiments";
     var instruments_url   = "ws/instruments";
     var instrument_station_list = "ws/instrument_station_list";
@@ -53,25 +55,28 @@
       </button>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/switch.html" href="#switch">Switch</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/experiments.html" href="#experiments">Experiments</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/instruments.html" href="#instruments">Instruments</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/exp_summary.html" href="#summary">Summary</a></li>
+        <li class="nav-item d-none priv_switch"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/switch.html" href="#switch">Switch</a></li>
+        <li class="nav-item d-none priv_experiment_create"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/experiments.html" href="#experiments">Experiments</a></li>
+        <li class="nav-item d-none priv_instrument_create"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/instruments.html" href="#instruments">Instruments</a></li>
+        <li class="nav-item d-none priv_manage_groups"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/global_roles.html" href="#global_roles">Global Roles</a></li>
+        <li class="nav-item d-none priv_experiment_create"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/exp_summary.html" href="#summary">Summary</a></li>
         <li class="nav-item sitespecific"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/data_movement.html" href="#data_mov">Data Movement</a></li>
       </ul>
     </div>
     <div class="tab_title_bar">
         <span class="exp_title">Operator dashboard</span>
+        <span class="ops_user"><a href="logout"><span>{{ logged_in_user }}</span><i class="fas fa-sign-out-alt fa-lg"></i></a></span>
         <span id="toolbar_for_tab"></span>
     </div>
   </div>
 </nav>
 
 <div class="tab-content" id="myTabContainer">
-  <div role="tabpanel" class="tab-pane fade" id="switch"></div>
-  <div role="tabpanel" class="tab-pane fade" id="experiments"></div>
-  <div role="tabpanel" class="tab-pane fade" id="instruments"></div>
-  <div role="tabpanel" class="tab-pane fade" id="summary"></div>
+  <div role="tabpanel" class="tab-pane fade d-none priv_switch" id="switch"></div>
+  <div role="tabpanel" class="tab-pane fade d-none priv_experiment_create" id="experiments"></div>
+  <div role="tabpanel" class="tab-pane fade d-none priv_instrument_create" id="instruments"></div>
+  <div role="tabpanel" class="tab-pane fade d-none priv_manage_groups" id="global_roles"></div>
+  <div role="tabpanel" class="tab-pane fade d-none priv_experiment_create" id="summary"></div>
   <div role="tabpanel" class="tab-pane fade sitespecific" id="data_mov"></div>
 </div>
 
@@ -102,26 +107,29 @@ var showTab = function (e) {
     }
 }
 
-$.getJSON('../static/json/sitespecific_ops_tabs_' + logbook_site + ".json")
-.done(function(tabs) {
-    {% raw %}
-    var ssnavtmpl = `{{#.}}<li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
-    var ssnavpnltmpl = `{{#.}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/.}}`;
-    {% endraw %}
-    Mustache.parse(ssnavtmpl); Mustache.parse(ssnavpnltmpl);
-    $("#myNavbar").find(".sitespecific").after(Mustache.render(ssnavtmpl, tabs));
-    $("#myTabContainer").find(".sitespecific").after(Mustache.render(ssnavpnltmpl, tabs));
-}).always(function(){
-    $('a[data-toggle="tab"]').on('shown.bs.tab', showTab);
-    // Code for honoring the hash; for example URL#eLog gets you to the eLog
-    if(_.has(sessionStorage, 'ops_active_tab') ) {
-      $('ul.nav a[href="#' + sessionStorage['ops_active_tab'] + '"]').tab('show');
-      sessionStorage.removeItem("ops_active_tab");
-    } else if (window.location.hash) {
-      $('ul.nav a[href="' + window.location.hash + '"]').tab('show');
-    } else {
-    	$('.navbar-nav a:first').tab('show');
-    }
+$(document).ready(function() {
+    _.each(privileges, function(v,k){if(v){$("#lgbk_body").find(".priv_"+k).removeClass("d-none");}})
+    $.getJSON('../static/json/sitespecific_ops_tabs_' + logbook_site + ".json")
+    .done(function(tabs) {
+        {% raw %}
+        var ssnavtmpl = `{{#.}}<li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
+        var ssnavpnltmpl = `{{#.}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/.}}`;
+        {% endraw %}
+        Mustache.parse(ssnavtmpl); Mustache.parse(ssnavpnltmpl);
+        $("#myNavbar").find(".sitespecific").after(Mustache.render(ssnavtmpl, tabs));
+        $("#myTabContainer").find(".sitespecific").after(Mustache.render(ssnavpnltmpl, tabs));
+    }).always(function(){
+        $('a[data-toggle="tab"]').on('shown.bs.tab', showTab);
+        // Code for honoring the hash; for example URL#eLog gets you to the eLog
+        if(_.has(sessionStorage, 'ops_active_tab') ) {
+          $('ul.nav a[href="#' + sessionStorage['ops_active_tab'] + '"]').tab('show');
+          sessionStorage.removeItem("ops_active_tab");
+        } else if (window.location.hash) {
+          $('ul.nav a[href="' + window.location.hash + '"]').tab('show');
+        } else {
+        	$('.navbar-nav a:first').tab('show');
+        }
+    });
 });
 
 </script>

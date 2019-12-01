@@ -49,7 +49,6 @@ mongorolereaderclient = MongoClient(host=MONGODB_HOSTS, username=MONGODB_USERNAM
 usergroups = UserGroups()
 roleslookup = MongoDBRoles(mongorolereaderclient, usergroups)
 security = FlaskAuthnz(roleslookup, "LogBook")
-ldapadminsecurity = FlaskAuthnz(roleslookup, "LDAP")
 
 logbookclient = MongoClient(host=MONGODB_HOSTS, username=MONGODB_ADMIN_USERNAME, password=MONGODB_ADMIN_PASSWORD, authSource="admin", tz_aware=True)
 

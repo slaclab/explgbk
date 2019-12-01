@@ -6,7 +6,7 @@ import datetime
 
 import context
 
-from flask import request, Blueprint, render_template, send_file, abort, make_response, jsonify
+from flask import request, Blueprint, render_template, send_file, abort, make_response, jsonify, session
 
 from dal.explgbk import get_current_sample_name, get_experiment_info
 from services.explgbk import experiment_exists_and_unlocked
@@ -52,25 +52,36 @@ def templates(experiment_name, path):
 
 @pages_blueprint.route("/lgbk/ops", methods=["GET"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@context.security.authorization_required("ops_page")
 def operator_dashboard():
-    return render_template("ops.html", logbook_site=context.LOGBOOK_SITE)
+    logged_in_user=context.security.get_current_user_id()
+    privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "ops_page", "switch", "experiment_create", "experiment_edit", "instrument_create", "manage_groups"]}
+    return render_template("ops.html",
+        logbook_site=context.LOGBOOK_SITE,
+        logged_in_user=logged_in_user,
+        privileges=json.dumps(privileges))
 
 
 @pages_blueprint.route("/lgbk/experiments", methods=["GET"])
 @context.security.authentication_required
 def choose_experiments():
-    return render_template("experiments.html")
+    logged_in_user=context.security.get_current_user_id()
+    privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "read", "ops_page", "switch", "experiment_create", "experiment_edit"]}
+    return render_template("experiments.html",
+        logbook_site=context.LOGBOOK_SITE,
+        logged_in_user=logged_in_user,
+        logged_in_user_details=json.dumps(context.usergroups.get_userids_matching_pattern(logged_in_user)),
+        privileges=json.dumps(privileges))
 
 @pages_blueprint.route("/lgbk/register_new_experiment", methods=["GET"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@context.security.authorization_required("experiment_create")
 def register_new_experiment():
     return render_template("register_new_experiment.html")
 
 @pages_blueprint.route("/lgbk/experiment_switch", methods=["GET"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@context.security.authorization_required("switch")
 def experiment_switch():
     return render_template("experiment_switch.html")
 
@@ -78,6 +89,7 @@ def experiment_switch():
 @context.security.authentication_required
 def logout():
     resp = make_response(render_template("logout.html"))
+    session.clear()
     resp.set_cookie('webauth_at', ' ', expires=datetime.datetime.fromtimestamp(0))
     return resp
 
@@ -102,16 +114,14 @@ def exp_elog(experiment_name):
     logged_in_user=context.security.get_current_user_id()
     exp_info = get_experiment_info(experiment_name)
     instrument_name = exp_info.get("instrument", None) if exp_info else None
+    privileges = { x : context.security.check_privilege_for_experiment(x, experiment_name, instrument_name) for x in [ "manage_groups", "delete", "edit", "post", "read", "experiment_create", "experiment_edit", "feedback_read", "feedback_write", "instrument_create", "ops_page", "switch" ]}
     return render_template("lgbk.html",
         experiment_name=experiment_name,
         instrument_name=instrument_name,
         logged_in_user=logged_in_user,
-        is_writer=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "Writer", experiment_name)),
-        is_editor=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "Editor", experiment_name)),
-        is_admin=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LDAP", "Admin", experiment_name)),
-        is_site_admin=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "Editor", ":")), # Use a dummy experiment to determine if site admin
-        is_lab_personnel=json.dumps(context.roleslookup.has_slac_user_role(logged_in_user, "LogBook", "LabPersonnel", experiment_name)),
+        privileges=json.dumps(privileges),
         current_sample_name=get_current_sample_name(experiment_name),
         auth_expiration_time=__parse_expiration_header__(request),
-        logbook_site=context.LOGBOOK_SITE
+        logbook_site=context.LOGBOOK_SITE,
+        show_feedback=json.dumps(os.path.exists(os.path.join("static", "json", "feedback_" + context.LOGBOOK_SITE + ".json")))
         )

@@ -45,14 +45,15 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     delete_system_run_table, get_instrument_elogs, post_related_elog_entry, get_related_instrument_elog_entries, \
     get_elog_tree_for_specified_id, get_workflow_definitions, get_dm_locations, get_workflow_triggers, \
     create_update_wf_definition, get_workflow_jobs, get_workflow_job_doc, create_wf_job, delete_wf_job, update_wf_job, \
-    file_available_at_location
+    file_available_at_location, get_collaborators_list_for_experiment, get_site_naming_conventions, delete_sample_for_experiment, \
+    get_global_roles, add_player_to_global_role, remove_player_from_global_role
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
-from dal.exp_cache import get_experiments, does_experiment_exist, reload_cache as reload_experiment_cache, \
+from dal.exp_cache import get_experiments, get_experiments_for_user, does_experiment_exist, reload_cache as reload_experiment_cache, \
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
     get_experiments_with_post_privileges, get_cached_experiment_names
 
@@ -186,7 +187,7 @@ def svc_get_experiments():
     When categorized, a dict of dict of arrays etc is returned; the array can be sorted using the sortby query parameter.
     For example, lgbk/ws/experiments?categorize=instrument_lastrunyear&sortby=lastrunyear should return a dict of dict of arrays of experiments.
     """
-    experiments = get_experiments()
+    experiments = get_experiments_for_user(context.security.get_current_user_id())
     categorizer = categorizers.get(request.args.get("categorize", None), None)
     sortby = sorters.get(request.args.get("sortby", None), None)
     if categorizer and sortby:
@@ -299,7 +300,7 @@ def svc_getUserGroupsForAuthenticatedUser():
 
 @explgbk_blueprint.route("/lgbk/ws/create_update_instrument", methods=["POST"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@context.security.authorization_required("instrument_create")
 def svc_create_update_instrument():
     """
     Create a new instrument. Pass in the document..
@@ -334,6 +335,38 @@ def svc_create_update_instrument():
         return jsonify({'success': False, 'errormsg': errormsg})
 
 
+@explgbk_blueprint.route("/lgbk/ws/global_roles", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
+def svc_get_global_roles():
+    return JSONEncoder().encode({"success": True, "value": get_global_roles()})
+
+@explgbk_blueprint.route("/lgbk/ws/add_player_to_global_role", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
+def svc_add_player_to_global_role():
+    role = request.form.get("role", None)
+    if not role:
+        return logAndAbort("Please specify a role")
+    player = request.form.get("player", None)
+    if not player:
+        return logAndAbort("Please specify a player")
+
+    return JSONEncoder().encode({"success": True, "value": add_player_to_global_role(player, role)})
+
+@explgbk_blueprint.route("/lgbk/ws/remove_player_from_global_role", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
+def svc_remove_player_from_global_role():
+    role = request.form.get("role", None)
+    if not role:
+        return logAndAbort("Please specify a role")
+    player = request.form.get("player", None)
+    if not player:
+        return logAndAbort("Please specify a player")
+
+    return JSONEncoder().encode({"success": True, "value": remove_player_from_global_role(player, role)})
+
 @explgbk_blueprint.route("/lgbk/ws/lookup_experiment_in_urawi", methods=["GET"])
 @context.security.authentication_required
 def svc_lookup_experiment_in_URAWI():
@@ -359,7 +392,7 @@ def svc_lookup_experiment_in_URAWI():
 
 @explgbk_blueprint.route("/lgbk/ws/register_new_experiment", methods=["POST"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@context.security.authorization_required("experiment_create")
 def svc_register_new_experiment():
     """
     Register a new experiment.
@@ -375,7 +408,7 @@ def svc_register_new_experiment():
     if not info:
         return logAndAbort("Experiment registration missing info document")
 
-    necessary_keys = set(['instrument', 'start_time', 'end_time', 'leader_account', 'contact_info', 'posix_group'])
+    necessary_keys = set(['instrument', 'start_time', 'end_time', 'leader_account', 'contact_info'])
     missing_keys = necessary_keys - info.keys()
     if missing_keys:
         return logAndAbort("Experiment registration missing keys %s" % missing_keys)
@@ -386,14 +419,17 @@ def svc_register_new_experiment():
     if status:
         context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
         context.kafka_producer.send("shifts", {"experiment_name" : experiment_name, "CRUD": "Create", "value": get_latest_shift(experiment_name) })
+        role_obj = get_role_object(experiment_name, "LogBook/Editor")
+        role_obj.update({'collaborators_added': [x for x in get_collaborators_list_for_experiment(experiment_name)], 'collaborators_removed': [], 'requestor': context.security.get_current_user_id()})
+        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
 
-@explgbk_blueprint.route("/lgbk/ws/update_experiment_info", methods=["POST"])
+@explgbk_blueprint.route("/lgbk/ws/experiment_edit_info", methods=["POST"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
-def svc_update_experiment_info():
+@context.security.authorization_required("experiment_edit")
+def svc_experiment_edit_info():
     """
     Update the information for an existing experiment.
     We expect the experiment_name as a query parameter and the registration information as a JSON document in the POST body.
@@ -406,7 +442,7 @@ def svc_update_experiment_info():
     if not info:
         return logAndAbort("Experiment registration missing info document")
 
-    necessary_keys = set(['instrument', 'start_time', 'end_time', 'leader_account', 'contact_info', 'posix_group'])
+    necessary_keys = set(['instrument', 'start_time', 'end_time', 'leader_account', 'contact_info'])
     missing_keys = necessary_keys - info.keys()
     if missing_keys:
         return logAndAbort("Experiment registration missing keys %s" % missing_keys)
@@ -420,7 +456,7 @@ def svc_update_experiment_info():
 
 @explgbk_blueprint.route("/lgbk/ws/clone_experiment", methods=["POST"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@context.security.authorization_required("experiment_create")
 def svc_clone_experiment():
     """
     Copy/clone an existing experiment as a new experiment.
@@ -454,7 +490,7 @@ def svc_clone_experiment():
 
 @explgbk_blueprint.route("/lgbk/ws/rename_experiment", methods=["POST"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@context.security.authorization_required("experiment_edit")
 def svc_rename_experiment():
     """
     Rename an existing experiment to a new experiment.
@@ -478,7 +514,7 @@ def svc_rename_experiment():
 
 @explgbk_blueprint.route("/lgbk/ws/lock_unlock_experiment", methods=["POST"])
 @context.security.authentication_required
-@context.security.authorization_required("edit")
+@context.security.authorization_required("experiment_edit")
 def svc_lock_unlock_experiment():
     """
     Lock/unlock an experiment.
@@ -525,9 +561,10 @@ def svc_switch_experiment():
     if not instrument:
         return jsonify({'success': False, 'errormsg': "No instrument given"})
 
-    station = info.get("station", None)
-    if not station:
+    if 'station' not in info:
         return jsonify({'success': False, 'errormsg': "No station given."})
+
+    station = int(info.get("station"))
 
     info_from_database = get_experiment_info(experiment_name)
     if not info_from_database:
@@ -980,7 +1017,7 @@ def svc_get_instrument_elogs(experiment_name):
 @experiment_exists_and_unlocked
 @context.security.authorization_required("read")
 def svc_get_files(experiment_name):
-    return JSONEncoder().encode({"success": True, "value": get_experiment_files(experiment_name)})
+    return JSONEncoder().encode({"success": True, "value": get_experiment_files(experiment_name, sample_name=request.args.get("sampleName", None))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/files", methods=["GET"])
 @context.security.authentication_required
@@ -1316,6 +1353,27 @@ def svc_get_latest_shift(experiment_name):
 def svc_get_samples(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_samples(experiment_name)})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples/<sample_name>", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_sample_by_name(experiment_name, sample_name):
+    return JSONEncoder().encode({"success": True, "value": get_sample_for_experiment_by_name(experiment_name, sample_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples/<sample_name>", methods=["DELETE"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("edit")
+def svc_delete_sample(experiment_name, sample_name):
+    status, errormsg, obj = delete_sample_for_experiment(experiment_name, sample_name)
+    if status:
+        sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
+        context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Delete", "value": sample_doc })
+        return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": obj})
+    else:
+        return jsonify({'success': status, 'errormsg': errormsg})
+
+
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/current_sample_name", methods=["GET"])
 @context.security.authentication_required
 @experiment_exists_and_unlocked
@@ -1346,7 +1404,7 @@ def svc_create_update_sample(experiment_name):
         return logAndAbort("Create/update sample missing fields %s" % missing_keys)
     if createp and 'create_associated_run' in info and info['create_associated_run']:
         current_run = get_current_run(experiment_name)
-        if not is_run_closed(experiment_name, current_run["num"]):
+        if current_run and not is_run_closed(experiment_name, current_run["num"]):
             return jsonify({'success': False, 'errormsg': ("Cannot switch to and create a run if the current run %s is still open %s" % (current_run["num"], experiment_name))})
         del info['create_associated_run']
         automatically_create_associated_run = True
@@ -1528,8 +1586,8 @@ def svc_get_collaborators(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/toggle_role", methods=["GET", "POST"])
 @experiment_exists_and_unlocked
-@context.ldapadminsecurity.authentication_required
-@context.ldapadminsecurity.authorization_required("manage_groups")
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
 def svc_toggle_role(experiment_name):
     uid = request.args.get("uid", None)
     role_fq_name = request.args.get("role_fq_name", None)
@@ -1537,39 +1595,52 @@ def svc_toggle_role(experiment_name):
         return logAndAbort("Please specify a uid and role_fq_name")
 
     role_obj = get_role_object(experiment_name, role_fq_name)
+    collaborators_before = get_collaborators_list_for_experiment(experiment_name)
     if role_obj and 'players' in role_obj and uid in role_obj['players']:
         status = remove_collaborator_from_role(experiment_name, uid, role_fq_name)
+        collaborators_after = get_collaborators_list_for_experiment(experiment_name)
+        collaborators_removed = collaborators_before - collaborators_after
+        collaborators_added = []
     else:
         status = add_collaborator_to_role(experiment_name, uid, role_fq_name)
+        collaborators_after = get_collaborators_list_for_experiment(experiment_name)
+        collaborators_added = collaborators_after - collaborators_before
+        collaborators_removed = []
 
     if status:
         role_obj = get_role_object(experiment_name, role_fq_name)
+        role_obj.update({'collaborators_added': [x for x in collaborators_added], 'collaborators_removed': [x for x in collaborators_removed], 'requestor': context.security.get_current_user_id() })
         context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
 
     return JSONEncoder().encode({"success": status, "message": "Did not match any entries" if not status else ""})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_collaborator", methods=["GET", "POST"])
 @experiment_exists_and_unlocked
-@context.ldapadminsecurity.authentication_required
-@context.ldapadminsecurity.authorization_required("manage_groups")
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
 def svc_add_collaborator(experiment_name):
     uid = request.args.get("uid", None)
     if not uid:
         return logAndAbort("Please specify a uid")
     role_fq_name = request.args.get("role_fq_name", "LogBook/Reader")
 
+    collaborators_before = get_collaborators_list_for_experiment(experiment_name)
     status = add_collaborator_to_role(experiment_name, uid, role_fq_name)
+    collaborators_after = get_collaborators_list_for_experiment(experiment_name)
+    collaborators_added = collaborators_after - collaborators_before
+    collaborators_removed = []
 
     if status:
         role_obj = get_role_object(experiment_name, role_fq_name)
+        role_obj.update({'collaborators_added': [x for x in collaborators_added], 'collaborators_removed': [x for x in collaborators_removed], 'requestor': context.security.get_current_user_id() })
         context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
     return JSONEncoder().encode({"success": status, "message": "Did not match any entries" if not status else ""})
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/remove_collaborator", methods=["GET", "POST"])
 @experiment_exists_and_unlocked
-@context.ldapadminsecurity.authentication_required
-@context.ldapadminsecurity.authorization_required("manage_groups")
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
 def svc_remove_collaborator(experiment_name):
     uid = request.args.get("uid", None)
     if not uid:
@@ -1584,19 +1655,17 @@ def svc_remove_collaborator(experiment_name):
     return JSONEncoder().encode({"success": True, "message": "Removed collaborator"})
 
 
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_matching_uids", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/ws/get_matching_uids", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
-def get_matching_uids(experiment_name):
+def get_matching_uids():
     uid = request.args.get("uid", None)
     if not uid:
         return logAndAbort("Please specify a uid")
     return JSONEncoder().encode({"success": True, "value": context.usergroups.get_userids_matching_pattern(uid)})
 
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_matching_groups", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/ws/get_matching_groups", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
-def get_matching_groups(experiment_name):
+def get_matching_groups():
     group_name = request.args.get("group_name", None)
     if not group_name:
         return logAndAbort("Please specify a group_name")
@@ -1830,3 +1899,12 @@ def svc_kill_workflow_job(experiment_name):
         context.kafka_producer.send("workflow_jobs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": val })
 
     return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
+
+
+@explgbk_blueprint.route("/lgbk/naming_conventions", methods=["GET"])
+@context.security.authentication_required
+def svc_get_site_naming_conventions():
+    """
+    Get the site config
+    """
+    return JSONEncoder().encode({"success": True, "value": get_site_naming_conventions()})

@@ -2,6 +2,7 @@ $(function() {
     $(document).ready(function() {
     	var exper_template = `{{#value}}<tr>
     		    <td> <a target="_blank" href="{{_id}}/">{{ name }}</a> </td>
+                <td class="d-none exp_actions"></td>
     		    <td> {{#FormatDate}}{{first_run.begin_time }}{{/FormatDate}} </td>
     		    <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
     		    <td> {{ contact_info }} </td>
@@ -11,7 +12,7 @@ $(function() {
     	var instrument_tab_template = `<li class="nav-item"><a class="nav-link instrument_tab" data-toggle="tab" href="#{{escaped_instr}}">{{ instrument }}</a></li>`;
     	var instrument_tab_content_template = `<div role="tabpanel" class="tab-pane fade in" id="{{escaped_instr}}"><div class="tabbable"><ul class="nav nav-pills"></ul></div><div class="tab-content"><div class="table-responsive">
             <table class="table table-condensed table-striped table-bordered">
-            <thead><tr><th>Name</th><th>First Run</th><th>Last Run</th><th>Contact</th><th>Description</th></tr></thead>
+            <thead><tr><th>Name</th><th class="d-none exp_actions">Actions</th><th>First Run</th><th>Last Run</th><th>Contact</th><th>Description</th></tr></thead>
             <tbody>
             </tbody>
           </table></div></div>`;
@@ -27,11 +28,22 @@ $(function() {
         .done(function( d1, d2 ) {
         	var userdata = d1[0], data = d2[0];
         	console.log("Done getting experiments");
-        	_.each(_.sortBy(_.keys(data.value)).reverse(), function(instr) {
-            var escaped_instr = instr.replace(/[ \/]/g, '_');
-        		$("#activeexperimentsli").after(Mustache.render(instrument_tab_template, { instrument: instr, escaped_instr: escaped_instr }));
-        		$("#activeexptab").after(Mustache.render(instrument_tab_content_template, { instrument: instr, escaped_instr: escaped_instr }))
-        	});
+            if(_.get(privileges, "read", false)) {
+                $("#activeexperimentsli").removeClass("d-none");$("#activeexptab").removeClass("d-none");
+            }
+            _.each(_.sortBy(_.keys(data.value)).reverse(), function(instr) {
+              var escaped_instr = instr.replace(/[ \/]/g, '_');
+              $("#activeexperimentsli").after(Mustache.render(instrument_tab_template, { instrument: instr, escaped_instr: escaped_instr }));
+              $("#activeexptab").after(Mustache.render(instrument_tab_content_template, { instrument: instr, escaped_instr: escaped_instr }))
+            });
+
+            if(!_.get(privileges, "ops_page", false) && _.get(privileges, "experiment_create", false)) {
+                $("#user_create_exp").parent().removeClass("d-none");
+                $("#user_create_exp").on("click", function(){
+                    lgbk_create_edit_exp({ leader_account: logged_in_user, contact_info: _.get(logged_in_user_details, "gecos", logged_in_user) + "( " + logged_in_user + "@slac.stanford.edu )", start_time : moment(), end_time : moment().add(2, 'days')});
+                })
+            }
+
             // Bootstrap 4 bug; revist after each release...
             $('#myNavbar a[data-toggle="tab"]').on('click', function(e) {
                 e.preventDefault();
@@ -76,6 +88,7 @@ $(function() {
             			});
         			}
         		});
+                myExps = _.reverse(_.sortBy(myExps, ['end_time']));
     			var expdata = {value: myExps};
     			expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
     			var rendered = Mustache.render(exper_template, expdata);

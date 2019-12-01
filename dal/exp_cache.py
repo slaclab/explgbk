@@ -73,6 +73,41 @@ def get_experiments():
     """
     return list(logbookclient['explgbk_cache']['experiments'].find({}))
 
+def get_experiments_for_instrument(instrument):
+    """
+    Get a list of experiments from the database for a instrument.
+    Returns basic information and also some info on the first and last runs.
+    """
+    return list(logbookclient['explgbk_cache']['experiments'].find({"instrument": instrument}))
+
+def get_experiments_for_user(uid):
+    """
+    Get a list of experiments for which the user has read access.
+    """
+    sitedb = logbookclient["site"]
+    cachedb = logbookclient['explgbk_cache']
+    groups = usergroups.get_user_posix_groups(uid)
+    groups.append("uid:" + uid)
+    # See if the user has any global read privileges
+    global_read_roles_for_user = [ x for x in sitedb["roles"].find({"players": {"$in": groups}, "privileges": "read"}) ]
+    if global_read_roles_for_user:
+        logger.debug("User %s has read privileges for all experiments from the site database", uid)
+        return get_experiments()
+    global_read_roles = set([(x["app"], x["name"]) for x in sitedb["roles"].find({"privileges": "read"}, {"_id": 0, "app": 1, "name": 1})])
+    # Check for instrument level privileges
+    instrument_roles_for_user = [x for x in sitedb["instruments"].aggregate([{"$match": {"roles.players": {"$in": groups}}}, {"$unwind": "$roles"}])]
+    exp_for_uid = {}
+    for irole in instrument_roles_for_user:
+        if (irole["roles"]["app"], irole["roles"]["name"]) in global_read_roles:
+            logger.debug("User %s has read permission for instrument %s because of role %s/%s", uid, irole["_id"], irole["roles"]["app"], irole["roles"]["name"] )
+            for exp in get_experiments_for_instrument(irole["_id"]):
+                exp_for_uid[exp["_id"]] = exp
+    # Now for experiments for which the user is directly a collaborator
+    for exp in list(logbookclient['explgbk_cache']["experiments"].find({"players": {"$in": groups}})):
+        exp_for_uid[exp["_id"]] = exp
+    return exp_for_uid.values()
+
+
 def get_cached_experiment_names():
     """
     Get the cached experiment names. Use for debugging.

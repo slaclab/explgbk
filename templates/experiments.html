@@ -5,6 +5,7 @@
 
     <link rel=stylesheet type=text/css href="../static/lgbk.css">
     <link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap.min.css">
+    <link rel=stylesheet type=text/css href="../js/tempusdominus-bootstrap-4/build/css/tempusdominus-bootstrap-4.min.css">
     <link rel=stylesheet type=text/css href="../js/@fortawesome/fontawesome-free/css/all.min.css">
     <link rel=stylesheet type=text/css href="../js/noty/lib/noty.css">
 
@@ -17,17 +18,27 @@
     <script type="text/javascript" src="../js/noty/lib/noty.min.js"></script>
     <script type="text/javascript" src="../js/bootstrap/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
+    <script type="text/javascript" src="../js/tempusdominus-bootstrap-4/build/js/tempusdominus-bootstrap-4.min.js"></script>
+    <script type="text/javascript" src="../static/lgbk.js"></script>
     <script type="text/javascript" src="../static/experiments.js"></script>
 
     <script type="text/javascript">
 		var experiments_url   = "ws/experiments?categorize=instrument_lastrunyear&sortby=lastrunyear";
 		var useridgroups_url  = "ws/usergroups";
+        var instruments_url   = "ws/instruments";
 		var active_experiments_url = "ws/activeexperiments";
+        var lookup_experiment_in_urawi = "ws/lookup_experiment_in_urawi";
+        var register_experiment_url = "ws/register_new_experiment";
+        var logged_in_user  = "{{ logged_in_user }}";
+        var logbook_site = "{{ logbook_site }}";
+        var privileges = {{ privileges|safe }};
+        var logged_in_user_details = {{ logged_in_user_details|safe }}
     </script>
 </head>
 
 <body id="lgbk_body">
 
+<div id="exp_mdl_holder"></div>
 
 <nav class="navbar navbar-expand-lg navbar-light" role="navigation" id="myNavRow">
   <div class="container-fluid">
@@ -37,9 +48,13 @@
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item" id="myexperimentsli"><a class="nav-link" data-toggle="tab" href="#myexptab">My Experiments</a></li>
-        <li class="nav-item" id="activeexperimentsli"><a class="nav-link" data-toggle="tab" href="#activeexptab">Active</a></li>
+        <li class="nav-item d-none" id="activeexperimentsli"><a class="nav-link" data-toggle="tab" href="#activeexptab">Active</a></li>
         <!-- We have one for each instrument here -->
         <li class="nav-item" id="searchli"><a class="nav-link" data-toggle="tab" href="#searchtab"><i class="fas fa-search fa-lg"></i></a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+          <li id="toolbar_for_tab" class="d-none"><span id="user_create_exp"><i class="fas fa-plus fa-lg" title="Create a new experiment"></i></span></li>
+          <li class="session_items"><a href="logout"><span class="logged_in_user_name">{{ logged_in_user }}</span><i class="fas fa-sign-out-alt fa-lg"></i></a></li>
       </ul>
     </div>
   </div>
@@ -54,7 +69,7 @@
       </table>
     </div>
   </div>
-  <div role="tabpanel" class="tab-pane fade" id="activeexptab">
+  <div role="tabpanel" class="tab-pane fade d-none" id="activeexptab">
     <div class="table-responsive">
       <table class="table table-condensed table-striped table-bordered">
         <thead><tr><th>Name</th><th>First Run</th><th>Last Run</th><th>Contact</th><th>Description</th></tr></thead>

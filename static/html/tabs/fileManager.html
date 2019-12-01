@@ -54,13 +54,6 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
       return $(Mustache.render(template, entry));
   }
 
-  sortable_paginator($("#fmgr_content"), "run_num", "run_num", true, 0, 50, 50);
-  $(window).scroll(function () {
-      if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
-          $("#fmgr_content").data("spgntr").pageDown();
-      }
-  });
-
   var run_loc_click = function() {
       let run_num = $(this).closest("[data-spgntr]").attr("data-spgntr"), loc_name = $(this).attr("data-loc-name");
       console.log("Clicked on " + run_num + " for location " + loc_name);
@@ -82,7 +75,8 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
       }
       return size_in_bytes + " bytes";
   }
-  var prep_run_file = function(run, dm_locations) {
+  var dm_locations;
+  var prep_run_file = function(run) {
       let rf =  {run_num: run["num"], num_files: 0, total_size: 0, files: [], dm_locations: dm_locations, fstat: _.map(dm_locations, function(x){ return { name: x, all: false, some: false }}) };
       rf.render = function() {
           this.updateStat();
@@ -107,35 +101,57 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
       run_files.files.push(file);
   }
 
-  $.when($.getJSON("ws/files"), $.getJSON("ws/runs?includeParams=false"), $.getJSON('ws/dm_locations'))
-  .done(function(d0, d1, d2){
-      let dm_locations = _.map(d2[0].value, "name"), files = _.fromPairs(_.map(d1[0].value, function(x){ return [x["num"], prep_run_file(x, dm_locations)]}));
-	  _.each(d0[0].value, function(file) {
-		 file.name = (file.path.length < 64) ? file.path : "..." + file.path.substr(-64) ;
-         file.hrsize = human_readable_size(file.size);
-         add_file_to_run_files(file, files[file["run_num"]])
-     });
-     $("#fmgr_content").data("spgntr").addObjects(_.values(files));
-     $(document).on('runs', function(event, rundoc) {
-         // console.log("WS run update "); console.log(rundoc);
-         let rf = prep_run_file(rundoc.value, dm_locations);
-         $.getJSON("ws/"+rf["run_num"]+"/files")
-         .done(function(d0){
-             _.each(d0.value, function(file) {
-                 file.name = (file.path.length < 64) ? file.path : "..." + file.path.substr(-64);
-                 file.hrsize = human_readable_size(file.size);
-                 add_file_to_run_files(file, rf)
-            });
-            $("#fmgr_content").data("spgntr").addObject(rf);
-         })
-     });
-     $(document).on('file_catalog', function(event, fdoc) {
-         console.log("WS file_catalog update "); console.log(fdoc);
-         let run_num = fdoc.value["run_num"], run_files = $("#fmgr_content").find("[data-spgntr="+run_num+"]").data("run_files");
-         _.remove(run_files.files, ["path", fdoc.value["path"]]);
-         add_file_to_run_files(fdoc.value, run_files)
-         $("#fmgr_content").data("spgntr").addObject(run_files);
-     });
+  let reload_page = function() {
+      let getrunparams = { includeParams: false };
+      if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { getrunparams["sampleName"] = sample_showing_in_UI; }
+      $.when($.getJSON("ws/files", getrunparams), $.getJSON("ws/runs", getrunparams), $.getJSON('ws/dm_locations'))
+      .done(function(d0, d1, d2){
+          dm_locations = _.map(d2[0].value, "name");
+          let files = _.fromPairs(_.map(d1[0].value, function(x){ return [x["num"], prep_run_file(x)]}));
+    	  _.each(d0[0].value, function(file) {
+    		 file.name = (file.path.length < 64) ? file.path : "..." + file.path.substr(-64) ;
+             file.hrsize = human_readable_size(file.size);
+             add_file_to_run_files(file, files[file["run_num"]])
+         });
+         sortable_paginator($("#fmgr_content"), "run_num", "run_num", true, 0, 50, 50);
+         $("#fmgr_content").data("spgntr").addObjects(_.values(files));
+      });
+  }
+  reload_page();
+
+  $(document).on('runs', function(event, rundoc) {
+      // console.log("WS run update "); console.log(rundoc);
+      let runSample = _.get(rundoc.value, 'sample', "");
+      if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && runSample != sample_showing_in_UI) { console.log("Skipping updating file manager for run from a different sample " + runSample); return; }
+      let rf = prep_run_file(rundoc.value);
+      $.getJSON("ws/"+rf["run_num"]+"/files")
+      .done(function(d0){
+          _.each(d0.value, function(file) {
+              file.name = (file.path.length < 64) ? file.path : "..." + file.path.substr(-64);
+              file.hrsize = human_readable_size(file.size);
+              add_file_to_run_files(file, rf)
+         });
+         $("#fmgr_content").data("spgntr").addObject(rf);
+      })
+  });
+  $(document).on('file_catalog', function(event, fdoc) {
+      let run_num = fdoc.value["run_num"], run_files = $("#fmgr_content").find("[data-spgntr="+run_num+"]").data("run_files");
+      if(!_.isNil(run_files)) {
+          console.log("WS file_catalog update "); console.log(fdoc);
+          _.remove(run_files.files, ["path", fdoc.value["path"]]);
+          add_file_to_run_files(fdoc.value, run_files)
+          $("#fmgr_content").data("spgntr").addObject(run_files);
+      } else {
+          console.log("Probably skipping file_catalog update for a different sample as the run does not exist");
+      }
+  });
+  $("#fmgr_tab").on("lg.refresh", function() {
+      reload_page();
+  });
+  $(window).scroll(function () {
+      if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+          $("#fmgr_content").data("spgntr").pageDown();
+      }
   });
 });
 </script>
