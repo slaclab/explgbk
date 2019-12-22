@@ -9,6 +9,7 @@ import logging
 import re
 import copy
 from operator import itemgetter
+import shutil
 
 import requests
 import tempfile
@@ -17,8 +18,9 @@ import subprocess
 from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
-from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, security, usergroups
+from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed
+from dal.imagestores import parseImageStoreURL
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -511,29 +513,20 @@ def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
         filename = file[0]
         filestorage = file[1] # http://werkzeug.pocoo.org/docs/0.14/datastructures/#werkzeug.datastructures.FileStorage
 
-        isloc = requests.post(imagestoreurl + "dir/assign").json()
-        imgurl = isloc['publicUrl'] + isloc['fid']
-        logger.info("Posting attachment %s to URL %s", filename, imgurl)
-        files = {'file': (filename, filestorage.stream, filestorage.mimetype, {'Content-Disposition' : 'inline; filename=%s' % filename})}
-        requests.post(imgurl, files=files)
+        imgurl = parseImageStoreURL(imagestoreurl).store_file_and_return_url(experiment_name, filename, filestorage.mimetype, filestorage.stream)
         attachment = {"_id": ObjectId(), "name" : filename, "type": filestorage.mimetype, "url" : imgurl }
 
         # We get the data back from the image server; this is to make sure the content did make it there; also the stream is probably in an inconsistent state
         # Not the most efficient but the safest perhaps.
-        with requests.get(imgurl, stream=True) as imgget, tempfile.NamedTemporaryFile("w+b") as fd:
+        with parseImageStoreURL(imgurl).return_url_contents(experiment_name, imgurl) as imgget, tempfile.NamedTemporaryFile("w+b") as fd:
             tfname, tf_thmbname = fd.name, fd.name+".png"
-            for chunk in imgget.iter_content(chunk_size=128):
-                fd.write(chunk)
+            shutil.copyfileobj(imgget, fd, 1024)
             fd.flush()
             cp = subprocess.run(["convert", "-thumbnail", "128", tfname, tf_thmbname], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=30)
             logger.info(cp)
             if cp.returncode == 0 and os.path.exists(tf_thmbname):
                 with open(tf_thmbname, 'rb') as thmb_s:
-                    thmb_isloc = requests.post(imagestoreurl + "dir/assign").json()
-                    thmb_imgurl = thmb_isloc['publicUrl'] + thmb_isloc['fid']
-                    logger.info("Posting attachment thumbnail %s to URL %s", tf_thmbname, thmb_imgurl)
-                    thmb_files = {'file': (filename, thmb_s, "image/png", {'Content-Disposition' : 'inline; filename=%s' % "preview_" + filename})}
-                    requests.post(thmb_imgurl, files=thmb_files)
+                    thmb_imgurl = parseImageStoreURL(imagestoreurl).store_file_and_return_url(experiment_name, "preview_" + filename, "image/png", thmb_s)
                     attachment["preview_url"] = thmb_imgurl
             else:
                 logger.warn("Skipping generating a thumbnail for %s for experiment %s", filename, experiment_name)

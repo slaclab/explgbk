@@ -57,6 +57,8 @@ from dal.exp_cache import get_experiments, get_experiments_for_user, does_experi
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
     get_experiments_with_post_privileges, get_cached_experiment_names
 
+from dal.imagestores import parseImageStoreURL
+
 __author__ = 'mshankar@slac.stanford.edu'
 
 explgbk_blueprint = Blueprint('experiment_logbook_api', __name__)
@@ -665,16 +667,17 @@ def svc_get_elog_attachment(experiment_name):
             if prefer_preview:
                 file_type = "image/png"
                 if "preview_url" in attachment:
+                    logger.debug("Returning preview")
                     remote_url = attachment.get("preview_url", None)
                 else:
                     return send_file('static/attachment.png')
             else:
-                logger.debug("Cannot find preview, returning main document.")
+                logger.debug("Returning main document")
                 remote_url = attachment.get("url", None)
                 file_type = attachment['type']
             if remote_url:
-                req = requests.get(remote_url, stream = True)
-                resp = Response(stream_with_context(req.iter_content(chunk_size=1024)), content_type = file_type)
+                urlcontents = parseImageStoreURL(remote_url).return_url_contents(experiment_name, remote_url)
+                resp = make_response(send_file(urlcontents, mimetype=file_type))
                 if not (attachment["type"].startswith("image") or "preview_url" in attachment):
                     resp.headers["Content-Disposition"] = 'attachment; filename="' + attachment["name"] + '"'
                 return resp
@@ -728,7 +731,7 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
                     maintype, subtype = attachment['type'].split('/', 1)
                 else:
                     maintype, subtype = "application", "data"
-                with requests.get(attachment["url"], stream=True) as imgget:
+                with parseImageStoreURL(attachment["url"]).return_url_contents(experiment_name, attachment["url"]) as imgget:
                     msg.add_attachment(imgget.raw.read(), maintype=maintype, subtype=subtype, filename=attachment['name'])
             return msg
 

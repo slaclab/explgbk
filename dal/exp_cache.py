@@ -17,7 +17,7 @@ from bson import ObjectId
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
-from context import logbookclient, imagestoreurl, instrument_scientists_run_table_defintions, usergroups, kafka_producer
+from context import logbookclient, instrument_scientists_run_table_defintions, usergroups, kafka_producer
 
 __author__ = 'mshankar@slac.stanford.edu'
 
