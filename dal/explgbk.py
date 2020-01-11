@@ -1275,13 +1275,18 @@ def register_file_for_experiment(experiment_name, info):
         expdb['file_catalog'].insert_one(info)
     return (True, expdb['file_catalog'].find_one({"path": info["path"], "run_num": info["run_num"]}))
 
-def file_available_at_location(experiment_name, file_path, location):
+def file_available_at_location(experiment_name, run_num, file_path, location):
     """
     Mark a file as being available at the specified location.
     """
     expdb = logbookclient[experiment_name]
-    expdb['file_catalog'].update_one({"path": file_path}, {"$set": {"locations."+location+".asof": datetime.datetime.utcnow()}})
-    return expdb['file_catalog'].find_one({"path": file_path})
+    expdb['file_catalog'].update_one({"run_num": run_num, "path": file_path}, {"$set": {"locations."+location+".asof": datetime.datetime.utcnow()}})
+    return expdb['file_catalog'].find_one({"run_num": run_num, "path": file_path})
+
+def file_not_available_at_location(experiment_name, run_num, file_path, location):
+    expdb = logbookclient[experiment_name]
+    expdb['file_catalog'].update_one({"run_num": run_num, "path": file_path}, {"$unset": {"locations."+location: 1}})
+    return expdb['file_catalog'].find_one({"run_num": run_num, "path": file_path})
 
 def get_collaborators(experiment_name):
     """
@@ -1389,6 +1394,11 @@ def get_dm_locations(experiment_name):
                 ret[exp_specific_dm_location] = [x for x in siteinfo['dm_locations'] if x["name"] == exp_specific_dm_location][0]
 
     return list(ret.values())
+
+def get_site_config():
+    sitedb = logbookclient["site"]
+    siteinfo = sitedb["site_config"].find_one()
+    return siteinfo
 
 def get_workflow_triggers(experiment_name):
     return [{"value": "MANUAL", "label": "Manually triggered"}, {"value": "START_OF_RUN", "label": "Start of a run"}, {"value": "END_OF_RUN", "label": "End of a run"}, {"value": "FIRST_FILE_TRANSFERRED", "label": "First file transfer"}, {"value": "ALL_FILES_TRANSFERRED", "label": "All files transferred"}]

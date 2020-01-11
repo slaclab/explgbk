@@ -18,7 +18,7 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
 
   var fmgr_child_template = `<div class="row col-md-12 fmgr-chid"><div class="card w-100"><div class="card-body">
       {{#files}}<div class="row run_file" data-file-path="{{path}}"><div class="col-md-5 text-left fmgr_exp_file_name">{{ name }}</div><div class="col-md-2 text-left">{{ hrsize }}</div><div class="col-md-2 text-left">{{#FormatDate}}{{ create_timestamp }}{{/FormatDate}}</div>
-      <div class="col-md-3 d-flex flex-wrap">{{#dm_locations}}<button type="button" class="btn btn-sm fileloc-btn {{#present}}btn-primary{{/present}}{{^present}}btn-secondary{{/present}}" {{#present}}title="This file was present at this location as of {{#FormatDate}}{{asof}}{{/FormatDate}}. Click to check if it is still there."{{/present}}{{^present}}title="This file may not be available at this location. Click to make it available at this location."{{/present}} data-loc-name="{{name}}">{{name}}</button>{{/dm_locations}}</div></div>{{/files}}</div></div></div>`;
+      </div>{{/files}}</div></div></div>`;
 
   var expandFunction = function() {
      var run_files =  $(this).closest(".fdat").data("run_files");
@@ -59,11 +59,20 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
       console.log("Clicked on " + run_num + " for location " + loc_name);
       $.when($.getJSON("ws/check_and_move_run_files_to_location", data={run_num: run_num, location: loc_name}), $.ajax("../../static/html/ms/generic_msg.html"))
       .done(function(d0, d1){
-          let rendered = $(Mustache.render(d1[0], {title: "Moving run " + run_num + " to " + loc_name, message: d0[0].message}));
+          if(d0[0].success) {
+              _.each(d0[0].value["run_files"], function(f){ $(document).trigger('file_catalog',[{"value": f}]); })
+              console.log(d0[0]);
+              window.vv = d0[0];
+              let total_files = d0[0].value["run_files"].length, present_files = _.filter(d0[0].value["run_files"], "locations." + loc_name).length, files_by_status = _.countBy(_.values(d0[0].value["dmstatus"]), _.identity),  pending_files = _.get(files_by_status, "pending", 0);
+              var rendered = $(Mustache.render(d1[0], {title: "Moving run " + run_num + " to " + loc_name, message: "Of the " + total_files + " files in run " + run_num + "<ul><li>" + present_files + " are already present at " + loc_name + "</li><li>" + pending_files + " are in the data mover queues</li></ul>"}));
+          } else {
+              var rendered = $(Mustache.render(d1[0], {title: "Moving run " + run_num + " to " + loc_name, message: d0[0].errormsg}));
+          }
           $("#fmgr_tab").find(".mdl_holder").empty().append(rendered);
           $("#fmgr_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#lcls_wf_ctrls_tab").find(".mdl_holder").empty(); });
           $("#fmgr_tab").find(".mdl_holder").find(".modal").modal("show");
       })
+      .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure " + textStatus); })
   }
 
   var human_readable_size = function(size_in_bytes) {
@@ -97,6 +106,7 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
       return rf;
   }
   var add_file_to_run_files = function(file, run_files) {
+      if(_.isNil(run_files)) { console.log("Cannot find run files for " + file["run_num"]); return; }
       file.dm_locations = _.map(run_files.dm_locations, function(x){ return {name : x, present: _.includes(_.keys(_.get(file, "locations")), x), "asof": _.get(file, "locations."+x+".asof")}});
       run_files.files.push(file);
   }

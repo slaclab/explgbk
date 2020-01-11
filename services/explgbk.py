@@ -46,7 +46,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elog_tree_for_specified_id, get_workflow_definitions, get_dm_locations, get_workflow_triggers, \
     create_update_wf_definition, get_workflow_jobs, get_workflow_job_doc, create_wf_job, delete_wf_job, update_wf_job, \
     file_available_at_location, get_collaborators_list_for_experiment, get_site_naming_conventions, delete_sample_for_experiment, \
-    get_global_roles, add_player_to_global_role, remove_player_from_global_role
+    get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -1544,25 +1544,16 @@ def svc_file_available_at_location(experiment_name):
     file_path = request.args.get("file_path", None)
     if not file_path:
         return logAndAbort("Please specify the file path.")
-    file_info = file_available_at_location(experiment_name, file_path, location)
+    run_num = request.args.get("run_num", None)
+    if not run_num:
+        return logAndAbort("Please specify the run number")
+    try:
+        run_num = int(run_num)
+    except ValueError:
+        pass
+    file_info = file_available_at_location(experiment_name, run_num, file_path, location)
     context.kafka_producer.send("file_catalog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": file_info })
     return jsonify({'success': True})
-
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/check_and_move_file_to_location", methods=["GET", "POST"])
-@context.security.authentication_required
-@experiment_exists_and_unlocked
-@context.security.authorization_required("post")
-def svc_check_and_move_file_to_location(experiment_name):
-    location = request.args.get("location", None)
-    if not location:
-        return logAndAbort("Please specify the location.")
-    if not location in [x["name"] for x in get_dm_locations(experiment_name)]:
-        return logAndAbort("Please specify a valid location")
-    file_path = request.args.get("file_path", None)
-    if not file_path:
-        return logAndAbort("Please specify the file path.")
-    # Make a call to the data mover here....
-    return jsonify({'success': True, "message": "The request to move %s to %s has been submitted to the data movers. Please check back later." % (file_path, location)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/check_and_move_run_files_to_location", methods=["GET", "POST"])
 @context.security.authentication_required
@@ -1577,8 +1568,34 @@ def svc_check_and_move_run_files_to_location(experiment_name):
     run_num = request.args.get("run_num", None)
     if not run_num:
         return logAndAbort("Please specify the run number")
-    # Make a call to the data mover here....
-    return jsonify({'success': True, "message": "The request to move files in run %s to %s has been submitted to the data movers. Please check back later." % (run_num, location)})
+    try:
+        run_num = int(run_num)
+    except ValueError:
+        pass
+
+    site_config = get_site_config()
+    if site_config.get("dm_mover_prefix", None):
+        files_for_run = {x["path"] : x for x in get_experiment_files_for_run(experiment_name, run_num)}
+        resp = requests.post(site_config["dm_mover_prefix"] + "ws/" + experiment_name + "/check_files_for_run", json={
+            "location": location,
+            "run_num": run_num,
+            "experiment_name": experiment_name,
+            "instrument": get_experiment_info(experiment_name)["instrument"],
+            "restore_missing_files": True,
+            "files": [x["path"] for x in files_for_run.values()]
+            }).json()
+        for mfile, status in resp.get("files", {}).items():
+            file_info = files_for_run.get(mfile, None)
+            if status == "present" and file_info and not location in file_info.get("locations", {}).keys():
+                logger.debug("I think %s is not there but it is already there", mfile)
+                file_available_at_location(experiment_name, run_num, mfile, location)
+            elif status != "present" and file_info and location in file_info.get("locations", {}).keys():
+                logger.debug("I think %s is there but it has been removed", mfile)
+                file_not_available_at_location(experiment_name, run_num, mfile, location)
+
+        return JSONEncoder().encode({'success': True, "value": {"run_files": get_experiment_files_for_run(experiment_name, run_num), "dmstatus": resp.get("files", {})} })
+    else:
+        return JSONEncoder().encode({'success': False, "errormsg": "This site has not been configured with a mover endpoint."})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/collaborators", methods=["GET"])
 @context.security.authentication_required
