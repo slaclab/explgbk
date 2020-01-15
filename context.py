@@ -21,15 +21,15 @@ app = None
 MONGODB_HOST=os.environ.get('MONGODB_HOST', "localhost")
 MONGODB_PORT=int(os.environ.get('MONGODB_PORT', 27017))
 MONGODB_HOSTS=os.environ.get("MONGODB_HOSTS", None)
-if MONGODB_HOSTS:
-    MONGODB_HOSTS = MONGODB_HOSTS.split(",")
-else:
-    MONGODB_HOSTS = [ MONGODB_HOST + ":" + str(MONGODB_PORT) ]
-MONGODB_USERNAME=os.environ.get('MONGODB_USERNAME', None) or 'roleReader'
-MONGODB_PASSWORD=os.environ.get('MONGODB_PASSWORD', None) or 'slac123'
+if not MONGODB_HOSTS:
+    MONGODB_HOSTS = MONGODB_HOST + ":" + str(MONGODB_PORT)
+MONGODB_URL=os.environ.get("MONGODB_URL", None)
+if not MONGODB_URL:
+    MONGODB_URL = "mongodb://" + MONGODB_HOSTS + "/admin"
 
-MONGODB_ADMIN_USERNAME=os.environ.get('MONGODB_ADMIN_USERNAME', None) or 'admin'
-MONGODB_ADMIN_PASSWORD=os.environ.get('MONGODB_ADMIN_PASSWORD', None) or 'slac123'
+MONGODB_USERNAME=os.environ['MONGODB_USERNAME']
+MONGODB_PASSWORD=os.environ['MONGODB_PASSWORD']
+
 
 # This identifies the current deployment site.
 # Functionality that depends on the deployment location is based off this variable.
@@ -44,12 +44,12 @@ PREVIEW_PREFIX_SHARED_SECRET = os.environ.get('PREVIEW_PREFIX_SHARED_SECRET', "S
 
 
 # Set up the security manager
-mongorolereaderclient = MongoClient(host=MONGODB_HOSTS, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, authSource="admin", tz_aware=True)
+mongorolereaderclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True)
 usergroups = UserGroups()
 roleslookup = MongoDBRoles(mongorolereaderclient, usergroups)
 security = FlaskAuthnz(roleslookup, "LogBook")
 
-logbookclient = MongoClient(host=MONGODB_HOSTS, username=MONGODB_ADMIN_USERNAME, password=MONGODB_ADMIN_PASSWORD, authSource="admin", tz_aware=True)
+logbookclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True)
 
 
 def __getKafkaProducer():
