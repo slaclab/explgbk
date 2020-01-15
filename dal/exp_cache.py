@@ -192,6 +192,8 @@ def __update_experiments_info():
     db_time_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
     logbookclient['explgbk_cache']['operations'].update_one({"name": "explgbk_cache_rebuild"}, {"$set": {"initiated": db_time_utc}})
     for experiment_name in database_names:
+        if experiment_name in ["admin", "config", "local", "site"]:
+            continue
         __update_single_experiment_info(experiment_name)
         db_time_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
         logbookclient['explgbk_cache']['operations'].update_one({"name": "explgbk_cache_rebuild"}, {"$set": {"completed": db_time_utc}})
