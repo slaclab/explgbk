@@ -152,7 +152,6 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 			processData: false // Needed
 		})
 		.done(function(data, textStatus, jqXHR) {
-			data = JSON.parse(data);
 			if(data.success) {
 				console.log("Successfully posted follow elog entry");
 			} else {
@@ -201,7 +200,6 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  			processData: false // Needed
  		})
  		.done(function(data, textStatus, jqXHR) {
- 			data = JSON.parse(data);
  			if(data.success) {
  				console.log("Successfully edited elog entry");
  			} else {
@@ -253,6 +251,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
     	$(this).html('<i class="fas fa-plus expand_ctrl"></i>');
 	} else {
 		var clicked_elem = $(this);
+        entry.privileges = privileges;
 	    clicked_elem.closest(".edat").append(renderMSTemplate(elog_child_template, entry, { elog_chid_body_content: elog_chid_body_content } ));
 	    clicked_elem.closest(".edat").find(".followup").on("click", followup_function);
         clicked_elem.closest(".edat").find(".delete").on("click", delete_elog_entry);
@@ -498,7 +497,6 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
                   processData: false // Needed
               })
               .done(function(data, textStatus, jqXHR) {
-                  data = JSON.parse(data);
                   if(data.success) {
                       console.log("Successfully posted elog entry");
                   } else {
