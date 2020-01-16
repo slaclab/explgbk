@@ -20,15 +20,15 @@ $("#collab_tab").on("lg.loaded.bs.tab", function() {
   Mustache.parse(actions_tmpl);
   var refreshFunction = function() {
       $("#collab_tab .collabtbl tbody").empty();
-      $.when($.getJSON("ws/collaborators"), $.getJSON("ws/has_role", {"role_fq_name": "LogBook/Admin"}))
+      $.when($.getJSON("ws/collaborators"), $.getJSON("ws/has_role", {"role_fq_name": "LogBook/Manager"}))
       .done(function(d0, d1){
-          var collabs = d0[0], roleAdminPerms = d1[0], hasRoleAdmin = roleAdminPerms.value.hasRole;
+          var collabs = d0[0], roleManagerPerms = d1[0], hasRoleManager = roleManagerPerms.value.hasRole;
           _.each(collabs.value, function(c){c["id"] = _.replace(c["uid"], "uid:", "")});
           var rendered = $(Mustache.render(collab_tr_tmpl, collabs));
           $("#collab_tab .collabtbl tbody").append(rendered);
-          if(hasRoleAdmin) {
+          if(hasRoleManager) {
               _.each(collabs.value, function(collab) {
-                  _.each([["LogBook/Writer", "fa-pencil-alt", "Write/post log entries; enough for most people"], ["LogBook/Editor", "fa-edit", "Edit/change existing entries"], ["LogBook/Admin", "fa-gavel", "Add/remove collaborators"]], function(rl_ic){
+                  _.each([["LogBook/Writer", "fa-pencil-alt", "Write/post log entries; enough for most people"], ["LogBook/Editor", "fa-edit", "Edit/change existing entries"], ["LogBook/Manager", "fa-gavel", "Add/remove collaborators"]], function(rl_ic){
                         $("tr[data-uid='" + collab["uid"] + "'] td.collab_admin_actions").append(Mustache.render(actions_tmpl, {rl : rl_ic[0], ic: rl_ic[1], hasrole: _.indexOf(collab.roles, rl_ic[0]) != -1, tooltip: rl_ic[2] }));
                   });
                   $("tr[data-uid='" + collab["uid"] + "'] td.collab_admin_actions").append($("<span class='remove-collab'><i class='fas fa-lg fa-trash' aria-hidden='true'></i></span>"));

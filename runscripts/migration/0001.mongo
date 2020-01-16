@@ -51,15 +51,17 @@ for (nm of nms) {
 // We'll add it back then.
 db.getSiblingDB("site").roles.updateMany({"app": "LogBook"}, {"$pull": {"privileges": "manage_shifts"}})
 
-// Move the LDAP/Admin to LogBook/Admin
-db.getSiblingDB("site").roles.updateOne({"app": "LDAP", "name": "Admin"}, {"$set": {"app": "LogBook"}})
+// Move the LDAP/Admin to LogBook/Manager
+db.getSiblingDB("site").roles.updateOne({"app": "LDAP", "name": "Admin"}, {"$set": {"app": "LogBook", "name": "Manager"}})
+db.getSiblingDB("site").roles.updateOne({"app": "LogBook", "name": "Admin"}, {"$set": {"app": "LogBook", "name": "Manager"}})
 db.getSiblingDB("site").roles.updateOne({"app": "LogBook", "name": "Admin"}, {"$addToSet": {"privileges": {"$each": ["read", "post", "edit", "delete", "manage_groups"]}}})
 // We also need to do this in all the experiment databases.
 var mongo = db.getMongo();
 mongo.getDBNames().forEach(function (dbname) {
  var db = mongo.getDB(dbname);
  if (db.getCollectionNames().includes('roles')) {
-     db.roles.updateOne({"app": "LDAP", "name": "Admin"}, {"$set": {"app": "LogBook"}})
+     db.roles.updateOne({"app": "LDAP", "name": "Admin"}, {"$set": {"app": "LogBook", "name": "Manager"}})
+     db.roles.updateOne({"app": "LogBook", "name": "Admin"}, {"$set": {"app": "LogBook", "name": "Manager"}})
  }
 });
 

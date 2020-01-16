@@ -52,12 +52,12 @@ This application uses role based access control (RBAC) for authorization. Briefl
     So, there may be a role called <code>LabPersonnel</code> that reflects this function.
     Another example, in all experiments, there is a principal investigator (PI).
     The PI is the one who decides who is to be as a collaborator on an specific experiment.
-    So, there is a role called <code>Admin</code> that reflects this function and the PI is automatically added to this role when the experiment is initially registered.
+    So, there is a role called <code>Manager</code> that reflects this function and the PI is automatically added to this role when the experiment is initially registered.
  </dd>
 </div>
 <p>Roles tie the other two comcepts together.
 Each role has a list of privileges that the users who play that role are entitled to.
-For example, users who play the <code>Admin</code> role inherit these privileges <code>[manage_groups, read, post, edit, delete]</code>.
+For example, users who play the <code>Manager</code> role inherit these privileges <code>[manage_groups, read, post, edit, delete]</code>.
 The set of privileges associated with the role is defined during application installation and only changes during application upgrades.
 </p>
 <p>Each role is also associated with a list of user/groups who play that role.

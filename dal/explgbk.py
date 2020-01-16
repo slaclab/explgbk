@@ -114,14 +114,14 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
 
     if create_auto_roles:
         expdb["roles"].insert_many([
-            {"app" : "LogBook", "name": "Admin", "players": [ "uid:" + info["leader_account"]] },
+            {"app" : "LogBook", "name": "Manager", "players": [ "uid:" + info["leader_account"]] },
             {"app" : "LogBook", "name": "Editor", "players": [ "uid:" + info["leader_account"]] }
             ])
         if "posix_group" in info and len(info["posix_group"]) > 1:
             expdb["roles"].insert_one({"app" : "LogBook", "name": "Writer", "players": [ info["posix_group"]] })
         if security.get_current_user_id() != info["leader_account"] and not security.check_privilege_for_experiment("ops_page", None, None):
             expdb["roles"].update_one({"app" : "LogBook", "name": "Editor"}, {"$addToSet": { "players": "uid:" + security.get_current_user_id() }})
-            expdb["roles"].update_one({"app" : "LogBook", "name": "Admin"}, {"$addToSet": { "players": "uid:" + security.get_current_user_id() }})
+            expdb["roles"].update_one({"app" : "LogBook", "name": "Manager"}, {"$addToSet": { "players": "uid:" + security.get_current_user_id() }})
 
 
     if "initial_sample" in incoming_info and incoming_info["initial_sample"]:
