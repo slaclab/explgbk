@@ -181,12 +181,13 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                 _.last(traces)['xbins']['size'] = (_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount;
               });
           } else if (_.get(tblDef, "table_type") == "scatter") {
-              var dateformatfn = (_.head(_.tail(tblDef.coldefs))["source"] == "begin_time" || _.head(_.tail(tblDef.coldefs))["source"] == "end_time") ? function(d) { return moment(d).toDate() } : function(d) { return d };
+              var dateformatfn = (_.endsWith(_.head(_.tail(tblDef.coldefs))["source"], "_time")) ? function(d) { return moment(d).toDate() } : function(d) { return d };
               var xaxisdata = _.map(runData.value, function(rd){return dateformatfn(_.get(rd, _.head(_.tail(tblDef.coldefs))["source"]))});
               _.each(_.tail(_.tail(tblDef.coldefs)), function(coldef, idx) {
                 traces.push({x: xaxisdata, y: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "scatter", mode: "markers", showlegend: true, name: coldef["label"]});
               });
-          }
+              layout = { title: { text: clkRTblName }, xaxis: { title: { text: _.head(_.tail(tblDef.coldefs))["label"], xref: "paper" }}};
+              if(tblDef.coldefs.length == 3){ layout["yaxis"] = { title: { text: _.last(tblDef.coldefs)["label"], yref: "paper" }} }          }
           Plotly.newPlot(plotlyDivName, traces, layout, {displaylogo: false});
           return;
         }
@@ -200,7 +201,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
             row_tmpl = row_tmpl + "<td class='rtbl_separator'>&nbsp;</td>";
           } else if (coldef["is_editable"]) {
             row_tmpl = row_tmpl + "<td><div class='rtbl_editable_column_parent'><div contenteditable='true' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column'>{{" + coldef["source"] + "}}</div></div></td>";
-          } else if (coldef["source"] == "begin_time" || coldef["source"] == "end_time") {
+        } else if (_.endsWith(coldef["source"], "_time")) {
             row_tmpl = row_tmpl + "<td>{{#FormatDate}}{{" + coldef["source"] + "}}{{/FormatDate}}</td>";
           } else if (_.startsWith(coldef["mime_type"], "image/")) {
             row_tmpl = row_tmpl + "<td><img class='rtbl_thumbnail' src='{{" + coldef["source"] + "}}'></td>";

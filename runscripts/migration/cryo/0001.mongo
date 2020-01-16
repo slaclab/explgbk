@@ -1,5 +1,11 @@
 db.getSiblingDB("site")["site"].drop() // Drop the empty site collection.
 
+# Clear out all the global users and add just Yee who will then add a limited set of folks as global users.
+db.getSiblingDB("site")["roles"].updateMany({"app": "LogBook"}, {"$unset": {"players": 1}})
+db.getSiblingDB("site")["roles"].updateOne({"app": "LogBook", "name": "SiteAdmin"}, {"$addToSet": {"players": "uid:ytl"}})
+db.getSiblingDB("site")["roles"].updateOne({"app": "LogBook", "name": "LabPersonnel"}, {"$addToSet": {"players": "uid:ytl"}})
+
+
 if(db.getSiblingDB("site")["site_config"].find({}).count() < 1) {
     print("Inserting the site_config object");
     db.getSiblingDB("site")["site_config"].insertOne({})

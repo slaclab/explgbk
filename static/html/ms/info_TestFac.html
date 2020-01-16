@@ -1,0 +1,13 @@
+<div class="exp_info">
+ <h1>General Info</h1>
+   <div class="exp_details">
+       <div class="row"><span class="label col-3">Name:</span><span class="col-9">{{ info.name }}</span></div>
+       <div class="row"><span class="label col-3">Instrument:</span><span class="col-9">{{ info.instrument }}</span></div>
+       <div class="row"><span class="label col-3">Start Time:</span><span class="col-9">{{#FormatDate}}{{ info.start_time }}{{/FormatDate}}</span></div>
+       <div class="row"><span class="label col-3">End Time:</span><span class="col-9">{{#FormatDate}}{{ info.end_time }}{{/FormatDate}}</span></div>
+       <div class="row"><span class="label col-3">PI:</span><span class="col-9"><a href="mailto:{{ info.contact_email }}">{{ info.contact_name }}</a></span></div>
+       <div class="row"><span class="label col-3">PI Email:</span><span class="col-9">{{ info.contact_email }}</span></div>
+       <div class="row"><span class="label col-3" title="When the experiment was created, this account was given privileges to add/remove collaborators from the experiment.">Leader Account:</span><span class="col-9">{{info.leader_account}}</span></div>
+       <div class="row"><span class="label col-3">Description:</span><span class="col-9">{{ info.description }}</span></div>
+   </div>
+</div>

@@ -156,6 +156,21 @@ label {
   color: white;
   padding-right: 1em;
 }
+#cryo_info_samples {
+  margin-top: 1em;
+  text-align: left;
+}
+#cryo_info_samples h3 {
+  font-size: 1em;
+  color: #6685F4;
+  border-bottom: thin solid #6685F4;
+  text-align: left;
+  padding-left: 1em;
+  font-weight: bold;
+}
+#cryo_info_samples .label {
+  color: #6685F4;
+}
 .search_text_mixin {
   padding: 0.25em;
   border: thin solid #6685F4;
