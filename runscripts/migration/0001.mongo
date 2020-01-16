@@ -11,6 +11,13 @@ db.getSiblingDB("site").roles.replaceOne({ "app" : "LogBook", "name" : "LabPerso
            "privileges" : [ "read", "post", "edit", "delete", "manage_groups", "feedback_read", "feedback_write", "switch", "ops_page", "experiment_create", "experiment_edit", "instrument_create" ],
            "players" : [ "uid:mshankar", "uid:wilko", "uid:cpo", "uid:perazzo"]}, {upsert: true});
 
+let siteadmin_privileges = db.getSiblingDB("site").roles.findOne({ "app" : "LogBook", "name" : "LabPersonnel"})["privileges"];
+siteadmin_privileges.push('experiment_delete');
+db.getSiblingDB("site").roles.replaceOne({ "app" : "LogBook", "name" : "SiteAdmin"},
+        { "app" : "LogBook", "name" : "SiteAdmin",
+          "privileges" : siteadmin_privileges,
+          "players" : [ "uid:mshankar", "uid:wilko", "uid:cpo", "uid:perazzo"]}, {upsert: true});
+
 // For Cryo, we'll create another role that has no access to the ops page but has the abiility to create/edit experiments and switch their own experiment.
 db.getSiblingDB("site").roles.insertOne({"app" : "LogBook", "name" : "PowerUsers",
   "privileges" : [ "switch", "experiment_create", "experiment_edit" ]
