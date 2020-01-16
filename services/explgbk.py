@@ -1173,7 +1173,7 @@ def svc_delete_run_table(experiment_name):
     is_system_run_table = json.loads(request.values.get("is_system_run_table", "False"))
     if is_system_run_table:
         logger.debug("Deleting system run table")
-        if context.roleslookup.has_slac_user_role(context.security.get_current_user_id(), "LogBook", "Editor", ":"):
+        if context.security.check_privilege_for_experiment("edit", None, None):
             status, errormsg = delete_system_run_table(experiment_name, table_name)
             return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": None})
         else:
