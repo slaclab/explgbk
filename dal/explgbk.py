@@ -884,23 +884,6 @@ def get_runtable_data(experiment_name, tableName, sampleName):
                 x['sample'] = samples[x['sample']]['name']
             return x
         rtdata = map(__replace_with_sample_name, rtdata)
-    def __lookup_file_times__(rtdata, attr_name, sortorder):
-        times = {x["_id"] : x for x in logbookclient[experiment_name]['runs'].aggregate([
-            { "$lookup": { "from": "file_catalog", "localField": "num", "foreignField": "run_num", "as": "files"}},
-            {"$unwind": "$files"},
-            {"$sort": {"num": 1, "files.create_timestamp": sortorder}},
-            {"$group": {"_id": "$num", "create_timestamp": {"$first": "$files.create_timestamp"}}}])}
-        def __set_file_time__(x):
-            if x["num"] in times:
-                x[attr_name] = times[x["num"]]["create_timestamp"]
-            return x
-        rtdata = map(__set_file_time__, rtdata)
-        return rtdata
-    if "first_file" in sources.keys():
-        rtdata = __lookup_file_times__(rtdata, "first_file", 1) # Sort ascending to determine first file
-    if "last_file" in sources.keys():
-        rtdata = __lookup_file_times__(rtdata, "last_file", -1)
-
     return rtdata
 
 def get_run_param_descriptions(experiment_name):
@@ -927,9 +910,7 @@ def get_runtable_sources(experiment_name):
         {"label": "End time", "description": "The end of the run", "source": "end_time", "category": "Run Info"},
         {"label": "Type", "description": "The run type", "source": "type", "category": "Run Info"},
         {"label": "Sample", "description": "The sample associated with the run", "source": "sample", "category": "Run Info"},
-        {"label": "Run Duration", "description": "The duration of the run", "source": "duration", "category": "Run Info"},
-        {"label": "First file", "description": "The creation timestamp of the first file", "source": "first_file", "category": "Run Info"},
-        {"label": "Last file", "description": "The creation timestamp of the most recent file", "source": "last_file", "category": "Run Info"}]
+        {"label": "Run Duration", "description": "The duration of the run", "source": "duration", "category": "Run Info"}]
     rtbl_sources["Editables"] = [ { "label": x["_id"], "description": x["_id"], "source": "editable_params."+x["_id"]+".value", "category": "Editables" } for x in expdb.runs.aggregate([
         { "$project": { "editables": { "$objectToArray": "$editable_params" } } },
         { "$unwind": "$editables" },
