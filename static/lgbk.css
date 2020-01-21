@@ -120,7 +120,6 @@ label {
   color: #6685F4;
   border-bottom: thin solid #6685F4;
   text-align: left;
-  padding-left: 1em;
 }
 .exp_info .group .header {
   font-weight: bold;
@@ -165,10 +164,13 @@ label {
   color: #6685F4;
   border-bottom: thin solid #6685F4;
   text-align: left;
-  padding-left: 1em;
   font-weight: bold;
 }
-#cryo_info_samples .label {
+#cryo_info_samples .sample_info {
+  border-bottom: thin solid #6685F4;
+  padding-bottom: 0.5em;
+}
+#cryo_info_samples .sample_info .label {
   color: #6685F4;
 }
 .search_text_mixin {

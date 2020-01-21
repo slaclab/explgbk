@@ -15,14 +15,14 @@
    $("#info_tab").on("info_loaded", function(ev, info){
        $.when($.getJSON("ws/runs", {includeParams: false}), $.getJSON("ws/samples"))
        .done(function(d0, d1){
-           let sample2runs = _.groupBy(d0[0].value, "sample"), sample2earlieststarttime = _.sortBy(_.map(sample2runs, function(v, k){return {"sample": k, "earliest_run": _.min(_.map(v, function(x){ return moment(x["begin_time"]).toDate()}))}}), "earliest_run"), samples = _.keyBy(d1[0].value, "_id");
-           let sampletmpl = {{=<% %>=}}`<div class="row"><span class="label col-2">Sample Name:</span><span class="col-4">{{name}}</span><span class="label col-2">Number of images:</span><span class="col-4">{{sampleruncount}}</span></div>
+           let sample2runs = _.groupBy(d0[0].value, "sample"), sample2earlieststarttime = _.sortBy(_.map(sample2runs, function(v, k){return {"sample": k, "earliest_run": _.min(_.map(v, function(x){ return moment(x["begin_time"]).toDate()}))}}), "earliest_run"), samples = d1[0].value;
+           let sampletmpl = {{=<% %>=}}`<div class="sample_info"><div class="row"><span class="label col-2">Sample Name:</span><span class="col-4">{{name}}</span><span class="label col-2">Number of images:</span><span class="col-4">{{sampleruncount}}</span></div>
            <div class="row"><span class="label col-2">Sample Description:</span><span class="col-10">{{description}}</span></div>
-           <div class="row"><span class="label col-2">Time Started:</span><span class="col-4">{{#FormatDate}}{{first_run}}{{/FormatDate}}</span><span class="label col-2">Time Ended:</span><span class="col-4">{{#FormatDate}}{{last_run}}{{/FormatDate}}</span></div>`;<%={{ }}=%>
+           <div class="row"><span class="label col-2">Time Started:</span><span class="col-4">{{#FormatDate}}{{first_run}}{{/FormatDate}}</span><span class="label col-2">Time Ended:</span><span class="col-4">{{#FormatDate}}{{last_run}}{{/FormatDate}}</span></div></div>`;<%={{ }}=%>
            Mustache.parse(sampletmpl);
-           _.each(sample2earlieststarttime, function(v){
-               let sampleObj = samples[v["sample"]];
-               sampleObj.sampleruns = sample2runs[v["sample"]];
+           _.each(_.sortBy(samples, "name"), function(v,k){
+               let sampleObj = v;
+               sampleObj.sampleruns = _.get(sample2runs, v["_id"], []);
                sampleObj.sampleruncount = sampleObj.sampleruns.length;
                sampleObj.first_run = _.min(_.map(sampleObj.sampleruns, function(r){return moment(r["begin_time"]).toDate()}));
                sampleObj.last_run = _.max(_.map(sampleObj.sampleruns, function(r){return moment(r["begin_time"]).toDate()}));
