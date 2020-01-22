@@ -813,6 +813,16 @@ def get_experiment_runs(experiment_name, include_run_params=False, sample_name=N
             { "$sort": { "num": -1 }}
         ])]
 
+def get_experiment_run_document(experiment_name, rnum):
+    '''
+    Get the run document for the specified run.
+    '''
+    expdb = logbookclient[experiment_name]
+    run_doc = expdb['runs'].find_one({"num": rnum})
+    return run_doc
+
+
+
 def get_all_run_tables(experiment_name):
     '''
     Get specifications for both the default and user defined run tables.

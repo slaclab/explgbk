@@ -276,8 +276,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
          $(this).html('<i class="fas fa-plus expand_ctrl"></i>');
      } else {
          var clicked_elem = $(this);
-         $.getJSON("ws/run_table_sources")
-         .done(function(param_defs) {
+         $.when($.getJSON("ws/run_table_sources"), $.getJSON("ws/runs/"+entry["num"]))
+         .done(function(d0, d1) {
+             let param_defs = d0[0];
+             entry["params"] = _.get(d1[0], "value.params", {});
              // src2catdesc is a flattened dict of arrays of dicts into a dict indexed by the source attribute.
              var src2catdesc = _.fromPairs(_.map(_.flatten(_.concat(_.values(param_defs.value))), function(pd) { return [_.replace(pd['source'], "params.", ""), { category: pd['category'], description: pd['description']}]})), categorized_params = {};
              _.each(entry["params"], function(v, k){
@@ -415,8 +417,9 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
               skip_websocket_elog_messages = true;
           });
       } else {
-          var elog_params = {};
+          var elog_params = {includeParams: false};
           if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { elog_params["sampleName"] = sample_showing_in_UI; }
+          $("#elog_content").html('<div class="loading">Loading</div>');
           $.when($.getJSON("ws/elog", elog_params), $.getJSON("ws/runs", elog_params))
           .done(function(d1, d2){
               var elogData = d1[0], runData = d2[0];

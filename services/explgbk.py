@@ -46,7 +46,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     get_elog_tree_for_specified_id, get_workflow_definitions, get_dm_locations, get_workflow_triggers, \
     create_update_wf_definition, get_workflow_jobs, get_workflow_job_doc, create_wf_job, delete_wf_job, update_wf_job, \
     file_available_at_location, get_collaborators_list_for_experiment, get_site_naming_conventions, delete_sample_for_experiment, \
-    get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location
+    get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
+    get_experiment_run_document
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -1040,6 +1041,21 @@ def svc_get_files_for_run(experiment_name, run_num):
 def svc_get_runs(experiment_name):
     include_run_params = json.loads(request.args.get("includeParams", "true"))
     return JSONEncoder().encode({"success": True, "value": get_experiment_runs(experiment_name, include_run_params, sample_name=request.args.get("sampleName", None))})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs/<run_num>", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_run_document(experiment_name, run_num):
+    try:
+        rnum = int(run_num)
+    except ValueError:
+        rnum = run_num # Cryo uses strings for run numbers.
+    run_doc = get_experiment_run_document(experiment_name, rnum)
+    if not run_doc:
+        return logAndAbort("Cannot find run document for " + rnum)
+    return JSONEncoder().encode({"success": True, "value": run_doc})
+
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs_for_calib", methods=["GET"])
 @context.security.authentication_required
