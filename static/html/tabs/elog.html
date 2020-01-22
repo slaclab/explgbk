@@ -374,6 +374,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   };
 
   var processRunResponse = function(data) {
+      if(!_.get(window, "showRuns", true)) { return [] };
       var runEntries = [];
       var addRunEntry = function(run, run_end) { // If run_end is true; we insert a stop event.
           var runData = _.clone(run);
@@ -563,6 +564,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 $("#elog_tab").on("lg.shown.bs.tab", function() {
     var tab_toolbar = `<input type="text" placeholder="Search/Run etc - see tooltip" title="Search;Author;Tag;Run;Run-Run;date(MM/DD/YYYY);date-date" id="elog_search_text">
     <span id="elog_new_entry"><i class="fas fa-plus fa-lg" title="Post a new elog entry"></i></span>
+    <span id="elog_toggle_runs"><i class="fas fa-running fa-lg" title="Hide/show the runs"></i></span>
     <span id="elog_attachments_only"><i class="fas fa-paperclip fa-lg" title="Toggle attachments only"></i></span>
     <span id="elog_deleted_entries"><i class="fas fa-strikethrough fa-lg" title="Toggle deleted entries"></i></span>
     <span id="elog_email_subscribe"><i class="fas fa-envelope-open fa-lg" title="Email subscription"></i></span>`;
@@ -578,6 +580,10 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
             skip_websocket_elog_messages = true;
         }
         $("#elog_attachments_only").toggleClass("pushedin");
+    });
+    $("#elog_toggle_runs").on("click", function() {
+        window.showRuns = !_.get(window, "showRuns", true);
+        $("#elog_tab").data("refresh")();
     });
     $("#elog_deleted_entries").on("click", function() {
         if($("#elog_deleted_entries").hasClass("pushedin")) {
