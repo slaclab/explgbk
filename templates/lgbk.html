@@ -38,7 +38,7 @@
     var sample_showing_in_UI = current_sample_at_DAQ;
     var privileges = {{ privileges|safe }};
     var auth_expiration_time = {{ auth_expiration_time }};
-    var current_run_url = "../../run_control/{{experiment_name}}/ws/current_run";
+    var current_run_url = "../{{experiment_name}}/ws/current_run";
     var elog_emails = "../{{experiment_name}}/ws/elog_emails";
     var show_feedback= {{show_feedback}};
     var feedback_survey_def = "../../static/json/feedback_{{logbook_site}}.json";
