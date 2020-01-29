@@ -7,14 +7,14 @@
         </h4>
        </div>
        <div class="modal-body">
-         <div class="text-primary">Please activate experiments on an instrument/station only after the previous experiment is finished. In some cases, you may need to restart the DAQ and other hutch specific software.</div>
+         <div class="text-primary">Please activate the experiment on an instrument/station only after the previous experiment {{#currently_used_by}}{{.}}{{/currently_used_by}} is finished.</div>
          <div class="text-danger message"></div>
          <form>
           <div class="d-none">
               <div>This instrument has multiple stations. Please choose a station.</div>
               <table class="table table-condensed table-striped table-bordered">
-                <thead><tr><th>Instrument</th><th>Station number</th></thead>
-                <tbody>{{#stations}}<tr class="station" data-station="{{station}}"><td>{{instrument}}</td><td>{{station}}</td></tr>{{/stations}}</tbody>
+                <thead><tr><th>Instrument</th><th>Station number</th><th>Currently used by</th></thead>
+                <tbody>{{#stations}}<tr class="station" data-station="{{station}}"><td>{{instrument}}</td><td>{{station}}</td><td>{{#currently_used_by}}{{.}}{{/currently_used_by}}</td></tr>{{/stations}}</tbody>
               </table>
           </div>
           <div class="modal-footer">

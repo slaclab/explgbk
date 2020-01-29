@@ -195,11 +195,15 @@ $(document).ready(function() {
             let rendered = $(`<li><button class="navbar_icon_btn switch" title="Make this experiment the current experiment on an instrument"><span class="btntext">Switch</span><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></button></li>`);
             $("#myNavbar").find(".session_items").before(rendered);
             rendered.on("click", function(){
-                $.when($.ajax('../../static/html/ms/switch_within_experiment.html'), $.getJSON("../ws/instrument_station_list"))
-                .done(function(d0, d1){
+                $.when($.ajax('../../static/html/ms/switch_within_experiment.html'), $.getJSON("../ws/instrument_station_list"), $.getJSON("../ws/activeexperiments"))
+                .done(function(d0, d1, d2){
                     let mdltmpl = d0[0], stations_by_ins = _.groupBy(d1[0].value, "instrument"), msobj = {experiment: experiment_name, instrument: instrument_name};
                     if(_.get(stations_by_ins, instrument_name, []).length > 1) {
                         msobj["stations"] = _.get(stations_by_ins, instrument_name);
+                        _.each(msobj["stations"], function(is){ is["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] = is["instrument"] && x["station"] == is["station"]}), "name", "") })
+                        console.log(msobj);
+                    } else {
+                        msobj["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] = instrument_name && x["station"] == 0}), "name", "")
                     }
                     let rendered = $(Mustache.render(mdltmpl, msobj));
                     rendered.data("selected_station", 0);
