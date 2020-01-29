@@ -195,7 +195,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
 
   $("#samples_tab").data("edit_sample", edit_sample);
 
-  var sample_tr_tmpl = `{{#value}}<tr {{#current}}class="active_sample"{{/current}}><td>{{ name }}</td><td>{{ description }}</td><td>
+  var sample_tr_tmpl = `{{#value}}<tr {{#current}}class="active_sample"{{/current}}><td><a class="smplnm" href="#">{{ name }}</a></td><td>{{ description }}</td><td>
       <span title="Display sample details"><i class="fas fa-info-circle listview-action"></i></span>
       <span title="Edit sample details"><i class="fas fa-edit listview-action"></i></span>
       <span title="Clone sample"><i class="fas fa-clone listview-action"></i></span>
@@ -228,10 +228,12 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
         var existing_sample_name = $(this).closest("tr").find("td").first().text();
         clone_sample(existing_sample_name);
     });
-    rendered.find(".fa-info-circle").parent().on("click", function(){
-        var sample_name = $(this).closest("tr").find("td").first().text();
+    let smplinfofn = function(dis) {
+        var sample_name = dis.closest("tr").find("td").first().text();
         $.getJSON("ws/samples/"+sample_name).done(function(data){display_sample(data["value"]);})
-    });
+    }
+    rendered.find(".fa-info-circle").parent().on("click", function(){ smplinfofn($(this)) });
+    rendered.find(".smplnm").on("click", function(){ smplinfofn($(this)) });
     rendered.find(".fa-trash").parent().on("click", function(){
       var sample_name = $(this).closest("tr").find("td").first().text();
       $.getJSON("ws/samples/"+sample_name).done(function(data){delete_sample(data["value"]);})
