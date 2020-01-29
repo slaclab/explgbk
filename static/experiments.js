@@ -120,14 +120,11 @@ $(function() {
 
 
         	$("#searchtab").on("input", function(e) {
-        		if($("#searchtext").val().length > 2) {
-        			var curname = $("#searchtext").val();
-        			var matchexps = [];
-        			_.each(exp_names, function(exp_name){
-        				if(_.startsWith(exp_name, curname)) {
-        					matchexps.push(name2info[exp_name]);
-        				}
-        			});
+        		if($("#searchtext").val().length > 1) {
+                    var curnamerx = new RegExp(".*"+$("#searchtext").val()+".*", 'i');
+                    var matchexps = _.filter(_.values(name2info), function(exp) {
+                        return curnamerx.test(exp["name"]) || curnamerx.test(exp["contact_info"]) || curnamerx.test(exp["description"]);
+                    });
         			if(matchexps.length > 0) {
         				var expdata = {value: matchexps};
             			expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
