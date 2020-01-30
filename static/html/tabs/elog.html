@@ -176,11 +176,11 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
     if(_.has(entry, "title")) {
         current_text_mode_html = true;
         rendered.find(".log_title").val(entry["title"]);
-        rendered.find(".log_title_div").removeClass("hidden");
+        rendered.find(".log_title_div").removeClass("d-none");
         rendered.find(".elog_followup_html").remove();
         rendered.find("textarea").first().summernote(summernote_options);
     } else {
-        rendered.find(".elog_followup_html").on("click", function() { $(this).closest(".followup_div").find(".log_title_div").removeClass("hidden"); $(this).closest(".followup_div").find("textarea").summernote(summernote_options); current_text_mode_html=true; $(this).remove(); });
+        rendered.find(".elog_followup_html").on("click", function() { $(this).closest(".followup_div").find(".log_title_div").removeClass("d-none"); $(this).closest(".followup_div").find("textarea").summernote(summernote_options); current_text_mode_html=true; $(this).remove(); });
     }
     rendered.find("input[name='log_tags']").val(_.join(_.get(entry, "tags", []), " "));
  	rendered.find(".followup_post").on("click", function(){

@@ -63,7 +63,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
          $("#rtbl_def_name").val(tblDef["name"]);
          $("#rtbl_def_desc").val(tblDef["description"]);
          $("#rtbl_def_table_type").val(_.get(tblDef, "table_type", "table"));
-         if($("#rtbl_def_table_type").val() == "histogram") { $("#rtbl_hist_params").removeClass("hidden"); }
+         if($("#rtbl_def_table_type").val() == "histogram") { $("#rtbl_hist_params").removeClass("d-none"); }
          $("#rtbl_def_bin_count").val(_.get(tblDef, "bin_count", 100));
          _.each(_.tail(tblDef["coldefs"]), function(coldef, index){
              var coldefrow = template_tr.clone(true);
