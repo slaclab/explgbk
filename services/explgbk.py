@@ -208,7 +208,10 @@ def svc_search_experiment_info():
     This only searches against basic information like the name, description, PI etc.
     """
     search_terms = request.args.get("search_text", "")
-    return jsonify({'success': True, 'value': text_search_for_experiments(search_terms)})
+    experiments = get_experiments_for_user(context.security.get_current_user_id())
+    matching_experiment_names = [x["name"] for x in text_search_for_experiments(search_terms)]
+    user_matches = [x for x in experiments if x["name"] in matching_experiment_names]
+    return jsonify({'success': True, 'value': user_matches})
 
 
 @explgbk_blueprint.route("/lgbk/ws/postable_experiments", methods=["GET"])

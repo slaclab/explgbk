@@ -67,7 +67,7 @@ def save_new_experiment_setup(experiment_name, setup_document, userid):
     expdb['info'].find_one_and_update({}, {'$set': {'latest_setup': latest_setup_id}})
 
 
-def register_new_experiment(experiment_name, incoming_info, create_auto_roles=True):
+def register_new_experiment(experiment_name, incoming_info, create_auto_roles=True, skip_initial_objects=False):
     """
     Registers a new experiment.
     In mongo, this mostly means creating the info object, the run number counter and various indices.
@@ -102,6 +102,11 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
     expdb["file_catalog"].create_index( [("run_num", DESCENDING)])
     expdb["run_tables"].create_index( [("name", ASCENDING)], unique=True)
     expdb["workflow_definitions"].create_index( [("name", ASCENDING)], unique=True)
+
+    if skip_initial_objects:
+        logger.debug("Skipping creating initial objects")
+        # We do this for internal calls clone/rename as they copy over the collections as they are.
+        return (True, "")
 
     # Create a default shift
     expdb["shifts"].insert_one( { "name" : "Default",
@@ -152,7 +157,7 @@ def update_existing_experiment(experiment_name, incoming_info):
     expdb['info'].update_one({}, { "$set": info })
     return (True, "")
 
-def clone_experiment(experiment_name, source_experiment_name, incoming_info, copy_specs):
+def clone_experiment(experiment_name, source_experiment_name, incoming_info, copy_specs, skip_initial_objects=False):
     """
     Registers a new experiment based on an existing experiment.
     We use the "info" of the existing experiment as a template for the new experiment.
@@ -177,13 +182,12 @@ def clone_experiment(experiment_name, source_experiment_name, incoming_info, cop
     if "experiment_name" in info: # Bug from previous releases?
         del info["experiment_name"]
 
-    status, msg = register_new_experiment(experiment_name, info, create_auto_roles=False)
+    status, msg = register_new_experiment(experiment_name, info, create_auto_roles=False, skip_initial_objects=skip_initial_objects)
     if not status:
         return (status, msg)
 
     def copy_collection_from_src_to_clone(collection_name):
         for doc in src_exp_db[collection_name].find({}):
-            del doc["_id"]
             expdb[collection_name].insert_one(doc)
 
     for coll, cp_select in copy_specs.items():
@@ -203,16 +207,26 @@ def rename_experiment(experiment_name, new_experiment_name):
     if experiment_name in [x["name"] for x in get_currently_active_experiments() if "name" in x]:
         return (False, "Experiment %s is currently active" % experiment_name)
 
-    logbookclient.admin.command('copydb', check=True, fromdb=experiment_name, todb=new_experiment_name)
+    src_exp_db = logbookclient[experiment_name]
+    info = src_exp_db["info"].find_one()
+    mods = {}
+    mods["start_time"] = info["start_time"].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    mods["end_time"] = info["end_time"].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
-    expdb = logbookclient[new_experiment_name]
-    info = {}
-    info.update(expdb["info"].find_one())
-    info["_id"]  = new_experiment_name
-    info["name"] = new_experiment_name
-    expdb["info"].delete_one({"_id": experiment_name})
-    expdb["info"].insert_one(info)
+    copy_specs = { x : True for x in src_exp_db.collection_names() }
+    for cn in ["info", "counters"]:
+        copy_specs[cn] = False
+    status, msg = clone_experiment(new_experiment_name, experiment_name, mods, copy_specs, skip_initial_objects=True)
+    if not status:
+        return (status, msg)
 
+    new_exp_db = logbookclient[new_experiment_name]
+
+    # Before dropping the src database, we should copy over the run counter.
+    run_counter = src_exp_db["counters"].find_one({'_id': "next_runnum"})
+    new_exp_db["counters"].update_one({'_id': "next_runnum"}, {"$set": {'seq': run_counter['seq']}})
+
+    logger.info("Dropping the experiment database for %s", experiment_name)
     logbookclient.drop_database(experiment_name)
 
     return (True, "")

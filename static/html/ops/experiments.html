@@ -21,7 +21,10 @@
 
 <script type="text/javascript">
 $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
-
+  var show_validation_message = function(message) {
+    $("#exp_mdl_holder").find(".validation_message").html(message);
+    $("#exp_mdl_holder").find(".validation_modal").modal("show");
+  }
   $("#register_edit_exp_tab").data("register_experiment_function", function() { lgbk_create_edit_exp({ contact_info: "", start_time : moment(), end_time : moment().add(2, 'days')}); });
 
   var clone_exp = function() {
