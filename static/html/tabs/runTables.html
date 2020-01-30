@@ -35,7 +35,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
        var validations = [
         [function() { return $.trim($("#rtbl_def_name").val()) == ""; }, "Table name cannot be blank."],
         [function() { return $.trim($("#rtbl_def_desc").val()) == ""; }, "Please enter a brief description."],
-        [function() { return !/^([a-zA-Z0-9_-]+)$/.test($("#rtbl_def_name").val())}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores only; please don't use spaces, periods etc."],
+        [function() { return !/^([\w-\s]+)$/.test($("#rtbl_def_name").val())}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores and spaces only."],
         [function() { return !/^([0-9]+)$/.test($("#rtbl_def_bin_count").val())}, "Please enter an integer number of bins."],
         [function() { return $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length <= 0; }, "At least one column definition should have a complete column definition."],
         [function() { return _.some($("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find("[name=label]").val() != "" }).map(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}) }), "length") }, "If the column name for a column definition is defined, then the column source(s) must be defined as well"],
@@ -244,7 +244,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
           $("#toolbar_for_tab").find(".tlbr").hide();
       }
     });
-    rendered.find( _.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name=" + sessionStorage['runtable_active_tab'] + "]") : ".rtbl_pill").first().trigger("click");
+    rendered.find( _.has(sessionStorage, 'runtable_active_tab') ? ("[data-rtbl-name='" + sessionStorage['runtable_active_tab'] + "']") : ".rtbl_pill").first().trigger("click");
     sessionStorage.removeItem("runtable_active_tab");
     $(document).on('runs', function(event, runData) {
       console.log("Processing web socket event for run " + runData.value['num'] + " for experiment " + runData['experiment_name'] + " CRUD=" + runData["CRUD"]);
@@ -277,7 +277,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                 var formObj = $("#rtbl_tab").find(".mdl_holder").find("form");
                 var validations = [
                     [function() { return $.trim(formObj.find(".new_object_name").val()) == ""; }, "New object name cannot be blank."],
-                    [function() { return !/^([a-zA-Z0-9_-]+)$/.test($.trim(formObj.find(".new_object_name").val()))}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores only; please don't use spaces, periods etc."],
+                    [function() { return !/^([\w-\s]+)$/.test($.trim(formObj.find(".new_object_name").val()))}, "We limit the special characters that can be used in table names.  Alpha-numeric with underscores and spaces only."],
                     [function() { return _.find($("#rtbl_tab").data("tblData"), function(shf){return shf.name == $.trim(formObj.find(".new_object_name").val())}) != undefined }, "The run table name already exists."]
                 ];
                 // Various validations
@@ -324,7 +324,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                 var formObj = $("#rtbl_tab").find(".mdl_holder").find("form");
                 var validations = [
                     [function() { return $.trim(formObj.find(".new_object_name").val()) == ""; }, "New object name cannot be blank."],
-                    [function() { return !/^([a-zA-Z0-9_-]+)$/.test($.trim(formObj.find(".new_object_name").val()))}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores only; please don't use spaces, periods etc."]
+                    [function() { return !/^([\w-\s]+)$/.test($.trim(formObj.find(".new_object_name").val()))}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores and spaces only."]
                 ];
                 // Various validations
                 var v_failed = false;
