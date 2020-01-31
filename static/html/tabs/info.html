@@ -7,30 +7,6 @@
 
 <script type="text/javascript">
   $("#info_tab").on("lg.loaded.bs.tab", function() {
-      var save_function = function() {
-		  $("#info_tab").find(".lg-autoupdate").prop('readonly', true);
-		  var setup_details = {};
-		  $("#info_tab").find(".lg-autoupdate").each(function() { setup_details[$(this).attr("data-attr")] = $(this).val()});
-		  console.log(setup_details);
-		  $.ajax({
-			  type: "POST",
-			  contentType: "application/json; charset=utf-8",
-			  url: "ws/info/setup",
-			  data: JSON.stringify(setup_details),
-			  dataType: "json"
-			})
-			.done(function() {
-				  $("#info_toolbar").html('<a id="info_edit" href="#"><i class="fas fa-edit"></i> Edit</a>');
-				  $("#info_edit").on("click", edit_function);
-			  })
-		    .fail( function() { alert("Error when updating setup details"); })
-	  }
-	  var edit_function = function() {
-		  $("#info_tab").find(".lg-autoupdate").prop('readonly', false);
-		  $("#info_toolbar").html('<a id="info_save" href="#"><i class="fas fa-save"></i> Save</a>');
-		  $("#info_save").on("click", save_function);
-	  }
-
       $.when($.ajax("../../static/html/ms/info_" + logbook_site + ".html"), $.getJSON("ws/info"))
       .done(function(d0, d1) {
           var tmpl = d0[0], info = d1[0].value, contact_info = info.contact_info, parts = contact_info.split(')')[0].split('(');
@@ -38,7 +14,6 @@
           info.contact_email = parts[1];
           Mustache.parse(tmpl);
           $("#info_tab").find(".lgcontent").empty().append($(Mustache.render(tmpl, {info: info, FormatDate: function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss")}}})));
-          $("#info_edit").on("click", edit_function);
           $("#info_tab").trigger("info_loaded", info);
       })
   });

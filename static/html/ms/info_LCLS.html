@@ -1,28 +1,30 @@
 <div class="exp_info">
  <h1>General Info</h1>
-  <div id="info_toolbar"><a id="info_edit" href="#"><i class="fas fa-edit"></i> Edit</a></div>
 
 <div class="exp_details">
-<div class="row"><span class="label col-2">Name:</span><span class="col-10">{{ info.name }}</span></div>
-<div class="row"><span class="label col-2">Instrument:</span><span class="col-10">{{ info.instrument }}</span></div>
-<div class="row"><span class="label col-2">PI:</span><span class="col-10"><a href="mailto:{{ info.contact_email }}">{{ info.contact_name }}</a></span></div>
-<div class="row"><span class="label col-2">Title:</span><span class="col-10">{{ info.description }}</span></div>
+    <div class="row"><span class="label col-3">Name:</span><span class="col-9">{{ info.name }}</span></div>
+    <div class="row"><span class="label col-3">Instrument:</span><span class="col-9">{{ info.instrument }}</span></div>
+    <div class="row"><span class="label col-3">Start Time:</span><span class="col-9">{{#FormatDate}}{{ info.start_time }}{{/FormatDate}}</span></div>
+    <div class="row"><span class="label col-3">End Time:</span><span class="col-9">{{#FormatDate}}{{ info.end_time }}{{/FormatDate}}</span></div>
+    <div class="row"><span class="label col-3">PI:</span><span class="col-9"><a href="mailto:{{ info.contact_email }}">{{ info.contact_name }}</a></span></div>
+    <div class="row"><span class="label col-3">PI Email:</span><span class="col-9">{{ info.contact_email }}</span></div>
+    <div class="row"><span class="label col-3" title="When the experiment was created, this account was given privileges to add/remove collaborators from the experiment.">Leader Account:</span><span class="col-9">{{info.leader_account}}</span></div>
+    <div class="row"><span class="label col-3">Description:</span><span class="col-9">{{ info.description }}</span></div>
+    {{#info.params.PNR}}<div class="row"><span class="label col-3">URAWI Proposal:</span><span class="col-9">{{.}}</span></div>{{/info.params.PNR}}
+    {{#info.params.DATA_PATH}}<div class="row"><span class="label col-3">Initial mount:</span><span class="col-9">{{.}}</span></div>{{/info.params.DATA_PATH}}
 </div>
 
-<div class="exp_info">
- <h1>Questionnaire</h1>
+<div class="ques_embed">
  <div class="ques_tabs">
  </div>
 </div>
 
 <script type="text/javascript">
 $("#info_tab").on("info_loaded", function(ev, info){
-    var no_ques_msg = '<p class="no_ques">Unable to load the setup from the questionnaire. If you believe that there was setup information associated with this experiment, please contact LCLS data management to retrieve the setup information for you. </p>';
     if(_.has(info, "params.PNR")) {
+        $("#info_tab").find(".ques_embed").prepend($("<h1 class='pt-2'>Questionnaire</h1>"));
         $.getJSON("../../../questionnaire_slac/ws/questionnaire/urawidata/" + _.get(info, "params.PNR"))
         .done(function(ques_data){
-            var addnlGenInfo = `<dt>Abstract:</dt><dd><% info.proposalAbstract %></dd>`;
-            $("#info_tab").find(".dl-horizontal").first().append(Mustache.render(addnlGenInfo, ques_data, {}, ["<%", "%>"]));
             $("#info_tab").find(".ques_tabs").first().append('<iframe class="sitespecific_iframe" src=../../../questionnaire_slac/proposal_questionnaire/' + _.get(ques_data, "run_period") + '/' + _.get(info, "params.PNR") + '/?hideHeader=true></iframe>');
             $(document).on("resize_embedded_iframe", function(ev, newh){
                 console.log("Changing embedded IFrame's height to " + newh);
@@ -30,17 +32,17 @@ $("#info_tab").on("info_loaded", function(ev, info){
             })
             $.getJSON("../../../questionnaire_slac/ws/proposal/attribute/" + _.get(ques_data, "run_period") + '/' + _.get(info, "params.PNR"))
             .done(function(ques_attr){
+                console.log(ques_attr);
                 var pocs = _.fromPairs(_.filter(_.map(_.get(ques_attr, "personnel"), function(ps) { if(_.get(ps, "id") ==  "personnel-poc-sci1" || _.get(ps, "id") == "personnel-poc-sci2") return [_.get(ps, "id"), _.get(ps, "val")]; })));
-                var poctmpl = `<%# personnel-poc-sci1 %><dt>POC 1:</dt><dd><% personnel-poc-sci1 %></dd><%/ personnel-poc-sci1 %><%# personnel-poc-sci2 %><dt>POC 2:</dt><dd><% personnel-poc-sci2 %></dd><%/ personnel-poc-sci2 %>`
-                $("#info_tab").find(".dl-horizontal").first().append(Mustache.render(poctmpl, pocs, {}, ["<%", "%>"]));
+                var poctmpl = {{=<% %>=}}`{{#personnel-poc-sci1}}<div class="row"><span class="label col-3">POC 1:</span><span class="col-9">{{personnel-poc-sci1}}</span></div>{{/personnel-poc-sci1}}{{#personnel-poc-sci2}}<div class="row"><span class="label col-3">POC 2:</span><span class="col-9">{{personnel-poc-sci2}}</span></div>{{/personnel-poc-sci2}}`<%={{ }}=%>
+                $("#info_tab").find(".exp_details").first().append(Mustache.render(poctmpl, pocs, {}));
             }).fail(function(){ console.log("Cannot get personnel from the questionnaire."); });
         }).fail(function() {
-            $("#info_tab").find(".ques_tabs").html(no_ques_msg);
+            $("#info_tab").find(".ques_tabs").append($('<p class="no_ques">Unable to load the setup from the questionnaire. If you believe that there was setup information associated with this experiment, please contact LCLS data management to retrieve the setup information for you. </p>'));
         });
     } else {
-        var poctmpl = `<%# latest_setup.general-poc1 %><dt>POC 1:</dt><dd><% latest_setup.general-poc1 %></dd><%/ latest_setup.general-poc1 %><%# latest_setup.general-poc2 %><dt>POC 2:</dt><dd><% latest_setup.general-poc2 %></dd><%/ latest_setup.general-poc2 %>`
-        $("#info_tab").find(".dl-horizontal").first().append(Mustache.render(poctmpl, info, {}, ["<%", "%>"]));
-        $("#info_tab").find(".ques_tabs").html(no_ques_msg);
+        var poctmpl = {{=<% %>=}}`{{#latest_setup.general-poc1}}<div class="row"><span class="label col-3">POC 1:</span><span class="col-9">{{.}}</span></div>{{/latest_setup.general-poc1}}{{#latest_setup.general-poc2}}<div class="row"><span class="label col-3">POC 2:</span><span class="col-9">{{.}}</span></div>{{/latest_setup.general-poc2}}`<%={{ }}=%>
+        $("#info_tab").find(".exp_details").first().append(Mustache.render(poctmpl, info));
     }
 });
 </script>

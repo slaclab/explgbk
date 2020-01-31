@@ -4,16 +4,16 @@
   <title>External Previews</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="text/css" href="../../js/bootstrap/css/bootstrap.min.css">
-  <link rel="stylesheet" type="text/css" href="../../js/@fortawesome/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../js/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../js/@fortawesome/fontawesome-free/css/all.min.css">
 
-  <script type="text/javascript" src="../../js/jquery/jquery.min.js"></script>
-  <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
-  <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
-  <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
-  <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.min.js"></script>
-  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
-  <script type="text/javascript" src="../../js/plotly.js/dist/plotly.min.js"></script>
+  <script type="text/javascript" src="../../../js/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="../../../js/mustache/mustache.min.js"></script>
+  <script type="text/javascript" src="../../../js/lodash/lodash.min.js"></script>
+  <script type="text/javascript" src="../../../js/moment/min/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="../../../js/bootstrap/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
+  <script type="text/javascript" src="../../../js/plotly.js/dist/plotly.min.js"></script>
 
 </head>
 <body>
@@ -80,7 +80,7 @@ Setting the experiment name in this fashion is optional. Since run parameters ar
                             </li>
                             <li>The application uses two environment variables when to compute the redirect URL for the <code>ext_preview</code>.
                                 <dl>
-                                    <dt><code>PREVIEW_PREFIX</code></dt><dd>This is the prefix to use to compute the redirect. The default value <code>../../..</code> should place the redirect in the root of the web server namespace in typical installations.</dd>
+                                    <dt><code>PREVIEW_PREFIX</code></dt><dd>This is the prefix to use to compute the redirect. The default value <code>../../../..</code> should place the redirect in the root of the web server namespace in typical installations.</dd>
                                     <dt><code>PREVIEW_PREFIX_SHARED_SECRET</code></dt><dd>This is used to compute the cookie used for basic authorization.</dd>
                                 </dl>
                             </li>
