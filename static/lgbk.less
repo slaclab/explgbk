@@ -71,6 +71,22 @@
 
 #lgbk_body {
   .font_family_choices_mixin;
+  span.help {
+      color: @navbartext;
+      background: @navbarcolor;
+  }
+
+  .infohelp {
+      font-style: italic;
+      span.helpd {
+          background: @navbartext;
+          color: @navbarcolor;
+      }
+      .no-break {
+          white-space: nowrap;
+      }
+  }
+
 }
 
 label {
@@ -226,7 +242,7 @@ label {
     }
     .sample_info {
         border-bottom: thin solid @navbarcolor;
-        padding-bottom: 0.5em;        
+        padding-bottom: 0.5em;
         .label {
             color: @navbarcolor;
         }
@@ -245,6 +261,25 @@ label {
     .search_text_mixin;
 }
 
+.modal {
+    text-align: left;
+    table {
+        tr th {
+            .highlight_mixin;
+        }
+        td {
+            padding: 0;
+            margin: 0;
+        }
+        input {
+            background-color: inherit;
+        }
+        select {
+            background-color: inherit;
+        }
+    }
+}
+
 .modal-title {
     .highlight_mixin;
     padding-left: 1.0em;
@@ -253,8 +288,66 @@ label {
     padding-bottom: 0.25em;
 }
 
-.modal-body table tr th {
-    .highlight_mixin;
+.ops_list_icons {
+    padding-left: 0.1rem;
+    padding-right: 0.1rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: @navbarcolor;
+}
+
+#switch_experiment_div th {
+  .highlight_mixin;
+}
+
+#switch_experiment_div .btn {
+  .highlight_mixin;
+}
+
+#expswitch_tab .modal {
+    .rowselect {
+        .bold_text_mixin;
+        background: @activewidgetcolor;
+    }
+}
+
+#expswitch_tab .ops_switch_icons {
+  white-space: nowrap;
+  span {
+      .ops_list_icons;
+  }
+}
+
+#expswitch_tab .exp_switch_standby {
+    color: @contrastcolor;
+    font-weight: bold;
+}
+
+#expswitch_tab .expswitch_run_open {
+    color: @contrastcolor;
+    font-weight: bold;
+}
+
+
+
+#expswitch_choose_experiment {
+    table {
+        height: 25rem;
+        display: block;
+        overflow-y: scroll;
+    }
+    table td a {
+      color: @navbarcolor;
+    }
+}
+
+#expswitch_choose_experiment {
+    .btn-group .btn {
+        margin-top: 0.25em;
+        margin-left: 0.5em;
+        margin-right: 0.5em;
+        .highlight_mixin;
+    }
 }
 
 #register_edit_exp_tab .modal-content {
@@ -278,7 +371,7 @@ label {
 #register_edit_exp_tab .ops_exp_icons {
   white-space: nowrap;
   span {
-      .listview_icon_mixin;
+      .ops_list_icons;
   }
 }
 
@@ -287,6 +380,9 @@ label {
     padding-left: 2.0em;
 }
 
+#ops_instruments_tab .editinsbtn {
+    .ops_list_icons;
+}
 
 #ops_instruments_tab .instrument_lbl {
   .bold_text_mixin;
@@ -384,60 +480,6 @@ label {
 	font-weight: bold;
 }
 
-#switch_experiment_div th {
-  .highlight_mixin;
-}
-
-#switch_experiment_div .btn {
-  .highlight_mixin;
-}
-
-#expswitch_tab .modal {
-    .rowselect {
-        .bold_text_mixin;
-        background: @activewidgetcolor;
-    }
-}
-
-#expswitch_tab .ops_switch_icons {
-  white-space: nowrap;
-  .fas {
-      .listview_icon_mixin;
-  }
-}
-
-#expswitch_tab .exp_switch_standby {
-    color: @contrastcolor;
-    font-weight: bold;
-}
-
-#expswitch_tab .expswitch_run_open {
-    color: @contrastcolor;
-    font-weight: bold;
-}
-
-
-
-#expswitch_choose_experiment {
-    table {
-        height: 25rem;
-        display: block;
-        overflow-y: scroll;
-    }
-    table td a {
-      color: @navbarcolor;
-    }
-}
-
-#expswitch_choose_experiment {
-    .btn-group .btn {
-        margin-top: 0.25em;
-        margin-left: 0.5em;
-        margin-right: 0.5em;
-        .highlight_mixin;
-    }
-}
-
 #switch_in_exp_mdl {
     .rowselect {
         .bold_text_mixin;
@@ -504,6 +546,9 @@ label {
     .card {
         border: 3px solid @navbarcolor;
     }
+    .custom-file-label {
+        color: @navbarcolor;
+    }
 }
 
 #elog_tab .elog_main_content {
@@ -567,6 +612,10 @@ label {
 
 #elog_new_entry_modal {
     margin-left: 1.0em;
+    text-align: left;
+    .custom-file-label {
+        color: @navbarcolor;
+    }
 }
 
 #elog_email_subscriptions {
@@ -801,10 +850,34 @@ label {
   padding: 0.1em;
 }
 
+#samples_tab {
+    .modal {
+        table {
+            td {
+                padding-top: .25rem;
+                padding-bottom: .25rem;
+                padding-left: .25rem;
+                .bold_text_mixin;
+            }
+        }
+    }
+}
+
+#choose_sample {
+    td {
+        padding: 0.5rem;
+    }
+    .chsmpic {
+        .ops_list_icons;
+    }
+}
+
 .note-callout {
     border: thin @navbarcolor solid;
     padding: 0.5em;
     margin-top: 0.25em;
+    color: @navbarcolor;
+    font-style: italic;
 }
 
 .collab_msg {
@@ -1000,5 +1073,42 @@ select {
 #global_roles_tab {
     .role_check {
         color: @navbarcolor;
+    }
+}
+
+#lgbk_help {
+    .font_family_choices_mixin;
+    .title {
+        .highlight_mixin;
+        text-align: center;
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+    }
+    .helptext {
+        .hh {
+            color: @navbarcolor;
+        }
+        .hhb {
+            color: @navbarcolor;
+            font-weight: bold;
+        }
+        .st {
+            color: @navbarcolor;
+            font-weight: bold;
+            border-bottom: thin solid;
+            padding-top: 0.25rem;
+        }
+        .sut {
+            color: @navbarcolor;
+            font-weight: bold;
+            padding-top: 0.25rem;
+        }
+        .ic {
+            color: @navbarcolor;
+            background-color: @navbartext;
+        }
+        ul {
+            margin-bottom: 0;
+        }
     }
 }

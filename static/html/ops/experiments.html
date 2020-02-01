@@ -177,7 +177,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
         <td> {{ contact_info }} </td>
         <td> {{ leader_account }} </td>
         <td> {{ description }} </td>
-        <td class="ops_exp_icons"><span class="exp_edit" title="Edit"><i class="fas fa-edit"></i></span><span class="exp_clone" title="Clone"><i class="far fa-clone"></i></span><span class="exp_rename" title="Rename"><i class="fas fa-suitcase"></i></span>{{#is_locked}}<span class="lock_unlock" title="Unlock"><i class="fas fa-unlock"></i></span>{{/is_locked}}{{^is_locked}}<span class="lock_unlock" title="Lock"><i class="fas fa-lock"></i></span>{{/is_locked}}</td>
+        <td class="ops_exp_icons"><span class="exp_edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span><span class="exp_clone" title="Clone"><i class="far fa-clone fa-lg"></i></span><span class="exp_rename" title="Rename"><i class="fas fa-suitcase fa-lg"></i></span>{{#is_locked}}<span class="lock_unlock" title="Unlock"><i class="fas fa-unlock fa-lg"></i></span>{{/is_locked}}{{^is_locked}}<span class="lock_unlock" title="Lock"><i class="fas fa-lock fa-lg"></i></span>{{/is_locked}}</td>
     </tr>{{/value}}`;
   Mustache.parse(exper_template);
 

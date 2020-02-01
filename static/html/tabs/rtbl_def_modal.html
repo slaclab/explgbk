@@ -7,36 +7,36 @@
     <div class="modal-body">
      <form class="form-horizontal" role="form" id="rtbl_def_form">
       <div class="row form-group">
-       <label  class="col-sm-2 " for="rtbl_def_name">Name</label>
-       <div class="col-sm-6">
+       <label  class="col-1 col-form-label" for="rtbl_def_name">Name</label>
+       <div class="col-3">
         <input type="text" class="form-control" name="name" id="rtbl_def_name"/>
        </div>
-      </div>
-      <div class="row form-group">
-       <label  class="col-sm-2 " for="rtbl_def_desc">Description</label>
-       <div class="col-sm-6">
+       <label  class="col-1 col-form-label" for="rtbl_def_desc">Descrip-tion</label>
+       <div class="col-7">
         <textarea class="form-control" name="name" id="rtbl_def_desc"></textarea>
        </div>
       </div>
       <div class="row form-group">
-       <label  class="col-sm-2 " for="rtbl_def_table_type">Table Type</label>
-       <div class="col-sm-6">
+       <label  class="col-1 col-form-label" for="rtbl_def_table_type">Table Type</label>
+       <div class="col-3">
         <select class="form-control" name="name" id="rtbl_def_table_type">
           <option value="table">Table</option>
           <option value="histogram">Histogram</option>
           <option value="scatter">Scatter</option>
         </select>
        </div>
-      </div>
-      <div class="row form-group d-none" id="rtbl_hist_params">
-       <label  class="col-sm-2 " for="rtbl_def_bin_count">Number of bins</label>
-       <div class="col-sm-6">
-        <input type="text" class="form-control" name="bincount" id="rtbl_def_bin_count" value="100"/>
+       <div class="form-group d-none col" id="rtbl_hist_params">
+           <div class="row">
+               <label  class="col-3 col-form-label" for="rtbl_def_bin_count">Number of bins</label>
+               <div class="col-3">
+                <input type="text" class="form-control" name="bincount" id="rtbl_def_bin_count" value="100"/>
+               </div>
+           </div>
        </div>
       </div>
       <div class="form-group">
         <table class="table table-striped table-bordered" id="rtbl_def_tbl">
-          <thead><tr><th class="col-md-2">Name</th><th class="col-md-3">Category</th><th class="col-md-5">Source</th><th class="col-md-2">Actions</th></tr></thead>
+          <thead><tr><th>Label</th><th>Category</th><th>Source</th><th>Actions</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>

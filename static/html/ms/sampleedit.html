@@ -32,7 +32,7 @@
         <thead><tr><th>Param Name</th><th>Param Value</th><th></th></thead>
         <tbody>
           {{#paramkvs}}
-          <tr class="defkv" {{#description}}title="{{description}}"{{/description}}><td class="text-left"><span class="cp_key" data-param-name={{param_name}}>{{label}}</span>{{#required}}<span class="pl-1 text-danger lbl-req">*</span>{{/required}}</td><td>
+          <tr class="defkv" {{#description}}title="{{description}}"{{/description}}><td class="text-left align-middle"><span class="cp_key" data-param-name={{param_name}}>{{label}}</span>{{#required}}<span class="pl-1 text-danger lbl-req">*</span>{{/required}}</td><td>
               {{#is_bool}}<input type="checkbox" class="form-control cp_value" {{#is_checked}}checked{{/is_checked}} ss_validate="bool">{{/is_bool}}
               {{#is_int}}<input type="text" class="form-control cp_value {{#required}}cp_required{{/required}}" value="{{current_val}}" ss_validate="int">{{/is_int}}
               {{#is_float}}<input type="text" class="form-control cp_value {{#required}}cp_required{{/required}}" value="{{current_val}}" ss_validate="float">{{/is_float}}
@@ -40,7 +40,7 @@
               {{#is_string}}<input type="text" class="form-control cp_value {{#required}}cp_required{{/required}}" value="{{current_val}}" ss_validate="string">{{/is_string}}
           </td></tr>
           {{/paramkvs}}
-          <tr class="arbkv"><td><input type="text" class="form-control cp_key" value=""></td><td><input type="text" class="form-control cp_value" value=""></td>
+          <tr class="arbkv"><td class="text-left align-middle"><input type="text" class="form-control cp_key" value=""></td><td><input type="text" class="form-control cp_value" value=""></td>
             <td>
                 <span class="param_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
                 <span class="param_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>

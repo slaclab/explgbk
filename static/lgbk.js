@@ -10,7 +10,7 @@ var setCurrentUISample = function() {
        <p>To change the sample being displayed in the UI, please click on the sample name and choose the current sample.</p>
      </span>`;
      Mustache.parse(ttip_template);
-     var choose_sample_template = `{{#sample_names}}<tr data-sample="{{.}}"><td><span><i class="far fa-hand-point-right fa-lg"></i><span></td><td>{{.}}</td></tr>{{/sample_names}}`;
+     var choose_sample_template = `{{#sample_names}}<tr data-sample="{{.}}"><td><span class="chsmpic"><i class="far fa-hand-point-right fa-lg"></i><span></td><td>{{.}}</td></tr>{{/sample_names}}`;
      Mustache.parse(choose_sample_template);
      $("#current_sample_lbl").removeClass("samples_different");
      $("#current_sample_lbl").prop("title", "");
@@ -22,7 +22,7 @@ var setCurrentUISample = function() {
              $("#current_sample_lbl").addClass("samples_different");
              $("#current_sample_name").tooltip({html: true, delay: 500, title: Mustache.render(ttip_template, samplesDict)});
          }
-         $("#current_sample_name").on("click", function(){
+         $("#current_sample_name").parent().on("click", function(){
              $.when($.ajax("../../static/html/ms/chooseSample.html"), $.getJSON("ws/samples"))
              .done(function(d1, d2){
                  var tmpl = d1[0], samples = d2[0], sample_names = _.union(_.map(samples.value, "name"), ["Current Sample", "All Samples"]);

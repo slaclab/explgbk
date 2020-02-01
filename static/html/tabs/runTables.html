@@ -12,17 +12,17 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
   var run_tbl_pill_template = `{{#value}}<li class="nav-item"><a class="nav-link rtbl_pill {{#is_system_run_table}}rtbl_sys{{/is_system_run_table}}" data-toggle="tab" data-rtbl-name="{{name}}" href="#{{name}}" title="{{description}}">{{ name }}</a></li>{{/value}}`;
   var run_tbl_tbl = `<table class="table table-striped table-bordered table-hover table-condensed sticky-table"><thead></thead><tbody class="spgntr_append"></tbody></table>`;
   var run_tbl_def_tr = `<tr>
-    <td><input name="label" class="nonblank w-75"/></td>
-    <td><select name="type" class="rtbl_def_category_select nonblank"><option value="">&nbsp;</option></select></td>
-    <td><select name="source" class="rtbl_def_pvname_select nonblank"><option value="">&nbsp;</option></select></td>
+    <td><input name="label" class="nonblank form-control"/></td>
+    <td><select name="type" class="rtbl_def_category_select nonblank form-control"><option value="">&nbsp;</option></select></td>
+    <td><select name="source" class="rtbl_def_pvname_select nonblank form-control"><option value="">&nbsp;</option></select></td>
     <td>
-      <span class="rtbldef_action"><i class="fas fa-arrow-up fa-lg" aria-hidden="true"></i></span>
-      <span class="rtbldef_action"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span>
-      <span class="rtbldef_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
-      <span class="rtbldef_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
+        <div class="row p-0 m-0"><span class="rtbldef_action col-6"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
+        <span class="rtbldef_action col-6"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span></div>
+        <div class="row p-0 m-0"><span class="rtbldef_action col-6"><i class="fas fa-arrow-up fa-lg" aria-hidden="true"></i></span>
+        <span class="rtbldef_action col-6"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span></div>
     </td></tr>`;
   var run_tbl_def_category_selector = `{{#.}}<option value="{{.}}">{{.}}</option>{{/.}}`;
-  var run_tbl_def_pvname_selector = `<select name="source" class='rtbl_def_pvname_select nonblank'><option value=''></option>{{#.}}<option value="{{label}}" title="{{param_name}}">{{label}}</option>{{/.}}</select>`;
+  var run_tbl_def_pvname_selector = `<select name="source" class='rtbl_def_pvname_select nonblank form-control'><option value=''></option>{{#.}}<option value="{{label}}" title="{{param_name}}">{{label}}</option>{{/.}}</select>`;
   Mustache.parse(run_tbl_pill_template);
   Mustache.parse(run_tbl_tbl);
   Mustache.parse(run_tbl_def_tr);
@@ -364,7 +364,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 });
 
 $("#rtbl_tab").on("lg.shown.bs.tab", function() {
-    var tab_toolbar = `<span id="new_rtbl"><i class="fas fa-plus fa-lg tlbr"></i></span>
+    var tab_toolbar = `<span id="new_rtbl" title="Create a new run table"><i class="fas fa-plus fa-lg tlbr"></i></span>
     <span id="edit_rtbl" title="Edit this run table"><i class="fas fa-edit fa-lg tlbr"></i></span>
     <span id="clone_rtbl" title="Clone this run table"><i class="fas fa-clone fa-lg tlbr"></i></span>
     <span id="del_rtbl" title="Delete this run table"><i class="fas fa-trash fa-lg tlbr"></i></span>

@@ -14,25 +14,25 @@
 $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
  var elog_header = `<div class="row exp_tab_header">
-  <div class="col-md-2">Posted</div>
-  <div class="col-md-1">Run</div>
-  <div class="col-md-5">Content</div>
-  <div class="col-md-3">Tags</div>
-  <div class="col-md-1">Author</div>
+  <div class="col-2">Posted</div>
+  <div class="col-1">Run</div>
+  <div class="col-5">Content</div>
+  <div class="col-3">Tags</div>
+  <div class="col-1">Author</div>
  </div><div class="spgntr_append"></div>`;
  var elog_main_template = `<div class="edat {{^root}}etop{{/root}}{{#root}}edesc{{/root}}" id="{{ elem_id }}" data-spgntr="{{elem_id}}"><div class="row">
-  <div class="col-md-2">
+  <div class="col-2">
     <span class="elog-expand elog-compressed exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>
     {{#c_attach}}<span class="exp_icons_left"><i class="fas fa-paperclip expand_ctrl"></i></span>{{/c_attach}}
     {{#FormatDate}}{{ relevance_time }}{{/FormatDate}}
   </div>
-  <div class="col-md-1" title="{{run_num}}">{{ run_num_str }}</div>
+  <div class="col-1" title="{{run_num}}">{{ run_num_str }}</div>
   {{> main_content_tmpl }}
-  <div class="col-md-1">{{ author }}</div>
+  <div class="col-1">{{ author }}</div>
   </div></div>`;
-  var elog_main_content_template = `<div class="col-md-5 elog_main_cnt text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-md-3 elog_main_cnt">{{#src_expname}}{{.}}{{#tagcount}}|{{/tagcount}}{{/src_expname}}{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>`;
+  var elog_main_content_template = `<div class="col-5 elog_main_cnt text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-3 elog_main_cnt">{{#src_expname}}{{.}}{{#tagcount}}|{{/tagcount}}{{/src_expname}}{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>`;
 
- var elog_child_template = `<div class="row col-md-12 elog-chid">
+ var elog_child_template = `<div class="row col-12 elog-chid">
    <div class="card">
     <div class="card-header text-left"><span class="entry_actions">{{^deleted_by}}<span class="followup" title="Followup"><i class="fas fa-paper-plane fa-lg"></i></span>{{#privileges.edit}}<span class="edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span>{{^parent}}<span class="ins_elogs" title="Post to instrument elogs"><i class="fas fa-mail-bulk fa-lg"></i></span>{{/parent}}<span class="delete" title="Delete"><i class="fas fa-trash fa-lg"></i></span>{{/privileges.edit}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre>{{content}}</pre>{{/title}}</div>
     <div class="card-body">
@@ -42,31 +42,35 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
    </div>
  </div>`;
  var elog_chid_body_content = `<div class="elog_chid_body_content">{{#deleted_by}}<div class="row elog_deleted_by">Deleted by {{deleted_by}} - {{#FormatDate}}{{ deleted_time }}{{/FormatDate}}</div>{{/deleted_by}}
- <div class="row">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=False" target="_blank" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div></div>`;
+ <div class="row">{{#attachments}}<div class="col-3"><a href="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=False" target="_blank" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div></div>`;
 
  var elog_followup_template = `<div class="row followup_div"><div class="card col-8"><div class="card-body">
       <form class="followup_form" role="form">
        <button type="button" class="close">&times;</button>
        <input type="hidden" name="parent" value="{{ _id }}">
        <div class="validation_warning d-none"></div>
-       <div class="form-group row log_title_div d-none"><label class="col-sm-2 col-form-label text-right">Title*:</label><div class="col-sm-8"><input class="form-control log_title" type="text" name="log_title"/></div></div>
-       <div class="form-group row"><label class="col-sm-2 col-form-label text-right">Text*: <span class="elog_followup_html"><i class="fas fa-table" title="HTML log entry"></i><span></label><div class="col-sm-8"><textarea class="form-control elog_followup_textarea" rows="5" name="log_text"></textarea></div></div>
-       <div class="form-group row"><label class="col-sm-2 col-form-label text-right">Email:</label><select class="form-control contacts email_select" rows="10" name="log_emails_shown" placeholder="email1 email2@institution.edu" multiple></select><input class="invisible email_input" name="log_emails" value="{{ emails_str }}"></input></div>
-       <div class="form-group row"><label class="col-sm-2 col-form-label text-right">Tags:</label><div class="col-sm-8"><input class="form-control" type="text" name="log_tags" placeholder="Tag1 Tag2 Tag3"/></div></div>
-       <div class="form-group row files_div"><label class="col-sm-2 col-form-label text-right">File</label><div class="col-sm-8"><input type="file" class="form-control" name="files" multiple/></div></div>
-       <div class="form-group row justify-content-center"><button type="button" class="btn btn-primary followup_post">Post</button></div>
+       <div class="form-group row log_title_div d-none"><label class="col-2 col-form-label text-right">Title*:</label><div class="col"><input class="form-control log_title" type="text" name="log_title"/></div></div>
+       <div class="form-group row"><label class="col-2 col-form-label text-right">Text*: <span class="elog_followup_html"><i class="fas fa-table" title="HTML log entry"></i><span></label><div class="col"><textarea class="form-control elog_followup_textarea" rows="5" name="log_text"></textarea></div></div>
+       <div class="form-group row"><label class="col-2 col-form-label text-right">Email:</label><div class="col"><select class="form-control contacts email_select" rows="10" name="log_emails_shown" placeholder="email1 email2@institution.edu" multiple></select></div></div>
+       <div class="form-group row"><input class="d-none email_input" name="log_emails" value="{{ emails_str }}"></input></div>
+       <div class="form-group row"><label class="col-2 col-form-label text-right">Tags:</label><div class="col"><input class="form-control" type="text" name="log_tags" placeholder="Tag1 Tag2 Tag3"/></div></div>
+       <div class="form-group row files_div"><label class="col-2 col-form-label text-right">&nbsp;</label><div class="custom-file col"><input type="file" name="files" class="custom-file-input" id="elog_followup_file_upload" multiple><label class="custom-file-label" for="elog_followup_file_upload"><span class="pr-2"><i class="fas fa-cloud fa-lg"></i></span>Attach files</label></div></div>
+       <div class="form-group row justify-content-end"><button type="button" class="btn btn-primary followup_post">Post</button></div>
       </form></div></div></div>`;
 
+
+
+
   var elog_run_main_template = `<div class="edat etop" id="{{ elem_id }}" data-spgntr="{{elem_id}}"><div class="row">
-       <div class="col-md-2">
+       <div class="col-2">
          <span class="elog-expand elog-compressed exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>
          {{#FormatDate}}{{relevance_time}}{{/FormatDate}}
        </div>
-       <div class="col-md-1" title="{{num}}">{{ run_num_str }}</div>
-       <div class="elog_main_cnt col-md-5 text_truncate">{{ content }}</div>
+       <div class="col-1" title="{{num}}">{{ run_num_str }}</div>
+       <div class="elog_main_cnt col-5 text_truncate">{{ content }}</div>
        </div></div>`;
 
-   var elog_run_child_template = `<div class="row col-md-12 elog-chid">
+   var elog_run_child_template = `<div class="row col-12 elog-chid">
      <div class="card">
       <div class="card-body">
         {{#param_list}}
@@ -134,6 +138,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
     email_selector(rendered);
 	rendered.find(".close").on("click", function(){ $(this).closest(".followup_div").remove(); });
     rendered.find(".elog_followup_html").on("click", function(){ $(this).closest(".followup_div").find(".log_title_div").removeClass("d-none"); $(this).closest(".followup_div").find("textarea").summernote(summernote_options); current_text_mode_html=true; $(this).remove(); });
+    rendered.find("#elog_followup_file_upload").on("change", function(){ let fsel = $(this)[0].files.length; $(this).closest(".custom-file").find(".custom-file-label").text(fsel + " file" + (fsel==1 ? "" : "s") + " selected")});
 	rendered.find(".followup_post").on("click", function(){
         var val_alert = function(th, msg) { th.closest(".followup_form").find(".validation_warning").html("Please enter a title for the log message").removeClass("d-none"); return false;  }
         if(current_text_mode_html) {
@@ -310,7 +315,6 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   var replaceExistingElogEntryContent = function(existingElem) { // If we get a update for an edit over web socker, we replace the contents of the elog entry.
       existingElem.find(".elog_main_cnt").replaceWith(renderMSTemplate(elog_main_content_template, this));
       if(_.has(this, "title")) {
-          window.jaja = existingElem; window.jajaobj = this;
           existingElem.find(".elog-chid").first().find(".chid_title").text(this["title"]);
           existingElem.find(".elog-chid").first().find(".chid_content").html($(this["content"]));
       } else {
@@ -491,6 +495,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
      $.when($.ajax('../../static/html/tabs/elog_new_entry.html'), $.getJSON(current_run_url), $.getJSON("ws/get_instrument_elogs"))
      .done(function(modal_txt, cur_run, inselgsresp){
          var current_run_num =_.get(cur_run[0], "value.num", ""), ins_elogs = inselgsresp[0].value, mdl = $(Mustache.render(modal_txt[0], { current_run_num: current_run_num, post_to_instrument_elogs: (ins_elogs.length > 0), instrument_elogs: ins_elogs })), current_text_mode_html=false;
+         mdl.find("#elog_new_entry_file_upload").on("change", function(){ let fsel = $(this)[0].files.length; $(this).closest(".custom-file").find(".custom-file-label").text(fsel + " file" + (fsel==1 ? "" : "s") + " selected")})
          $("#elog_content").prepend(mdl);
          email_selector($("#elog_content"));
          $("#elog_content").find(".elog_html").on("click", function(){ $("#elog_content").find(".log_title_div").removeClass("d-none"); $(this).remove(); $('#elog_new_entry_log_text').summernote(summernote_options); current_text_mode_html=true;});
@@ -553,7 +558,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       console.log("Getting data for attachments only");
       $.getJSON("ws/elog")
       .done(function(data){
-          var attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="col-xs-6 col-md-3"><a href="?_id={{entry_id}}#eLog" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
+          var attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="col-3"><a href="?_id={{entry_id}}#eLog" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
           Mustache.parse(attachments_only_template);
           var attachments_flat_list = [];
           _.each(data.value, function(entry) {

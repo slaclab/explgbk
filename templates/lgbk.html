@@ -70,7 +70,8 @@
       </ul>
       <ul class="nav navbar-nav navbar-right">
           <li class="session_items"><a href="../logout"><span class="logged_in_user_name">{{ logged_in_user }}</span><i class="fas fa-sign-out-alt fa-lg"></i></a></li>
-          <li><a href="../experiments"><i class="fas fa-home fa-lg"></i>  Home</a></li>
+          <li class="pl-2"><a href="../experiments"><i class="fas fa-home fa-lg"></i>  Home</a></li>
+          <li class="pl-2"><span class="help" title="User documentation"><i class="fas fa-question fa-lg"></i></span></li>
       </ul>
     </div>
   </div>
@@ -175,6 +176,12 @@ $(document).ready(function() {
         } else {
         	$('#myNavbar ul.navbar-nav a:first').tab('show');
         }
+
+        $("#lgbk_body span.help").on("click", function(){
+            let hsh = window.location.hash, hlpurl = "../help";
+            if(!_.isNil(hsh)) { hlpurl = hlpurl + hsh; }
+            window.open(hlpurl, name="_blank");
+        })
     });
 
     $.getJSON("../ws/activeexperiments")

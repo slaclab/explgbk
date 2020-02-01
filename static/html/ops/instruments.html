@@ -87,7 +87,7 @@ $("#ops_instruments_tab").on("lg.loaded.bs.tab", function() {
         <td class="instrument_lbl" style="background:{{color}}; color:{{#color}}white{{/color}}{{^color}}black{{/color}}; " >{{ _id }}</td>
         <td>{{ description }}</td>
         <td>{{ params.num_stations}}</td>
-        <td> <a class="editinsbtn" href="#"><i class="fas fa-edit"></i>&nbsp;</a> </td>
+        <td> <span class="editinsbtn"><i class="fas fa-edit fa-lg"></i></span></td>
     </tr>{{/value}}`;
   Mustache.parse(instmpl);
   $.getJSON(instruments_url)

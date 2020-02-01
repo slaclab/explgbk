@@ -102,6 +102,18 @@ def docs(path):
         return send_file(doc_path)
     abort(404)
 
+@pages_blueprint.route("/lgbk/help", methods=["GET"])
+@context.security.authentication_required
+def lgbkhelp():
+    logged_in_user=context.security.get_current_user_id()
+    privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "read", "ops_page", "switch", "experiment_create", "experiment_edit"]}
+    return render_template("help.html",
+        logbook_site=context.LOGBOOK_SITE,
+        logged_in_user=logged_in_user,
+        logged_in_user_details=json.dumps(context.usergroups.get_userids_matching_pattern(logged_in_user)),
+        privileges=json.dumps(privileges))
+
+
 def __parse_expiration_header__(request):
     expiration = request.headers.get("Webauth-Token-Expiration", "0")
     return int(expiration.replace("t=", ""))//1000000 if expiration.startswith("t=") else int(expiration)

@@ -47,7 +47,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     create_update_wf_definition, get_workflow_jobs, get_workflow_job_doc, create_wf_job, delete_wf_job, update_wf_job, \
     file_available_at_location, get_collaborators_list_for_experiment, get_site_naming_conventions, delete_sample_for_experiment, \
     get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
-    get_experiment_run_document
+    get_experiment_run_document, get_experiment_files_for_run_for_live_mode
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -1036,6 +1036,18 @@ def svc_get_files_for_run(experiment_name, run_num):
     except ValueError:
         rnum = run_num_str # Cryo uses strings for run numbers.
     return JSONEncoder().encode({"success": True, "value": get_experiment_files_for_run(experiment_name, rnum)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/files_for_live_mode", methods=["GET"])
+def svc_get_files_for_run_for_live_mode(experiment_name, run_num):
+    """
+    Get a minimal set of information for psana live mode.
+    Return only the path information for only the xtc/xtc2 files in the xtc folder ( and not it's children ).
+    """
+    try:
+        rnum = int(run_num)
+    except ValueError:
+        rnum = run_num_str # Cryo uses strings for run numbers.
+    return JSONEncoder().encode({"success": True, "value": get_experiment_files_for_run_for_live_mode(experiment_name, rnum)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs", methods=["GET"])
 @context.security.authentication_required
