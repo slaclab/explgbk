@@ -651,6 +651,7 @@ def post_related_elog_entry(related_experiment, src_experiment, src_elog_entry_i
     When we copy, we maintain the source experiment and source elog entry id to make it easier to tie children to the parent.
     For now attachments are not copied over as attachments are URL's into an external image store.
     '''
+    related_experiment = related_experiment.replace(" ", "_")
     expdb = logbookclient[related_experiment]
     src_expdb = logbookclient[src_experiment]
     src_elog_entry = get_specific_elog_entry(src_experiment, src_elog_entry_id)
