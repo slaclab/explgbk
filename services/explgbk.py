@@ -854,10 +854,12 @@ def svc_post_new_elog_entry(experiment_name):
         if root_posted:
             post_to_elogs.extend(root_posted)
 
-    for post_to_elog in post_to_elogs:
+    for  post_to_elog in post_to_elogs:
+        post_to_elog = post_to_elog.replace(" ", "_")
         logger.debug("Cross posting entry to %s", post_to_elog)
         rel_ins_doc = post_related_elog_entry(post_to_elog, experiment_name, inserted_doc["_id"])
         if rel_ins_doc:
+            logger.debug("Publishing cross post entry to %s", post_to_elog)
             context.kafka_producer.send("elog", {"experiment_name" : post_to_elog, "CRUD": "Create", "value": rel_ins_doc})
 
     return JSONEncoder().encode({'success': True, 'value': inserted_doc})
@@ -969,6 +971,7 @@ def svc_cross_post_elog_entry(experiment_name):
     post_to_elogs = post_to_elogs_str.split(",")
     all_elogs_for_id = get_elog_tree_for_specified_id(experiment_name, existing_entry["_id"])
     for post_to_elog in post_to_elogs:
+        post_to_elog = post_to_elog.replace(" ", "_")
         logger.debug("Cross posting entry to %s", post_to_elog)
         for elog_for_id in all_elogs_for_id:
             logger.debug("Cross posting entry to %s %s", post_to_elog, elog_for_id["_id"])
