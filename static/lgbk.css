@@ -92,6 +92,9 @@ label {
   margin-left: 1em;
   color: white;
 }
+#myNavbar .currently_active .standby {
+  padding-left: 0.25rem;
+}
 #lgbk_footer {
   left: auto;
 }
@@ -269,9 +272,11 @@ label {
   font-weight: bold;
 }
 #expswitch_choose_experiment table {
-  height: 25rem;
   display: block;
   overflow-y: scroll;
+}
+#expswitch_choose_experiment table td {
+  padding: 0.25rem;
 }
 #expswitch_choose_experiment table td a {
   color: #6685F4;

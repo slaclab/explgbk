@@ -220,3 +220,26 @@ var lgbk_create_edit_exp = function(expInfo) {
    $("#exp_mdl_holder").find(".edit_modal").modal("show");
   });
 };
+
+
+var put_instrument_in_standby = function() {
+    var instr = $(this).attr("data-instrument");
+    var station = $(this).attr("data-station");
+    console.log("Putting " + instr + "/" + station + " into standby/maintenance mode.");
+    $.ajax({
+        type: "POST",
+        contentType: "application/json; charset=utf-8",
+        url: instrument_standby_url,
+        data: JSON.stringify({"instrument": instr, "station": station}),
+        dataType: "json"
+    })
+    .done(function(data){
+        if(data.success) {
+            console.log("Successfully put "+ instr + "/" + station + " into standby/maintenance mode.");
+            location.reload();
+        } else {
+            alert("Server side exception switching experiment " + data.errormsg);
+        }
+    })
+    .fail( function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+};

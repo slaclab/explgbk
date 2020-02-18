@@ -42,6 +42,7 @@
     var elog_emails = "../{{experiment_name}}/ws/elog_emails";
     var show_feedback= {{show_feedback}};
     var feedback_survey_def = "../../static/json/feedback_{{logbook_site}}.json";
+    var instrument_standby_url = "../ws/instrument_standby";
   </script>
 
 </head>
@@ -191,14 +192,35 @@ $(document).ready(function() {
             let expactinfo = _.find(c_active, ["name", experiment_name]);
             console.log(expactinfo);
             {% raw %}
-            let curr_active_tmpl = `<li title="This experiment is currently active on this instrument/station"><span class="currently_active"><span class="instrument">{{instrument}}</span>/<span class="station">{{station}}</span></span></li>`; Mustache.parse(curr_active_tmpl);
+            let curr_active_tmpl = `<li title="This experiment is currently active on this instrument {{instrument}}/station {{station}}"><span class="currently_active"><span class="instrument">{{instrument}}</span>/<span class="station">{{station}}</span></span></li>`; Mustache.parse(curr_active_tmpl);
             {% endraw %}
             let rendered = $(Mustache.render(curr_active_tmpl, expactinfo));
             $("#myNavbar").find(".session_items").before(rendered);
         }
 
         if(!_.get(privileges, "ops_page", false) && _.get(privileges, "switch") && _.get(privileges, "manage_groups")) {
-            if(_.includes(_.map(c_active, "name"), experiment_name)) { console.log("This experiment is already active."); return; }
+            if(_.includes(_.map(c_active, "name"), experiment_name)) {
+                {% raw %}
+                let stby_tmpl = `<span class="standby" data-instrument="{{ instrument }}" data-station="{{ station }}" title="End this experiment and put this instrument/station in standby mode."><i class="fas fa-power-off fa-lg"></i></span>`; Mustache.parse(stby_tmpl);
+                {% endraw %}
+                let expactinfo = _.find(c_active, ["name", experiment_name]), rendered = $(Mustache.render(stby_tmpl, expactinfo));
+                rendered.on("stby", put_instrument_in_standby);
+                rendered.on("click", function(){
+                    $.ajax('../../static/html/ms/generic_yes_no.html')
+                    .done(function(d0){
+                        {% raw %}
+                        let msg = `Please confirm that you want to put this instrument {{ instrument }}/station {{ station }} on standby`; Mustache.parse(msg);
+                        {% endraw %}
+                        let rdrd = $(Mustache.render(d0, {"title": "Please confirm", "message": Mustache.render(msg, expactinfo)}));
+                        rdrd.find(".yesbutton").on("click", function(){ rendered.trigger("stby") });
+                        $("#glbl_modals_go_here").empty().append(rdrd);
+                        $("#glbl_modals_go_here").find(".modal").modal("show");
+                    })
+                });
+
+                $("#myNavbar").find(".currently_active").append(rendered);
+                return;
+            }
             let rendered = $(`<li><button class="navbar_icon_btn switch" title="Make this experiment the current experiment on an instrument"><span class="btntext">Switch</span><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></button></li>`);
             $("#myNavbar").find(".session_items").before(rendered);
             rendered.on("click", function(){
@@ -210,7 +232,7 @@ $(document).ready(function() {
                         _.each(msobj["stations"], function(is){ is["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] = is["instrument"] && x["station"] == is["station"]}), "name", "") })
                         console.log(msobj);
                     } else {
-                        msobj["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] = instrument_name && x["station"] == 0}), "name", "")
+                        msobj["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] == instrument_name && x["station"] == 0}), "name", "")
                     }
                     let rendered = $(Mustache.render(mdltmpl, msobj));
                     rendered.data("selected_station", 0);
@@ -235,8 +257,10 @@ $(document).ready(function() {
                             console.log(data);
                             if(data.success) {
                                 show_message("Successfully activated " + experiment_name + " on instrument " + instrument_name + " station " + rendered.data("selected_station"));
-                                setTimeout($("#glbl_modals_go_here").find(".modal").modal("hide"), 2000);
-                                location.reload();
+                                setTimeout(function(){
+                                    $("#glbl_modals_go_here").find(".modal").modal("hide");
+                                    location.reload();
+                                }, 1000);
                             } else {
                                 show_message("Server side exception switching experiment " + data.errormsg);
                             }

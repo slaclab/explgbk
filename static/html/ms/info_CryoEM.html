@@ -1,15 +1,28 @@
 <div class="exp_info">
  <h1>General Info</h1>
-   <div class="exp_details">
-       <div class="row"><span class="label col-3">Name:</span><span class="col-9">{{ info.name }}</span></div>
-       <div class="row"><span class="label col-3">Instrument:</span><span class="col-9">{{ info.instrument }}</span></div>
-       <div class="row"><span class="label col-3">Start Time:</span><span class="col-9">{{#FormatDate}}{{ info.start_time }}{{/FormatDate}}</span></div>
-       <div class="row"><span class="label col-3">End Time:</span><span class="col-9">{{#FormatDate}}{{ info.end_time }}{{/FormatDate}}</span></div>
-       <div class="row"><span class="label col-3">PI:</span><span class="col-9"><a href="mailto:{{ info.contact_email }}">{{ info.contact_name }}</a></span></div>
-       <div class="row"><span class="label col-3">PI Email:</span><span class="col-9">{{ info.contact_email }}</span></div>
-       <div class="row"><span class="label col-3" title="When the experiment was created, this account was given privileges to add/remove collaborators from the experiment.">Leader Account:</span><span class="col-9">{{info.leader_account}}</span></div>
-       <div class="row"><span class="label col-3">Description:</span><span class="col-9">{{ info.description }}</span></div>
+ <div class="row">
+     <div class="col-9">
+       <div class="exp_details">
+           <div class="row"><span class="label col-3">Name:</span><span class="col-9">{{ info.name }}</span></div>
+           <div class="row"><span class="label col-3">Instrument:</span><span class="col-9">{{ info.instrument }}</span></div>
+           <div class="row"><span class="label col-3">Start Time:</span><span class="col-9">{{#FormatDate}}{{ info.start_time }}{{/FormatDate}}</span></div>
+           <div class="row"><span class="label col-3">End Time:</span><span class="col-9">{{#FormatDate}}{{ info.end_time }}{{/FormatDate}}</span></div>
+           <div class="row"><span class="label col-3">PI:</span><span class="col-9"><a href="mailto:{{ info.contact_email }}">{{ info.contact_name }}</a></span></div>
+           <div class="row"><span class="label col-3">PI Email:</span><span class="col-9">{{ info.contact_email }}</span></div>
+           <div class="row"><span class="label col-3" title="When the experiment was created, this account was given privileges to add/remove collaborators from the experiment.">Leader Account:</span><span class="col-9">{{info.leader_account}}</span></div>
+           <div class="row"><span class="label col-3">Description:</span><span class="col-9">{{ info.description }}</span></div>
+       </div>
    </div>
+   <div class="col-3 text-justify infohelp">
+       Welcome to the CryoEM data management portal.
+       You can use the nav bar above to switch between the various functions in data management.
+       Each tab typically has some icons on the top right hand corner for various functions.
+       Hover over the icons to get some documentation as a tooltip.
+       The <span class="helpd"><i class="fas fa-question fa-lg"></i></span> icon should open up the user documentation.
+       If you have any questions, please contact <span class="no-break">pcds-datamgt-l@slac.stanford.edu</span>.
+   </div>
+</div>
+
    <div id="cryo_info_samples"><h3>Samples</h3></div>
    <script type="text/javascript">
    $("#info_tab").on("info_loaded", function(ev, info){

@@ -135,6 +135,9 @@ label {
         margin-right: 1.0em;
         margin-left: 1.0em;
         color: @navbartext;
+        .standby {
+            padding-left: 0.25rem;
+        }
     }
 }
 
@@ -332,12 +335,15 @@ label {
 
 #expswitch_choose_experiment {
     table {
-        height: 25rem;
         display: block;
         overflow-y: scroll;
-    }
-    table td a {
-      color: @navbarcolor;
+
+        td {
+            padding: 0.25rem;
+            a {
+                color: @navbarcolor;
+            }
+        }
     }
 }
 

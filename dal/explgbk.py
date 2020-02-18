@@ -306,7 +306,7 @@ def get_currently_active_experiments():
 
 def get_active_experiment_name_for_instrument_station(instrument, station):
     for active_experiment in get_currently_active_experiments():
-        if 'instrument' in active_experiment and active_experiment['instrument'] == instrument and active_experiment['station'] == int(station):
+        if 'instrument' in active_experiment and active_experiment['instrument'] == instrument and active_experiment['station'] == int(station) and not active_experiment.get('is_standby', False):
             return active_experiment['name']
     return None
 
