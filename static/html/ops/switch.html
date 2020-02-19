@@ -1,4 +1,5 @@
 <div class="container-fluid text-center tabcontainer" id="expswitch_tab">
+<div id="switch_mdl_holder"></div>
 <div class="row" id="switch_experiment_div">
   <div class="table-responsive">
     <table class="table table-condensed table-striped table-bordered">
@@ -52,6 +53,7 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 	<td class="ops_switch_icons">
       <span class="expswitch" data-instrument="{{ instrument }}" data-station="{{ station }}" title="Switch to a new experiment"><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></span>
       {{^is_standby}}<span class="standby"  data-instrument="{{ instrument }}" data-station="{{ station }}" title="Put this station in standby mode."><i class="fas fa-power-off fa-lg" aria-hidden="true"></i></span>{{/is_standby}}
+      <span class="switch_history" data-instrument="{{ instrument }}" data-station="{{ station }}" title="Show the history of changes to this instrument station"><i class="fas fa-history fa-lg"></i></span>
     </td>
 	</tr>{{/value}}`;
 
@@ -118,6 +120,21 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
     			});
     		})
             $("span.standby").on("click", put_instrument_in_standby);
+
+            $("span.switch_history").on("click", function(){
+                let instrument = $(this).attr("data-instrument"), station=$(this).attr("data-station");
+                $.when($.ajax ("../static/html/ms/switch_history.html"), $.getJSON("ws/instrument_switch_history", {"instrument": instrument, "station": station}))
+                .done(function( d0, d1 ) {
+                    let htmpl = d0[0], shistories = d1[0].value, ish = {"instrument": instrument, "station": station, "switches": shistories};
+                    Mustache.parse(htmpl);
+                    ish.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+                    let rend = Mustache.render(htmpl, ish);
+                    $("#switch_mdl_holder").empty().append(rend);
+                    $("#switch_mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#switch_mdl_holder").empty(); });
+                    $("#switch_mdl_holder").find(".modal").modal("show");
+
+                });
+            })
     	});
     });
 });

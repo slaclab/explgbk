@@ -21,6 +21,7 @@ from bson import ObjectId
 from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 from dal.imagestores import parseImageStoreURL
+from dal.exp_cache import get_experiments_for_instrument
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -354,6 +355,21 @@ def instrument_standby(instrument, station, userid):
         "is_standby": True
         })
     return (True, "")
+
+def get_switch_history(instrument, station):
+    """
+    Return the experiment switch history for an instrument/station.
+    """
+    sitedb = logbookclient["site"]
+    ins_exps = { x["name"] : x for x in get_experiments_for_instrument(instrument) }
+    ret = []
+    for x in sitedb.experiment_switch.find({"instrument": instrument, "station": station}).sort([("switch_time", -1)]):
+        expname = x.get("experiment_name", "")
+        if expname != "Standby" and expname in ins_exps:
+            x["description"] = ins_exps[expname]["description"]
+            x["PI"] = ins_exps[expname]["contact_info"]
+        ret.append(x)
+    return ret
 
 def get_global_roles():
     sitedb = logbookclient["site"]

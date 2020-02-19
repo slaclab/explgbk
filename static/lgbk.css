@@ -294,6 +294,14 @@ label {
   background: #6685F4;
   font-weight: bold;
 }
+#switch_hist table tr th {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+}
+#switch_hist table td {
+  padding: 0.25rem;
+}
 #register_edit_exp_tab .modal-content {
   padding: 0.5em;
 }
