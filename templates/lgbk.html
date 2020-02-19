@@ -219,58 +219,64 @@ $(document).ready(function() {
                 });
 
                 $("#myNavbar").find(".currently_active").append(rendered);
-                return;
-            }
-            let rendered = $(`<li><button class="navbar_icon_btn switch" title="Make this experiment the current experiment on an instrument"><span class="btntext">Switch</span><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></button></li>`);
-            $("#myNavbar").find(".session_items").before(rendered);
-            rendered.on("click", function(){
-                $.when($.ajax('../../static/html/ms/switch_within_experiment.html'), $.getJSON("../ws/instrument_station_list"), $.getJSON("../ws/activeexperiments"))
-                .done(function(d0, d1, d2){
-                    let mdltmpl = d0[0], stations_by_ins = _.groupBy(d1[0].value, "instrument"), msobj = {experiment: experiment_name, instrument: instrument_name};
-                    if(_.get(stations_by_ins, instrument_name, []).length > 1) {
-                        msobj["stations"] = _.get(stations_by_ins, instrument_name);
-                        _.each(msobj["stations"], function(is){ is["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] = is["instrument"] && x["station"] == is["station"]}), "name", "") })
-                        console.log(msobj);
-                    } else {
-                        msobj["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] == instrument_name && x["station"] == 0}), "name", "")
-                    }
-                    let rendered = $(Mustache.render(mdltmpl, msobj));
-                    rendered.data("selected_station", 0);
-                    let show_message = function(message){
-                        rendered.find(".message").text(message);
-                    }
-                    if(_.get(stations_by_ins, instrument_name, []).length > 1) {
-                        rendered.find("table").parent().removeClass("d-none");
-                        rendered.find("table").find("tr[data-station=0]").addClass("rowselect");
-                        rendered.find(".station").on("click", function(){
-                            $(this).closest("table").find(".rowselect").removeClass("rowselect");
-                            $(this).closest("tr").addClass("rowselect");
-                            rendered.data("selected_station", $(this).closest("tr").attr("data-station"));
+            } else {
+                let rendered = $(`<li><button class="navbar_icon_btn switch" title="Make this experiment the current experiment on an instrument"><span class="btntext">Switch</span><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></button></li>`);
+                $("#myNavbar").find(".session_items").before(rendered);
+                rendered.on("click", function(){
+                    $.when($.ajax('../../static/html/ms/switch_within_experiment.html'), $.getJSON("../ws/instrument_station_list"), $.getJSON("../ws/activeexperiments"))
+                    .done(function(d0, d1, d2){
+                        let mdltmpl = d0[0], stations_by_ins = _.groupBy(d1[0].value, "instrument"), msobj = {experiment: experiment_name, instrument: instrument_name};
+                        if(_.get(stations_by_ins, instrument_name, []).length > 1) {
+                            msobj["stations"] = _.get(stations_by_ins, instrument_name);
+                            _.each(msobj["stations"], function(is){ is["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] = is["instrument"] && x["station"] == is["station"]}), "name", "") })
+                            console.log(msobj);
+                        } else {
+                            msobj["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] == instrument_name && x["station"] == 0}), "name", "")
+                        }
+                        let rendered = $(Mustache.render(mdltmpl, msobj));
+                        rendered.data("selected_station", 0);
+                        let show_message = function(message){
+                            rendered.find(".message").text(message);
+                        }
+                        if(_.get(stations_by_ins, instrument_name, []).length > 1) {
+                            rendered.find("table").parent().removeClass("d-none");
+                            rendered.find("table").find("tr[data-station=0]").addClass("rowselect");
+                            rendered.find(".station").on("click", function(){
+                                $(this).closest("table").find(".rowselect").removeClass("rowselect");
+                                $(this).closest("tr").addClass("rowselect");
+                                rendered.data("selected_station", $(this).closest("tr").attr("data-station"));
+                            })
+                        }
+                        rendered.find(".activate_exp").on("click", function() {
+                            let station = rendered.data("selected_station"), station_data = {instrument: instrument_name, station: station, experiment_name: experiment_name };
+                            console.log("Activating " + experiment_name + " on instrument " + instrument_name + " station " + station);
+                            console.log(station_data);
+                            $.ajax({ type: "POST", contentType: "application/json; charset=utf-8", url: "../ws/switch_experiment", data: JSON.stringify(station_data), dataType: "json"})
+                            .done(function(data, textStatus, jqXHR) {
+                                console.log(data);
+                                if(data.success) {
+                                    show_message("Successfully activated " + experiment_name + " on instrument " + instrument_name + " station " + rendered.data("selected_station"));
+                                    setTimeout(function(){
+                                        $("#glbl_modals_go_here").find(".modal").modal("hide");
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    show_message("Server side exception switching experiment " + data.errormsg);
+                                }
+                            })
+                            .fail( function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); if(jqXHR.status == 403){ show_message("You don't seem to have permissions for this operation. Please contact the site administrators."); return;}; show_message("Server side exception switching experiment " + jqXHR.responseText); })
                         })
-                    }
-                    rendered.find(".activate_exp").on("click", function() {
-                        let station = rendered.data("selected_station"), station_data = {instrument: instrument_name, station: station, experiment_name: experiment_name };
-                        console.log("Activating " + experiment_name + " on instrument " + instrument_name + " station " + station);
-                        console.log(station_data);
-                        $.ajax({ type: "POST", contentType: "application/json; charset=utf-8", url: "../ws/switch_experiment", data: JSON.stringify(station_data), dataType: "json"})
-                        .done(function(data, textStatus, jqXHR) {
-                            console.log(data);
-                            if(data.success) {
-                                show_message("Successfully activated " + experiment_name + " on instrument " + instrument_name + " station " + rendered.data("selected_station"));
-                                setTimeout(function(){
-                                    $("#glbl_modals_go_here").find(".modal").modal("hide");
-                                    location.reload();
-                                }, 1000);
-                            } else {
-                                show_message("Server side exception switching experiment " + data.errormsg);
-                            }
-                        })
-                        .fail( function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); if(jqXHR.status == 403){ show_message("You don't seem to have permissions for this operation. Please contact the site administrators."); return;}; show_message("Server side exception switching experiment " + jqXHR.responseText); })
+                        $("#glbl_modals_go_here").empty().append(rendered);
+                        $("#glbl_modals_go_here").find(".modal").modal("show");
                     })
-                    $("#glbl_modals_go_here").empty().append(rendered);
-                    $("#glbl_modals_go_here").find(".modal").modal("show");
                 })
+            }
+            let clone_tmpl = `<li class="clone_tb"><span class="exp_clone" title="Clone this experiment"><i class="far fa-clone fa-lg"></i></span></li>`; Mustache.parse(clone_tmpl);
+            let clone_rendered = $(Mustache.render(clone_tmpl, {src_experiment_name: experiment_name}));
+            clone_rendered.find(".exp_clone").on("click", function(){
+                clone_experiment(experiment_name, $("#glbl_modals_go_here"), path_to_ws="../", false);
             })
+            $("#myNavbar").find(".session_items").before(clone_rendered);
         }
     })
 

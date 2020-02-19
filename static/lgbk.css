@@ -95,6 +95,11 @@ label {
 #myNavbar .currently_active .standby {
   padding-left: 0.25rem;
 }
+#myNavbar .clone_tb {
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+  color: white;
+}
 #lgbk_footer {
   left: auto;
 }

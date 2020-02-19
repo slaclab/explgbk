@@ -243,3 +243,73 @@ var put_instrument_in_standby = function() {
     })
     .fail( function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
 };
+
+var clone_experiment = function(src_experiment_name, mdl_holder, path_to_ws="", auto_scroll=true) {
+  console.log("Cloning experiment " + src_experiment_name);
+  $.ajax (path_to_ws + "../static/html/ms/expclone.html")
+  .done(function( tmpl ) {
+    Mustache.parse(tmpl);
+    var rendered = $(Mustache.render(tmpl, {src_experiment_name: src_experiment_name, name: src_experiment_name, cloning: true, clone_attrs: [{k: "Experimental Setup", v: "setup"}, {k: "Samples", v: "samples"}, {k: "Roles", v: "roles"}, {k: "Run Parameter Descriptions", v: "run_param_descriptions"}]}));
+    let show_validation_message = function(message) {
+        rendered.find(".validation_message").text(message).removeClass("d-none");
+    }
+    rendered.find(".start_time").datetimepicker({defaultDate: moment(), sideBySide: true });
+    rendered.find(".end_time").datetimepicker({defaultDate: moment().add(2, 'days'), sideBySide: true });
+    rendered.find(".clone_btn").on("click", function(e) {
+      e.preventDefault();
+      var formObj = rendered.find("form");
+      var validations = [
+          [function() { return $.trim(formObj.find(".experiment_name").val()) == ""; }, "Experiment name cannot be blank."],
+          [function() { return $.trim(formObj.find(".experiment_name").val()) == formObj.find(".src_experiment_name").val(); }, "Experiment name cannot be the same as the original."],
+          [function() { return $.trim(formObj.find(".start_time input").val()) == ""; }, "Please choose a valid start time."],
+          [function() { return $.trim(formObj.find(".end_time input").val()) == ""; }, "Please choose a valid end time."],
+          [function() { return formObj.find('.end_time').datetimepicker('date').isSameOrBefore(formObj.find('.start_time').datetimepicker('date'), 'minute') ; }, "The end time should be after the start time."]
+        ];
+      // Various validations
+      var v_failed = false;
+      _.each(validations, function(validation, i) {
+        // console.log("Trying validation " + i + "" + validation[1]);
+        if(validation[0]()) {
+            show_validation_message(validation[1]);
+            v_failed = true;
+            return false;
+        }
+      });
+      if (v_failed) { e.preventDefault(); return; }
+      var experiment_name = $.trim(formObj.find(".experiment_name").val());
+      var registration_doc = {
+          "name" : experiment_name,
+          "start_time" : formObj.find('.start_time').datetimepicker('date').toJSON(),
+          "end_time" : formObj.find('.end_time').datetimepicker('date').toJSON()
+      };
+      formObj.find(".clone_attr:checked").each(function(){ registration_doc[$(this).attr("name")] = true; });
+      console.log(registration_doc);
+
+      let clone_experiment_url = path_to_ws + "ws/clone_experiment";
+      $.ajax({
+        type: "POST",
+        contentType: "application/json; charset=utf-8",
+        url: clone_experiment_url + "?experiment_name=" + encodeURIComponent(experiment_name) + "&src_experiment_name=" + encodeURIComponent(src_experiment_name),
+        data: JSON.stringify(registration_doc),
+        dataType: "json"
+      })
+      .done(function(data, textStatus, jqXHR) {
+        if(data.success) {
+            console.log("Successfully cloned experiment " + experiment_name);
+            mdl_holder.find(".edit_modal").modal("hide");
+            if(auto_scroll) {
+                sessionStorage.setItem("ops_active_tab", "experiments");
+                sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
+            }
+            window.location.reload(true);
+        } else {
+          show_validation_message("Server failure: " + data.errormsg);
+        }
+      })
+      .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+    });
+   mdl_holder.empty().append(rendered);
+   mdl_holder.find(".edit_modal").on("hidden.bs.modal", function(){ mdl_holder.empty(); });
+   mdl_holder.find(".edit_modal").modal("show");
+  });
+};
