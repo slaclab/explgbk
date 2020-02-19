@@ -19,5 +19,7 @@ class SeaWeed(ImageStore):
         return imgurl
 
     def return_url_contents(self, experiment_name, remote_url):
-        req = requests.get(remote_url, stream = True)
-        return io.BytesIO(req.content)
+        resp = requests.get(remote_url, stream = True)
+        if not resp:
+            return None
+        return io.BytesIO(resp.content)

@@ -55,7 +55,7 @@ def templates(experiment_name, path):
 @context.security.authorization_required("ops_page")
 def operator_dashboard():
     logged_in_user=context.security.get_current_user_id()
-    privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "ops_page", "switch", "experiment_create", "experiment_edit", "instrument_create", "manage_groups"]}
+    privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "ops_page", "switch", "experiment_create", "experiment_edit", "experiment_delete", "instrument_create", "manage_groups"]}
     return render_template("ops.html",
         logbook_site=context.LOGBOOK_SITE,
         logged_in_user=logged_in_user,
@@ -106,7 +106,7 @@ def docs(path):
 @context.security.authentication_required
 def lgbkhelp():
     logged_in_user=context.security.get_current_user_id()
-    privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "read", "ops_page", "switch", "experiment_create", "experiment_edit"]}
+    privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "read", "ops_page", "switch", "experiment_create", "experiment_edit", "experiment_edit"]}
     return render_template("help.html",
         logbook_site=context.LOGBOOK_SITE,
         logged_in_user=logged_in_user,

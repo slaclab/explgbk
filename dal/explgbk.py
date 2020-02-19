@@ -242,6 +242,69 @@ def lock_unlock_experiment(experiment_name):
     expdb['info'].update_one({}, { "$set": {"is_locked": False if curr_is_locked else True } })
     return (True, "")
 
+def delete_experiment(experiment_name):
+    """
+    Delete the experiment; we cannot recover from this without a backup.
+    Make sure the experiment is not active and is actually an experiment.
+    We also check to make sure that none of the attacments use http for an image store.
+    """
+    active_experiments = [ x["name"] for x in get_currently_active_experiments() ]
+    if experiment_name in active_experiments:
+        return (False, "Experiment %s is currently active" % experiment_name)
+
+    expdb = logbookclient[experiment_name]
+    if not expdb["info"].find_one() or not "instrument" in expdb["info"].find_one():
+        return (False, "Is %s an experiment?" % experiment_name)
+
+    http_attachments = expdb["elog"].find({"$or": [{"attachments.url": {"$regex": re.compile("^http://")}}, {"attachments.preview_url": {"$regex": re.compile("^http://")}}]}).count()
+    if http_attachments:
+        return (False, "We have %s attachments in an external image store; please archive the experiment before deleting." % http_attachments)
+
+    logbookclient.drop_database(experiment_name)
+    return (True, "")
+
+def migrate_attachments_to_local_store(experiment_name):
+    """
+    Move the attachments from an external image store to either GridFS or a tar.gz on the file system.
+    This is a step in preparation for archiving/deleting the experiment.
+    """
+    mg_imgstore = parseImageStoreURL("mongo://")
+    expdb = logbookclient[experiment_name]
+    failures = 0
+    elog_entries = expdb["elog"].find({"$or": [{"attachments.url": {"$regex": re.compile("^http://")}}, {"attachments.preview_url": {"$regex": re.compile("^http://")}}]})
+    for elog_entry in elog_entries:
+        def __migrate_to_mongo__(aurl, attachment):
+            logger.debug("Migrating %s to mongo", aurl)
+            try:
+                bio = parseImageStoreURL(aurl).return_url_contents(experiment_name, aurl)
+                if not bio:
+                    logger.debug("Cannot get attachment contents for %s", aurl)
+                    return None
+                murl = mg_imgstore.store_file_and_return_url(experiment_name, attachment["name"], attachment["type"], bio)
+                logger.debug("Migrated %s to mongo as %s", aurl, murl)
+                return murl
+            except:
+                logger.exception("Exception migrating attachment %s", aurl)
+                return None
+
+        for attachment in elog_entry.get("attachments", []):
+            if attachment.get("url", "").startswith("http://"):
+                murl = __migrate_to_mongo__(attachment["url"], attachment)
+                if murl:
+                    expdb["elog"].update_one({"_id": elog_entry["_id"], "attachments._id": attachment["_id"]}, {"$set": {"attachments.$.url": murl}})
+                else:
+                    failures = failures + 1
+            if attachment.get("preview_url", "").startswith("http://"):
+                murl = __migrate_to_mongo__(attachment["preview_url"], attachment)
+                if murl:
+                    expdb["elog"].update_one({"_id": elog_entry["_id"], "attachments._id": attachment["_id"]}, {"$set": {"attachments.$.preview_url": murl}})
+                else:
+                    failures = failures + 1
+
+    if failures:
+        return (False, "%s attachments were not migrated. Please see the server logs for more details" % failures)
+    return (True, "")
+
 
 def create_update_instrument(instrument_name, createp, incoming_info):
     """

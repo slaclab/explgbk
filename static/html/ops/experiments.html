@@ -101,6 +101,54 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
       .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
   }
 
+  var migrate_attachments = function() {
+      var experiment_name = $(this).closest("tr").find("td").first().find("a").text()
+      console.log("Migrating attachments for experiment " + experiment_name);
+      $.getJSON({
+        type: "POST",
+        url: _.replace(experiment_name, " ", "_") + "/migrate_attachments",
+        dataType: "json"
+      })
+      .done(function(data, textStatus, jqXHR) {
+        if(data.success) {
+            alert("Successfully migrated attachments for experiment " + experiment_name);
+        } else {
+          alert("Server failure: " + data.errormsg);
+        }
+      })
+      .fail( function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+  }
+
+  var delete_experiment = function() {
+      var experiment_name = $(this).closest("tr").find("td").first().find("a").text()
+      console.log("Deleting experiment " + experiment_name);
+      $.ajax ("../static/html/ms/generic_yes_no.html")
+      .done(function( tmpl ) {
+        Mustache.parse(tmpl);
+        var rendered = $(Mustache.render(tmpl, {"title": "Delete experiment", "message": "Are you sure you want to delete experiment " + experiment_name + "?"}));
+        rendered.find(".yesbutton").on("click", function(e) {
+          $.ajax({
+            type: "DELETE",
+            url: experiment_name + "/",
+            dataType: "json"
+          })
+          .done(function(data, textStatus, jqXHR) {
+            if(data.success) {
+                console.log("Successfully deleted experiment " + experiment_name);
+                $("#exp_mdl_holder").find(".modal").modal("hide");
+                window.location.reload(true);
+            } else {
+              alert("Server failure: " + data.errormsg);
+            }
+          })
+          .fail( function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+        });
+       $("#exp_mdl_holder").append(rendered);
+       $("#exp_mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#exp_mdl_holder").empty(); });
+       $("#exp_mdl_holder").find(".modal").modal("show");
+      });
+  }
+
 
   $("#register_edit_exp_tab").data("cur_sort_attr", "start_time");
   $("#register_edit_exp_tab").data("cur_sort_desc", false);
@@ -112,7 +160,11 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
         <td> {{ contact_info }} </td>
         <td> {{ leader_account }} </td>
         <td> {{ description }} </td>
-        <td class="ops_exp_icons"><span class="exp_edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span><span class="exp_clone" title="Clone"><i class="far fa-clone fa-lg"></i></span><span class="exp_rename" title="Rename"><i class="fas fa-suitcase fa-lg"></i></span>{{#is_locked}}<span class="lock_unlock" title="Unlock"><i class="fas fa-unlock fa-lg"></i></span>{{/is_locked}}{{^is_locked}}<span class="lock_unlock" title="Lock"><i class="fas fa-lock fa-lg"></i></span>{{/is_locked}}</td>
+        <td class="ops_exp_icons"><span class="exp_edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span>
+          <span class="exp_clone" title="Clone"><i class="far fa-clone fa-lg"></i></span>
+          <span class="exp_rename" title="Rename"><i class="fas fa-suitcase fa-lg"></i></span>
+          {{#is_locked}}<span class="lock_unlock" title="Unlock"><i class="fas fa-unlock fa-lg"></i></span>{{/is_locked}}{{^is_locked}}<span class="lock_unlock" title="Lock"><i class="fas fa-lock fa-lg"></i></span>{{/is_locked}}
+          {{#privileges.experiment_delete}}<span class="exper_migrate_attachments" title="Migrate attachments to a local store - this is usually a step in archival of the experiment"><i class="fas fa-coins fa-lg"></i></span><span class="exper_delete" title="Delete experiment"><i class="fas fa-trash fa-lg"></i></span>{{/privileges.experiment_delete}}</td>
     </tr>{{/value}}`;
   Mustache.parse(exper_template);
 
@@ -125,7 +177,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   var add_exps_to_search_results = function() { // Uses the mustache template to add the contents of data("search_results")
     var sorted_exps = _.sortBy($("#register_edit_exp_tab").data("search_results"), $("#register_edit_exp_tab").data("cur_sort_attr"));
     if(!$("#register_edit_exp_tab").data("cur_sort_desc")) { sorted_exps = _.reverse(sorted_exps); }
-    var expdata = { value: sorted_exps };
+    var expdata = { value: sorted_exps, privileges: privileges };
     expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
     var rendered = Mustache.render(exper_template, expdata);
     $("#exp_searchresults tbody").html(rendered);
@@ -136,6 +188,8 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     });
     $("#exp_searchresults .ops_exp_icons .exp_rename").on("click", rename_exp);
     $("#exp_searchresults .ops_exp_icons .lock_unlock").on("click", lock_unlock_experiment);
+    $("#exp_searchresults .ops_exp_icons .exper_migrate_attachments").on("click", migrate_attachments);
+    $("#exp_searchresults .ops_exp_icons .exper_delete").on("click", delete_experiment);
   }
 
   $("#register_edit_exp_tab").data("search_function", function() { // Register the search function.

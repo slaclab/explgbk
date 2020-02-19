@@ -208,6 +208,7 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
     if crud == "Delete":
         all_experiment_names.remove(experiment_name)
         logbookclient['explgbk_cache']['experiments'].delete_one({"_id": experiment_name})
+        logbookclient['explgbk_cache']['experiment_stats'].delete_one({"_id": experiment_name})
         return
     logger.debug("Gathering the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     expdb = logbookclient[experiment_name]

@@ -47,7 +47,7 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     create_update_wf_definition, get_workflow_jobs, get_workflow_job_doc, create_wf_job, delete_wf_job, update_wf_job, \
     file_available_at_location, get_collaborators_list_for_experiment, get_site_naming_conventions, delete_sample_for_experiment, \
     get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
-    get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history
+    get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -517,6 +517,33 @@ def svc_rename_experiment():
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/", methods=["DELETE"])
+@context.security.authentication_required
+@context.security.authorization_required("experiment_delete")
+def svc_delete_experiment(experiment_name):
+    """
+    Delete an experiment.
+    This drops the database; so recovery is only possible from backups.
+    """
+    old_info = copy.copy(get_experiment_info(experiment_name))
+    (status, errormsg) = delete_experiment(experiment_name)
+    if status:
+        context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Delete", "value": old_info })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/migrate_attachments", methods=["GET", "POST"])
+@context.security.authentication_required
+@context.security.authorization_required("experiment_delete")
+def svc_migrate_attachments(experiment_name):
+    """
+    Prepare the experiment for archival by migrating attachments to a local image store - most likely mongo.
+    The sysadmin is then expected to use mongodump --archive to make a backup of the experiment which should then include the attachments as well.
+    """
+    (status, errormsg) = migrate_attachments_to_local_store(experiment_name)
+    return jsonify({'success': status, 'errormsg': errormsg})
 
 @explgbk_blueprint.route("/lgbk/ws/lock_unlock_experiment", methods=["POST"])
 @context.security.authentication_required
