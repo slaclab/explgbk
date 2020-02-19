@@ -48,7 +48,7 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
     <td>{{ current_sample }}</td>
     <td {{#current_run}}{{^current_run.end_time}}class="expswitch_run_open" title="The run is still active as of {{#FormatDateTime}}{{ current_run.begin_time }}{{/FormatDateTime}}"{{/current_run.end_time}}{{#current_run.end_time}} title="The run was marked done at {{#FormatDateTime}}{{ current_run.end_time }}{{/FormatDateTime}}"{{/current_run.end_time}}>{{ current_run.num }}{{/current_run}}</td>
 	<td>{{ description }}</td>
-	<td>{{#FormatDate}}{{ switch_time }}{{/FormatDate}}</td>
+	<td>{{#FormatDateTime}}{{ switch_time }}{{/FormatDateTime}}</td>
 	<td>{{ requestor_uid }}</td>
 	<td class="ops_switch_icons">
       <span class="expswitch" data-instrument="{{ instrument }}" data-station="{{ station }}" title="Switch to a new experiment"><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></span>
