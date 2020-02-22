@@ -891,9 +891,7 @@ def get_experiment_files_for_run_for_live_mode(experiment_name, run_num):
     Return only the path information for only the xtc/xtc2 files in the xtc folder ( and not it's children ).
     '''
     expdb = logbookclient[experiment_name]
-    ret = [f["path"] for f in expdb['file_catalog'].find({"run_num": run_num, "path": { "$regex": re.compile(".*/xtc/[^/]*[.](xtc|xtc2)$") }}, {"_id": -0, "path": 1}).sort([("path", 1)])]
-    ret = list(map(lambda x : os.path.normpath("/reg/d/psdm" + x), ret))
-    logger.debug(ret)
+    ret = [file["path"] for file in expdb['file_catalog'].find({"run_num": run_num, "path": { "$regex": re.compile(".*/xtc/[^/]*[.](xtc|xtc2)$") }}, {"_id": -0, "path": 1}).sort([("path", 1)])]
     return ret
 
 def get_experiment_runs(experiment_name, include_run_params=False, sample_name=None):
