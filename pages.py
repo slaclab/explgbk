@@ -42,7 +42,7 @@ def send_js(path):
         return send_file(filepath)
     else:
         logger.error("Cannot find static file %s in %s", path, filepath)
-        abort(403)
+        abort(404)
         return None
 
 @pages_blueprint.route("/lgbk/<experiment_name>/templates/<path:path>", methods=["GET"])
