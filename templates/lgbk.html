@@ -198,7 +198,7 @@ $(document).ready(function() {
             $("#myNavbar").find(".session_items").before(rendered);
         }
 
-        if(!_.get(privileges, "ops_page", false) && _.get(privileges, "switch") && _.get(privileges, "manage_groups")) {
+        if(_.get(privileges, "switch", false) && _.get(privileges, "experiment_create", false) && _.get(privileges, "manage_groups", false)) {
             if(_.includes(_.map(c_active, "name"), experiment_name)) {
                 {% raw %}
                 let stby_tmpl = `<span class="standby" data-instrument="{{ instrument }}" data-station="{{ station }}" title="End this experiment and put this instrument/station in standby mode."><i class="fas fa-power-off fa-lg"></i></span>`; Mustache.parse(stby_tmpl);

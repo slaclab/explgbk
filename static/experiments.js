@@ -37,7 +37,7 @@ $(function() {
               $("#activeexptab").after(Mustache.render(instrument_tab_content_template, { instrument: instr, escaped_instr: escaped_instr }))
             });
 
-            if(!_.get(privileges, "ops_page", false) && _.get(privileges, "experiment_create", false)) {
+            if(_.get(privileges, "experiment_create", false)) {
                 $("#user_create_exp").parent().removeClass("d-none");
                 $("#user_create_exp").on("click", function(){
                     lgbk_create_edit_exp({ leader_account: logged_in_user, contact_info: _.get(logged_in_user_details, "gecos", logged_in_user) + "( " + logged_in_user + "@slac.stanford.edu )", start_time : moment(), end_time : moment().add(2, 'days')});
