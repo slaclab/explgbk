@@ -248,7 +248,7 @@ def delete_experiment(experiment_name):
     Make sure the experiment is not active and is actually an experiment.
     We also check to make sure that none of the attacments use http for an image store.
     """
-    active_experiments = [ x["name"] for x in get_currently_active_experiments() ]
+    active_experiments = [ x.get("name", "Standby") for x in get_currently_active_experiments() ]
     if experiment_name in active_experiments:
         return (False, "Experiment %s is currently active" % experiment_name)
 
