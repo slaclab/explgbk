@@ -853,6 +853,9 @@ label {
   opacity: 0.6;
   cursor: not-allowed;
 }
+#collab_mdl_holder tbody td {
+  padding: 0.25rem;
+}
 #logout h2 {
   background-color: #6685F4;
   color: white;
