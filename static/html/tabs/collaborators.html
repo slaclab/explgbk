@@ -22,7 +22,7 @@ $("#collab_tab").on("lg.loaded.bs.tab", function() {
       $("#collab_tab .collabtbl tbody").empty();
       $.when($.getJSON("ws/collaborators"), $.getJSON("ws/has_role", {"role_fq_name": "LogBook/Manager"}))
       .done(function(d0, d1){
-          var collabs = d0[0], roleManagerPerms = d1[0], hasRoleManager = roleManagerPerms.value.hasRole;
+          var collabs = d0[0], hasRoleManager = _.get(privileges, "manage_groups", false);
           _.each(collabs.value, function(c){c["id"] = _.replace(c["uid"], "uid:", "")});
           var rendered = $(Mustache.render(collab_tr_tmpl, collabs));
           $("#collab_tab .collabtbl tbody").append(rendered);
