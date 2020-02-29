@@ -131,12 +131,16 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
 
 
     if "initial_sample" in incoming_info and incoming_info["initial_sample"]:
-        create_update_sample(experiment_name, incoming_info["initial_sample"], True, {
-            "name": incoming_info["initial_sample"],
-            "description": "The initial sample created as part of experiment creation."
-            })
-        make_sample_current(experiment_name, incoming_info["initial_sample"])
-        start_run(experiment_name, "DATA")
+        try:
+            create_update_sample(experiment_name, incoming_info["initial_sample"], True, {
+                "name": incoming_info["initial_sample"],
+                "description": "The initial sample created as part of experiment creation."
+                })
+            make_sample_current(experiment_name, incoming_info["initial_sample"])
+            start_run(experiment_name, "DATA")
+        except:
+            logger.exception("Exception creating an initial sample. Please create the sample manually.")
+            return (True, "Exception creating an initial sample. Please create the sample manually.")
 
     return (True, "")
 
