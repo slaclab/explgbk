@@ -415,7 +415,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   }
 
   $(window).scroll(function () {
-      if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+      if (!_.isNil($("#elog_content").data("spgntr")) && ($(window).scrollTop() >= $(document).height() - $(window).height() - 10)) {
           $("#elog_content").data("spgntr").pageDown();
       }
   });
