@@ -1605,7 +1605,6 @@ def svc_register_file(experiment_name):
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/file_available_at_location", methods=["GET", "POST"])
 @context.security.authentication_required
 @experiment_exists_and_unlocked
-@context.security.authorization_required("post")
 def svc_file_available_at_location(experiment_name):
     location = request.args.get("location", None)
     if not location:
