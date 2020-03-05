@@ -1643,6 +1643,7 @@ def svc_check_and_move_run_files_to_location(experiment_name):
         run_num = int(run_num)
     except ValueError:
         pass
+    restore_missing_files = json.loads(request.args.get("restore_missing_files", "false"))
 
     site_config = get_site_config()
     if site_config.get("dm_mover_prefix", None):
@@ -1652,7 +1653,7 @@ def svc_check_and_move_run_files_to_location(experiment_name):
             "run_num": run_num,
             "experiment_name": experiment_name,
             "instrument": get_experiment_info(experiment_name)["instrument"],
-            "restore_missing_files": True,
+            "restore_missing_files": restore_missing_files,
             "files": [x["path"] for x in files_for_run.values()]
             }).json()
         for mfile, status in resp.get("files", {}).items():
