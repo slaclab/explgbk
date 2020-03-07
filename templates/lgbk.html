@@ -281,9 +281,9 @@ $(document).ready(function() {
         console.log("Session times out in " + msToSessionTimeout + "(ms)");
         $(".session_items").attr("title", "Your session will expire at " + moment.unix(auth_expiration_time).format("dddd, MMMM Do YYYY, h:mm:ss a"));
         var on_session_timeout = function() {
-            console.log("Session timed out.");
-            $(".session_items").addClass("session_timeout");
-            $(".session_items").attr("title", "Your session is about to or has already timed out. Please logout and log back in to continue your work.");
+            let lgt = function() { window.location.href="../logout" };
+            new Noty( { text: "Your session is about to or has already timed out. Please logout and log back in to continue your work.", layout: "topRight", type: "error", timeout: 20000 }).show();
+            setTimeout(lgt, 21000);
         }
         if(msToSessionTimeout > 30000) {
             setTimeout(on_session_timeout, msToSessionTimeout - 30000);
