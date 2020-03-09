@@ -200,6 +200,11 @@ def clone_experiment(experiment_name, source_experiment_name, incoming_info, cop
             logger.info("Copying over collection %s from source experiment %s to dest experiment %s", coll, source_experiment_name, experiment_name)
             copy_collection_from_src_to_clone(coll)
 
+    # Make sure the person doing the cloning has admin privileges in the expeirment.
+    current_user = security.get_current_user_id()
+    expdb["roles"].update_one({"app" : "LogBook", "name": "Manager"}, {"$addToSet": {"players": "uid:" + current_user}}, upsert=True)
+    expdb["roles"].update_one({"app" : "LogBook", "name": "Editor"}, {"$addToSet": {"players": "uid:" + current_user}}, upsert=True)
+
     return (True, "")
 
 
