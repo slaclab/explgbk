@@ -1,0 +1,39 @@
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "AMO"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Editor", "players" : [ "ps-amo", "ps-amo-sci", "ps-amo-elog"]}}})
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "AMO"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Manager", "players" : [ "ps-amo", "ps-amo-sci"]}}})
+
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "CXI"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Editor", "players" : [ "ps-cxi", "ps-cxi-sci", "ps-cxi-elog"]}}})
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "CXI"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Manager", "players" : [ "ps-cxi", "ps-cxi-sci"]}}})
+
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "DET"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Editor", "players" : [ "ps-det", "ps-det-sci", "ps-det-elog"]}}})
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "DET"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Manager", "players" : [ "ps-det", "ps-det-sci"]}}})
+
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "MEC"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Editor", "players" : [ "ps-mec", "ps-mec-sci", "ps-mec-elog"]}}})
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "MEC"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Manager", "players" : [ "ps-mec", "ps-mec-sci"]}}})
+
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "MFX"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Editor", "players" : [ "ps-mfx", "ps-mfx-sci", "ps-mfx-elog"]}}})
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "MFX"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Manager", "players" : [ "ps-mfx", "ps-mfx-sci"]}}})
+
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "SXR"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Editor", "players" : [ "ps-sxr", "ps-sxr-sci", "ps-sxr-elog"]}}})
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "SXR"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Manager", "players" : [ "ps-sxr", "ps-sxr-sci"]}}})
+
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "XCS"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Editor", "players" : [ "ps-xcs", "ps-xcs-sci", "ps-xcs-elog"]}}})
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "XCS"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Manager", "players" : [ "ps-xcs", "ps-xcs-sci"]}}})
+
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "XPP"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Editor", "players" : [ "ps-xpp", "ps-xpp-sci", "ps-xpp-elog"]}}})
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "XPP"}, {
+    "$push": { "roles": { "app" : "LogBook", "name" : "Manager", "players" : [ "ps-xpp", "ps-xpp-sci"]}}})
