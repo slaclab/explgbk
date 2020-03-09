@@ -682,7 +682,7 @@ def svc_has_role(experiment_name):
     return JSONEncoder().encode({"success": True,
         "value": {
             "role_fq_name": role_fq_name, "application_name": application_name, "role_name": role_name,
-            "hasRole": context.roleslookup.has_slac_user_role(context.security.get_current_user_id(), application_name, role_name, experiment_name)
+            "hasRole": context.roleslookup.has_slac_user_role(context.security.get_current_user_id(), application_name, role_name, experiment_name, instrument=g.instrument)
         }})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog", methods=["GET"])
@@ -803,6 +803,7 @@ def svc_post_new_elog_entry(experiment_name):
     Create a new log entry.
     Process multi-part file upload
     """
+    experiment_name = experiment_name.replace(" ", "_")
     log_content = request.form["log_text"]
 
     if not log_content or not log_content.strip():
