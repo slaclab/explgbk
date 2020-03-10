@@ -1161,15 +1161,21 @@ def update_editable_param_for_run(experiment_name, runnum, source, value, userid
     :param userid:
     '''
     expdb = logbookclient[experiment_name]
-    if not source.startswith('editable_params.'):
+    if not source.startswith('editable_params.') and not source.startswith('params.Calibrations/'):
         raise Exception("Cannot update anything else other than an editable param")
-    return expdb["runs"].find_one_and_update(
-        {"num": runnum},
-        {"$set": { source: {
-                    "value": value,
-                    "modified_by": userid,
-                    "modified_time": datetime.datetime.utcnow()
-                    }}})
+    if source.startswith('editable_params.'):
+        return expdb["runs"].find_one_and_update(
+            {"num": runnum},
+            {"$set": { source: {
+                        "value": value,
+                        "modified_by": userid,
+                        "modified_time": datetime.datetime.utcnow()
+                        }}})
+    if source.startswith('params.Calibrations/'):
+        return expdb["runs"].find_one_and_update(
+            {"num": runnum},
+            {"$set": { source: value }})
+    raise Exception("Update editable param called for unknown param type " + source)
 
 def get_experiment_shifts(experiment_name):
     """

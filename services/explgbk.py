@@ -1202,7 +1202,8 @@ def svc_run_table_editable_update(experiment_name):
     value = request.form.get("value")
     userid = context.security.get_current_user_id()
 
-    if not source.startswith('editable_params.'):
+    # params.Calibrations is a legacy of old LCLS1 experiments.
+    if not source.startswith('editable_params.') and not source.startswith('params.Calibrations/'):
         return logAndAbort("We can only change editable parameters.")
     if source.endswith('.value'):
         source = source.replace(".value", "")

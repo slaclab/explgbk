@@ -108,7 +108,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                label: colname,
                type: type,
                source: source,
-               is_editable: type == "Editables",
+               is_editable: ((type == "Editables") || (_.startsWith(source, "params.Calibrations/"))),
                position: index
              });
            });
@@ -132,7 +132,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 
   var update_editable_for_run = function( input_elem ) {
     console.log("Updating editable column");
-    $.getJSON({ url: "ws/run_table_editable_update", method: "POST", data: { runnum: input_elem.attr('data-run-num'), source: input_elem.attr('data-column-source'), value: input_elem.html()}})
+    $.getJSON({ url: "ws/run_table_editable_update", method: "POST", data: { runnum: input_elem.attr('data-run-num'), source: input_elem.attr('data-column-source'), value: input_elem.text()}})
     .done(function(data, textStatus, jqXHR){ if(data.success) { console.log("Successfully updated editable");} else { alert("Server side exception updating editable " + data.errormsg); }})
     .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception updating editable " + jqXHR.responseText)});
   }
@@ -201,7 +201,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
           if(coldef["source"] == "Separator") {
             row_tmpl = row_tmpl + "<td class='rtbl_separator'>&nbsp;</td>";
           } else if (coldef["is_editable"]) {
-            row_tmpl = row_tmpl + "<td><div class='rtbl_editable_column_parent'><div contenteditable='true' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column'>{{" + coldef["source"] + "}}</div></div></td>";
+            row_tmpl = row_tmpl + "<td><div class='rtbl_editable_column_parent'><div contenteditable='true' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column' title='Type and click outside the box to update'>{{" + coldef["source"] + "}}</div></div></td>";
         } else if (_.endsWith(coldef["source"], "_time")) {
             row_tmpl = row_tmpl + "<td>{{#FormatDate}}{{" + coldef["source"] + "}}{{/FormatDate}}</td>";
           } else if (_.startsWith(coldef["mime_type"], "image/")) {
