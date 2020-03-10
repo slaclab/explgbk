@@ -1310,9 +1310,7 @@ def svc_end_run(experiment_name):
 
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/current_run", methods=["GET"])
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/current_run", methods=["GET"])
-@context.security.authentication_required
 @experiment_exists_and_unlocked
-@context.security.authorization_required("read")
 def svc_current_run(experiment_name):
     """
     Get the run document for the current run.
