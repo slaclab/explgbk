@@ -716,6 +716,11 @@ label {
 #rtbl_content .tblhighlight {
   background-color: #1E48DF;
 }
+#rtbl_content .rbtl_col_hvr {
+  background-color: #BDCBFC;
+  border-left: solid #1E48DF 2px;
+  border-right: solid #1E48DF 2px;
+}
 #rtbl_content .rtbldef_action {
   opacity: 0.5;
   padding-left: 0.1rem;

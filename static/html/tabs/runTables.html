@@ -146,6 +146,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").removeClass("tblhighlight"); });
       content_editable_trigger_change(rowRendered);
       rowRendered.find(".rtbl_editable_column").change(function(){ update_editable_for_run($(this))});
+      rowRendered.find("td").hover(function() { let colnum = parseInt($(this).index()) + 1; $(this).closest("table").find('td:nth-child(' + colnum + ')').addClass('rbtl_col_hvr'); }, function() { let colnum = parseInt($(this).index()) + 1; $(this).closest("table").find('td:nth-child(' + colnum + ')').removeClass('rbtl_col_hvr')});
       return rowRendered;
   }
 
