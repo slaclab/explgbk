@@ -277,7 +277,6 @@ label {
   font-weight: bold;
 }
 #expswitch_choose_experiment table {
-  display: block;
   overflow-y: scroll;
 }
 #expswitch_choose_experiment table td {
@@ -285,6 +284,12 @@ label {
 }
 #expswitch_choose_experiment table td a {
   color: #6685F4;
+}
+#switch_hist .histdiv {
+  max-height: 20rem;
+}
+#switch_hist table {
+  overflow-y: scroll;
 }
 #expswitch_choose_experiment .btn-group .btn {
   margin-top: 0.25em;
