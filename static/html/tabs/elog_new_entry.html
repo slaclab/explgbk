@@ -35,7 +35,8 @@
                     <div class="form-group row">
                         <label class="col-1 col-form-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
                         <div class="col-7">
-                            <input class="form-control" rows="5" name="log_tags" id="elog_new_entry_tags" placeholder="Tag1 Tag2 Tag3"></input>
+                            <select class="form-control contacts tag_select" rows="10" id="elog_new_entry_tag_select" name="log_tags_shown" placeholder="tag1 tag2" multiple></select>
+                            <input class="d-none tag_input" name="log_tags" id="elog_new_entry_tag_dest"></input>
                         </div>
                         <div class="files_div col-4 input-group">
                             <div class="custom-file">

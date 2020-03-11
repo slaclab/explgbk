@@ -27,7 +27,6 @@
 .validation_warning {
   color: #FFB305;
   font-weight: bold;
-  font-size: 1.5rem;
 }
 .small_btn_mixin {
   font-size: 0.5rem;

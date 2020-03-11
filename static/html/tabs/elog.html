@@ -53,7 +53,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
        <div class="form-group row"><label class="col-2 col-form-label text-right">Text*: <span class="elog_followup_html"><i class="fas fa-table" title="HTML log entry"></i><span></label><div class="col"><textarea class="form-control elog_followup_textarea" rows="5" name="log_text"></textarea></div></div>
        <div class="form-group row"><label class="col-2 col-form-label text-right">Email:</label><div class="col"><select class="form-control contacts email_select" rows="10" name="log_emails_shown" placeholder="email1 email2@institution.edu" multiple></select></div></div>
        <div class="form-group row"><input class="d-none email_input" name="log_emails" value="{{ emails_str }}"></input></div>
-       <div class="form-group row"><label class="col-2 col-form-label text-right">Tags:</label><div class="col"><input class="form-control" type="text" name="log_tags" placeholder="Tag1 Tag2 Tag3"/></div></div>
+       <div class="form-group row"><label class="col-2 col-form-label text-right">Tags:</label><div class="col"><select class="form-control contacts tag_select" rows="10" id="elog_new_entry_tag_select" name="log_tags_shown" placeholder="tag1 tag2" multiple></select><input class="d-none tag_input" name="log_tags" id="elog_new_entry_tag_dest"></input></div></div>
        <div class="form-group row files_div"><label class="col-2 col-form-label text-right">&nbsp;</label><div class="custom-file col"><input type="file" name="files" class="custom-file-input" id="elog_followup_file_upload" multiple><label class="custom-file-label" for="elog_followup_file_upload"><span class="pr-2"><i class="fas fa-cloud fa-lg"></i></span>Attach files</label></div></div>
        <div class="form-group row justify-content-end"><button type="button" class="btn btn-primary followup_post">Post</button></div>
       </form></div></div></div>`;
@@ -130,17 +130,34 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       });
   }
 
+  var tag_selector = function(content_div) {
+      $.getJSON(elog_tags).done(function(dat){
+          var tags_choices = _.map(dat.value, function(t){ return {tag: t} });
+          console.log(tags_choices);
+          var selected_items = _.split(content_div.find(".tag_input").val(), " ");
+          content_div.find(".tag_select").selectize({persist: false, valueField: 'tag', labelField: 'tag', createOnBlur: true, maxItems: null, options: tags_choices, items: selected_items,
+            render: { item: function(item, escape)   { return "<div class='selectedoption'><span>" + escape(item['tag']) + "</span></div>"; },
+                      option: function(item, escape) { return "<div class='seloption'><span>" + escape(item['tag']) + "</span></div>"; }
+                  },
+                  create: function(input) { return {tag: input }}});
+          content_div.find(".tag_select").on("change", function() {
+              content_div.find(".tag_input").val(_.join(content_div.find(".tag_select").val(), " "));
+          })
+      });
+  }
+
  var followup_function = function() {
     if($(this).closest(".edat").find(".followup_div").length > 0) { $(this).closest(".edat").find(".followup_div").remove(); return; }
     if(check_session_timeout()) return;
 	var entry = $(this).closest(".edat").data("entry"), current_text_mode_html = false;
 	var rendered = renderMSTemplate(elog_followup_template, entry);
     email_selector(rendered);
+    tag_selector(rendered);
 	rendered.find(".close").on("click", function(){ $(this).closest(".followup_div").remove(); });
     rendered.find(".elog_followup_html").on("click", function(){ $(this).closest(".followup_div").find(".log_title_div").removeClass("d-none"); $(this).closest(".followup_div").find("textarea").summernote(summernote_options); current_text_mode_html=true; $(this).remove(); });
     rendered.find("#elog_followup_file_upload").on("change", function(){ let fsel = $(this)[0].files.length; $(this).closest(".custom-file").find(".custom-file-label").text(fsel + " file" + (fsel==1 ? "" : "s") + " selected")});
 	rendered.find(".followup_post").on("click", function(){
-        var val_alert = function(th, msg) { th.closest(".followup_form").find(".validation_warning").html("Please enter a title for the log message").removeClass("d-none"); return false;  }
+        var val_alert = function(th, msg) { th.closest(".followup_form").find(".validation_warning").html(msg).removeClass("d-none"); return false;  }
         if(current_text_mode_html) {
             if(_.isEmpty($.trim($(this).closest(".followup_form").find(".log_title").val()))) { return val_alert($(this), "Please enter a title for the log message"); }
             if(_.isEmpty($.trim($($(this).closest(".followup_form").find("textarea").val()).text()))) { return val_alert($(this), "Please enter some text for the log message"); }
@@ -176,6 +193,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
     var entry = $(this).closest(".edat").data("entry"), current_text_mode_html = false;
     var rendered = renderMSTemplate(elog_followup_template, entry);
     email_selector(rendered);
+    tag_selector(rendered);
  	rendered.find(".close").on("click", function(){ $(this).closest(".followup_div").remove(); });
     rendered.find("textarea").first().text(entry["content"]);
     if(_.has(entry, "title")) {
@@ -498,6 +516,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
          mdl.find("#elog_new_entry_file_upload").on("change", function(){ let fsel = $(this)[0].files.length; $(this).closest(".custom-file").find(".custom-file-label").text(fsel + " file" + (fsel==1 ? "" : "s") + " selected")})
          $("#elog_content").prepend(mdl);
          email_selector($("#elog_content"));
+         tag_selector($("#elog_content"));
          $("#elog_content").find(".elog_html").on("click", function(){ $("#elog_content").find(".log_title_div").removeClass("d-none"); $(this).remove(); $('#elog_new_entry_log_text').summernote(summernote_options); current_text_mode_html=true;});
          $("#elog_new_entry_modal_post").on("click", function (e) {
             var formData = new FormData($('#elog_new_entry_form')[0]);
