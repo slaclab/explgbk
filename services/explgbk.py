@@ -47,7 +47,8 @@ from dal.explgbk import get_experiment_info, save_new_experiment_setup, register
     create_update_wf_definition, get_workflow_jobs, get_workflow_job_doc, create_wf_job, delete_wf_job, update_wf_job, \
     file_available_at_location, get_collaborators_list_for_experiment, get_site_naming_conventions, delete_sample_for_experiment, \
     get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
-    get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store
+    get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
+    get_complete_elog_tree_for_specified_id
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -793,6 +794,15 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
         logger.exception("Exception sending elog emails for experiment " + experiment_name)
 
     return True
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog/<entry_id>/complete_elog_tree", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_complete_elog_tree_for_specified_id(experiment_name, entry_id):
+    complete_tree = get_complete_elog_tree_for_specified_id(experiment_name, entry_id)
+    return JSONEncoder().encode({'success': True, 'value': complete_tree})
+
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/new_elog_entry", methods=["POST"])
 @context.security.authentication_required

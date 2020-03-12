@@ -313,3 +313,7 @@ var clone_experiment = function(src_experiment_name, mdl_holder, path_to_ws="", 
    mdl_holder.find(".edit_modal").modal("show");
   });
 };
+
+var error_message = function(msg, timeout=1000) {
+    new Noty( { text: msg, theme: "sunset", layout: "topRight", type: "error", timeout: timeout }).show();
+}

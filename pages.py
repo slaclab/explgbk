@@ -137,3 +137,19 @@ def exp_elog(experiment_name):
         logbook_site=context.LOGBOOK_SITE,
         show_feedback=json.dumps(os.path.exists(os.path.join("static", "json", "feedback_" + context.LOGBOOK_SITE + ".json")))
         )
+
+@pages_blueprint.route("/lgbk/<experiment_name>/elogs/<entry_id>", methods=["GET"])
+@experiment_exists_and_unlocked
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def exp_elog_entry_only(experiment_name, entry_id):
+    logged_in_user=context.security.get_current_user_id()
+    exp_info = get_experiment_info(experiment_name)
+    instrument_name = exp_info.get("instrument", None) if exp_info else None
+    return render_template("elog_entry.html",
+        experiment_name=experiment_name,
+        instrument_name=instrument_name,
+        entry_id=entry_id,
+        logged_in_user=logged_in_user,
+        logbook_site=context.LOGBOOK_SITE
+    )

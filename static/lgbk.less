@@ -757,6 +757,32 @@ label {
 	width: 100%;
 }
 
+#log_entry_body {
+    #toolbar_for_tab span {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        color: @navbartext;
+        background: @navbarcolor;
+        a {
+            color: @navbartext;
+            background: @navbarcolor;
+        }
+    }
+    .tab_title_bar {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+}
+#elog_sgl_entry {
+    .font_family_choices_mixin;
+    .card {
+        width: 100%;
+        .elog_deleted {
+            text-decoration: line-through;
+        }
+    }
+}
+
 #fmgr_tab {
     .run_file:nth-child(odd) {
     	background: @tablezebra;

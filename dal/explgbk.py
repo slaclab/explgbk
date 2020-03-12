@@ -591,6 +591,21 @@ def get_elog_tree_for_specified_id(experiment_name, specified_id):
     else:
         return []
 
+def get_complete_elog_tree_for_specified_id(experiment_name, specified_id):
+    """
+    Get all the parents and all the children of the specified elog entry; the result includes the entry also.
+    """
+    expdb = logbookclient[experiment_name]
+    specified_entry = get_specific_elog_entry(experiment_name, ObjectId(specified_id))
+    if specified_entry:
+        if 'root' in specified_entry:
+            ret = {x["_id"] : x for x in expdb['elog'].find({ "root": specified_entry["root"]})}
+            ret[specified_entry["root"]] = get_specific_elog_entry(experiment_name, specified_entry["root"])
+        else:
+            ret = {x["_id"] : x for x in expdb['elog'].find({ "root": specified_entry["_id"]})}
+            ret[specified_entry["_id"]] = specified_entry
+        return list(sorted(ret.values(), key=lambda x : x["insert_time"]))
+    return []
 
 def get_elogs_for_date_range(experiment_name, start_date, end_date):
     """

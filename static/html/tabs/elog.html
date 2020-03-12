@@ -440,26 +440,21 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
 
   var load_elog_function = function() {
-      var user_specified_log_entry_id = getURLParameter("_id");
-      if(!_.isNil(user_specified_log_entry_id)) {
-          console.log("Loading elog for specific entry " + user_specified_log_entry_id);
-          $.getJSON({ url: "ws/search_elog", data: { "_id": user_specified_log_entry_id }}).done(function(data){
-              processElogResponse(data);
-              renderElogResponse(data);
-              _.times(100, function(){ $(".elog-compressed").trigger("click"); });
-              skip_websocket_elog_messages = true;
-          });
-      } else {
-          var elog_params = {includeParams: false};
-          if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { elog_params["sampleName"] = sample_showing_in_UI; }
-          $("#elog_content").html('<div class="loading">Loading</div>');
-          $.when($.getJSON("ws/elog", elog_params), $.getJSON("ws/runs", elog_params))
-          .done(function(d1, d2){
-              var elogData = d1[0], runData = d2[0];
-              skip_websocket_elog_messages = false;
-              renderElogResponse({value: _.concat(processElogResponse(elogData), processRunResponse(runData))});
-          });
-      }
+      var elog_params = {includeParams: false};
+      if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { elog_params["sampleName"] = sample_showing_in_UI; }
+      $("#elog_content").html('<div class="loading">Loading</div>');
+      $.when($.getJSON("ws/elog", elog_params), $.getJSON("ws/runs", elog_params))
+      .done(function(d1, d2){
+          var elogData = d1[0], runData = d2[0];
+          skip_websocket_elog_messages = false;
+          renderElogResponse({value: _.concat(processElogResponse(elogData), processRunResponse(runData))});
+          if(!_.isNil(sessionStorage.getItem("eLog_scrollTo"))) {
+              let scrollToId = sessionStorage.getItem("eLog_scrollTo");
+              sessionStorage.removeItem("eLog_scrollTo");
+              $("#elog_content").data("spgntr").scrollTo(scrollToId);
+              $("#elog_content").find("[data-spgntr=" + scrollToId + "] .elog-expand").trigger("click");
+          }
+      });
   };
   $("#elog_tab").data("refresh", load_elog_function);
   $("#elog_tab").on("lg.refresh", function() { load_elog_function(); });
@@ -522,7 +517,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
             var formData = new FormData($('#elog_new_entry_form')[0]);
             if(current_text_mode_html) {
                 if(_.isEmpty($.trim($("#elog_new_entry_log_title").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter a title for the log message"); return false; }
-                if(_.isEmpty($.trim($($("#elog_new_entry_log_text").val()).text()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
+                if(_.isEmpty($.trim($("#elog_new_entry_log_text").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
             } else {
                 if(_.isEmpty($.trim($("#elog_new_entry_log_text").val()))) { $("#elog_new_entry_modal").find(".validation_warning").html("Please enter some text for the log message"); return false; }
             }
@@ -577,7 +572,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       console.log("Getting data for attachments only");
       $.getJSON("ws/elog")
       .done(function(data){
-          var attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="col-3"><a href="?_id={{entry_id}}#eLog" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
+          var attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="col-3"><a href="elogs/{{entry_id}}" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
           Mustache.parse(attachments_only_template);
           var attachments_flat_list = [];
           _.each(data.value, function(entry) {

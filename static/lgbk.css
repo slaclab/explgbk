@@ -666,6 +666,30 @@ label {
 #elog_content .elog-chid .card {
   width: 100%;
 }
+#log_entry_body #toolbar_for_tab span {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  color: white;
+  background: #6685F4;
+}
+#log_entry_body #toolbar_for_tab span a {
+  color: white;
+  background: #6685F4;
+}
+#log_entry_body .tab_title_bar {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+#elog_sgl_entry {
+  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+  font-size: 0.85rem;
+}
+#elog_sgl_entry .card {
+  width: 100%;
+}
+#elog_sgl_entry .card .elog_deleted {
+  text-decoration: line-through;
+}
 #fmgr_tab .run_file:nth-child(odd) {
   background: #efefef;
 }
