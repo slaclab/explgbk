@@ -177,10 +177,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 			if(data.success) {
 				console.log("Successfully posted follow elog entry");
 			} else {
-				alert("Server side exception posting followup elog entry " + data.errormsg);
+				error_message("Server side exception posting followup elog entry " + data.errormsg);
 			}
 		})
-		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception posting followup elog entry " + jqXHR.responseText); })
+		.fail(function(jqXHR, textStatus, errorThrown) { error_message("Server side exception posting followup elog entry " + jqXHR.responseText); })
 		$(this).closest(".followup_div").remove();
 	});
 
@@ -226,10 +226,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  			if(data.success) {
  				console.log("Successfully edited elog entry");
  			} else {
- 				alert("Server side exception editing elog entry " + data.errormsg);
+ 				error_message("Server side exception editing elog entry " + data.errormsg);
  			}
  		})
- 		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception editing elog entry " + jqXHR.responseText); })
+ 		.fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); error_message("Server side exception editing elog entry " + jqXHR.responseText); })
  		$(this).closest(".followup_div").remove();
  	});
     $(this).closest(".elog-chid").find(".dialog_holder").html(rendered);
@@ -257,7 +257,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
              if(!_.isEmpty(post_to_elogs)) {
                  $.getJSON({url: "ws/cross_post_elogs", data: {_id: entry["_id"], post_to_elogs: _.join(post_to_elogs, ",") }})
                  .done(function(){})
-                 .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception cross posting elog entry " + jqXHR.responseText); })
+                 .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); error_message("Server side exception cross posting elog entry " + jqXHR.responseText); })
              }
          })
          $("#elog_tab").find(".mdl_holder").append(rendered);
@@ -533,10 +533,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
                   if(data.success) {
                       console.log("Successfully posted elog entry");
                   } else {
-                      alert("Server side exception posting new elog entry " + data.errormsg);
+                      error_message("Server side exception posting new elog entry " + data.errormsg);
                   }
               })
-              .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception posting new elog entry " + jqXHR.responseText); })
+              .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); error_message("Server side exception posting new elog entry " + jqXHR.responseText); })
             $("#elog_new_entry_modal").modal("hide");
          });
          $("#elog_new_entry_modal").modal();

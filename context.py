@@ -64,6 +64,8 @@ imagestoreurl = os.environ.get("IMAGE_STORE_URL", "http://localhost:9333/")
 if not imagestoreurl.endswith("/"):
     imagestoreurl = imagestoreurl + "/"
 
+MAX_ATTACHMENT_SIZE = float(os.environ.get("MAX_ATTACHMENT_SIZE", "6291456"))
+
 # Instrument scientist run table definitions/descriptions/categoris are typically defined in a JSON file external to this project
 # We load this from the file if it exists and create a reverse mapping from PV -> Category/Description
 # There is a per instrument breakdown in this file and a all-instrument section called "HEADER" which I presume we add to all instruments

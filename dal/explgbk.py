@@ -18,7 +18,7 @@ import subprocess
 from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
-from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl
+from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, MAX_ATTACHMENT_SIZE
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 from dal.imagestores import parseImageStoreURL
 from dal.exp_cache import get_experiments_for_instrument
@@ -26,6 +26,12 @@ from dal.exp_cache import get_experiments_for_instrument
 __author__ = 'mshankar@slac.stanford.edu'
 
 logger = logging.getLogger(__name__)
+
+class LgbkException(Exception):
+    """
+    Exception whose message gets passed to the end user as an error message
+    """
+    pass
 
 def get_instruments():
     """
@@ -639,6 +645,10 @@ def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
             tfname, tf_thmbname = fd.name, fd.name+".png"
             shutil.copyfileobj(imgget, fd, 1024)
             fd.flush()
+            attachment_size = os.fstat(fd.fileno()).st_size
+            if attachment_size > MAX_ATTACHMENT_SIZE:
+                raise LgbkException("We limit the size of attachments to %s M" % str(MAX_ATTACHMENT_SIZE/(1024*1024)))
+            logger.error("Attachment size %s", attachment_size)
             cp = subprocess.run(["convert", "-thumbnail", "128", tfname, tf_thmbname], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=30)
             logger.info(cp)
             if cp.returncode == 0 and os.path.exists(tf_thmbname):

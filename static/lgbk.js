@@ -314,6 +314,6 @@ var clone_experiment = function(src_experiment_name, mdl_holder, path_to_ws="", 
   });
 };
 
-var error_message = function(msg, timeout=1000) {
-    new Noty( { text: msg, theme: "sunset", layout: "topRight", type: "error", timeout: timeout }).show();
+var error_message = function(msg, timeout=5000) {
+    new Noty( { text: msg, layout: "topRight", type: "error", timeout: timeout }).show();
 }

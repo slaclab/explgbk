@@ -29,7 +29,7 @@ from email.message import EmailMessage
 from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context, send_file, \
     abort, redirect, make_response, g
 
-from dal.explgbk import get_experiment_info, save_new_experiment_setup, register_new_experiment, \
+from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_setup, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
     get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources, \
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
@@ -879,7 +879,10 @@ def svc_post_new_elog_entry(experiment_name):
         if filename:
             logger.info(filename)
             files.append((filename, upload))
-    inserted_doc = post_new_log_entry(experiment_name, userid, log_content, files, **optional_args)
+    try:
+        inserted_doc = post_new_log_entry(experiment_name, userid, log_content, files, **optional_args)
+    except LgbkException as e:
+        return JSONEncoder().encode({'success': False, 'errormsg': str(e), 'value': None})
     if 'run_num' in inserted_doc:
         sample_obj = get_sample_for_run(experiment_name, inserted_doc['run_num'])
         if sample_obj:
