@@ -34,8 +34,7 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
         _.each(validations, function(validation, i) {
           console.log("Trying validation " + i + "" + validation[1]);
           if(validation[0]()) {
-              $("#shifts_tab").find("#mdl_holder").find(".validation_message").html(validation[1]);
-              $("#shifts_tab").find("#mdl_holder").find(".validation_modal").modal("show");
+              error_message(validation[1]);
               v_failed = true;
               return false;
           }
