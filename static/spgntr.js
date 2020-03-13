@@ -89,11 +89,15 @@ var sortable_paginator = function(container, key_attr, sort_attr, sort_desc=fals
     }
 
     container.data("spgntr").scrollTo = function(scrollToId) {
-        let prev_page_end = this.page_end, ap2c = this.container.find(".spgntr_append"), scIndex = _.findIndex(this.disp_objs, ["_id", scrollToId]);
+        let prev_page_end = this.page_end, ap2c = this.container.find(".spgntr_append"), scIndex = _.findIndex(this.disp_objs, [key_attr, scrollToId]);
         if(scIndex < 0) { error_message("Cannot find element to scroll to " + scrollToId); }
         if(scIndex < this.page_end) { ap2c.find("[data-spgntr=" + scrollToId + "]")[0].scrollIntoView(); }
         this.page_end = scIndex + 1;
         _.each(_.slice(this.disp_objs, prev_page_end, this.page_end), function(obj){ ap2c.append(obj.render())});
-        ap2c.find("[data-spgntr=" + scrollToId + "]")[0].scrollIntoView();
+        if(ap2c.find("[data-spgntr=" + scrollToId + "]").length > 0){
+            ap2c.find("[data-spgntr=" + scrollToId + "]")[0].scrollIntoView();
+        } else {
+            error_message("Cannot find DOM element to scroll to " + scrollToId);
+        }
     }
 }

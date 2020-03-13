@@ -450,6 +450,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
           renderElogResponse({value: _.concat(processElogResponse(elogData), processRunResponse(runData))});
           if(!_.isNil(sessionStorage.getItem("eLog_scrollTo"))) {
               let scrollToId = sessionStorage.getItem("eLog_scrollTo");
+              console.log("Scrolling to entry " + scrollToId);
               sessionStorage.removeItem("eLog_scrollTo");
               $("#elog_content").data("spgntr").scrollTo(scrollToId);
               $("#elog_content").find("[data-spgntr=" + scrollToId + "] .elog-expand").trigger("click");
@@ -570,12 +571,16 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
   $("#elog_tab").data("elog_attachments_only", function() {
       console.log("Getting data for attachments only");
-      $.getJSON("ws/elog")
-      .done(function(data){
-          var attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="col-3"><a href="elogs/{{entry_id}}" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
+      var elog_params = {includeParams: false};
+      if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { elog_params["sampleName"] = sample_showing_in_UI; }
+      $("#elog_content").html('<div class="loading">Loading</div>');
+      $.getJSON("ws/elog", elog_params)
+      .done(function(d0){
+          let attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="col-3"><a href="elogs/{{entry_id}}" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
+          let entries = d0.value;
           Mustache.parse(attachments_only_template);
-          var attachments_flat_list = [];
-          _.each(data.value, function(entry) {
+          let attachments_flat_list = [];
+          _.each(entries, function(entry) {
               if(_.has(entry, 'attachments')) {
                   _.each(entry.attachments, function(attachment){
                       attachment["entry_id"] = entry["_id"];
@@ -583,8 +588,42 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
                   });
               }
           });
-          var rendered = Mustache.render(attachments_only_template, { attachments: attachments_flat_list.reverse()});
+          let rendered = Mustache.render(attachments_only_template, { attachments: attachments_flat_list.reverse()});
           $("#elog_content").html(rendered);
+      });
+  });
+
+  $("#elog_tab").data("elog_hybrid_mode", function() {
+      console.log("Attachments in hybrid mode.");
+      var elog_params = {includeParams: false};
+      if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { elog_params["sampleName"] = sample_showing_in_UI; }
+      $("#elog_content").html('<div class="loading">Loading</div>');
+      $.when($.getJSON("ws/elog", elog_params), $.getJSON("ws/runs", elog_params))
+      .done(function(d0, d1){
+          let attachments_only_template = `<div class="elog_hybrid_mode">{{#attachments}}<div class="row elog_hybrid_row"><div class="col-2">{{#run}}<div class="row"><span class="pl-2 pr-1"><strong>Run:</strong></span>{{run.num}}<span class="tblr" title="Go to this run in the logbook" data-runid="{{run._id}}"><i class="fas fa-sync"></i></span></div><div class="row"><span class="pl-2 pr-1"><strong>Run start:</strong></span>{{#FormatDate}}{{ run.begin_time }}{{/FormatDate}}</div>{{/run}}</div>
+          <div class="col-2"><div class="row"><span class="pr-1"><strong>Author:</strong></span>{{entry.author}}</div><div class="row"><span class="pr-1"><strong>Posted:</strong></span>{{#FormatDate}}{{ entry.relevance_time }}{{/FormatDate}}</div><div class="row"><span class="pr-1"><strong>Name:</strong></span>{{name}}</div><div class="row"><span class="pr-1"><strong>Type:</strong></span>{{type}}</div></div>
+          <div class="col"><a href="elogs/{{entry._id}}" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry._id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div></div>{{/attachments}}</div>`;
+          Mustache.parse(attachments_only_template);
+          let entries = d0[0].value, runs = _.keyBy(d1[0].value, "num");
+          let attachments_flat_list = [];
+          _.each(entries, function(entry) {
+              if(_.has(entry, 'attachments')) {
+                  _.each(entry.attachments, function(attachment){
+                      attachment["entry"] = entry;
+                      if(_.has(entry, "run_num")) { attachment["run"] = runs[entry["run_num"]]  }
+                      attachments_flat_list.push(attachment);
+                  });
+              }
+          });
+          let atl = { attachments: attachments_flat_list.reverse()};
+          atl.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+          let rendered = $(Mustache.render(attachments_only_template, atl));
+
+          rendered.find(".fa-sync").parent().on("click", function(){
+              sessionStorage.setItem("eLog_scrollTo", "r_" + $(this).attr("data-runid") + "_b");
+              location.reload();
+          })
+          $("#elog_content").empty().html(rendered);
       });
   });
 
@@ -595,6 +634,7 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
     <span id="elog_new_entry"><i class="fas fa-plus fa-lg" title="Post a new elog entry"></i></span>
     <span id="elog_toggle_runs"><i class="fas fa-running fa-lg" title="Hide/show run entries"></i></span>
     <span id="elog_attachments_only"><i class="fas fa-paperclip fa-lg" title="Toggle attachments only"></i></span>
+    <span id="elog_hybrid_mode"><i class="fas fa-table fa-lg" title="Attachments as a table (aka hybrid mode)"></i></span>
     <span id="elog_deleted_entries"><i class="fas fa-strikethrough fa-lg" title="Toggle deleted entries"></i></span>
     <span id="elog_email_subscribe"><i class="fas fa-envelope-open fa-lg" title="Email subscription"></i></span>`;
     var toolbar_rendered = $(tab_toolbar);
@@ -609,6 +649,16 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
             skip_websocket_elog_messages = true;
         }
         $("#elog_attachments_only").toggleClass("pushedin");
+    });
+    $("#elog_hybrid_mode").on("click", function() {
+        if($("#elog_hybrid_mode").hasClass("pushedin")) {
+            $("#elog_tab").data("refresh")();
+            skip_websocket_elog_messages = false;
+        } else {
+            $("#elog_tab").data("elog_hybrid_mode")();
+            skip_websocket_elog_messages = true;
+        }
+        $("#elog_hybrid_mode").toggleClass("pushedin");
     });
     $("#elog_toggle_runs").on("click", function() {
         window.showRuns = !_.get(window, "showRuns", true);

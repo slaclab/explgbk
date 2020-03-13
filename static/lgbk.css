@@ -523,6 +523,15 @@ label {
   height: 100%;
   overflow-y: scroll;
 }
+#elog_tab .elog_hybrid_row {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom: thin solid #6685F4;
+}
+#elog_tab .elog_hybrid_row .tblr {
+  color: #6685F4;
+  padding-left: 0.1rem;
+}
 #elog_tab .elog_deleted {
   text-decoration: line-through;
 }
