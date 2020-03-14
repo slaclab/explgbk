@@ -21,7 +21,9 @@ var sortable_paginator = function(container, key_attr, sort_attr, sort_desc=fals
             this.objs = _.keyBy(objs, this.key_attr);
             this.disp_objs = this.sort_desc ? this.sorted_objs.slice().reverse() : this.sorted_objs;
             var spg = this;
-            _.each(_.slice(this.disp_objs, this.page_start, this.page_end), function(o, i, c) { ap2c.append(o.render()); });
+            let elems2insert = [];
+            _.each(_.slice(this.disp_objs, this.page_start, this.page_end), function(o, i, c) { elems2insert.push(o.render()); });
+            ap2c.append(elems2insert);
         } else {
             _.each(objs, function(obj){ this.addObject(obj)});
         }
@@ -85,7 +87,9 @@ var sortable_paginator = function(container, key_attr, sort_attr, sort_desc=fals
         let prev_page_end = this.page_end, ap2c = this.container.find(".spgntr_append");
         this.page_end = this.page_end + this.page_size;
         console.log("Paging down from " + prev_page_end + " to " + this.page_end);
-        _.each(_.slice(this.disp_objs, prev_page_end, this.page_end), function(obj){ ap2c.append(obj.render())});
+        let elems2insert = [];
+        _.each(_.slice(this.disp_objs, prev_page_end, this.page_end), function(obj){ elems2insert.push(obj.render())});
+        ap2c.append(elems2insert);
     }
 
     container.data("spgntr").scrollTo = function(scrollToId) {
@@ -93,7 +97,9 @@ var sortable_paginator = function(container, key_attr, sort_attr, sort_desc=fals
         if(scIndex < 0) { error_message("Cannot find element to scroll to " + scrollToId); }
         if(scIndex < this.page_end) { ap2c.find("[data-spgntr=" + scrollToId + "]")[0].scrollIntoView(); }
         this.page_end = scIndex + 1;
-        _.each(_.slice(this.disp_objs, prev_page_end, this.page_end), function(obj){ ap2c.append(obj.render())});
+        let elems2insert = [];
+        _.each(_.slice(this.disp_objs, prev_page_end, this.page_end), function(obj){ elems2insert.push(obj.render())});
+        ap2c.append(elems2insert);
         if(ap2c.find("[data-spgntr=" + scrollToId + "]").length > 0){
             ap2c.find("[data-spgntr=" + scrollToId + "]")[0].scrollIntoView();
         } else {
