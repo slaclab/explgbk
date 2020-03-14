@@ -422,6 +422,8 @@ def svc_register_new_experiment():
         return logAndAbort("Experiment registration missing keys %s" % missing_keys)
     if info["instrument"] not in set([x["_id"] for x in get_instruments()]):
         return logAndAbort("The instrument specified %s  is not a valid instrument" % info["instrument"])
+    if 'posix_group' in info and len(info["posix_group"].strip()) < 1:
+        del info['posix_group']
 
     (status, errormsg) = register_new_experiment(experiment_name, info)
     if status:
@@ -1288,15 +1290,21 @@ def svc_runtable_export_as_csv(experiment_name):
     coltups = [ ("Run Number", "num") ] # List of tuples of label and attr name
     for cdef in tbldefs[0].get("coldefs", []):
         coltups.append((cdef["label"], cdef["source"]))
+    tz = pytz.timezone('America/Los_Angeles')
     si = io.StringIO()
     si.write(",".join([x[0] for x in coltups]) + "\n")
+    def __tocsv__(obj):
+        if isinstance(obj, datetime):
+            return obj.astimezone(tz).strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            return str(obj)
     def __ldget__(obj, attrpath, deflt):
         prts = attrpath.split(".")
         for prt in prts:
             obj = obj.get(prt, {})
         if not obj:
             return deflt
-        return str(obj)
+        return __tocsv__(obj)
     for dt in list(map(replaceInfNan, get_runtable_data(experiment_name, tableName, sampleName=sampleName))):
         si.write(",".join([ __ldget__(dt, ct[1], "") for ct in coltups]) + "\n")
     resp = make_response(si.getvalue())

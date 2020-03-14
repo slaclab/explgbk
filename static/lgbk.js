@@ -104,12 +104,13 @@ var lgbk_create_edit_exp = function(expInfo) {
     expInfo['contact_info_email'] = expInfo['contact_info'];
   }
   expInfo['paramkvs'] = _.map(expInfo['params'], function(value, key) { return { key: key, value: value };});
-  $.when($.ajax ("../static/html/ms/expreg.html"), $.getJSON(instruments_url), $.getJSON("naming_conventions"))
-  .done(function( d1, d2, d3) {
-    var tmpl = d1[0], instruments = d2[0], options = `{{#value}}<option value="{{ _id }}">{{ _id }}</option>{{/value}}`, site_naming_conventions = _.get(d3[0], "value", {}), ignore_experiment_name_regex = false;
+  $.when($.ajax ("../static/html/ms/expreg.html"), $.getJSON(instruments_url), $.getJSON("naming_conventions"), $.getJSON("get_modal_param_definitions", { modal_type: "experiments" }))
+  .done(function( d1, d2, d3, d4) {
+    var tmpl = d1[0], instruments = d2[0], options = `{{#value}}<option value="{{ _id }}">{{ _id }}</option>{{/value}}`, site_naming_conventions = _.get(d3[0], "value", {}), ignore_experiment_name_regex = false, site_options = d4[0].value;
     Mustache.parse(tmpl); Mustache.parse(options);
     if(_.has(site_naming_conventions, "experiment.name.placeholder")) { expInfo.name_placeholder = _.get(site_naming_conventions, "experiment.name.placeholder"); }
     if(_.has(site_naming_conventions, "experiment.name.tooltip")) { expInfo.name_tooltip = _.get(site_naming_conventions, "experiment.name.tooltip"); }
+    if(_.get(site_options, "options.disable_posix")) { expInfo.disable_posix = true; }
     var rendered = $(Mustache.render(tmpl, expInfo));
     rendered.find(".start_time").datetimepicker({defaultDate: moment(expInfo['start_time']), sideBySide: true });
     rendered.find(".end_time").datetimepicker({defaultDate: moment(expInfo['end_time']), sideBySide: true });
