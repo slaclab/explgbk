@@ -13,6 +13,7 @@ import json
 import logging
 import copy
 import math
+import io
 
 import requests
 import context
@@ -1266,6 +1267,42 @@ def svc_delete_run_table(experiment_name):
     else:
         status, errormsg = delete_run_table(experiment_name, table_name)
         return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": None})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runtables/export_as_csv", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_runtable_export_as_csv(experiment_name):
+    """
+    Return a CSV of the run table data for the specified run table.
+    :param: runtable is the run table name
+    :sampleName: export data only for this sample.
+    """
+    tableName = request.args.get("runtable", None)
+    if not tableName:
+        return logAndAbort("Please specify the table name to export.")
+    sampleName = request.args.get("sampleName", None)
+    tbldefs = [x for x in filter(lambda x : x["name"] == tableName, get_all_run_tables(experiment_name))]
+    if len(tbldefs) != 1:
+        return logAndAbort("Cannot find the definition for table " + tableName)
+    coltups = [ ("Run Number", "num") ] # List of tuples of label and attr name
+    for cdef in tbldefs[0].get("coldefs", []):
+        coltups.append((cdef["label"], cdef["source"]))
+    si = io.StringIO()
+    si.write(",".join([x[0] for x in coltups]) + "\n")
+    def __ldget__(obj, attrpath, deflt):
+        prts = attrpath.split(".")
+        for prt in prts:
+            obj = obj.get(prt, {})
+        if not obj:
+            return deflt
+        return str(obj)
+    for dt in list(map(replaceInfNan, get_runtable_data(experiment_name, tableName, sampleName=sampleName))):
+        si.write(",".join([ __ldget__(dt, ct[1], "") for ct in coltups]) + "\n")
+    resp = make_response(si.getvalue())
+    resp.headers["Content-Disposition"] = "attachment; filename="+tableName+".csv"
+    resp.headers["Content-type"] = "text/csv"
+    return resp
 
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/start_run", methods=["GET", "POST"])
 @context.security.authentication_required

@@ -214,7 +214,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         tblRndr.find("thead").empty().append(hdr);
         tblRndr.data("samples", _.fromPairs(_.map(sampleData.value, function(o){return [o["_id"], o["name"]]})));
         $("#rtbl_content").html(tblRndr);
-        sortable_paginator($("#rtbl_content").find("table"), "num", "num", true, 0, 50, 400);
+        sortable_paginator($("#rtbl_content").find("table"), "num", "num", true, 0, 400, 50);
 
         rtnl_row_tmpl = "<tr data-runnum={{num}} data-spgntr={{num}}>" + row_tmpl + "</tr>";
         Mustache.parse(rtnl_row_tmpl);
@@ -258,6 +258,11 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 
     $("#rtbl_tab").data("new_rtbl_fn", function(e) { col_defs_dialog(); });
     $("#rtbl_tab").data("edit_rtbl_fn", function(e) { var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name"); col_defs_dialog(clkRTblName); });
+    $("#rtbl_tab").data("csv_rtbl_fn", function(e) {
+        let params = {}; params["runtable"] = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name");
+        if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { params["sampleName"] = sample_showing_in_UI; }
+        window.open("ws/runtables/export_as_csv?" + $.param(params), "_blank");
+    });
     $("#rtbl_tab").data("del_rtbl_fn", function(e) {
         var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name");
         $.ajax({ url: "ws/delete_run_table", "data": { table_name: clkRTblName, is_system_run_table: _.get($("#rtbl_tab").data("tblData")[clkRTblName], 'is_system_run_table', false)}, method: "DELETE"})
@@ -367,6 +372,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 $("#rtbl_tab").on("lg.shown.bs.tab", function() {
     var tab_toolbar = `<span id="new_rtbl" title="Create a new run table"><i class="fas fa-plus fa-lg tlbr"></i></span>
     <span id="edit_rtbl" title="Edit this run table"><i class="fas fa-edit fa-lg tlbr"></i></span>
+    <span id="export_rtbl" title="Export this run table as a CSV"><i class="fas fa-download fa-lg tlbr"></i></span>
     <span id="clone_rtbl" title="Clone this run table"><i class="fas fa-clone fa-lg tlbr"></i></span>
     <span id="del_rtbl" title="Delete this run table"><i class="fas fa-trash fa-lg tlbr"></i></span>
     <span id="make_system_rtbl" title="Move this run table to the system run tables. These are visible to all experiments; the move will replace any system run table with the same name. This run table will be removed from this experiment."><i class="fab fa-superpowers fa-lg tlbr"></i></span>
@@ -376,6 +382,7 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
     $("#toolbar_for_tab").append(toolbar_rendered);
     $("#new_rtbl").on("click", function(e) { $("#rtbl_tab").data("new_rtbl_fn")(e)});
     $("#edit_rtbl").on("click", function(e) { $("#rtbl_tab").data("edit_rtbl_fn")(e)});
+    $("#export_rtbl").on("click", function(e) { $("#rtbl_tab").data("csv_rtbl_fn")(e)});
     $("#clone_rtbl").on("click", function(e) { $("#rtbl_tab").data("clone_rtbl_fn")(e)});
     $("#del_rtbl").on("click", function(e) { $("#rtbl_tab").data("del_rtbl_fn")(e)});
     $("#make_system_rtbl").on("click", function(e) { $("#rtbl_tab").data("make_system_rtbl")(e)});
