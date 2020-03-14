@@ -214,7 +214,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         tblRndr.find("thead").empty().append(hdr);
         tblRndr.data("samples", _.fromPairs(_.map(sampleData.value, function(o){return [o["_id"], o["name"]]})));
         $("#rtbl_content").html(tblRndr);
-        sortable_paginator($("#rtbl_content").find("table"), "num", "num", true, 0, 50, 50);
+        sortable_paginator($("#rtbl_content").find("table"), "num", "num", true, 0, 50, 400);
 
         rtnl_row_tmpl = "<tr data-runnum={{num}} data-spgntr={{num}}>" + row_tmpl + "</tr>";
         Mustache.parse(rtnl_row_tmpl);
