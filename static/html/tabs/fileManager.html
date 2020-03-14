@@ -117,7 +117,7 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
           dm_locations = _.map(d2[0].value, "name");
           let files = _.fromPairs(_.map(d1[0].value, function(x){ return [x["num"], prep_run_file(x)]}));
     	  _.each(d0[0].value, function(file) { add_file_to_run_files(file, files[file["run_num"]]) });
-         sortable_paginator($("#fmgr_content"), "run_num", "run_num", true, 0, 50, 50);
+         sortable_paginator($("#fmgr_content"), "run_num", "run_num", true, 0, 400, 50);
          $("#fmgr_content").data("spgntr").addObjects(_.values(files));
       });
   }
