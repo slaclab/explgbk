@@ -25,14 +25,14 @@
           rendered.find(".submit_btn").on("click", function(e) {
             e.preventDefault();
             let formObj = $(this).closest("form"), modalObj = $(this).closest(".modal");
-            var show_validation_message = function(message) { modalObj.find(".validation_message").html(message).removeClass("d-none"); }
+            var show_validation_message = function(message) { error_message(message) }
             var validations = [
                 [function() { return $.trim(formObj.find(".wf_def_name").val()) == ""; }, "Please enter a name."],
                 [function() { return $.trim(formObj.find(".wf_def_executable").val()) == ""; }, "Please enter the path to the script you want to trigger."],
                 [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
               ];
             // Various validations
-            var v_failed = false; show_validation_message("");
+            var v_failed = false;
             _.each(validations, function(validation, i) {
               console.log("Trying validation " + i + "" + validation[1]);
               if(validation[0]()) {
