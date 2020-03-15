@@ -72,6 +72,11 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
              if(!_.isNil(rtbl_src_obj)) {
                coldefrow.find(".rtbl_def_category_select").val(rtbl_src_obj['category']);
                coldefrow.find(".rtbl_def_pvname_select").empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value[rtbl_src_obj['category']])).val(rtbl_src_obj['label']);
+             } else {
+               console.log("Did not find param description for " + coldef["source"] + " Making one up.");
+               rtbl_sources.value["EPICS:Additional parameters"].push({ label: _.replace(coldef["source"], "params.", ""), category: "EPICS:Additional parameters", source: coldef["source"] })
+               coldefrow.find(".rtbl_def_category_select").val("EPICS:Additional parameters");
+               coldefrow.find(".rtbl_def_pvname_select").empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value["EPICS:Additional parameters"])).val(_.replace(coldef["source"], "params.", ""));
              }
              $("#rtbl_def_tbl tbody").append(coldefrow);
          });
