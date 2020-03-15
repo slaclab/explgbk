@@ -88,8 +88,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
          _.each(validations, function(validation, i) {
            if(validation[0]()) {
              e.preventDefault();
-             $("#rtbl_validation_modal .modal-body p").text(validation[1]);
-             $("#rtbl_validation_modal").modal();
+             error_message(validation[1]);
              v_failed = true;
              return false;
            }
@@ -287,7 +286,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                 e.preventDefault();
                 var formObj = $("#rtbl_tab").find(".mdl_holder").find("form");
                 var validations = [
-                    [function() { return $.trim(formObj.find(".new_object_name").val()) == ""; }, "New object name cannot be blank."],
+                    [function() { return $.trim(formObj.find(".new_object_name").val()) == ""; }, "The name of the cloned table cannot be blank."],
                     [function() { return !/^([\w-\s]+)$/.test($.trim(formObj.find(".new_object_name").val()))}, "We limit the special characters that can be used in table names.  Alpha-numeric with underscores and spaces only."],
                     [function() { return _.find($("#rtbl_tab").data("tblData"), function(shf){return shf.name == $.trim(formObj.find(".new_object_name").val())}) != undefined }, "The run table name already exists."]
                 ];
@@ -296,8 +295,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                 _.each(validations, function(validation, i) {
                     console.log("Trying validation " + i + "" + validation[1]);
                     if(validation[0]()) {
-                        $("#rtbl_tab").find(".mdl_holder").find(".validation_message").html(validation[1]);
-                        $("#rtbl_tab").find(".mdl_holder").find(".validation_modal").modal("show");
+                        error_message(validation[1]);
                         v_failed = true;
                         return false;
                     }
@@ -334,7 +332,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                 e.preventDefault();
                 var formObj = $("#rtbl_tab").find(".mdl_holder").find("form");
                 var validations = [
-                    [function() { return $.trim(formObj.find(".new_object_name").val()) == ""; }, "New object name cannot be blank."],
+                    [function() { return $.trim(formObj.find(".new_object_name").val()) == ""; }, "The name of the system run table cannot be blank."],
                     [function() { return !/^([\w-\s]+)$/.test($.trim(formObj.find(".new_object_name").val()))}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores and spaces only."]
                 ];
                 // Various validations
@@ -342,8 +340,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                 _.each(validations, function(validation, i) {
                     console.log("Trying validation " + i + "" + validation[1]);
                     if(validation[0]()) {
-                        $("#rtbl_tab").find(".mdl_holder").find(".validation_message").html(validation[1]);
-                        $("#rtbl_tab").find(".mdl_holder").find(".validation_modal").modal("show");
+                        error_message(validation[1]);
                         v_failed = true;
                         return false;
                     }
@@ -377,9 +374,9 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 $("#rtbl_tab").on("lg.shown.bs.tab", function() {
     var tab_toolbar = `<span id="new_rtbl" title="Create a new run table"><i class="fas fa-plus fa-lg tlbr"></i></span>
     <span id="edit_rtbl" title="Edit this run table"><i class="fas fa-edit fa-lg tlbr"></i></span>
-    <span id="export_rtbl" title="Export this run table as a CSV"><i class="fas fa-download fa-lg tlbr"></i></span>
     <span id="clone_rtbl" title="Clone this run table"><i class="fas fa-clone fa-lg tlbr"></i></span>
     <span id="del_rtbl" title="Delete this run table"><i class="fas fa-trash fa-lg tlbr"></i></span>
+    <span id="export_rtbl" title="Export this run table as a CSV"><i class="fas fa-download fa-lg tlbr"></i></span>
     <span id="make_system_rtbl" title="Move this run table to the system run tables. These are visible to all experiments; the move will replace any system run table with the same name. This run table will be removed from this experiment."><i class="fab fa-superpowers fa-lg tlbr"></i></span>
     `;
     var toolbar_rendered = $(tab_toolbar);
