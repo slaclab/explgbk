@@ -871,6 +871,14 @@ def svc_post_new_elog_entry(experiment_name):
         optional_args["tags"] = tags
 
     post_to_elogs = [ k.replace('post_to_elog_', '') for k, v in request.form.items() if k.startswith('post_to_elog_') and v.lower() == "on" ]
+
+    # Alternate knob for cross posting to the intrument elog (if it exists).
+    xpost_instrument_elog = json.loads(request.form.get("xpost_instrument_elog", "false").lower())
+    if xpost_instrument_elog:
+        instrument_elogs = get_instrument_elogs(experiment_name, include_site_spanning_elogs=False)
+        if instrument_elogs:
+            post_to_elogs.extend(instrument_elogs)
+            post_to_elogs = list(set(post_to_elogs))
     if post_to_elogs:
         optional_args["post_to_elogs"] = post_to_elogs
 

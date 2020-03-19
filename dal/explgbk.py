@@ -762,7 +762,6 @@ def post_related_elog_entry(related_experiment, src_experiment, src_elog_entry_i
     '''
     Copy an elog entry into a related elog; typically an instrument elog
     When we copy, we maintain the source experiment and source elog entry id to make it easier to tie children to the parent.
-    For now attachments are not copied over as attachments are URL's into an external image store.
     '''
     expdb = logbookclient[related_experiment]
     src_expdb = logbookclient[src_experiment]
@@ -783,6 +782,26 @@ def post_related_elog_entry(related_experiment, src_experiment, src_elog_entry_i
                 src_elog_entry[attr] = rel_entry["_id"]
     __check_and_link__("root")
     __check_and_link__("parent")
+
+    mg_imgstore = parseImageStoreURL("mongo://")
+    def __copy_attachment__(attch, attr):
+        if attr in attch and attch[attr].startswith("mongo://"):
+            aurl = attch[attr]
+            try:
+                bio = parseImageStoreURL(aurl).return_url_contents(src_experiment, aurl)
+                if not bio:
+                    logger.debug("Cannot get attachment contents for %s", aurl)
+                    return None
+                murl = mg_imgstore.store_file_and_return_url(related_experiment, attch["name"], attch["type"], bio)
+                logger.debug("Copied %s to mongo as %s", aurl, murl)
+                attch[attr] = murl
+                return murl
+            except:
+                logger.exception("Exception copying attachment %s", aurl)
+                return None
+    for attch in src_elog_entry.get("attachments", []):
+        __copy_attachment__(attch, "url")
+        __copy_attachment__(attch, "preview_url")
 
     ins_id = expdb['elog'].insert_one(src_elog_entry).inserted_id
     entry = expdb['elog'].find_one({"_id": ins_id})
@@ -876,7 +895,7 @@ def get_site_naming_conventions():
         return s_config.get("naming_conventions", {})
     return {}
 
-def get_instrument_elogs(experiment_name):
+def get_instrument_elogs(experiment_name, include_site_spanning_elogs=True):
     '''
     Get the associated elogs for experiment.
     This consists of the elog for the instrument (instrument param elog in the instrument object)
@@ -888,9 +907,10 @@ def get_instrument_elogs(experiment_name):
     ret = []
     if instrument_elog:
         ret.append(instrument_elog)
-    siteinfo = sitedb["site_config"].find_one()
-    if siteinfo and 'experiment_spanning_elogs' in siteinfo and siteinfo['experiment_spanning_elogs']:
-        ret.extend(siteinfo['experiment_spanning_elogs'])
+    if include_site_spanning_elogs:
+        siteinfo = sitedb["site_config"].find_one()
+        if siteinfo and 'experiment_spanning_elogs' in siteinfo and siteinfo['experiment_spanning_elogs']:
+            ret.extend(siteinfo['experiment_spanning_elogs'])
     return ret
 
 def get_experiment_files(experiment_name, sample_name=None):
