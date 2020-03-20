@@ -3,7 +3,7 @@
     <div class="container-fluid text-center" id="collab_content">
         <div class="table-responsive">
           <table class="table table-condensed table-striped table-bordered collabtbl">
-            <thead><tr><th>Id</th><th>Full Name</th><th>Permissions</th></tr></thead>
+            <thead><tr><th>Id</th><th>Full Name</th><th title="Is this user a member of the experiment specific posix group?">Posix Member</th><th>Permissions</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -13,25 +13,35 @@
 
 <script type="text/javascript">
 $("#collab_tab").on("lg.loaded.bs.tab", function() {
-  var collab_tr_tmpl = `{{#value}}<tr data-uid="{{ uid }}"><td>{{#is_group}}<i class="fas fa-users" aria-hidden="true"></i>{{/is_group}}{{^is_group}}<i class="fas fa-user" aria-hidden="true"></i>{{/is_group}}{{ id }}</td><td>{{ full_name }}</td><td class="collab_admin_actions"></td></tr>{{/value}}`;
-  var actions_tmpl = `<span title="{{ tooltip }}" data-role-fq-name="{{ rl }}">{{^hasrole}}<i class="fas fa-lg {{ ic }} collab-no-role" aria-hidden="true"></i>{{/hasrole}}
+  var collab_tr_tmpl = `{{#collabs}}<tr data-uid="{{ uid }}"><td>{{#is_group}}<i class="fas fa-users" aria-hidden="true"></i>{{/is_group}}{{^is_group}}<i class="fas fa-user" aria-hidden="true"></i>{{/is_group}}{{ id }}</td><td>{{ full_name }}</td><td>{{#inPosixGroup}}<i class="fas fa-check"></i>{{/inPosixGroup}}</td><td class="collab_admin_actions"></td></tr>{{/collabs}}`;
+  var actions_tmpl = `<span title="{{#hasrole}}Click to deny {{/hasrole}}{{^hasrole}}Click to grant {{/hasrole}}{{ tooltip }}" data-role-fq-name="{{ rl }}">{{^hasrole}}<i class="fas fa-lg {{ ic }} collab-no-role" aria-hidden="true"></i>{{/hasrole}}
     {{#hasrole}}<span><i class="fas {{ ic }} fa-lg" aria-hidden="true"></i><span class="croxxout">x</span></span>{{/hasrole}}</span>`;
   Mustache.parse(collab_tr_tmpl);
   Mustache.parse(actions_tmpl);
   var refreshFunction = function() {
       $("#collab_tab .collabtbl tbody").empty();
-      $.when($.getJSON("ws/collaborators"), $.getJSON("ws/has_role", {"role_fq_name": "LogBook/Manager"}))
-      .done(function(d0, d1){
-          var collabs = d0[0], hasRoleManager = _.get(privileges, "manage_groups", false);
-          _.each(collabs.value, function(c){c["id"] = _.replace(c["uid"], "uid:", "")});
-          var rendered = $(Mustache.render(collab_tr_tmpl, collabs));
+      $.when($.getJSON("ws/collaborators"), $.getJSON("ws/has_role", {"role_fq_name": "LogBook/Manager"}), $.getJSON("ws/exp_posix_group_members"))
+      .done(function(d0, d1, d2){
+          var collabs = d0[0].value, hasRoleManager = _.get(privileges, "manage_groups", false), posixmembers = d2[0].value;
+          _.each(collabs, function(c){
+              c["id"] = _.replace(c["uid"], "uid:", "")
+              c["inPosixGroup"] = _.includes(posixmembers, c["id"]);
+          });
+          collabs.sort(function(u1, u2){
+              if(u1["is_group"] == u2["is_group"]) { return u1["id"].localeCompare(u2["id"]); }
+              if(!u1["is_group"]) { return -1 }
+              if(!u2["is_group"]) { return 1 }
+          });
+          var rendered = $(Mustache.render(collab_tr_tmpl, {collabs: collabs}));
           $("#collab_tab .collabtbl tbody").append(rendered);
           if(hasRoleManager) {
-              _.each(collabs.value, function(collab) {
-                  _.each([["LogBook/Writer", "fa-pencil-alt", "Write/post log entries; enough for most people"], ["LogBook/Editor", "fa-edit", "Edit/change existing entries"], ["LogBook/Manager", "fa-gavel", "Add/remove collaborators"]], function(rl_ic){
+              _.each(collabs, function(collab) {
+                  _.each([["LogBook/Writer", "fa-pencil-alt", "permission to write/post log entries"],
+                          ["LogBook/Editor", "fa-edit", "permission to edit/change existing entries"],
+                          ["LogBook/Manager", "fa-gavel", "permission to add/remove collaborators"]], function(rl_ic){
                         $("tr[data-uid='" + collab["uid"] + "'] td.collab_admin_actions").append(Mustache.render(actions_tmpl, {rl : rl_ic[0], ic: rl_ic[1], hasrole: _.indexOf(collab.roles, rl_ic[0]) != -1, tooltip: rl_ic[2] }));
                   });
-                  $("tr[data-uid='" + collab["uid"] + "'] td.collab_admin_actions").append($("<span class='remove-collab'><i class='fas fa-lg fa-trash' aria-hidden='true'></i></span>"));
+                  $("tr[data-uid='" + collab["uid"] + "'] td.collab_admin_actions").append($("<span class='remove-collab' title='Remove this user/group from this experiment'><i class='fas fa-lg fa-trash' aria-hidden='true'></i></span>"));
               });
               $("span[data-role-fq-name]").on("click", function(){
                   var role_fq_name = $(this).attr("data-role-fq-name"), uid = $(this).closest("tr").attr("data-uid");

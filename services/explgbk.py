@@ -1743,6 +1743,21 @@ def svc_check_and_move_run_files_to_location(experiment_name):
 def svc_get_collaborators(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_collaborators(experiment_name)})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/exp_posix_group_members", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_posix_group_members(experiment_name):
+    """
+    Return the group membership in the posix group with the same name as the experiment name.
+    We only return the group membership if the experiment's posix group is set and it is the same as the experiment name.
+    Otherwise, return a empty list...
+    """
+    exp_info = get_experiment_info(experiment_name)
+    if exp_info.get("posix_group", None) != experiment_name:
+        return JSONEncoder().encode({"success": True, "value": []})
+    return JSONEncoder().encode({"success": True, "value": context.usergroups.get_group_members(experiment_name)})
+
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/toggle_role", methods=["GET", "POST"])
 @experiment_exists_and_unlocked
 @context.security.authentication_required
