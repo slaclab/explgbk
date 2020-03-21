@@ -106,4 +106,10 @@ var sortable_paginator = function(container, key_attr, sort_attr, sort_desc=fals
             error_message("Cannot find DOM element to scroll to " + scrollToId);
         }
     }
+
+    container.data("spgntr").redraw = function() {
+        let elems2insert = [], ap2c = this.container.find(".spgntr_append");
+        _.each(_.slice(this.disp_objs, this.page_start, this.page_end), function(obj){ elems2insert.push(obj.render())});
+        ap2c.empty().append(elems2insert);
+    }
 }

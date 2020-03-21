@@ -37,7 +37,7 @@ Analysis jobs can be configured using the <span class="hhb">Workflow</span>/<spa
 These analysis jobs can generate further metadata to be displayed using <span class="hhb">Run Tables</span> or HTML documents that can be displayed in the <span class="hhb">Summaries</span> tab.</p>
 <p>For the operational side of things, you can keep track of the progress of your experiment using a electronic logbook in the <span class="hhb">eLog</span>.
 The eLog supports attachments, emails, tags and Slack integration.
-<p>Finally, experiments are all about collaboration. Add/remove/manage your collaborators using the <span class="hhb">Mgmt</span>/<span class="hhb">Collaborators</span>.</p>
+<p>Finally, experiments are all about collaboration. Add/remove/manage your collaborators using the <span class="hhb">Collaborators</span> page.</p>
 </div>
 
 <h6 class="st" id="runTables">Run Tables</h6>
@@ -101,6 +101,8 @@ Use the <i class="fas fa-strikethrough fa-lg ic"></i> to hide deleted entries fr
 Support for full text search is available in addition to searching by run numbers, dates etc.
 <ul>
     <li>To search for any text (non-numeric), simply type in the text. Text matches are made against the message text, message titles, tags and author names. For example, typing <span class="hhb">temp</span> in the search bar will match elog entries with the tag temp and also an entry with the message &quot;Moving to the (+1) Room temp&quot;</li>
+    <li>The underlying full text search engine uses spaces to separate words and phrases. Adding a terminal space to your search term (for example, &quot;trim &quot;)is often useful in narrowing your search results. </li>
+    <li>To search for an exact phrase, enclose the search term in quotes. For example, the search term <span class="hhb">large clusters</span> will return full text search results for entries with the word <span class="hhb">large</span> and the word <span class="hhb">clusters</span>. Whereas the search term <span class="hhb">&quot;large clusters&quot;</span> will return entries that contain the entire phrase <span class="hhb">large clusters</span>.</li>
     <li class="site_LCLS site_TestFac">To search for a run or a range or runs, enter the numeric run number or range of run numbers. For example, typing <span class="hhb">37</span> in the search box will search for elog entries associated with the run 37. Typing <span class="hhb">37-39</span> will search for elog entries associated with the run's 37, 38 and 39.</li>
     <li>To search for a date or range of dates, type in the date (or range) using a MM/DD/YYYY format. For example, typing <span class="hhb">11/25/2018</span> in the search box will search for elog entries made on Nov 25th 2018. Typing <span class="hhb">11/23/2018-11/29/2018</span> in the search box will search for elog entries made between Nov 23rd 2018 and Nov 29th 2018.</li>
 </ul>

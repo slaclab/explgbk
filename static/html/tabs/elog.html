@@ -86,6 +86,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
    var id2entry = {};
    var skip_websocket_elog_messages = false;
+   var in_search_results = false;
 
   Mustache.parse(elog_main_template);
   Mustache.parse(elog_main_content_template);
@@ -550,22 +551,24 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       var search_text = $("#elog_search_text").val();
       if (!_.isNil(search_text)) {
           if(/^[0-9]+$/g.test(search_text)) {
-              $.getJSON({ url: "ws/search_elog", data: { run_num : search_text }}).done(function(data){ skip_websocket_elog_messages = true; processElogResponse(data); renderElogResponse(data); });
+              $.getJSON({ url: "ws/search_elog", data: { run_num : search_text }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
           } else if(/^([0-9]+)-([0-9]+)$/g.test(search_text)) {
               var start_run_num = /^([0-9]+)-([0-9]+)$/g.exec(search_text)[1];
               var end_run_num   = /^([0-9]+)-([0-9]+)$/g.exec(search_text)[2];
-              $.getJSON({ url: "ws/search_elog", data: { start_run_num : start_run_num, end_run_num: end_run_num }}).done(function(data){ skip_websocket_elog_messages = true; processElogResponse(data); renderElogResponse(data); });
+              $.getJSON({ url: "ws/search_elog", data: { start_run_num : start_run_num, end_run_num: end_run_num }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
           } else if(/^\d{1,2}[\/.]\d{1,2}[\/.]\d{4}$/.test(search_text) && moment(search_text, "MM/DD/YYYY").isValid()) {
-              $.getJSON({ url: "ws/search_elog", data: { start_date : moment(search_text, "MM/DD/YYYY").subtract(1, "days").toJSON(), end_date : moment(search_text, "MM/DD/YYYY").add(1, "days").toJSON() }}).done(function(data){ skip_websocket_elog_messages = true; processElogResponse(data); renderElogResponse(data); });
+              $.getJSON({ url: "ws/search_elog", data: { start_date : moment(search_text, "MM/DD/YYYY").subtract(1, "days").toJSON(), end_date : moment(search_text, "MM/DD/YYYY").add(1, "days").toJSON() }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
           } else if(/^\d{1,2}[\/.]\d{1,2}[\/.]\d{4}-\d{1,2}[\/.]\d{1,2}[\/.]\d{4}$/.test(search_text) && moment(_.split(search_text, "-")[0], "MM/DD/YYYY").isValid() && moment(_.split(search_text, "-")[1], "MM/DD/YYYY").isValid()) {
-              $.getJSON({ url: "ws/search_elog", data: { start_date : moment(_.split(search_text, "-")[0], "MM/DD/YYYY").subtract(1, "days").toJSON(), end_date : moment(_.split(search_text, "-")[1], "MM/DD/YYYY").add(1, "days").toJSON() }}).done(function(data){ skip_websocket_elog_messages = true; processElogResponse(data); renderElogResponse(data); });
+              $.getJSON({ url: "ws/search_elog", data: { start_date : moment(_.split(search_text, "-")[0], "MM/DD/YYYY").subtract(1, "days").toJSON(), end_date : moment(_.split(search_text, "-")[1], "MM/DD/YYYY").add(1, "days").toJSON() }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
           } else if(search_text.length > 2) {
-              $.getJSON({ url: "ws/search_elog", data: { search_text : search_text }}).done(function(data){ skip_websocket_elog_messages = true; processElogResponse(data); renderElogResponse(data); });
+              $.getJSON({ url: "ws/search_elog", data: { search_text : search_text }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
           } else {
-              $("#elog_tab").data("refresh")();
+              if(in_search_results) { $("#elog_tab").data("refresh")(); }
+              in_search_results = false;
           }
       } else {
-          $("#elog_tab").data("refresh")();
+          if(in_search_results) { $("#elog_tab").data("refresh")(); }
+          in_search_results = false;
       }
   });
 
@@ -634,7 +637,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 });
 
 $("#elog_tab").on("lg.shown.bs.tab", function() {
-    var tab_toolbar = `<input type="text" placeholder="Search/Run etc - see tooltip" title="Search;Author;Tag;Run;Run-Run;date(MM/DD/YYYY);date-date" id="elog_search_text">
+    var tab_toolbar = `<input type="text" placeholder="Search/Run etc - see tooltip" title='Search;"A phrase";Author;Tag;Run;Run-Run;date(MM/DD/YYYY);date-date' id="elog_search_text">
     <span id="elog_new_entry"><i class="fas fa-plus fa-lg" title="Post a new elog entry"></i></span>
     <span id="elog_toggle_runs"><i class="fas fa-running fa-lg" title="Hide/show run entries"></i></span>
     <span id="elog_attachments_only"><i class="fas fa-paperclip fa-lg" title="Toggle attachments only"></i></span>

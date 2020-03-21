@@ -14,6 +14,7 @@ import logging
 import copy
 import math
 import io
+import re
 
 import requests
 import context
@@ -49,7 +50,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     file_available_at_location, get_collaborators_list_for_experiment, get_site_naming_conventions, delete_sample_for_experiment, \
     get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
-    get_complete_elog_tree_for_specified_id
+    get_complete_elog_tree_for_specified_id, get_site_file_types
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -1711,10 +1712,22 @@ def svc_check_and_move_run_files_to_location(experiment_name):
     except ValueError:
         pass
     restore_missing_files = json.loads(request.args.get("restore_missing_files", "false"))
+    file_types_to_restore = request.args.get("file_types_to_restore", "").split(",")
+    file_patterns = []
+    if not file_types_to_restore:
+        logger.debug("Restoring all files")
+        file_patterns.append(".*")
+    else:
+        file_types = get_site_file_types()
+        for ftype in file_types_to_restore:
+            file_patterns.extend(file_types.get(ftype, {}).get("patterns", []))
 
     site_config = get_site_config()
     if site_config.get("dm_mover_prefix", None):
         files_for_run = {x["path"] : x for x in get_experiment_files_for_run(experiment_name, run_num)}
+        def __any_pattern__(f):
+            return any(map(lambda x : re.match(x, f["path"]), file_patterns))
+        files_for_run = {x["path"] : x for x in filter(lambda f: __any_pattern__(f), files_for_run.values())}
         resp = requests.post(site_config["dm_mover_prefix"] + "ws/" + experiment_name + "/check_files_for_run", json={
             "location": location,
             "run_num": run_num,
@@ -2082,3 +2095,11 @@ def svc_get_site_naming_conventions():
     Get the site config
     """
     return JSONEncoder().encode({"success": True, "value": get_site_naming_conventions()})
+
+@explgbk_blueprint.route("/lgbk/filemanager_file_types", methods=["GET"])
+@context.security.authentication_required
+def svc_get_site_filemanager_file_types():
+    """
+    Get the file manager file types for this site
+    """
+    return JSONEncoder().encode({"success": True, "value": get_site_file_types()})

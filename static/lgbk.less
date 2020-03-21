@@ -794,6 +794,29 @@ label {
 }
 
 #fmgr_tab {
+    padding: 0;
+    .fmgr_types {
+        padding-left: 1.5rem;
+        font-weight: bold;
+        margin-top: 0.5rem;
+        .ft_chkbx {
+            padding-left: 0.5rem;
+            margin-left: 0.5rem;
+        }
+        label {
+            padding-left: 0.25rem;
+        }
+    }
+    .fmgr_locs_label {
+        padding-left: 1.5rem;
+    }
+    .loc_chkbx {
+        padding-left: 0.5rem;
+        margin-left: 0.5rem;
+        label {
+            padding-left: 0.25rem;
+        }
+    }
     .run_file:nth-child(odd) {
     	background: @tablezebra;
     }
@@ -811,13 +834,17 @@ label {
         padding-left: 2.0em;
         word-break: break-all;
     }
-    .fileloc-btn {
-        .small_btn_mixin;
+    #fmgr_content {
+        padding: 0;
+        .fmfi {
+            padding-left: 1.5rem;
+        }
     }
-    .runloc-btn {
-        .small_btn_mixin;
+    .exp_tab_header {
+        .row{
+            margin: 0;
+        }
     }
-
 }
 
 #rtbl_content table {

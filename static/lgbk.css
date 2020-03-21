@@ -699,6 +699,31 @@ label {
 #elog_sgl_entry .card .elog_deleted {
   text-decoration: line-through;
 }
+#fmgr_tab {
+  padding: 0;
+}
+#fmgr_tab .fmgr_types {
+  padding-left: 1.5rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+#fmgr_tab .fmgr_types .ft_chkbx {
+  padding-left: 0.5rem;
+  margin-left: 0.5rem;
+}
+#fmgr_tab .fmgr_types label {
+  padding-left: 0.25rem;
+}
+#fmgr_tab .fmgr_locs_label {
+  padding-left: 1.5rem;
+}
+#fmgr_tab .loc_chkbx {
+  padding-left: 0.5rem;
+  margin-left: 0.5rem;
+}
+#fmgr_tab .loc_chkbx label {
+  padding-left: 0.25rem;
+}
 #fmgr_tab .run_file:nth-child(odd) {
   background: #efefef;
 }
@@ -716,15 +741,14 @@ label {
   padding-left: 2em;
   word-break: break-all;
 }
-#fmgr_tab .fileloc-btn {
-  font-size: 0.5rem;
-  padding: 1px;
-  margin: 1px;
+#fmgr_tab #fmgr_content {
+  padding: 0;
 }
-#fmgr_tab .runloc-btn {
-  font-size: 0.5rem;
-  padding: 1px;
-  margin: 1px;
+#fmgr_tab #fmgr_content .fmfi {
+  padding-left: 1.5rem;
+}
+#fmgr_tab .exp_tab_header .row {
+  margin: 0;
 }
 #rtbl_content table {
   width: 100%;

@@ -516,6 +516,8 @@ def search_elog_for_text(experiment_name, search_text):
     """
     expdb = logbookclient[experiment_name]
     matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "$text": { "$search": search_text }})}
+    if not matching_entries:
+        matching_entries = {x["_id"] : x for x in expdb['elog'].find({ "content": { "$regex": re.compile(".*" + search_text + ".*", re.IGNORECASE)}})}
     # Recursively gather all root and parent entries
     while __get_root_and_parent_entries(experiment_name, matching_entries):
         pass
@@ -893,6 +895,33 @@ def get_site_naming_conventions():
     s_config = sitedb["site_config"].find_one({})
     if s_config:
         return s_config.get("naming_conventions", {})
+    return {}
+
+def get_site_file_types():
+    """
+    For the file manager, we classify the files in the file catalog into types.
+    These are assumed to be equivalent and basically different versions of the same data.
+    For example, in LCLS, the detector data is stored initially as XTC or XTC2 files.
+    Some users convert these into HDF5 (h5) files and primarily use those for analysis.
+    Typically, users use one of these types of files.
+    To capture this, we define filemanager_file_types in the site_config.
+	"filemanager_file_types" : {
+		"XTC" : {
+			"name" : "XTC",
+			"label" : "XTC files",
+			"tooltip" : "Large and smalldata xtc and xtc2 files",
+			"patterns" : [
+				"^.*/xtc/.*.xtc$",
+				"^.*/xtc/.*.xtc2$"
+			],
+			"selected" : true
+		},
+    The filemanager supports restoration of one or all of these file types.
+    """
+    sitedb = logbookclient["site"]
+    s_config = sitedb["site_config"].find_one({})
+    if s_config:
+        return s_config.get("filemanager_file_types", {})
     return {}
 
 def get_instrument_elogs(experiment_name, include_site_spanning_elogs=True):
