@@ -1,0 +1,5 @@
+use site
+db.getSiblingDB("site").roles.updateOne(
+  {"app" : "LogBook", "name" : "Manager"},
+  {"$addToSet": {"privileges": {"$each": [ "read", "post", "edit", "delete"]}}}
+)
