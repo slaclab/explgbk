@@ -289,7 +289,7 @@ def svc_get_active_experiment_for_instrument_station():
     if not instrument_name:
         return logAndAbort("Please pass in the instrument name, for example, XPP")
     station_num = int(request.args.get("station", "0"))
-    active_experiment = [x for x in filter(lambda x : x["instrument"] == instrument_name and x["station"] == station_num, get_currently_active_experiments())]
+    active_experiment = [x for x in filter(lambda x : x.get("instrument", None) == instrument_name and x.get("station", None) == station_num, get_currently_active_experiments())]
     if len(active_experiment) == 1:
         return JSONEncoder().encode({'success': True, 'value': active_experiment[0]})
     else:
