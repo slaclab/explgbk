@@ -1,0 +1,18 @@
+use site
+db.getSiblingDB("site")["site_config"].updateOne({}, {"$set": {"filemanager_file_types": {
+   "XTC": {
+     "name": "XTC",
+     "label": "XTC files",
+     "tooltip": "Large and smalldata xtc and xtc2 files",
+     "patterns": [ "^.*/xtc/.*\.xtc$",  "^.*/xtc/.*\.xtc2$" ],
+     "selected": true
+ },
+   "HDF5": {
+     "name": "HDF5",
+     "label": "HDF5 files",
+     "tooltip": "Large and smalldata hdf5 files",
+     "patterns": [ "^.*/hdf5/.*\.h5$",  ],
+     "selected": false
+  }
+}
+}})
