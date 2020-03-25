@@ -1030,6 +1030,23 @@ label {
 #global_roles_tab .role_check {
   color: #6685F4;
 }
+#inst_roles_tab .inshdr {
+  margin: 0;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+#inst_roles_tab .insrolchs {
+  font-weight: bold;
+  padding-left: 1rem;
+  padding-right: 0.5rem;
+}
+#inst_roles_tab .role_check {
+  color: #6685F4;
+}
+#inst_roles_tab .choose_instr {
+  color: #6685F4;
+  font-weight: bold;
+}
 #lgbk_help {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
   font-size: 0.85rem;

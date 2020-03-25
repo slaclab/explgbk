@@ -461,6 +461,33 @@ def remove_player_from_global_role(player, role):
     sitedb = logbookclient["site"]
     sitedb["roles"].update_one({"app": "LogBook", "name": role}, {"$pull": {"players": player}})
 
+def add_player_to_instrument_role(instrument, player, role):
+    sitedb = logbookclient["site"]
+    ins = sitedb["instruments"].find_one({ "_id": instrument })
+    if not "roles" in ins:
+        sitedb["instruments"].update_one({ "_id": instrument }, {"$push": {"roles": [{"app": "LogBook", "name": role, "players": [ player ]}]}})
+        return sitedb["instruments"].find_one({ "_id": instrument })
+    rl = [ x for x in ins.get("roles", []) if x["app"] == "LogBook" and x["name"] == role ]
+    if rl:
+        sitedb["instruments"].update_one({ "_id": instrument, "roles.app": "LogBook", "roles.name": role}, {"$addToSet": {"roles.$.players": player}})
+        return sitedb["instruments"].find_one({ "_id": instrument })
+    else:
+        sitedb["instruments"].update_one({ "_id": instrument}, {"$push": {"roles": {"app": "LogBook", "name": role, "players": [ player ]}}})
+        return sitedb["instruments"].find_one({ "_id": instrument })
+
+def remove_player_from_instrument_role(instrument, player, role):
+    sitedb = logbookclient["site"]
+    ins = sitedb["instruments"].find_one({ "_id": instrument })
+    if not "roles" in ins:
+        return sitedb["instruments"].find_one({ "_id": instrument })
+
+    rl = [ x for x in ins.get("roles", []) if x["app"] == "LogBook" and x["name"] == role ]
+    if rl:
+        sitedb["instruments"].update_one({ "_id": instrument, "roles.app": "LogBook", "roles.name": role}, {"$pull": {"roles.$.players": player}})
+        sitedb["instruments"].update_one({ "_id": instrument, "roles.app": "LogBook", "roles.name": role, "roles.players": {"$exists": True, "$size": 0}}, {"$pull": {"roles": {"app": "LogBook", "name": role}}})
+
+    return sitedb["instruments"].find_one({ "_id": instrument })
+
 def get_elog_entries(experiment_name, sample_name=None):
     """
     Get the elog entries for the experiment as a flat list sorted by inserted time ascending.

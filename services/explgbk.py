@@ -50,7 +50,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     file_available_at_location, get_collaborators_list_for_experiment, get_site_naming_conventions, delete_sample_for_experiment, \
     get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
-    get_complete_elog_tree_for_specified_id, get_site_file_types
+    get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -375,6 +375,38 @@ def svc_remove_player_from_global_role():
         return logAndAbort("Please specify a player")
 
     return JSONEncoder().encode({"success": True, "value": remove_player_from_global_role(player, role)})
+
+@explgbk_blueprint.route("/lgbk/ws/add_player_to_instrument_role", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
+def svc_add_player_to_instrument_role():
+    instrument = request.form.get("instrument", None)
+    if not instrument:
+        return logAndAbort("Please specify a instrument")
+    role = request.form.get("role", None)
+    if not role:
+        return logAndAbort("Please specify a role")
+    player = request.form.get("player", None)
+    if not player:
+        return logAndAbort("Please specify a player")
+
+    return JSONEncoder().encode({"success": True, "value": add_player_to_instrument_role(instrument, player, role)})
+
+@explgbk_blueprint.route("/lgbk/ws/remove_player_from_instrument_role", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
+def svc_remove_player_from_instrument_role():
+    instrument = request.form.get("instrument", None)
+    if not instrument:
+        return logAndAbort("Please specify a instrument")
+    role = request.form.get("role", None)
+    if not role:
+        return logAndAbort("Please specify a role")
+    player = request.form.get("player", None)
+    if not player:
+        return logAndAbort("Please specify a player")
+
+    return JSONEncoder().encode({"success": True, "value": remove_player_from_instrument_role(instrument, player, role)})
 
 @explgbk_blueprint.route("/lgbk/ws/lookup_experiment_in_urawi", methods=["GET"])
 @context.security.authentication_required
