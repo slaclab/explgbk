@@ -66,7 +66,7 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
               let total_files = d0[0].value["run_files"].length, present_files = _.filter(d0[0].value["run_files"], "locations." + loc_name).length, files_by_status = _.countBy(_.values(d0[0].value["dmstatus"]), _.identity),  pending_files = _.get(files_by_status, "pending", 0), restore_on = ((total_files - ( pending_files + present_files)) > 0);
               var rendered = $(Mustache.render(d1[0], {title: "Status of files for run " + run_num + " at " + loc_name, message: "Of the " + total_files + " files in run " + run_num + "<ul><li>" + present_files + " are already present at " + loc_name + "</li><li>" + pending_files + " are in the data mover queues</li></ul>", restore_on: restore_on}));
               rendered.find(".restore_btn").on("click", function(){
-                  $.getJSON("ws/check_and_move_run_files_to_location", data={run_num: run_num, location: loc_name, restore_missing_files: true})
+                  $.getJSON("ws/check_and_move_run_files_to_location", data={run_num: run_num, location: loc_name, restore_missing_files: true, file_types_to_restore: file_types_to_restore})
                   .done(function(){
                       console.log("Restore kicked off.");
                       $("#fmgr_tab").find(".mdl_holder").find(".modal").modal("hide");
