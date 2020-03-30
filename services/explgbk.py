@@ -1801,7 +1801,11 @@ def svc_get_posix_group_members(experiment_name):
     exp_info = get_experiment_info(experiment_name)
     if exp_info.get("posix_group", None) != experiment_name:
         return JSONEncoder().encode({"success": True, "value": []})
-    return JSONEncoder().encode({"success": True, "value": context.usergroups.get_group_members(experiment_name)})
+    try:
+        return JSONEncoder().encode({"success": True, "value": context.usergroups.get_group_members(experiment_name)})
+    except:
+        logger.exception("Exception getting posix members for %s", experiment_name)
+        return JSONEncoder().encode({"success": True, "value": []})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/toggle_role", methods=["GET", "POST"])
 @experiment_exists_and_unlocked
