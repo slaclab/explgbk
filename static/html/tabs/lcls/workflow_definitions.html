@@ -86,6 +86,12 @@
           let wf_id = $(this).closest("tr").attr("data-id");
           create_edit_wf_def(wf_id);
       })
+      rendered.find(".fa-trash").parent().on("click", function(){
+          let wf_id = $(this).closest("tr").attr("data-id");
+          $.getJSON({url: "ws/workflow_definitions/"+encodeURIComponent(wf_id), method: "DELETE" })
+          .done(function(data){ if(data.success){ window.location.reload(true) } else { error_message(data.errormsg)}})
+          .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); error_message("Server side exception deleting workflow definition " + jqXHR.responseText); })
+      })
       $("#lcls_wf_defs_tbl tbody").empty().append(rendered);
   })
  });

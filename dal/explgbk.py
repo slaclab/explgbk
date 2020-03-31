@@ -1648,6 +1648,17 @@ def create_update_wf_definition(experiment_name, wf_obj):
         wf_id = expdb["workflow_definitions"].insert_one(wf_obj).inserted_id
         return True, "", expdb["workflow_definitions"].find_one({"_id": wf_id})
 
+def delete_wf_definition(experiment_name, wf_obj_id):
+    expdb = logbookclient[experiment_name]
+    cur_wf_obj = expdb["workflow_definitions"].find_one({"_id": ObjectId(wf_obj_id)})
+    if not cur_wf_obj:
+        return False, "Cannot find workflow object with id %s " % wf_obj_id, None
+    wfjobs = expdb["workflow_jobs"].count_documents({"def_id": cur_wf_obj["_id"]})
+    if wfjobs > 0:
+        return False, "Cannot delete workflow definition as we have %s jobs using this definition." % wfjobs, None
+    expdb["workflow_definitions"].delete_one({"_id": cur_wf_obj["_id"]})
+    return True, "", None
+
 def get_workflow_jobs(experiment_name):
     expdb = logbookclient[experiment_name]
     return [x for x in expdb["workflow_jobs"].aggregate([
