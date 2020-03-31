@@ -37,8 +37,9 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         [function() { return $.trim($("#rtbl_def_desc").val()) == ""; }, "Please enter a brief description."],
         [function() { return !/^([\w-\s]+)$/.test($("#rtbl_def_name").val())}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores and spaces only."],
         [function() { return !/^([0-9]+)$/.test($("#rtbl_def_bin_count").val())}, "Please enter an integer number of bins."],
-        [function() { return $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length <= 0; }, "At least one column definition should have a complete column definition."],
-        [function() { return _.some($("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find("[name=label]").val() != "" }).map(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}) }), "length") }, "If the column name for a column definition is defined, then the column source(s) must be defined as well"],
+        [function() { return $("#rtbl_def_table_type").val() == "generatedtable" && $.trim($("#rtbl_gentable_patterns").val()) == ""; }, "Please enter a pattern for the attribute names"],
+        [function() { return $("#rtbl_def_table_type").val() != "generatedtable" && $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length <= 0; }, "At least one column definition should have a complete column definition."],
+        [function() { return $("#rtbl_def_table_type").val() != "generatedtable" && _.some($("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find("[name=label]").val() != "" }).map(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}) }), "length") }, "If the column name for a column definition is defined, then the column source(s) must be defined as well"],
       ];
        var mdl = $(d1[0]), rtbl_sources = d2[0];
        _.defaults(rtbl_sources.value, {"Editables": []});
@@ -51,7 +52,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
          $(this).parent().next().empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value[$(this).val()]));
        });
        mdl.find("#rtbl_def_table_type").on("change", function(){
-           if($(this).val() == "histogram") { $(this).closest(".modal").find($("#rtbl_hist_params")).removeClass("d-none"); } else { $(this).closest(".modal").find($("#rtbl_hist_params")).addClass("d-none"); }
+           $("#rtbl_new_entry_modal").find(".ttype").addClass("d-none");
+           $("#rtbl_new_entry_modal").find(".ttype_"+$("#rtbl_def_table_type").val()).removeClass("d-none");
        });
        template_tr.find(".fa-plus").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").after(template_tr.clone(true)); });
        template_tr.find(".fa-trash").parent().on("click", function(e){ e.preventDefault(); $(this).closest("tr").remove(); });
@@ -62,9 +64,10 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
          var tblDef = $("#rtbl_tab").data("tblData")[editTableName];
          $("#rtbl_def_name").val(tblDef["name"]);
          $("#rtbl_def_desc").val(tblDef["description"]);
-         $("#rtbl_def_table_type").val(_.get(tblDef, "table_type", "table"));
-         if($("#rtbl_def_table_type").val() == "histogram") { $("#rtbl_hist_params").removeClass("d-none"); }
          $("#rtbl_def_bin_count").val(_.get(tblDef, "bin_count", 100));
+         $("#rtbl_gentable_patterns").val(_.get(tblDef, "patterns", ".*"));
+         $("#rtbl_gentable_showvalues").prop("checked", _.get(tblDef, "showvalues", true));
+         $("#rtbl_def_table_type").val(_.get(tblDef, "table_type", "table")).trigger("change");
          _.each(_.tail(tblDef["coldefs"]), function(coldef, index){
              var coldefrow = template_tr.clone(true);
              coldefrow.find("[name='label']").val(coldef["label"]);
@@ -102,20 +105,23 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
              coldefs: []
            };
            if(tbl_def['table_type'] == "histogram") { tbl_def['bin_count'] = parseInt($("#rtbl_def_bin_count").val()); }
-           $("#rtbl_def_tbl tbody tr").each(function(index, defnrow){
-             var colname = $(this).find("[name='label']").val();
-             var type = $(this).find("[name='type']").val();
-             var srclbl = $(this).find("[name='source']").val();
-             console.log("Looking for source for " + srclbl);
-             var source = (srclbl == "New Editable") ? "editable_params." + colname + ".value" : _.find($("#rtbl_content").data("run_table_sources").value[type], function(o){ return o['label'] == srclbl; })['source'];
-             tbl_def.coldefs.push({
-               label: colname,
-               type: type,
-               source: source,
-               is_editable: ((type == "Editables") || (_.startsWith(source, "params.Calibrations/"))),
-               position: index
-             });
-           });
+           if(tbl_def['table_type'] == "generatedtable") { tbl_def['patterns'] = $.trim($("#rtbl_gentable_patterns").val()); tbl_def['showvalues'] = $("#rtbl_gentable_showvalues").is(':checked'); }
+           if(tbl_def['table_type'] != "generatedtable") {
+               $("#rtbl_def_tbl tbody tr").each(function(index, defnrow){
+                 var colname = $(this).find("[name='label']").val();
+                 var type = $(this).find("[name='type']").val();
+                 var srclbl = $(this).find("[name='source']").val();
+                 console.log("Looking for source for " + srclbl);
+                 var source = (srclbl == "New Editable") ? "editable_params." + colname + ".value" : _.find($("#rtbl_content").data("run_table_sources").value[type], function(o){ return o['label'] == srclbl; })['source'];
+                 tbl_def.coldefs.push({
+                   label: colname,
+                   type: type,
+                   source: source,
+                   is_editable: ((type == "Editables") || (_.startsWith(source, "params.Calibrations/"))),
+                   position: index
+                 })
+               })
+           }
        	   $.getJSON({
        		    url: 'ws/create_update_user_run_table_def',
        		    data: JSON.stringify(tbl_def),
@@ -165,49 +171,56 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
     var rendered = $(Mustache.render(run_tbl_pill_template, tblData));
     $("#rtbl_tab .nav-pills").append(rendered);
     rendered.find(".rtbl_pill").on("click", function() {
-      var clkRTblName = $(this).attr("data-rtbl-name");
+      let clkRTblName = $(this).attr("data-rtbl-name");
       console.log("Getting data for run table " + clkRTblName);
       sessionStorage['runtable_active_tab'] = clkRTblName;
-      var tblDef = $("#rtbl_tab").data("tblData")[clkRTblName];
-      var rtbl_data_params = {"tableName": clkRTblName}, binCount = _.get(tblDef, "bin_count", 100);
+      let tblDef = $("#rtbl_tab").data("tblData")[clkRTblName], coldefs = tblDef.coldefs;
+      let rtbl_data_params = {"tableName": clkRTblName}, binCount = _.get(tblDef, "bin_count", 100);
       if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { rtbl_data_params["sampleName"] = sample_showing_in_UI; }
       $.when($.getJSON("ws/run_table_data", rtbl_data_params), $.getJSON("ws/samples"))
       .done(function(d0, d1){
-        var runData = d0[0], sampleData = d1[0];
+        let runData = d0[0], sampleData = d1[0];
         if(_.get(tblDef, "table_type") == "histogram" || _.get(tblDef, "table_type") == "scatter") {
           var plotlyDivName = _.get(tblDef, "name") + '_plotlydiv';
           $("#rtbl_content").html("<div id='" + plotlyDivName + "'></div>");
           var traces = [], layout = {};
           if(_.get(tblDef, "table_type") == "histogram") {
               layout = { barmode: "overlay", title: { text: clkRTblName }, xaxis: { title: { text: _.head(_.tail(tblDef.coldefs))["label"], xref: "paper" }}};
-              _.each(_.tail(tblDef.coldefs), function(coldef, idx) {
+              _.each(_.tail(coldefs), function(coldef, idx) {
                 traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram", showlegend: true, name: coldef["label"]});
                 _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
                 _.last(traces)['xbins']['size'] = (_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount;
               });
           } else if (_.get(tblDef, "table_type") == "scatter") {
-              var dateformatfn = (_.endsWith(_.head(_.tail(tblDef.coldefs))["source"], "_time")) ? function(d) { return moment(d).toDate() } : function(d) { return d };
-              var xaxisdata = _.map(runData.value, function(rd){return dateformatfn(_.get(rd, _.head(_.tail(tblDef.coldefs))["source"]))});
-              _.each(_.tail(_.tail(tblDef.coldefs)), function(coldef, idx) {
+              var dateformatfn = (_.endsWith(_.head(_.tail(coldefs))["source"], "_time")) ? function(d) { return moment(d).toDate() } : function(d) { return d };
+              var xaxisdata = _.map(runData.value, function(rd){return dateformatfn(_.get(rd, _.head(_.tail(coldefs))["source"]))});
+              _.each(_.tail(_.tail(coldefs)), function(coldef, idx) {
                 traces.push({x: xaxisdata, y: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "scatter", mode: "markers", showlegend: true, name: coldef["label"]});
               });
-              layout = { title: { text: clkRTblName }, xaxis: { title: { text: _.head(_.tail(tblDef.coldefs))["label"], xref: "paper" }}};
-              if(tblDef.coldefs.length == 3){ layout["yaxis"] = { title: { text: _.last(tblDef.coldefs)["label"], yref: "paper" }} }
+              layout = { title: { text: clkRTblName }, xaxis: { title: { text: _.head(_.tail(coldefs))["label"], xref: "paper" }}};
+              if(coldefs.length == 3){ layout["yaxis"] = { title: { text: _.last(coldefs)["label"], yref: "paper" }} }
           }
           Plotly.newPlot(plotlyDivName, traces, layout, {displaylogo: false});
           return;
         }
-        var numHdrRows = _.find([[6, 1], [12, 2], [18, 3], [0, 4]], function(v) { return (v[0] == 0 || tblDef.coldefs.length < v[0]); })[1];
+        if (_.get(tblDef, "table_type") == "generatedtable") {
+            let tickifpresent = !_.get(tblDef, "showvalues", true);
+            coldefs = _.concat(coldefs, _.map(_.uniq(_.flatten(_.map(_.map(runData.value, "params"), _.keys))).sort(), function(x){ return { "label": x, "source": "params." + x, "tickifpresent": tickifpresent } }))
+            if(tickifpresent) { _.each(runData.value, function(x){ _.each(_.keys(_.get(x, "params", {})), function(k){_.set(x, "params."+k, true)})})  }
+        }
+        var numHdrRows = _.find([[6, 1], [12, 2], [18, 3], [0, 4]], function(v) { return (v[0] == 0 || coldefs.length < v[0]); })[1];
         var tblRndr = $(Mustache.render(run_tbl_tbl, {}));
         var hdr = _.times(numHdrRows, function() { return $("<tr/>"); }), row_tmpl = "";
-        _.each(tblDef.coldefs, function(coldef, idx) {
+        _.each(coldefs, function(coldef, idx) {
           if(idx > 0 && idx < numHdrRows) { hdr[idx%numHdrRows].append($("<th colspan='" + idx + "' class='rtbl_filler'>&nbsp;</th>"))};
           hdr[idx%numHdrRows].append($("<th colspan='"+ numHdrRows + "' class='rtbl_header' data-col-idx='" + idx + "' >" + coldef["label"] + "</th>"));
           if(coldef["source"] == "Separator") {
             row_tmpl = row_tmpl + "<td class='rtbl_separator'>&nbsp;</td>";
           } else if (coldef["is_editable"]) {
             row_tmpl = row_tmpl + "<td><div class='rtbl_editable_column_parent'><div contenteditable='true' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column' title='Type and click outside the box to update'>{{" + coldef["source"] + "}}</div></div></td>";
-        } else if (_.endsWith(coldef["source"], "_time")) {
+          } else if(_.get(coldef, "tickifpresent", false)) {
+            row_tmpl = row_tmpl + "<td class='text-center'>{{#" + coldef["source"]  + "}}<span class='rtblbooltick'><i class='fas fa-check'></i></span>{{/" + coldef["source"] + "}}</td>";
+          } else if (_.endsWith(coldef["source"], "_time")) {
             row_tmpl = row_tmpl + "<td>{{#FormatDate}}{{" + coldef["source"] + "}}{{/FormatDate}}</td>";
           } else if (_.startsWith(coldef["mime_type"], "image/")) {
             row_tmpl = row_tmpl + "<td><img class='rtbl_thumbnail' src='{{" + coldef["source"] + "}}'></td>";
@@ -219,8 +232,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         tblRndr.data("samples", _.fromPairs(_.map(sampleData.value, function(o){return [o["_id"], o["name"]]})));
         $("#rtbl_content").html(tblRndr);
         sortable_paginator($("#rtbl_content").find("table"), "num", "num", true, 0, 400, 50);
-
         rtnl_row_tmpl = "<tr data-runnum={{num}} data-spgntr={{num}}>" + row_tmpl + "</tr>";
+
         Mustache.parse(rtnl_row_tmpl);
         _.each(runData.value, function(r){ r.render = renderRunData})
         $("#rtbl_content").find("table").data("spgntr").addObjects(runData.value);

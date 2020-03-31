@@ -23,9 +23,10 @@
           <option value="table">Table</option>
           <option value="histogram">Histogram</option>
           <option value="scatter">Scatter</option>
+          <option value="generatedtable">Generated Table</option>
         </select>
        </div>
-       <div class="form-group d-none col" id="rtbl_hist_params">
+       <div class="form-group d-none col ttype ttype_histogram" id="rtbl_hist_params">
            <div class="row">
                <label  class="col-3 col-form-label" for="rtbl_def_bin_count">Number of bins</label>
                <div class="col-3">
@@ -34,8 +35,18 @@
            </div>
        </div>
       </div>
+      <div class="row form-group d-none ttype ttype_generatedtable" id="rtbl_generated_params">
+          <label  class="col-1 col-form-label" title="Regex patterns for the attribute names">Patterns</label>
+          <div class="col">
+           <input type="text" class="form-control" name="patterns" id="rtbl_gentable_patterns"/>
+          </div>
+          <label  class="col-2 col-form-label" title="Show the values (if unchecked, indicates only if the parameter is present)">Show values</label>
+          <div class="col-1">
+           <input type="checkbox" class="form-control" name="showvalues" id="rtbl_gentable_showvalues" checked/>
+          </div>
+      </div>
       <div class="form-group">
-        <table class="table table-striped table-bordered" id="rtbl_def_tbl">
+        <table class="table table-striped table-bordered ttype ttype_table ttype_histogram ttype_scatter" id="rtbl_def_tbl">
           <thead><tr><th>Label</th><th>Category</th><th>Source</th><th>Actions</th></tr></thead>
           <tbody></tbody>
         </table>

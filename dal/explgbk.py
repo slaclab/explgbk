@@ -1092,6 +1092,10 @@ def get_runtable_data(experiment_name, tableName, sampleName):
     tableDef = next(x for x in get_all_run_tables(experiment_name) if x['name'] == tableName)
     sources = { "num": 1, "begin_time": 1, "end_time": 1 }
     sources.update({ x['source'] : 1 for x in tableDef['coldefs']})
+    if tableDef.get("table_type", None) == "generatedtable":
+        allsources = [ x["source"] for y in get_runtable_sources(experiment_name).values() for x in y ]
+        ptrn = re.compile(tableDef["patterns"])
+        sources.update({ x : 1 for x in allsources if ptrn.match(x.replace("params.", ""))})
     query = {}
     if sampleName:
         logger.debug("Getting run table data for sample %s", sampleName)

@@ -753,6 +753,9 @@ label {
 #rtbl_content table {
   width: 100%;
 }
+#rtbl_content table .rtblbooltick {
+  color: #6685F4;
+}
 #rtbl_content .sticky-table {
   height: 80vh;
 }
