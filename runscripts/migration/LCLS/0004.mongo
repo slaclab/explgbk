@@ -1,0 +1,21 @@
+// Script to change the NEH instrument to OPS.
+// Stop the middle tier.
+use site
+let opsins = db.getSiblingDB("site")["instruments"].findOne({"_id": "NEH"})
+opsins["_id"] = "OPS"
+db.getSiblingDB("site")["instruments"].insertOne(opsins)
+db.getSiblingDB("site")["instruments"].deleteOne({"_id": "NEH"})
+
+var mongo = db.getMongo();
+mongo.getDBNames().forEach(function (dbname) {
+ var db = mongo.getDB(dbname);
+ if (db.getCollectionNames().includes('info') && db["info"].findOne()["instrument"] == "NEH") {
+   print("Changing instrument for " + dbname);
+   db["info"].updateOne({}, {"$set": {"instrument": "OPS"}})
+ }
+});
+
+// Now we need to rebuild the cache.
+use explgbk_cache
+db.getSiblingDB("explgbk_cache").dropDatabase()
+// Now starting the middle tier should rebuild the cache.

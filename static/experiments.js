@@ -78,7 +78,7 @@ $(function() {
         		console.log("Showing my experiments");
         		var myExps = [];
         		_.forOwn(data.value, function(value, instr) {
-        			if (instr != "NEH") {
+        			if (instr != "OPS") {
             			_.forOwn(data.value[instr], function(value, year) {
             				_.forEach(data.value[instr][year], function(exp, index) {
             					if ((exp['leader_account'] == userdata.value.userid) || (_.includes(userdata.value.groups, exp['posix_group'])) || _.includes(exp['players'], 'uid:'+userdata.value.userid )) {
