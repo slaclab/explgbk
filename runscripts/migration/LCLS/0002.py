@@ -21,7 +21,7 @@ MONGODB_USERNAME=os.environ['MONGODB_USERNAME']
 MONGODB_PASSWORD=os.environ['MONGODB_PASSWORD']
 
 usergroups = UserGroups()
-logbookclient = MongoClient(host=MONGODB_HOST, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True)
+logbookclient = MongoClient(host=MONGODB_HOST, port=MONGODB_PORT, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Migrate group memberships from LDAP to the database')
