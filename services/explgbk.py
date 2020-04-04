@@ -1402,6 +1402,10 @@ def svc_end_run(experiment_name):
     sample_obj = get_sample_for_run(experiment_name, run_doc['num'])
     if sample_obj:
         run_doc['sample'] = sample_obj['name']
+    try:
+        run_doc["duration"] = (run_doc["end_time"] - run_doc["begin_time"]).total_seconds()
+    except:
+        logger.exception("Exception computing duration for run %s for experiment %s", run_doc["num"], experiment_name)
     run_doc["file_catalog"] = get_experiment_files_for_run(experiment_name, run_doc['num'])
     context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc})
 

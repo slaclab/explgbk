@@ -164,7 +164,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
   .done(function(tblData){
     _.each(tblData.value, function(tdef){
       tdef.coldefs = _.sortBy(tdef.coldefs, function(v){ return v["position"];});
-      tdef.coldefs.unshift({"label": "Num", "source": "num", "is_editable": false, "position": -1 })
+      tdef.coldefs.unshift({"label": "Run", "source": "num", "is_editable": false, "position": -1 })
     });
     $("#rtbl_tab").data("tblData", _.keyBy(tblData.value, function(o) {  return o.name; }));
     console.log($("#rtbl_tab").data("tblData"));
@@ -270,6 +270,12 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       var tblRndr = $("#rtbl_content").find("table"), runSample = _.get(runData.value, 'sample', "");
       if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && runSample != sample_showing_in_UI) { console.log("Skipping updating run table for different sample " + runSample); return; }
       runData.value.render = renderRunData;
+      let clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name"), tblDef = $("#rtbl_tab").data("tblData")[clkRTblName], coldefs = tblDef.coldefs;
+      if (_.get(tblDef, "table_type") == "generatedtable") {
+          let tickifpresent = !_.get(tblDef, "showvalues", true);
+          coldefs = _.concat(coldefs, _.map(_.uniq(_.flatten(_.map(_.map(runData.value, "params"), _.keys))).sort(), function(x){ return { "label": x, "source": "params." + x, "tickifpresent": tickifpresent } }))
+          if(tickifpresent) { _.each([runData.value], function(x){ _.each(_.keys(_.get(x, "params", {})), function(k){_.set(x, "params."+k, true)})})  }
+      }
       $("#rtbl_content").find("table").data("spgntr").addObject(runData.value);
     });
 
