@@ -861,8 +861,11 @@ def get_elog_tags(experiment_name):
     '''
     Get the distinct tags for the elog entries.
     '''
+    sitedb = logbookclient["site"]
+    ins = sitedb["instruments"].find_one({ "_id": get_experiment_info(experiment_name)["instrument"] })
+    ins_tags = ins.get("params", {}).get("tags", "").split(" ")
     expdb = logbookclient[experiment_name]
-    return expdb['elog'].distinct("tags")
+    return expdb['elog'].distinct("tags") + ins_tags
 
 def get_elog_emails(experiment_name):
     '''
