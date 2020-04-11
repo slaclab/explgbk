@@ -268,11 +268,11 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
  }
 
  var expandFunction = function() {
-	var entry = $(this).closest(".edat").data("entry");
+	var entry = $(this).closest(".edat").data("entry"), expdr = $(this).find(".elog-expand");
 	console.log("Expand/contract " + entry["_id"]);
-	if($(this).hasClass("elog-expanded")) {
+	if(expdr.hasClass("elog-expanded")) {
 		$(this).closest(".edat").find(".elog-chid").remove();
-    	$(this).html('<i class="fas fa-plus expand_ctrl"></i>');
+    	expdr.html('<i class="fas fa-plus expand_ctrl"></i>');
 	} else {
 		var clicked_elem = $(this);
         entry.privileges = privileges;
@@ -285,19 +285,19 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 		    var rendered = renderMSTemplate(elog_main_template, ch_entry, { main_content_tmpl: elog_main_content_template });
 		    rendered.data("entry", ch_entry).data("ts", moment(ch_entry["relevance_time"]));
 		    clicked_elem.closest(".edat").find(".card-body").append(rendered);
-		    rendered.find(".elog-expand").on("click", expandFunction);
+		    rendered.find(".elog-expand").closest(".row").on("click", expandFunction);
 		});
-    	$(this).html('<i class="fas fa-minus expand_ctrl"></i>');
+    	expdr.html('<i class="fas fa-minus expand_ctrl"></i>');
 	}
-	$(this).toggleClass("elog-expanded elog-compressed");
+	expdr.toggleClass("elog-expanded elog-compressed");
  };
 
  var runExpandFunction = function() {
-     var entry = $(this).closest(".edat").data("entry");
+     var entry = $(this).closest(".edat").data("entry"), expdr = $(this).find(".elog-expand");
      console.log("Expand/contract run " + entry["num"]);
-     if($(this).hasClass("elog-expanded")) {
+     if(expdr.hasClass("elog-expanded")) {
          $(this).closest(".edat").find(".elog-chid").remove();
-         $(this).html('<i class="fas fa-plus expand_ctrl"></i>');
+         expdr.html('<i class="fas fa-plus expand_ctrl"></i>');
      } else {
          var clicked_elem = $(this);
          $.when($.getJSON("ws/run_table_sources"), $.getJSON("ws/runs/"+entry["num"]))
@@ -312,23 +312,25 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
              })
              var cat_params_list = _.sortBy(_.map(categorized_params, function(v, k){ return {k: k, v: v}}), function(o){return o['k']});
              var rendered = renderMSTemplate(elog_run_child_template, { param_list: cat_params_list });
-             rendered.find(".expand_param").on("click", function(){
-                 var clickedElem = $(this).closest(".elog_run_param_category");
-                 if($(this).hasClass("expand_plus")) {
+             rendered.find(".expand_param").parent().on("click", function(ev){
+                 console.log(ev);
+                 if(!$(ev.target).hasClass("expand_param") && !$(ev.target).hasClass("elog_run_param_category")) return;
+                 var clickedElem = $(this), rexpdr = clickedElem.find(".expand_param");
+                 if(rexpdr.hasClass("expand_plus")) {
                      var paramsrendered = renderMSTemplate(elog_run_child_expanded_params_template, { params: _.sortBy(categorized_params[clickedElem.attr("data-category")], function(o){ return o['k']})});
                      clickedElem.find(".elog_run_params_expanded").append(paramsrendered);
-                     $(this).find("svg").replaceWith($('<i class="fas fa-minus"></i>'));
+                     rexpdr.find("svg").replaceWith($('<i class="fas fa-minus"></i>'));
                  } else {
                      clickedElem.find(".elog_run_params_expanded").empty();
-                     $(this).find("svg").replaceWith($('<i class="fas fa-plus"></i>'));
+                     rexpdr.find("svg").replaceWith($('<i class="fas fa-plus"></i>'));
                  }
-                 $(this).toggleClass("expand_plus")
+                 rexpdr.toggleClass("expand_plus")
              });
              clicked_elem.closest(".edat").append(rendered);
-             $(this).html('<i class="fas fa-minus expand_ctrl"></i>');
+             expdr.html('<i class="fas fa-minus expand_ctrl"></i>');
          });
      }
-     $(this).toggleClass("elog-expanded elog-compressed");
+     expdr.toggleClass("elog-expanded elog-compressed");
  };
 
   var replaceExistingElogEntryContent = function(existingElem) { // If we get a update for an edit over web socker, we replace the contents of the elog entry.
@@ -345,14 +347,14 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   var elogEntryRenderFunction = function() {
       var rendered = renderMSTemplate(elog_main_template, this, { main_content_tmpl: elog_main_content_template })
       rendered.data("entry", this).data("ts", moment(this["relevance_time"]));
-      rendered.find(".elog-expand").on("click", this.expandFunction);
+      rendered.find(".elog-expand").closest(".row").on("click", this.expandFunction);
       return rendered;
   }
 
   var runRenderFunction = function() {
       var rendered = renderMSTemplate(elog_run_main_template, this);
       rendered.data("entry", this).data("ts", moment(this["relevance_time"]));
-      rendered.find(".elog-expand").on("click", this.expandFunction);
+      rendered.find(".elog-expand").closest(".row").on("click", this.expandFunction);
       return rendered;
   }
 
