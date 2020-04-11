@@ -28,9 +28,9 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
   </div>
   <div class="col-1" title="{{run_num}}">{{ run_num_str }}</div>
   {{> main_content_tmpl }}
-  <div class="col-1">{{ author }}</div>
+  <div class="col-1 text-left">{{ author }}</div>
   </div></div>`;
-  var elog_main_content_template = `<div class="col-5 elog_main_cnt text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-3 elog_main_cnt">{{#src_expname}}{{.}}{{#tagcount}}|{{/tagcount}}{{/src_expname}}{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>`;
+  var elog_main_content_template = `<div class="col-5 elog_main_cnt text-left text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-3 elog_main_cnt">{{#src_expname}}{{.}}{{#tagcount}}|{{/tagcount}}{{/src_expname}}{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>`;
 
  var elog_child_template = `<div class="row col-12 elog-chid">
    <div class="card">
@@ -548,24 +548,29 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
 
   $("#elog_tab").data("search_text_input", function(e) {
-      var search_text = $("#elog_search_text").val();
+      let search_text = $("#elog_search_text").val(), tag_sel = _.trim($("#elog_select_by_tag").val()), srchparams = {};
+      if(!_.isEmpty(tag_sel)) { srchparams["tag"] = tag_sel; }
+      let srchandrender = function(){ $.getJSON({ url: "ws/search_elog", data: srchparams}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); }); }
       if (!_.isNil(search_text)) {
           if(/^[0-9]+$/g.test(search_text)) {
-              $.getJSON({ url: "ws/search_elog", data: { run_num : search_text }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
+              _.assign(srchparams, { run_num : search_text });
           } else if(/^([0-9]+)-([0-9]+)$/g.test(search_text)) {
               var start_run_num = /^([0-9]+)-([0-9]+)$/g.exec(search_text)[1];
               var end_run_num   = /^([0-9]+)-([0-9]+)$/g.exec(search_text)[2];
-              $.getJSON({ url: "ws/search_elog", data: { start_run_num : start_run_num, end_run_num: end_run_num }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
+              _.assign(srchparams, { start_run_num : start_run_num, end_run_num: end_run_num });
           } else if(/^\d{1,2}[\/.]\d{1,2}[\/.]\d{4}$/.test(search_text) && moment(search_text, "MM/DD/YYYY").isValid()) {
-              $.getJSON({ url: "ws/search_elog", data: { start_date : moment(search_text, "MM/DD/YYYY").subtract(1, "days").toJSON(), end_date : moment(search_text, "MM/DD/YYYY").add(1, "days").toJSON() }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
+              _.assign(srchparams, { start_date : moment(search_text, "MM/DD/YYYY").subtract(1, "days").toJSON(), end_date : moment(search_text, "MM/DD/YYYY").add(1, "days").toJSON() });
           } else if(/^\d{1,2}[\/.]\d{1,2}[\/.]\d{4}-\d{1,2}[\/.]\d{1,2}[\/.]\d{4}$/.test(search_text) && moment(_.split(search_text, "-")[0], "MM/DD/YYYY").isValid() && moment(_.split(search_text, "-")[1], "MM/DD/YYYY").isValid()) {
-              $.getJSON({ url: "ws/search_elog", data: { start_date : moment(_.split(search_text, "-")[0], "MM/DD/YYYY").subtract(1, "days").toJSON(), end_date : moment(_.split(search_text, "-")[1], "MM/DD/YYYY").add(1, "days").toJSON() }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
+              _.assign(srchparams, { start_date : moment(_.split(search_text, "-")[0], "MM/DD/YYYY").subtract(1, "days").toJSON(), end_date : moment(_.split(search_text, "-")[1], "MM/DD/YYYY").add(1, "days").toJSON() });
           } else if(search_text.length > 2) {
-              $.getJSON({ url: "ws/search_elog", data: { search_text : search_text }}).done(function(data){ skip_websocket_elog_messages = true; in_search_results = true; processElogResponse(data); renderElogResponse(data); });
-          } else {
+              _.assign(srchparams, { search_text : search_text });
+          } else if(!_.isEmpty(tag_sel)) { } // Do nothing...
+          else {
               if(in_search_results) { $("#elog_tab").data("refresh")(); }
               in_search_results = false;
+              return;
           }
+          srchandrender();
       } else {
           if(in_search_results) { $("#elog_tab").data("refresh")(); }
           in_search_results = false;
@@ -637,7 +642,8 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 });
 
 $("#elog_tab").on("lg.shown.bs.tab", function() {
-    var tab_toolbar = `<input type="text" placeholder="Search/Run etc - see tooltip" title='Search;"A phrase";Author;Tag;Run;Run-Run;date(MM/DD/YYYY);date-date' id="elog_search_text">
+    var tab_toolbar = `<select id="elog_select_by_tag" class="d-none"><option value="">Select by tag</option></select>
+    <input type="text" placeholder="Search/Run etc - see tooltip" title='Search;"A phrase";Author;Tag;Run;Run-Run;date(MM/DD/YYYY);date-date' id="elog_search_text">
     <span id="elog_new_entry"><i class="fas fa-plus fa-lg" title="Post a new elog entry"></i></span>
     <span id="elog_toggle_runs"><i class="fas fa-running fa-lg" title="Hide/show run entries"></i></span>
     <span id="elog_attachments_only"><i class="fas fa-paperclip fa-lg" title="Toggle attachments only"></i></span>
@@ -646,6 +652,10 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
     <span id="elog_email_subscribe"><i class="fas fa-envelope-open fa-lg" title="Email subscription"></i></span>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
+    $.getJSON("ws/get_elog_tags").done(function(d0){
+        $("#elog_select_by_tag").append(Mustache.render(`{{#.}}<option value="{{.}}">{{.}}</option>{{/.}}`, d0.value)).removeClass("d-none");
+        $("#elog_select_by_tag").on("change", $("#elog_tab").data("search_text_input"));
+    })
     $("#elog_new_entry").on("click", $("#elog_tab").data("new_entry_click"));
     $("#elog_attachments_only").on("click", function() {
         if($("#elog_attachments_only").hasClass("pushedin")) {

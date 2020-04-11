@@ -1010,6 +1010,7 @@ def svc_search_elog(experiment_name):
     end_run_num_str   = request.args.get("end_run_num", None)
     start_date_str = request.args.get("start_date", None)
     end_date_str   = request.args.get("end_date", None)
+    tag_filter = request.args.get("tag", None)
     id_str = request.args.get("_id", None)
     if run_num_str:
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_run_num(experiment_name, int(run_num_str))})
@@ -1019,6 +1020,10 @@ def svc_search_elog(experiment_name):
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_specified_id(experiment_name, id_str)})
     elif start_date_str and end_date_str:
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_date_range(experiment_name, datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'), datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'))})
+    elif search_text.startswith("t^"):
+        return JSONEncoder().encode({"success": True, "value": get_elog_entries_by_tag(experiment_name, search_text[2:])})
+    elif len(search_text) < 1 and tag_filter:
+        return JSONEncoder().encode({"success": True, "value": get_elog_entries_by_tag(experiment_name, tag_filter)})
     else:
         combined_results = {}
         if search_text in get_elog_authors(experiment_name):
@@ -1027,6 +1032,11 @@ def svc_search_elog(experiment_name):
             combined_results.update({ x["_id"] : x for x in get_elog_entries_by_tag(experiment_name, search_text) })
 
         combined_results.update({ x["_id"] : x for x in search_elog_for_text(experiment_name, search_text) })
+
+        if tag_filter:
+            tag_entries = get_elog_entries_by_tag(experiment_name, tag_filter)
+            combined_results = { x : combined_results[x] for x in set([ y["_id"] for y in tag_entries ]) & combined_results.keys() }
+
         return JSONEncoder().encode({"success": True, "value": list(sorted(combined_results.values(), key=lambda x : x["insert_time"]))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_elog_entry", methods=["DELETE"])
