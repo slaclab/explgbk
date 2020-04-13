@@ -51,7 +51,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
-    delete_wf_definition
+    delete_wf_definition, get_elog_entries_by_regex
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -1020,8 +1020,10 @@ def svc_search_elog(experiment_name):
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_specified_id(experiment_name, id_str)})
     elif start_date_str and end_date_str:
         return JSONEncoder().encode({"success": True, "value": get_elogs_for_date_range(experiment_name, datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'), datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'))})
-    elif search_text.startswith("t^"):
+    elif search_text.startswith("t:"):
         return JSONEncoder().encode({"success": True, "value": get_elog_entries_by_tag(experiment_name, search_text[2:])})
+    elif search_text.startswith("x:"):
+        return JSONEncoder().encode({"success": True, "value": get_elog_entries_by_regex(experiment_name, search_text[2:])})
     elif len(search_text) < 1 and tag_filter:
         return JSONEncoder().encode({"success": True, "value": get_elog_entries_by_tag(experiment_name, tag_filter)})
     else:

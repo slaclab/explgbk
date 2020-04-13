@@ -655,6 +655,22 @@ def get_elogs_for_date_range(experiment_name, start_date, end_date):
 
     return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
 
+def get_elog_entries_by_regex(experiment_name, regx):
+    """
+    Get the elog entries that match the regex
+    """
+    expdb = logbookclient[experiment_name]
+    logger.debug("Looking for entries matching %s", regx)
+    try:
+        matching_entries = {x["_id"] : x for x in expdb['elog'].find({"content": {"$regex": regx, "$options": "m"}})}
+        # Recursively gather all root and parent entries
+        while __get_root_and_parent_entries(experiment_name, matching_entries):
+            pass
+
+        return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
+    except:
+        logger.exception("Exception matching regex %s for experiment %s", regx, experiment_name)
+        return []
 
 def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
     """
