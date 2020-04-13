@@ -1156,6 +1156,7 @@ def get_runtable_sources(experiment_name):
     rtbl_sources = {}
     rtbl_sources["Run Info"] = [{"label": "Begin Time", "description": "The start of the run", "source": "begin_time", "category": "Run Info"},
         {"label": "End time", "description": "The end of the run", "source": "end_time", "category": "Run Info"},
+        {"label": "Number", "description": "The run number", "source": "num", "category": "Run Info"},
         {"label": "Type", "description": "The run type", "source": "type", "category": "Run Info"},
         {"label": "Sample", "description": "The sample associated with the run", "source": "sample", "category": "Run Info"},
         {"label": "Run Duration", "description": "The duration of the run", "source": "duration", "category": "Run Info"}]
