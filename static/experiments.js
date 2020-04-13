@@ -106,6 +106,13 @@ $(function() {
         		});
         	});
 
+            _.each(privileges, function(v, k){
+                if(v) {
+                    $("#myNavbar").find(".priv_"+k).removeClass("d-none");
+                    $("#myexptab").find(".priv_"+k).removeClass("d-none");
+                }
+            })
+
         	// Prepare for searches...
         	var exp_names = []
         	var name2info = {};
