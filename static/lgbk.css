@@ -59,7 +59,7 @@ label {
   margin-bottom: 0;
   border-radius: 0;
 }
-#myNavRow li.active a {
+#myNavRow li a.active {
   background-color: #1E48DF;
   color: white;
 }
