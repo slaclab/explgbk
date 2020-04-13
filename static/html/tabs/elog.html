@@ -433,6 +433,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       $("#elog_content").html(elog_header);
       sortable_paginator($("#elog_content"), "elem_id", "r_time", true, 0, 100, 100);
       $("#elog_content").data("spgntr").addObjects(_.filter(data.value, function(f) { return !_.has(f, "root") }));
+      if(!_.isNil($("#elog_content").data("spgntr").disp_objs) && $("#elog_content").data("spgntr").disp_objs.length <= 20 && $("#elog_content").data("spgntr").disp_objs.length > 0) { $("#elog_expand_all").removeClass("d-none"); } else { $("#elog_expand_all").addClass("d-none"); }
   }
 
   $(window).scroll(function () {
@@ -568,14 +569,11 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
               _.assign(srchparams, { search_text : search_text });
           } else if(!_.isEmpty(tag_sel)) { } // Do nothing...
           else {
-              if(in_search_results) { $("#elog_tab").data("refresh")(); }
-              in_search_results = false;
-              return;
+              if(in_search_results) { $("#elog_tab").data("refresh")(); } in_search_results = false; return;
           }
           srchandrender();
       } else {
-          if(in_search_results) { $("#elog_tab").data("refresh")(); }
-          in_search_results = false;
+          if(in_search_results) { $("#elog_tab").data("refresh")(); }; in_search_results = false; return;
       }
   });
 
@@ -648,6 +646,7 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
     <input type="text" placeholder="Search/Run etc - see tooltip" title='Search;"A phrase";Author;Tag;Run;Run-Run;date(MM/DD/YYYY);date-date' id="elog_search_text">
     <span id="elog_new_entry"><i class="fas fa-plus fa-lg" title="Post a new elog entry"></i></span>
     <span id="elog_toggle_runs"><i class="fas fa-running fa-lg" title="Hide/show run entries"></i></span>
+    <span id="elog_expand_all" class="d-none"><i class="fas fa-arrows-alt fa-lg" title="Expand all visible entries"></i></span>
     <span id="elog_attachments_only"><i class="fas fa-paperclip fa-lg" title="Toggle attachments only"></i></span>
     <span id="elog_hybrid_mode"><i class="fas fa-table fa-lg" title="Attachments as a table (aka hybrid mode)"></i></span>
     <span id="elog_deleted_entries"><i class="fas fa-strikethrough fa-lg" title="Toggle deleted entries"></i></span>
@@ -683,6 +682,7 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
         window.showRuns = !_.get(window, "showRuns", true);
         $("#elog_tab").data("refresh")();
     });
+    $("#elog_expand_all").on("click", function(){ $("#elog_content").find(".elog-expand").closest(".row").trigger("click") })
     $("#elog_deleted_entries").on("click", function() {
         if($("#elog_deleted_entries").hasClass("pushedin")) {
             $("#elog_tab").find(".elog_deleted").closest(".edat").removeClass("d-none");
