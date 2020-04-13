@@ -64,7 +64,7 @@
         <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/runTables.html" href="#runTables">Run Tables</a></li>
         <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/fileManager.html" href="#fileManager">File Manager</a></li>
         <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/shifts.html" href="#shifts">Shifts</a></li>
-        <li class="nav-item"><a class="nav-link d-none lab_personnel_only" data-toggle="tab" data-url="../../static/html/tabs/feedback.html" href="#feedback">Feedback</a></li>
+        <li class="nav-item"><a class="nav-link d-none priv_feedback_read" data-toggle="tab" data-url="../../static/html/tabs/feedback.html" href="#feedback">Feedback</a></li>
         <li class="nav-item sitespecific"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/collaborators.html" href="#collaborators">Collaborators</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -88,7 +88,7 @@
   <div role="tabpanel" class="tab-pane fade" id="runTables"></div>
   <div role="tabpanel" class="tab-pane fade" id="fileManager"></div>
   <div role="tabpanel" class="tab-pane fade" id="shifts"></div>
-  <div role="tabpanel" class="tab-pane fade d-none lab_personnel_only" id="feedback"></div>
+  <div role="tabpanel" class="tab-pane fade d-none priv_feedback_read" id="feedback"></div>
   <div role="tabpanel" class="tab-pane fade sitespecific" id="collaborators"></div>
 </div>
 
@@ -130,10 +130,12 @@ $(document).ready(function() {
         }
     });
 
-    if(show_feedback && _.get(privileges, "feedback_read", false)) {
-        $("#myNavbar").find(".lab_personnel_only").removeClass("d-none");
-        $("#myTabContainer").find(".lab_personnel_only").removeClass("d-none");
-    }
+    _.each(privileges, function(v, k){
+        if(v) {
+            $("#myNavbar").find(".priv_"+k).removeClass("d-none");
+            $("#myTabContainer").find(".priv_"+k).removeClass("d-none");
+        }
+    })
 
     $.getJSON('../../static/json/sitespecific_tabs_' + logbook_site + ".json")
     .done(function(tabs) {
