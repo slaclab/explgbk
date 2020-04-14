@@ -1099,6 +1099,11 @@ def get_all_run_tables(experiment_name):
             if coldef['type'].startswith('EPICS:'):
                 coldef['type'] = coldef['type'].replace('EPICS:', 'EPICS/')
             coldef['mime_type'] = mimes.get(coldef['source'], "text")
+        if "sort_index" not in rt:
+            rt["sort_index"] = 100
+
+    # Sort by run table sort_index and then by name.
+    allRunTables = sorted(allRunTables, key=itemgetter('sort_index', 'name'))
     return allRunTables
 
 def get_runtable_data(experiment_name, tableName, sampleName):

@@ -37,6 +37,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         [function() { return $.trim($("#rtbl_def_desc").val()) == ""; }, "Please enter a brief description."],
         [function() { return !/^([\w-\s]+)$/.test($("#rtbl_def_name").val())}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores and spaces only."],
         [function() { return !/^([0-9]+)$/.test($("#rtbl_def_bin_count").val())}, "Please enter an integer number of bins."],
+        [function() { return !/^([0-9]+)$/.test($("#rtbl_sort_index").val())}, "Please enter an integer value for the sort index."],
         [function() { return $("#rtbl_def_table_type").val() == "generatedtable" && $.trim($("#rtbl_gentable_patterns").val()) == ""; }, "Please enter a pattern for the attribute names"],
         [function() { return $("#rtbl_def_table_type").val() != "generatedtable" && $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length <= 0; }, "At least one column definition should have a complete column definition."],
         [function() { return $("#rtbl_def_table_type").val() != "generatedtable" && _.some($("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find("[name=label]").val() != "" }).map(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}) }), "length") }, "If the column name for a column definition is defined, then the column source(s) must be defined as well"],
@@ -102,6 +103,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
              description: $("#rtbl_def_desc").val(),
              is_editable: true,
              table_type: $("#rtbl_def_table_type").val(),
+             sort_index: _.toInteger($("#rtbl_sort_index").val()),
              coldefs: []
            };
            if(tbl_def['table_type'] == "histogram") { tbl_def['bin_count'] = parseInt($("#rtbl_def_bin_count").val()); }
