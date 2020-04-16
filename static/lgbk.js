@@ -315,6 +315,10 @@ var clone_experiment = function(src_experiment_name, mdl_holder, path_to_ws="", 
   });
 };
 
+var success_message = function(msg, timeout=5000) {
+    new Noty( { text: msg, layout: "topRight", type: "success", timeout: timeout }).show();
+}
+
 var error_message = function(msg, timeout=5000) {
     new Noty( { text: msg, layout: "topRight", type: "error", timeout: timeout }).show();
 }

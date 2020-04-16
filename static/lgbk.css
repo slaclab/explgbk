@@ -1013,6 +1013,12 @@ label {
 #lcls_wf_ctrls_tab .ctrls_content .runrow:nth-child(even) {
   background: #efefef;
 }
+#lcls_wf_ctrls_tab .ctrls_content .wact {
+  color: #1E48DF;
+}
+#lcls_wf_ctrls_tab .ctrls_content .wact[disabled] {
+  color: #efefef;
+}
 #lcls_wf_ctrls_tab .wf_counters {
   text-align: left;
 }

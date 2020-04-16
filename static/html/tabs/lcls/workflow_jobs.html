@@ -9,7 +9,7 @@
 <script type="text/javascript">
  $("#lcls_wf_ctrls_tab").on("lg.loaded.bs.tab", function() {
   let wf_job_tmpl = `<div class="row jobrow" data-jobid="{{_id}}"><span class="col-1"></span><span class="col-2">{{def.name}}</span><span class="col-2">{{status}}</span>
-      <span class="col-2"><span class="listview-action kill-job" title="Kill a running job" {{^running}}disabled{{/running}}><i class="fas fa-skull-crossbones"></i></span><span class="listview-action view-log" title="View the log file"><i class="fas fa-align-justify"></i></span><span class="listview-action view-details" title="View job details"><i class="fas fa-info-circle"></i></span><span class="listview-action delete-job" title="Delete this job entry" {{#running}}disabled{{/running}}><i class="fas fa-trash"></i></span></span><span class="col-5 wf_counters"><ul>{{#counters}}<li><span class="wf_counter_key">{{{key}}}</span>:<span class="wf_counter_value">{{{value}}}</span></li>{{/counters}}</ul></span></div>`,
+      <span class="col-2"><span class="listview-action wact kill-job" title="Kill a running job" {{^running}}disabled{{/running}}><i class="fas fa-skull-crossbones"></i></span><span class="listview-action wact view-log" title="View the log file"><i class="fas fa-align-justify"></i></span><span class="listview-action wact view-details" title="View job details"><i class="fas fa-info-circle"></i></span><span class="listview-action wact delete-job" title="Delete this job entry" {{#running}}disabled{{/running}}><i class="fas fa-trash"></i></span></span><span class="col-5 wf_counters"><ul>{{#counters}}<li><span class="wf_counter_key">{{{key}}}</span>:<span class="wf_counter_value">{{{value}}}</span></li>{{/counters}}</ul></span></div>`,
       wf_run_tmpl = `<div class="runrow" data-spgntr="{{num}}"><div class="row runhdr"><span class="col-1">{{num}}</span><span class="col-2"><select><option value=""> </option>{{#wf_defs}}<option value="{{.}}">{{.}}</option>{{/wf_defs}}</select></span></div>
       <div class="jobsdiv">{{#jobs}}`+wf_job_tmpl+`{{/jobs}}</div></div>`;
   Mustache.parse(wf_job_tmpl);Mustache.parse(wf_run_tmpl);
@@ -28,10 +28,10 @@
         if(data.success) {
             console.log("Successfully triggered job manually for " + jobname + " for run " + run_num);
         } else {
-          alert("Server side exception triggering job " + data.errormsg);
+          error_message("Server side exception triggering job " + data.errormsg);
         }
       })
-      .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure triggering job " + textStatus); })
+      .fail( function(jqXHR, textStatus, errorThrown) { error_message("Server side HTTP failure triggering job " + textStatus); })
   }
 
   let show_content_modal = function(title, content_url) {
@@ -43,13 +43,15 @@
             $("#lcls_wf_ctrls_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#lcls_wf_ctrls_tab").find(".mdl_holder").empty(); });
             $("#lcls_wf_ctrls_tab").find(".mdl_holder").find(".modal").modal("show");
         } else {
-          alert("Server failure: " + data.errormsg);
+          error_message("Server failure: " + data.errormsg);
         }
       })
-      .fail( function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+      .fail( function(jqXHR, textStatus, errorThrown) { error_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
   }
   let kill_job = function() {
-      $.getJSON("ws/kill_workflow_job", {"job_id": $(this).closest(".jobrow").attr("data-jobid")}).fail( function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+      $.getJSON("ws/kill_workflow_job", {"job_id": $(this).closest(".jobrow").attr("data-jobid")})
+      .done(function(d){if(_.get(d, "success", false)){ success_message("Job was successfully killed"); } else { error_message("Error killing job " + _.get(d, "errormsg", ""))}})
+      .fail(function(jqXHR, textStatus, errorThrown) { error_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
   }
   let view_log = function() {
       let jobid = $(this).closest(".jobrow").attr("data-jobid");
@@ -60,7 +62,7 @@
       show_content_modal("Details for " + jobid, "ws/workflow/" + jobid + "/job_details");
   }
   let delete_job = function() {
-      $.getJSON("ws/delete_workflow_job", {"job_id": $(this).closest(".jobrow").attr("data-jobid")}).fail( function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+      $.getJSON("ws/delete_workflow_job", {"job_id": $(this).closest(".jobrow").attr("data-jobid")}).fail( function(jqXHR, textStatus, errorThrown) { error_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
   }
   let job_attach_actions_fn = function(rendered) {
       rendered.find(".kill-job").not("[disabled]").on("click", kill_job);
