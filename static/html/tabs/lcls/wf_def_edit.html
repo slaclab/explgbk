@@ -27,25 +27,10 @@
           <label>Executable:</label>
           <input type="text" class="form-control wf_def_executable" value="{{ executable }}">
        </div>
-      <table class="table table-condensed table-striped table-bordered">
-        <thead><tr><th>Param Name</th><th>Param Value</th><th>Actions</th></thead>
-        <tbody>
-          {{#paramkvs}}
-          <tr><td>{{#has_ss_params}}<div class="input-group">{{/has_ss_params}}<input type="text" class="form-control cp_key" value="{{key}}">{{#has_ss_params}}<span class="input-group-addon param_action"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span></div>{{/has_ss_params}}</td><td><input type="text" class="form-control cp_value" value="{{value}}"></td>
-            <td>
-                <span class="param_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
-                <span class="param_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
-            </td>
-          </tr>
-          {{/paramkvs}}
-          <tr><td>{{#has_ss_params}}<div class="input-group">{{/has_ss_params}}<input type="text" class="form-control cp_key" value="">{{#has_ss_params}}<span class="input-group-addon param_action"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span></div>{{/has_ss_params}}</td><td><input type="text" class="form-control cp_value" value=""></td>
-            <td>
-                <span class="param_action"><i class="fas fa-trash fa-lg" aria-hidden="true"></i></span>
-                <span class="param_action"><i class="fas fa-plus fa-lg" aria-hidden="true"></i></span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+       <div class="pl-2 pr-2 form-group row">
+          <label>Parameters:</label>
+          <input type="text" class="form-control wf_def_parameters" value="{{ parameters }}">
+       </div>
       <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           <button class="btn btn-default panel_btn submit_btn">{{#_id}}Update{{/_id}}{{^_id}}Create{{/_id}}</button>

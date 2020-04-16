@@ -14,9 +14,7 @@
   var create_edit_wf_def = function(wf_id) {
       $.when($.ajax("../../static/html/tabs/lcls/wf_def_edit.html"), $.getJSON('ws/workflow_definitions'), $.getJSON('ws/dm_locations'), $.getJSON('ws/workflow_triggers'))
       .done(function(d0, d1, d2, d3){
-          let wf_def = ( _.isNil(wf_id) ? {} : _.find(d1[0].value, ["_id", wf_id])), lc = _.set(wf_def, "locations", _.map(_.filter(d2[0].value, "jid_prefix"), "name")), lt = _.set(wf_def, "triggers", d3[0].value), lp = _.set(wf_def, "paramkvs", _.map(_.get(wf_def, "parameters", {}), function(value, key){ return {"key": key, "value": value}})), rendered = $(Mustache.render(d0[0], wf_def));
-          rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
-          rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
+          let wf_def = ( _.isNil(wf_id) ? {} : _.find(d1[0].value, ["_id", wf_id])), lc = _.set(wf_def, "locations", _.map(_.filter(d2[0].value, "jid_prefix"), "name")), lt = _.set(wf_def, "triggers", d3[0].value), rendered = $(Mustache.render(d0[0], wf_def));
           rendered.find(".wf_def_trigger").val(_.get(wf_def, "trigger", _.first(d3[0].value)["value"]));
           rendered.find(".wf_def_location").val(_.get(wf_def, "location", _.first(d2[0].value)["name"]));
           $("#lcls_wf_defs_tab").find("#mdl_holder").empty().append(rendered);
@@ -28,8 +26,7 @@
             var show_validation_message = function(message) { error_message(message) }
             var validations = [
                 [function() { return $.trim(formObj.find(".wf_def_name").val()) == ""; }, "Please enter a name."],
-                [function() { return $.trim(formObj.find(".wf_def_executable").val()) == ""; }, "Please enter the path to the script you want to trigger."],
-                [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
+                [function() { return $.trim(formObj.find(".wf_def_executable").val()) == ""; }, "Please enter the path to the script you want to trigger."]
               ];
             // Various validations
             var v_failed = false;
@@ -44,14 +41,12 @@
             if (v_failed) { e.preventDefault(); return; }
             var wf_def_name = $.trim(formObj.find(".wf_def_name").val());
             var wf_def_id_original = $.trim(formObj.find(".wf_def_id").val());
-            var wf_def_params = {};
-            formObj.find("tbody tr").map(function() {  var key = $(this).find(".cp_key").val(), val = $(this).find(".cp_value").val(); if(key != "" && val != "") { wf_def_params[key] = val; }});
             var new_wf_def_doc = {
               name: wf_def_name,
               executable: $.trim(formObj.find(".wf_def_executable").val()),
               trigger: $.trim(formObj.find(".wf_def_trigger").val()),
               location: $.trim(formObj.find(".wf_def_location").val()),
-              parameters: wf_def_params
+              parameters: $.trim(formObj.find(".wf_def_parameters").val())
             };
             if( !_.isNil(wf_def_id_original) && $.trim(wf_def_id_original).length > 1 ) { new_wf_def_doc["_id"] = wf_def_id_original }
             console.log(new_wf_def_doc);
@@ -77,10 +72,9 @@
   }
 
  $("#lcls_wf_defs_tab").on("lg.loaded.bs.tab", function() {
-  var ws_defs_tmpl = `{{#value}}<tr data-id="{{_id}}"><td>{{name}}</td><td>{{executable}}</td><td>{{#paramkvs}}<div class="row"><span class="font-weight-bold pl-2 text-truncate">{{key}}</span>: <span class="text-truncate">{{value}}</span></div>{{/paramkvs}}</td><td>{{location}}</td><td>{{trigger}}</td><td>{{run_as_user}}</td><td><span title="Edit definition"><i class="fas fa-edit listview-action"></i></span><span title="Delete definition"><i class="fas fa-trash listview-action"></i></span></td></tr>{{/value}}`;
+  var ws_defs_tmpl = `{{#value}}<tr data-id="{{_id}}"><td>{{name}}</td><td>{{executable}}</td><td>{{parameters}}</td><td>{{location}}</td><td>{{trigger}}</td><td>{{run_as_user}}</td><td><span title="Edit definition"><i class="fas fa-edit listview-action"></i></span><span title="Delete definition"><i class="fas fa-trash listview-action"></i></span></td></tr>{{/value}}`;
   Mustache.parse(ws_defs_tmpl);
   $.getJSON('ws/workflow_definitions').done(function(d){
-      _.each(d.value, function(w){ w["paramkvs"] = _.map(_.get(w, "parameters", {}), function(value, key){ return {"key": key, "value": value}})})
       let rendered = $(Mustache.render(ws_defs_tmpl, d));
       rendered.find(".fa-edit").parent().on("click", function(){
           let wf_id = $(this).closest("tr").attr("data-id");
