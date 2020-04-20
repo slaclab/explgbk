@@ -34,7 +34,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
  var elog_child_template = `<div class="row col-12 elog-chid">
    <div class="card">
-    <div class="card-header text-left"><span class="entry_actions">{{^deleted_by}}<span class="followup" title="Followup"><i class="fas fa-paper-plane fa-lg"></i></span>{{#privileges.edit}}<span class="edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span>{{^parent}}<span class="ins_elogs" title="Post to instrument elogs"><i class="fas fa-mail-bulk fa-lg"></i></span>{{/parent}}<span class="delete" title="Delete"><i class="fas fa-trash fa-lg"></i></span>{{/privileges.edit}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre>{{content}}</pre>{{/title}}</div>
+    <div class="card-header text-left"><span class="entry_actions">{{^deleted_by}}<span class="followup" title="Followup"><i class="fas fa-paper-plane fa-lg"></i></span>{{#privileges.edit}}<span class="edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span>{{^parent}}<span class="ins_elogs" title="Post to instrument elogs"><i class="fas fa-mail-bulk fa-lg"></i></span>{{/parent}}<span class="delete" title="Delete"><i class="fas fa-trash fa-lg"></i></span>{{/privileges.edit}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre class="precontent">{{content}}</pre>{{/title}}</div>
     <div class="card-body">
       {{> elog_chid_body_content }}
      <div class="row dialog_holder"></div>

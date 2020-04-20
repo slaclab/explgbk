@@ -679,6 +679,9 @@ label {
   padding-right: 0.15em;
   opacity: 0.5;
 }
+#elog_content .precontent {
+  white-space: pre-line;
+}
 #elog_content .elog-chid .card {
   width: 100%;
 }
