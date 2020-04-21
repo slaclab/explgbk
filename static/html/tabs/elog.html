@@ -314,7 +314,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
              var rendered = renderMSTemplate(elog_run_child_template, { param_list: cat_params_list });
              rendered.find(".expand_param").parent().on("click", function(ev){
                  console.log(ev);
-                 if(!$(ev.target).hasClass("expand_param") && !$(ev.target).hasClass("elog_run_param_category")) return;
+                 if(!$(ev.target).hasClass("expand_param") && !$(ev.target).hasClass("elog_run_param_category") && !$(ev.target).is("path") && !$(ev.target).is("svg")) return;
                  var clickedElem = $(this), rexpdr = clickedElem.find(".expand_param");
                  if(rexpdr.hasClass("expand_plus")) {
                      var paramsrendered = renderMSTemplate(elog_run_child_expanded_params_template, { params: _.sortBy(categorized_params[clickedElem.attr("data-category")], function(o){ return o['k']})});
