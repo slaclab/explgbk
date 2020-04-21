@@ -1,0 +1,13 @@
+// Replace spaces in tags
+// One version replaces the spaces in tags one tag at a time.
+// The other applies to all elog statements.
+let tags_to_replace = ["RF Plasma Cleaner", "Laser Induced Contamination", "Deformable mirror", "Old lab notes"];
+tags_to_replace.forEach(function(tag_to_replace){
+    db.elog.updateMany({"tags": tag_to_replace}, {"$set": {"tags.$": tag_to_replace.replace(/ /g, "_")}})
+})
+
+// Here's the replace all
+db.elog.distinct("tags").forEach(function(tag_to_replace){
+    if(!/ /.test(tag_to_replace)) return;
+    db.elog.updateMany({"tags": tag_to_replace}, {"$set": {"tags.$": tag_to_replace.replace(/ /g, "_")}})
+})
