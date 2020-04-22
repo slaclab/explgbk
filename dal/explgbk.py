@@ -465,7 +465,7 @@ def add_player_to_instrument_role(instrument, player, role):
     sitedb = logbookclient["site"]
     ins = sitedb["instruments"].find_one({ "_id": instrument })
     if not "roles" in ins:
-        sitedb["instruments"].update_one({ "_id": instrument }, {"$push": {"roles": [{"app": "LogBook", "name": role, "players": [ player ]}]}})
+        sitedb["instruments"].update_one({ "_id": instrument }, {"$set": {"roles": [{"app": "LogBook", "name": role, "players": [ player ]}]}})
         return sitedb["instruments"].find_one({ "_id": instrument })
     rl = [ x for x in ins.get("roles", []) if x["app"] == "LogBook" and x["name"] == role ]
     if rl:
