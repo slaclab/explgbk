@@ -465,7 +465,7 @@ def svc_register_new_experiment():
         context.kafka_producer.send("shifts", {"experiment_name" : experiment_name, "CRUD": "Create", "value": get_latest_shift(experiment_name) })
         role_obj = get_role_object(experiment_name, "LogBook/Editor")
         role_obj.update({'collaborators_added': [x for x in get_collaborators_list_for_experiment(experiment_name)], 'collaborators_removed': [], 'requestor': context.security.get_current_user_id()})
-        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
+        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "instrument": get_experiment_info(experiment_name)["instrument"], "CRUD": "Update", "value": role_obj })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -1850,7 +1850,7 @@ def svc_toggle_role(experiment_name):
     if status:
         role_obj = get_role_object(experiment_name, role_fq_name)
         role_obj.update({'collaborators_added': [x for x in collaborators_added], 'collaborators_removed': [x for x in collaborators_removed], 'requestor': context.security.get_current_user_id() })
-        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
+        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "instrument": get_experiment_info(experiment_name)["instrument"], "CRUD": "Update", "value": role_obj })
 
     return JSONEncoder().encode({"success": status, "message": "Did not match any entries" if not status else ""})
 
@@ -1873,7 +1873,7 @@ def svc_add_collaborator(experiment_name):
     if status:
         role_obj = get_role_object(experiment_name, role_fq_name)
         role_obj.update({'collaborators_added': [x for x in collaborators_added], 'collaborators_removed': [x for x in collaborators_removed], 'requestor': context.security.get_current_user_id() })
-        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
+        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "instrument": get_experiment_info(experiment_name)["instrument"], "CRUD": "Update", "value": role_obj })
     return JSONEncoder().encode({"success": status, "message": "Did not match any entries" if not status else ""})
 
 
@@ -1888,9 +1888,14 @@ def svc_remove_collaborator(experiment_name):
 
     collaborator_roles = next(filter(lambda x : x["uid"] == uid, get_collaborators(experiment_name)))
     for role in collaborator_roles['roles']:
+        collaborators_before = get_collaborators_list_for_experiment(experiment_name)
         remove_collaborator_from_role(experiment_name, uid, role)
+        collaborators_after = get_collaborators_list_for_experiment(experiment_name)
+        collaborators_added = []
+        collaborators_removed = collaborators_before - collaborators_after
         role_obj = get_role_object(experiment_name, role)
-        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "CRUD": "Update", "value": role_obj })
+        role_obj.update({'collaborators_added': [x for x in collaborators_added], 'collaborators_removed': [x for x in collaborators_removed], 'requestor': context.security.get_current_user_id() })
+        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "instrument": get_experiment_info(experiment_name)["instrument"], "CRUD": "Update", "value": role_obj })
 
     return JSONEncoder().encode({"success": True, "message": "Removed collaborator"})
 
