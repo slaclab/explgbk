@@ -1,2 +1,3 @@
+use site
 db.roles.updateOne({"app" : "LogBook", "name" : "POC"}, {"$addToSet": {"privileges": "config_edit"}})
 db.roles.updateOne({"app" : "LogBook", "name" : "SiteAdmin"}, {"$addToSet": {"privileges": "config_edit"}})
