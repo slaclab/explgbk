@@ -1903,10 +1903,13 @@ def svc_remove_collaborator(experiment_name):
 @explgbk_blueprint.route("/lgbk/ws/get_matching_uids", methods=["GET"])
 @context.security.authentication_required
 def get_matching_uids():
-    uid = request.args.get("uid", None)
-    if not uid:
+    uids = request.args.getlist("uid", None)
+    if not uids:
         return logAndAbort("Please specify a uid")
-    return JSONEncoder().encode({"success": True, "value": context.usergroups.get_userids_matching_pattern(uid)})
+    ret = []
+    for uid in uids:
+        ret = ret + context.usergroups.get_userids_matching_pattern(uid)
+    return JSONEncoder().encode({"success": True, "value": ret})
 
 @explgbk_blueprint.route("/lgbk/ws/get_matching_groups", methods=["GET"])
 @context.security.authentication_required
