@@ -433,7 +433,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       $("#elog_content").html(elog_header);
       sortable_paginator($("#elog_content"), "elem_id", "r_time", true, 0, 100, 100);
       $("#elog_content").data("spgntr").addObjects(_.filter(data.value, function(f) { return !_.has(f, "root") }));
-      if(!_.isNil($("#elog_content").data("spgntr").disp_objs) && $("#elog_content").data("spgntr").disp_objs.length <= 20 && $("#elog_content").data("spgntr").disp_objs.length > 0) { $("#elog_expand_all").removeClass("d-none"); } else { $("#elog_expand_all").addClass("d-none"); }
+      if(!_.isNil($("#elog_content").data("spgntr").disp_objs) && $("#elog_content").data("spgntr").disp_objs.length > 0) { $("#elog_expand_all").removeClass("d-none"); } else { $("#elog_expand_all").addClass("d-none"); }
   }
 
   $(window).scroll(function () {
