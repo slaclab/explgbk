@@ -1377,6 +1377,7 @@ def svc_start_run(experiment_name):
     You can pass in an optional run number; note you cannot use both options for an experiment.
     For example, CryoEM uses the file prefix as the run number as that fits in with their workflow.
     LCLS uses a auto-increment counter.
+    One can also pass parameters as a JSON using a POST
     """
     run_type = request.args.get("run_type", "DATA")
     user_specified_run_number = request.args.get("run_num", None)
@@ -1387,7 +1388,9 @@ def svc_start_run(experiment_name):
     # Currently; there are none (after discussions with the DAQ team)
     # But we may want to make sure the previous run is closed, the specified experiment is the active one etc.
 
-    run_doc = start_run(experiment_name, run_type, user_specified_run_number, user_specified_start_time)
+    params = { escape_chars_for_mongo(k) : v for k, v in request.get_json().items() }  if request.is_json else None
+
+    run_doc = start_run(experiment_name, run_type, user_specified_run_number, user_specified_start_time, params=params)
 
     sample_obj = get_sample_for_run(experiment_name, run_doc['num'])
     if sample_obj:
