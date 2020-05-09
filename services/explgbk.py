@@ -1457,7 +1457,11 @@ def svc_add_run_params(experiment_name):
     """
     user_specified_run_number = request.args.get("run_num", None)
     if user_specified_run_number:
-        current_run_doc = get_run_doc_for_run_num(experiment_name, user_specified_run_number)
+        try:
+            rnum = int(user_specified_run_number)
+        except ValueError:
+            rnum = user_specified_run_number # Cryo uses strings for run numbers.
+        current_run_doc = get_run_doc_for_run_num(experiment_name, rnum)
     else:
         current_run_doc = get_current_run(experiment_name)
 

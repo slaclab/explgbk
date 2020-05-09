@@ -79,8 +79,8 @@ def backup_experiment(args, database_name):
     archive_file_name = os.path.join(db_backup_folder, datetime.datetime.now().strftime(DATETIME_FILE_NAME_FORMAT) + ".gz")
 
     latest_backup_ts = find_latest_timestamp_in_folder(db_backup_folder)
-    if latest_backup_ts:
-        logger.debug("We have a backup. Checking the dbpath to see if we need to do a backup")
+    if latest_backup_ts and args.dbpath is not None:
+        logger.debug("We have a backup and a dbpath. Checking the dbpath to see if we need to do a backup")
         latest_mongo_file_ts = find_latest_timestamp_in_folder(os.path.join(args.dbpath, database_name.replace("-", ".45")))
         if not latest_mongo_file_ts:
             logger.error("Cannot seem to find any files in the dbpath folder %s for database %s", os.path.join(args.dbpath, database_name), database_name)
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     parser.add_argument("--mongo_auth_db",     help="The authentication database for the user. Since this user is one that spans databases; we probably need the user to come from the admin database", default="admin")
     parser.add_argument("--mongodump_path",    help="Full path to the mongodump command. If not specified, we use mongodump from the PATH.", default="mongodump")
     parser.add_argument("--keep_backups",      help="Keep at least this many complete backups; older backups are deleted.", default=0, type=int)
-    parser.add_argument("--dbpath",            help="The db path to the shard/replica set we are trying to backup. Note, we assume that directoryPerDB is set and we have a folder per database.", required=True)
+    parser.add_argument("--dbpath",            help="The db path to the shard/replica set we are trying to backup. Note, we assume that directoryPerDB is set and we have a folder per database.")
     parser.add_argument("backup_folder",       help="The folder containing the backups.")
 
     args = parser.parse_args()
@@ -152,9 +152,9 @@ if __name__ == "__main__":
     backup_experiment(args, "site")
 
     logger.info("Gathering the list of experiments")
-    database_names = list(logbookclient.list_database_names())
+    database_names = sorted(list(logbookclient.list_database_names()))
     for experiment_name in database_names:
-        if experiment_name in ["admin", "config", "local", "site", "explgbk_cache"]:
+        if experiment_name in ["admin", "config", "local"]:
             logger.info("Not backing up %s", experiment_name)
             continue
         backup_experiment(args, experiment_name)
