@@ -22,7 +22,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         <span class="rtbldef_action col-6"><i class="fas fa-arrow-down fa-lg" aria-hidden="true"></i></span></div>
     </td></tr>`;
   var run_tbl_def_category_selector = `{{#.}}<option value="{{.}}">{{.}}</option>{{/.}}`;
-  var run_tbl_def_pvname_selector = `<select name="source" class='rtbl_def_pvname_select nonblank form-control'><option value=''></option>{{#.}}<option value="{{label}}" title="{{param_name}}">{{label}}</option>{{/.}}</select>`;
+  var run_tbl_def_pvname_selector = `<select name="source" class='rtbl_def_pvname_select nonblank form-control'><option value=''></option>{{#.}}<option value="{{label}}" title="{{param_name}}">{{description}}</option>{{/.}}</select>`;
   Mustache.parse(run_tbl_pill_template);
   Mustache.parse(run_tbl_tbl);
   Mustache.parse(run_tbl_def_tr);
@@ -50,7 +50,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
        var template_tr = $(Mustache.render(run_tbl_def_tr), {});
        template_tr.find(".rtbl_def_category_select").append(Mustache.render(run_tbl_def_category_selector, _.keys(rtbl_sources.value)));
        template_tr.find(".rtbl_def_category_select").on("change", function(){
-         $(this).parent().next().empty().html(Mustache.render(run_tbl_def_pvname_selector, rtbl_sources.value[$(this).val()]));
+         $(this).parent().next().empty().html(Mustache.render(run_tbl_def_pvname_selector, _.sortBy(rtbl_sources.value[$(this).val()]), "description"));
        });
        mdl.find("#rtbl_def_table_type").on("change", function(){
            $("#rtbl_new_entry_modal").find(".ttype").addClass("d-none");
