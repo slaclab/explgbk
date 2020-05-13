@@ -51,7 +51,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
-    delete_wf_definition, get_elog_entries_by_regex
+    delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed
@@ -2181,3 +2181,27 @@ def svc_get_site_filemanager_file_types():
     Get the file manager file types for this site
     """
     return JSONEncoder().encode({"success": True, "value": get_site_file_types()})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_param_descriptions", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_run_param_descriptions(experiment_name):
+    return JSONEncoder().encode({"success": True, "value": get_run_param_descriptions(experiment_name)})
+
+
+@explgbk_blueprint.route("/run_control/<experiment_name>/ws/add_update_run_param_descriptions", methods=["POST"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_update_run_param_descriptions", methods=["POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_add_update_run_param_descriptions(experiment_name):
+    """
+    Update the experiment specific run parameter descriptions for this experiment.
+    Takes in a dict of attribute name/attribute descriptions.
+    """
+    param_descs = request.json
+    if len(param_descs) <= 0:
+        return JSONEncoder().encode({"success": True})
+    add_update_run_param_descriptions(experiment_name, param_descs)
+    return JSONEncoder().encode({"success": True})

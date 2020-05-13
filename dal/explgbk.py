@@ -15,7 +15,7 @@ import requests
 import tempfile
 import subprocess
 
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING, DESCENDING, UpdateOne
 from bson import ObjectId
 
 from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, MAX_ATTACHMENT_SIZE
@@ -1144,6 +1144,17 @@ def get_run_param_descriptions(experiment_name):
     Get the run param descriptions for this experiment.
     '''
     return [x for x in logbookclient[experiment_name]['run_param_descriptions'].find({}).sort([("name", 1)])]
+
+def add_update_run_param_descriptions(experiment_name, param_descs):
+    '''
+    Add or update the run parameter descriptions for this experiment.
+    '''
+    blk_ops = []
+    for k, v in param_descs.items():
+        blk_ops.append(UpdateOne({"param_name": k}, {"$set": {"description": v}}))
+    blk_res = logbookclient[experiment_name]['run_param_descriptions'].bulk_write(blk_ops)
+    logger.debug(blk_res.bulk_api_result)
+    return True
 
 def get_runtable_sources(experiment_name):
     '''
