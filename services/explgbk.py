@@ -1469,6 +1469,9 @@ def svc_add_run_params(experiment_name):
     #     return logAndAbort("The current run %s is closed for experiment %s" % (current_run_doc['num'], experiment_name))
 
     params = request.json
+    if len(params) <= 0:
+        logger.warn("No run parameters were specified in add_run_params.") # This is not an error; merely something to help with debugging.
+        return JSONEncoder().encode({"success": True})
     run_params = {"params." + escape_chars_for_mongo(k) : v for k, v in params.items() }
     run_doc_after = add_run_params(experiment_name, current_run_doc, run_params)
     sample_obj = get_sample_for_run(experiment_name, run_doc_after['num'])
