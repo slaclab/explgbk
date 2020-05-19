@@ -36,7 +36,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         [function() { return $.trim($("#rtbl_def_name").val()) == ""; }, "Table name cannot be blank."],
         [function() { return $.trim($("#rtbl_def_desc").val()) == ""; }, "Please enter a brief description."],
         [function() { return !/^([\w-\s]+)$/.test($("#rtbl_def_name").val())}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores and spaces only."],
-        [function() { return !/^([0-9]+)$/.test($("#rtbl_def_bin_count").val())}, "Please enter an integer number of bins."],
+        [function() { return !/^([0-9.]+)$/.test($("#rtbl_def_bin_size").val())}, "Please enter the size of each bin."],
         [function() { return !/^([0-9]+)$/.test($("#rtbl_sort_index").val())}, "Please enter an integer value for the sort index."],
         [function() { return $("#rtbl_def_table_type").val() == "generatedtable" && $.trim($("#rtbl_gentable_patterns").val()) == ""; }, "Please enter a pattern for the attribute names"],
         [function() { return $("#rtbl_def_table_type").val() != "generatedtable" && $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length <= 0; }, "At least one column definition should have a complete column definition."],
@@ -65,7 +65,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
          var tblDef = $("#rtbl_tab").data("tblData")[editTableName];
          $("#rtbl_def_name").val(tblDef["name"]);
          $("#rtbl_def_desc").val(tblDef["description"]);
-         $("#rtbl_def_bin_count").val(_.get(tblDef, "bin_count", 100));
+         $("#rtbl_def_bin_size").val(_.get(tblDef, "bin_size", 1));
          $("#rtbl_gentable_patterns").val(_.get(tblDef, "patterns", ".*"));
          $("#rtbl_gentable_showvalues").prop("checked", _.get(tblDef, "showvalues", true));
          $("#rtbl_def_table_type").val(_.get(tblDef, "table_type", "table")).trigger("change");
@@ -106,7 +106,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
              sort_index: _.toInteger($("#rtbl_sort_index").val()),
              coldefs: []
            };
-           if(tbl_def['table_type'] == "histogram") { tbl_def['bin_count'] = parseInt($("#rtbl_def_bin_count").val()); }
+           if(tbl_def['table_type'] == "histogram") { tbl_def['bin_size'] = parseFloat($("#rtbl_def_bin_size").val()); }
            if(tbl_def['table_type'] == "generatedtable") { tbl_def['patterns'] = $.trim($("#rtbl_gentable_patterns").val()); tbl_def['showvalues'] = $("#rtbl_gentable_showvalues").is(':checked'); }
            if(tbl_def['table_type'] != "generatedtable") {
                $("#rtbl_def_tbl tbody tr").each(function(index, defnrow){
@@ -192,7 +192,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
               _.each(_.tail(coldefs), function(coldef, idx) {
                 traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram", showlegend: true, name: coldef["label"]});
                 _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
-                _.last(traces)['xbins']['size'] = (_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount;
+                _.last(traces)['xbins']['size'] = _.has(tblDef, "bin_size") ? _.get(tblDef, "bin_size") : ((_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount);
+                console.log("Bin Size" + _.last(traces)['xbins']['size']);
               });
           } else if (_.get(tblDef, "table_type") == "scatter") {
               var dateformatfn = (_.endsWith(_.head(_.tail(coldefs))["source"], "_time")) ? function(d) { return moment(d).toDate() } : function(d) { return d };
