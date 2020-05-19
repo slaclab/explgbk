@@ -179,6 +179,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       let tblDef = $("#rtbl_tab").data("tblData")[clkRTblName], coldefs = tblDef.coldefs;
       let rtbl_data_params = {"tableName": clkRTblName}, binCount = _.get(tblDef, "bin_count", 100);
       if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { rtbl_data_params["sampleName"] = sample_showing_in_UI; }
+      $("#lgbk_body").addClass("busy");
       $.when($.getJSON("ws/run_table_data", rtbl_data_params), $.getJSON("ws/samples"))
       .done(function(d0, d1){
         let runData = d0[0], sampleData = d1[0];
@@ -248,7 +249,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
           $("#rtbl_content").find("table").data("spgntr").pageDown();
         }});
       })
-      .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception getting data " + jqXHR.responseText)});
+      .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception getting data " + jqXHR.responseText)})
+      .always(function(){ $("#lgbk_body").removeClass("busy"); })
       if(_.get(privileges, "edit", false)) {
           $("#toolbar_for_tab").find(".tlbr").show();
           $("#make_system_rtbl").hide();

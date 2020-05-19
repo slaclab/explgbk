@@ -33,6 +33,9 @@
   padding: 1px;
   margin: 1px;
 }
+body.busy {
+  cursor: progress;
+}
 #lgbk_body {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
   font-size: 0.85rem;
