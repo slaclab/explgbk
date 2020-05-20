@@ -162,6 +162,46 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       return rowRendered;
   }
 
+  var renderTabularData = function(coldefs, runData, sampleData) { // Render a tabluar run data...
+      var numHdrRows = _.find([[6, 1], [12, 2], [18, 3], [0, 4]], function(v) { return (v[0] == 0 || coldefs.length < v[0]); })[1];
+      var tblRndr = $(Mustache.render(run_tbl_tbl, {}));
+      var hdr = _.times(numHdrRows, function() { return $("<tr/>"); }), row_tmpl = "";
+      _.each(coldefs, function(coldef, idx) {
+        if(idx > 0 && idx < numHdrRows) { hdr[idx%numHdrRows].append($("<th colspan='" + idx + "' class='rtbl_filler'>&nbsp;</th>"))};
+        hdr[idx%numHdrRows].append($("<th colspan='"+ numHdrRows + "' class='rtbl_header' data-col-idx='" + idx + "' >" + coldef["label"] + "</th>"));
+        if(coldef["source"] == "Separator") {
+          row_tmpl = row_tmpl + "<td class='rtbl_separator'>&nbsp;</td>";
+        } else if (coldef["is_editable"]) {
+          row_tmpl = row_tmpl + "<td><div class='rtbl_editable_column_parent'><div contenteditable='true' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column' title='Type and click outside the box to update'>{{" + coldef["source"] + "}}</div></div></td>";
+        } else if(_.get(coldef, "tickifpresent", false)) {
+          row_tmpl = row_tmpl + "<td class='text-center'>{{#" + coldef["source"]  + "}}<span class='rtblbooltick'><i class='fas fa-check'></i></span>{{/" + coldef["source"] + "}}</td>";
+        } else if (_.endsWith(coldef["source"], "_time")) {
+          row_tmpl = row_tmpl + "<td>{{#FormatDate}}{{" + coldef["source"] + "}}{{/FormatDate}}</td>";
+        } else if (_.startsWith(coldef["mime_type"], "image/")) {
+          row_tmpl = row_tmpl + "<td><img class='rtbl_thumbnail' src='{{" + coldef["source"] + "}}'></td>";
+        } else {
+          row_tmpl = row_tmpl + "<td>{{" + coldef["source"] + "}}</td>";
+        }
+      });
+      tblRndr.find("thead").empty().append(hdr);
+      tblRndr.data("samples", _.fromPairs(_.map(sampleData, function(o){return [o["_id"], o["name"]]})));
+      $("#rtbl_content").html(tblRndr);
+      sortable_paginator($("#rtbl_content").find("table"), "num", "num", true, 0, 400, 50);
+      rtnl_row_tmpl = "<tr data-runnum={{num}} data-spgntr={{num}}>" + row_tmpl + "</tr>";
+
+      Mustache.parse(rtnl_row_tmpl);
+      _.each(runData, function(r){ r.render = renderRunData})
+      $("#rtbl_content").find("table").data("spgntr").addObjects(runData);
+      var thead_top = $("#rtbl_content .sticky-table thead")[0].getBoundingClientRect().top;
+      $.each($("#rtbl_content .sticky-table thead th"), function(){
+          $(this).css({"top": $(this)[0].getBoundingClientRect().top - thead_top + "px"});
+      })
+      $(window).scroll(function () {
+        if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+        $("#rtbl_content").find("table").data("spgntr").pageDown();
+      }});
+  }
+
   $.getJSON("ws/run_tables")
   .done(function(tblData){
     _.each(tblData.value, function(tdef){
@@ -207,51 +247,32 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
           Plotly.newPlot(plotlyDivName, traces, layout, {displaylogo: false});
           return;
         }
+        if (_.get(tblDef, "table_type") == "groupbytable") {
+            let mcd = _.tail(tblDef["coldefs"]), mrd = runData.value, scs = _.map(mcd, "source"), justvals = _.map(mrd, function(x){ return _.pick(x, scs) }), uniqvals = _.uniqWith(justvals, _.isEqual)
+            _.each(uniqvals, function(uq){ uq["runs"] = []})
+            _.each(mrd, function(r) {
+                _.each(uniqvals, function(u) {
+                    if(_.isEqual(_.pick(r, scs), _.pick(u, scs))) {
+                        u["runs"].push(r["num"])
+                        return false;
+                    }
+                })
+            })
+            uniqvals = _.reverse(_.sortBy(uniqvals, scs));
+            _.each(uniqvals, function(uq, idx){ uq["num"] = idx})
+            renderTabularData(_.concat(mcd, [{is_editable: false, label: "Runs", mime_type: "TEXT", position: mcd.length, source: "runs", type: "Run Info"}]), uniqvals, sampleData.value);
+            return;
+        }
         if (_.get(tblDef, "table_type") == "generatedtable") {
             let tickifpresent = !_.get(tblDef, "showvalues", true);
             coldefs = _.concat(coldefs, _.map(_.uniq(_.flatten(_.map(_.map(runData.value, "params"), _.keys))).sort(), function(x){ return { "label": x, "source": "params." + x, "tickifpresent": tickifpresent } }))
             if(tickifpresent) { _.each(runData.value, function(x){ _.each(_.keys(_.get(x, "params", {})), function(k){_.set(x, "params."+k, true)})})  }
         }
-        var numHdrRows = _.find([[6, 1], [12, 2], [18, 3], [0, 4]], function(v) { return (v[0] == 0 || coldefs.length < v[0]); })[1];
-        var tblRndr = $(Mustache.render(run_tbl_tbl, {}));
-        var hdr = _.times(numHdrRows, function() { return $("<tr/>"); }), row_tmpl = "";
-        _.each(coldefs, function(coldef, idx) {
-          if(idx > 0 && idx < numHdrRows) { hdr[idx%numHdrRows].append($("<th colspan='" + idx + "' class='rtbl_filler'>&nbsp;</th>"))};
-          hdr[idx%numHdrRows].append($("<th colspan='"+ numHdrRows + "' class='rtbl_header' data-col-idx='" + idx + "' >" + coldef["label"] + "</th>"));
-          if(coldef["source"] == "Separator") {
-            row_tmpl = row_tmpl + "<td class='rtbl_separator'>&nbsp;</td>";
-          } else if (coldef["is_editable"]) {
-            row_tmpl = row_tmpl + "<td><div class='rtbl_editable_column_parent'><div contenteditable='true' data-run-num='{{num}}' data-column-source='" + coldef["source"] + "' class='rtbl_editable_column' title='Type and click outside the box to update'>{{" + coldef["source"] + "}}</div></div></td>";
-          } else if(_.get(coldef, "tickifpresent", false)) {
-            row_tmpl = row_tmpl + "<td class='text-center'>{{#" + coldef["source"]  + "}}<span class='rtblbooltick'><i class='fas fa-check'></i></span>{{/" + coldef["source"] + "}}</td>";
-          } else if (_.endsWith(coldef["source"], "_time")) {
-            row_tmpl = row_tmpl + "<td>{{#FormatDate}}{{" + coldef["source"] + "}}{{/FormatDate}}</td>";
-          } else if (_.startsWith(coldef["mime_type"], "image/")) {
-            row_tmpl = row_tmpl + "<td><img class='rtbl_thumbnail' src='{{" + coldef["source"] + "}}'></td>";
-          } else {
-            row_tmpl = row_tmpl + "<td>{{" + coldef["source"] + "}}</td>";
-          }
-        });
-        tblRndr.find("thead").empty().append(hdr);
-        tblRndr.data("samples", _.fromPairs(_.map(sampleData.value, function(o){return [o["_id"], o["name"]]})));
-        $("#rtbl_content").html(tblRndr);
-        sortable_paginator($("#rtbl_content").find("table"), "num", "num", true, 0, 400, 50);
-        rtnl_row_tmpl = "<tr data-runnum={{num}} data-spgntr={{num}}>" + row_tmpl + "</tr>";
-
-        Mustache.parse(rtnl_row_tmpl);
-        _.each(runData.value, function(r){ r.render = renderRunData})
-        $("#rtbl_content").find("table").data("spgntr").addObjects(runData.value);
-        var thead_top = $("#rtbl_content .sticky-table thead")[0].getBoundingClientRect().top;
-        $.each($("#rtbl_content .sticky-table thead th"), function(){
-            $(this).css({"top": $(this)[0].getBoundingClientRect().top - thead_top + "px"});
-        })
-        $(window).scroll(function () {
-          if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
-          $("#rtbl_content").find("table").data("spgntr").pageDown();
-        }});
+        renderTabularData(coldefs, runData.value, sampleData.value);
       })
       .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception getting data " + jqXHR.responseText)})
       .always(function(){ $("#lgbk_body").removeClass("busy"); })
+
       if(_.get(privileges, "edit", false)) {
           $("#toolbar_for_tab").find(".tlbr").show();
           $("#make_system_rtbl").hide();
@@ -280,6 +301,18 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
           let tickifpresent = !_.get(tblDef, "showvalues", true);
           coldefs = _.concat(coldefs, _.map(_.uniq(_.flatten(_.map(_.map(runData.value, "params"), _.keys))).sort(), function(x){ return { "label": x, "source": "params." + x, "tickifpresent": tickifpresent } }))
           if(tickifpresent) { _.each([runData.value], function(x){ _.each(_.keys(_.get(x, "params", {})), function(k){_.set(x, "params."+k, true)})})  }
+      } else if(_.get(tblDef, "table_type") == "groupbytable") {
+          let mcd = _.tail(tblDef["coldefs"]), scs = _.map(mcd, "source"), curr_run_key = _.map(runData.value, scs), disp_objs = $("#rtbl_content").find("table").data("spgntr").disp_objs;
+          let existing_uniq_obj = _.find(disp_objs, function(dobj){ return _.isEqual(_.pick(runData.value, scs), _.pick(dobj, scs))});
+          if(_.isNil(existing_uniq_obj)) {
+              let new_uniq_obj = _.assign(_.pick(runData.value, scs), {"runs": [runData.value["num"]], "num": disp_objs.length + 1});
+              new_uniq_obj.render = renderRunData;
+              $("#rtbl_content").find("table").data("spgntr").addObject(new_uniq_obj);
+          } else {
+              existing_uniq_obj["runs"] = _.uniq(_.concat(existing_uniq_obj["runs"], [runData.value["num"]])).sort().reverse();
+              $("#rtbl_content").find("table").data("spgntr").addObject(existing_uniq_obj);
+          }
+          return;
       }
       $("#rtbl_content").find("table").data("spgntr").addObject(runData.value);
     });
