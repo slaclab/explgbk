@@ -233,7 +233,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
               _.each(_.tail(coldefs), function(coldef, idx) {
                 traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram", showlegend: true, name: coldef["label"]});
                 _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
-                _.last(traces)['xbins']['size'] = _.has(tblDef, "bin_size") ? _.get(tblDef, "bin_size") : ((_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount);
+                let computedBinSize = ((_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount);
+                _.last(traces)['xbins']['size'] = (_.isFinite(computedBinSize) && _.has(tblDef, "bin_size")) ? _.get(tblDef, "bin_size") : computedBinSize;
                 console.log("Bin Size" + _.last(traces)['xbins']['size']);
               });
           } else if (_.get(tblDef, "table_type") == "scatter") {
