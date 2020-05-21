@@ -36,7 +36,8 @@ $("#collab_tab").on("lg.loaded.bs.tab", function() {
           $("#collab_tab .collabtbl tbody").append(rendered);
           if(hasRoleManager) {
               _.each(collabs, function(collab) {
-                  _.each([["LogBook/Writer", "fa-pencil-alt", "permission to write/post log entries"],
+                  _.each([["LogBook/Reader", "fa-book-reader", "permission to read entries"],
+                          ["LogBook/Writer", "fa-pencil-alt", "permission to write/post log entries"],
                           ["LogBook/Editor", "fa-edit", "permission to edit/change existing entries"],
                           ["LogBook/Manager", "fa-gavel", "permission to add/remove collaborators"]], function(rl_ic){
                         $("tr[data-uid='" + collab["uid"] + "'] td.collab_admin_actions").append(Mustache.render(actions_tmpl, {rl : rl_ic[0], ic: rl_ic[1], hasrole: _.indexOf(collab.roles, rl_ic[0]) != -1, tooltip: rl_ic[2] }));
