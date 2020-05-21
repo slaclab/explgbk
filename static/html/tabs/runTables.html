@@ -66,6 +66,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
          $("#rtbl_def_name").val(tblDef["name"]);
          $("#rtbl_def_desc").val(tblDef["description"]);
          $("#rtbl_def_bin_size").val(_.get(tblDef, "bin_size", 1));
+         $("#rtbl_sort_index").val(_.get(tblDef, "sort_index", 100));
          $("#rtbl_gentable_patterns").val(_.get(tblDef, "patterns", ".*"));
          $("#rtbl_gentable_showvalues").prop("checked", _.get(tblDef, "showvalues", true));
          $("#rtbl_def_table_type").val(_.get(tblDef, "table_type", "table")).trigger("change");
