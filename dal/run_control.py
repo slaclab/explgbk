@@ -83,6 +83,17 @@ def get_specified_run_params_for_all_runs(experiment_name, run_params):
         projection_op["params." + escape_chars_for_mongo(run_param)] = 1
     return [x for x in expdb.runs.find({}, projection_op)]
 
+def get_run_nums_matching_params(experiment_name, query_document):
+    """
+    Get an array of run numbers for all runs that have the specified value for the specified parameter.
+    This is a very simplistic query.
+    """
+    expdb = logbookclient[experiment_name]
+    projection_op = {"num": 1}
+    query = { "params." + escape_chars_for_mongo(k) : v for k,v in query_document.items() }
+    return [ x["num"] for x in expdb.runs.find(query, projection_op) ]
+
+
 def get_sample_for_run(experiment_name, run_num):
     """
     Lookup the sample for the specified run

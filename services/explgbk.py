@@ -54,7 +54,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
-    get_specified_run_params_for_all_runs, is_run_closed
+    get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
@@ -1446,6 +1446,7 @@ def svc_current_run(experiment_name):
     return JSONEncoder().encode({"success": True, "value": run_doc})
 
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/add_run_params", methods=["POST"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_run_params", methods=["POST"])
 @context.security.authentication_required
 @experiment_exists_and_unlocked
 @context.security.authorization_required("post")
@@ -1988,6 +1989,24 @@ def svc_get_specified_run_params_for_all_runs(experiment_name):
     param_names = param_names_str.split(",")
     param_values = get_specified_run_params_for_all_runs(experiment_name, param_names)
     return JSONEncoder().encode({"success": True, "value": param_values})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_runs_matching_params", methods=["POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("read")
+def svc_get_runs_matching_param_values(experiment_name):
+    """
+    Get an array of run numbers for all runs that have the specified values for the specified parameters.
+    We expect a JSON document with name value pairs.
+    For now, this only includes the non-editable parameters submitted by the DAQ.
+    For EPICS fields, watch out for character encoding issues.
+    """
+    query_doc = request.json
+    if not query_doc:
+        return logAndAbort("Please specify the query as a JSON document)")
+    run_numbers = get_run_nums_matching_params(experiment_name, query_doc)
+    return JSONEncoder().encode({"success": True, "value": run_numbers})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/dm_locations", methods=["GET"])
 @context.security.authentication_required
