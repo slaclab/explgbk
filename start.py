@@ -7,6 +7,7 @@ from kafka import KafkaConsumer, TopicPartition
 from threading import Thread
 import eventlet
 import requests
+import urllib3
 
 from context import app, security
 
@@ -46,6 +47,10 @@ if app.debug:
     root.addHandler(ch)
 
 logger = logging.getLogger(__name__)
+
+# Turn off a RFC compliance warning; remove this once we get a SSL cert that works with requests.
+urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
+
 
 # Register routes.
 app.register_blueprint(pages_blueprint)

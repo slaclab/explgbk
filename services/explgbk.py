@@ -2081,9 +2081,16 @@ def svc_get_wf_job_action(experiment_name, job_id, action):
     wf_job = get_workflow_job_doc(experiment_name, job_id)
     if not wf_job:
         return logAndAbort("Cannot find workflow in experiment %s for id %s" % (experiment_name, job_id), 404)
-    def proxy_JID(location):
+    if action not in ["job_statuses", "job_details", "job_log_file"]:
+        return logAndAbort("For security reasons, action %s is not proxied thru the logbook" % (action), 405)
+    def __proxy_JID__(location):
         logger.debug("Calling the JID at %s", (location["jid_prefix"]+"jid/ws/"+action))
-        req = requests.post(location["jid_prefix"]+"jid/ws/"+action, data=JSONEncoder().encode(wf_job), stream=True, headers={"Content-Type": "application/json"})
+        client_cert_params = {}
+        if "jid_client_key" in location and "jid_client_cert" in location:
+            client_cert_params["cert"] = (location["jid_client_cert"], location["jid_client_key"])
+        if "jid_ca_cert" in location:
+            client_cert_params["verify"] = location["jid_ca_cert"]
+        req = requests.post(location["jid_prefix"]+"jid/ws/"+action, data=JSONEncoder().encode(wf_job), stream=True, headers={"Content-Type": "application/json"}, **client_cert_params)
         resp = Response(stream_with_context(req.iter_content(chunk_size=1024)))
         return resp
 
@@ -2091,7 +2098,7 @@ def svc_get_wf_job_action(experiment_name, job_id, action):
     if not location:
         return logAndAbort("Cannot determine workflow location in experiment %s for id %s %s" % (experiment_name, job_id, wf_job), 500)
 
-    return proxy_JID(location)
+    return __proxy_JID__(location)
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_workflow_job", methods=["POST"])
 @context.security.authentication_required
@@ -2179,7 +2186,12 @@ def svc_kill_workflow_job(experiment_name):
     wf_job = get_workflow_job_doc(experiment_name, job_id)
     location_config = { x["name"] : x for x in get_dm_locations(experiment_name)}
     loc_info = location_config[wf_job["def"]["location"]]
-    resp = requests.post(loc_info["jid_prefix"] + "jid/ws/kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json"})
+    client_cert_params = {}
+    if "jid_client_key" in location and "jid_client_cert" in location:
+        client_cert_params["cert"] = (location["jid_client_cert"], location["jid_client_key"])
+    if "jid_ca_cert" in location:
+        client_cert_params["verify"] = location["jid_ca_cert"]
+    resp = requests.post(loc_info["jid_prefix"] + "jid/ws/kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json"}, **client_cert_params)
     respdoc = resp.json()["value"]
     (status, errormsg, val) = update_wf_job(experiment_name, job_id, {"status": respdoc.get("status", wf_job["status"])})
     if status:
