@@ -810,7 +810,7 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
                 else:
                     maintype, subtype = "application", "data"
                 with parseImageStoreURL(attachment["url"]).return_url_contents(experiment_name, attachment["url"]) as imgget:
-                    msg.add_attachment(imgget.raw.read(), maintype=maintype, subtype=subtype, filename=attachment['name'])
+                    msg.add_attachment(imgget.read(), maintype=maintype, subtype=subtype, filename=attachment['name'])
             return msg
 
         msg = generateEMailMsgFromELogDoc(elog_doc)
