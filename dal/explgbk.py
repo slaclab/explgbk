@@ -693,7 +693,7 @@ def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
             attachment_size = os.fstat(fd.fileno()).st_size
             if attachment_size > MAX_ATTACHMENT_SIZE:
                 raise LgbkException("We limit the size of attachments to %s M" % str(MAX_ATTACHMENT_SIZE/(1024*1024)))
-            logger.error("Attachment size %s", attachment_size)
+            logger.info("Attachment size %s", attachment_size)
             cp = subprocess.run(["convert", "-thumbnail", "128", tfname, tf_thmbname], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, timeout=30)
             logger.info(cp)
             if cp.returncode == 0 and os.path.exists(tf_thmbname):
