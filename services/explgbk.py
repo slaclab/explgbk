@@ -956,6 +956,10 @@ def svc_post_new_elog_entry(experiment_name):
         if rel_ins_doc:
             logger.debug("Publishing cross post entry to %s", post_to_elog)
             context.kafka_producer.send("elog", {"experiment_name" : post_to_elog, "CRUD": "Create", "value": rel_ins_doc})
+            email_to = get_elog_email_subscriptions_emails(post_to_elog)
+            if email_to:
+                logger.debug("Sending emails for cross posted elog entry in experiment %s to %s", post_to_elog, ",".join(email_to))
+                send_elog_as_email(post_to_elog, rel_ins_doc, email_to)
 
     return JSONEncoder().encode({'success': True, 'value': inserted_doc})
 
