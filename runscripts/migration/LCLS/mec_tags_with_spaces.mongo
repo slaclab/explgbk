@@ -1,0 +1,42 @@
+use MEC_Laser_System
+
+db.elog.distinct("tags")
+
+let sptags = db.elog.distinct("tags").filter(function(t) { if(/^.*\s+.*$/.test(t)){return true;}else{return false;}});
+sptags.forEach(function(t){
+    let undtag = t.replace(/\s+/g, "_");
+    print("Replacing " + t + " with " + undtag);
+    db.elog.updateMany({"tags": t}, {"$set": {"tags.$": undtag}})
+})
+
+let deltags = [ 'Agilite',
+  'LP',
+  'Laser',
+  'Laser,',
+  'Pulse',
+  'Regen',
+  'SP',
+  'Seed',
+  'Test',
+  'XPW',
+  'alignment',
+  'alignment_drift',
+  'compressor',
+  'damage',
+  'drift',
+  'seeder',
+  'spectrum',
+  'test1'
+];
+
+deltags.forEach(function(t){
+    db.elog.updateMany({"tags": t}, {"$pull": {"tags": t}})
+})
+
+db.elog.distinct("tags")
+
+db.elog.updateMany({"tags": "stretcher"}, {"$set": {"tags.$": "SP_stretcher"}})
+db.elog.updateMany({"tags": "MPA1"}, {"$set": {"tags.$": "SP_MPA1"}})
+db.elog.updateMany({"tags": "MPA2"}, {"$set": {"tags.$": "SP_MPA2"}})
+
+db.elog.distinct("tags")
