@@ -1,0 +1,19 @@
+var mongo = db.getMongo();
+  mongo.getDBNames().forEach(function (dbname) {
+  if(["admin", "config", "local", "site", "neocaptar", "explgbk_cache", "sample_delivery_ques"].includes(dbname)) return;
+  var db = mongo.getDB(dbname);
+  if(!["AMO", "CXI", "MEC", "MFX", "SXR", "XCS", "XPP"].includes(db.info.findOne({})["instrument"])) return;
+  if(!dbname.endsWith("18") && !dbname.endsWith("17")) return;
+  if(!db.getCollectionNames().includes("counters")) {
+      print(dbname + " does not have a counter; adding one");
+  }
+});
+
+db.getSiblingDB("amoc00118")["counters"].insertOne({'_id': "next_runnum", 'seq': 0})
+db.getSiblingDB("cxic00318")["counters"].insertOne({'_id': "next_runnum", 'seq': 0})
+db.getSiblingDB("mecc00118")["counters"].insertOne({'_id': "next_runnum", 'seq': 0})
+db.getSiblingDB("mecx38017")["counters"].insertOne({'_id': "next_runnum", 'seq': 0})
+db.getSiblingDB("sxrc00117")["counters"].insertOne({'_id': "next_runnum", 'seq': 0})
+db.getSiblingDB("sxrc00118")["counters"].insertOne({'_id': "next_runnum", 'seq': 0})
+db.getSiblingDB("xcsx34717")["counters"].insertOne({'_id': "next_runnum", 'seq': 0})
+db.getSiblingDB("xcsx36817")["counters"].insertOne({'_id': "next_runnum", 'seq': 0})
