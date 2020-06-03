@@ -2209,13 +2209,13 @@ def svc_kill_workflow_job(experiment_name):
         return logAndAbort("Please pass in the workflow job id.")
     wf_job = get_workflow_job_doc(experiment_name, job_id)
     location_config = { x["name"] : x for x in get_dm_locations(experiment_name)}
-    loc_info = location_config[wf_job["def"]["location"]]
+    location = location_config[wf_job["def"]["location"]]
     client_cert_params = {}
     if "jid_client_key" in location and "jid_client_cert" in location:
         client_cert_params["cert"] = (location["jid_client_cert"], location["jid_client_key"])
     if "jid_ca_cert" in location:
         client_cert_params["verify"] = location["jid_ca_cert"]
-    resp = requests.post(loc_info["jid_prefix"] + "jid/ws/kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json"}, **client_cert_params)
+    resp = requests.post(location["jid_prefix"] + "jid/ws/kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json"}, **client_cert_params)
     respdoc = resp.json()["value"]
     (status, errormsg, val) = update_wf_job(experiment_name, job_id, {"status": respdoc.get("status", wf_job["status"])})
     if status:
