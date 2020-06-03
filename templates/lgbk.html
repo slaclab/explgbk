@@ -39,6 +39,7 @@
     var sample_showing_in_UI = current_sample_at_DAQ;
     var privileges = {{ privileges|safe }};
     var auth_expiration_time = {{ auth_expiration_time }};
+    var is_locked = {{ is_locked }};
     var current_run_url = "../{{experiment_name}}/ws/current_run";
     var elog_emails = "../{{experiment_name}}/ws/elog_emails";
     var elog_tags = "../{{experiment_name}}/ws/get_elog_tags";

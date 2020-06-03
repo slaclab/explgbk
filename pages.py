@@ -9,7 +9,7 @@ import context
 from flask import request, Blueprint, render_template, send_file, abort, make_response, jsonify, session
 
 from dal.explgbk import get_current_sample_name, get_experiment_info
-from services.explgbk import experiment_exists_and_unlocked
+from services.explgbk import experiment_exists
 
 pages_blueprint = Blueprint('pages_api', __name__)
 
@@ -46,7 +46,7 @@ def send_js(path):
         return None
 
 @pages_blueprint.route("/lgbk/<experiment_name>/templates/<path:path>", methods=["GET"])
-@experiment_exists_and_unlocked
+@experiment_exists
 def templates(experiment_name, path):
     return render_template(path, experiment_name=experiment_name)
 
@@ -119,7 +119,7 @@ def __parse_expiration_header__(request):
     return int(expiration.replace("t=", ""))//1000000 if expiration.startswith("t=") else int(expiration)
 
 @pages_blueprint.route("/lgbk/<experiment_name>/", methods=["GET"])
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authentication_required
 @context.security.authorization_required("read")
 def exp_elog(experiment_name):
@@ -130,6 +130,7 @@ def exp_elog(experiment_name):
     return render_template("lgbk.html",
         experiment_name=experiment_name,
         instrument_name=instrument_name,
+        is_locked=json.dumps(exp_info.get("is_locked", False)),
         logged_in_user=logged_in_user,
         privileges=json.dumps(privileges),
         current_sample_name=get_current_sample_name(experiment_name),
@@ -139,7 +140,7 @@ def exp_elog(experiment_name):
         )
 
 @pages_blueprint.route("/lgbk/<experiment_name>/elogs/<entry_id>", methods=["GET"])
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authentication_required
 @context.security.authorization_required("read")
 def exp_elog_entry_only(experiment_name, entry_id):

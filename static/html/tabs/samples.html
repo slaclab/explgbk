@@ -196,9 +196,9 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
 
   var sample_tr_tmpl = `{{#value}}<tr {{#current}}class="active_sample"{{/current}}><td><a class="smplnm" href="#">{{ name }}</a></td><td>{{ description }}</td><td>
       <span title="Display sample details"><i class="fas fa-info-circle listview-action"></i></span>
-      <span title="Edit sample details"><i class="fas fa-edit listview-action"></i></span>
-      <span title="Clone sample"><i class="fas fa-clone listview-action"></i></span>
-      <span title="Make this sample the current sample">{{^current}}<span><i class="fas fa-play listview-action"></i></span>{{/current}}</span>
+      <span title="Edit sample details" class="hide_when_locked"><i class="fas fa-edit listview-action"></i></span>
+      <span title="Clone sample" class="hide_when_locked"><i class="fas fa-clone listview-action"></i></span>
+      <span title="Make this sample the current sample" class="hide_when_locked">{{^current}}<span><i class="fas fa-play listview-action"></i></span>{{/current}}</span>
       <span title="Delete sample; a sample can be deleted only if there are no runs associated with it."><i class="fas fa-trash listview-action"></i></span></td></tr>{{/value}}`;
   Mustache.parse(sample_tr_tmpl);
   $.getJSON("ws/samples")
@@ -206,6 +206,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
     data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
     $("#samples_tab").data("samples", data);
     var rendered = $(Mustache.render(sample_tr_tmpl, data));
+    if(is_locked){ rendered.find(".hide_when_locked").addClass("d-none") }
     rendered.find(".fa-play").parent().on("click", function(){
       var sample_name = $(this).closest("tr").find("td").first().text();
       $.getJSON({url: "ws/make_sample_current?sample_name="+encodeURIComponent(sample_name), method: "POST" })
@@ -245,6 +246,7 @@ $("#samples_tab").on("lg.shown.bs.tab", function() {
     var tab_toolbar = `<span id="new_sample"><i class="fas fa-plus fa-lg"></i></span>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
+    if(is_locked) { $("#toolbar_for_tab").find("#new_sample").addClass("d-none"); }
     $("#new_sample").on("click", function(e){ $("#samples_tab").data("edit_sample")({})});
 });
 

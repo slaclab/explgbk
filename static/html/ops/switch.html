@@ -18,6 +18,8 @@
           </h4>
         </div>
       <div class="modal-body">
+        <div class="locked_warning"><small>If you do not find the experiment listed here; it is possible that the experiment has been locked and can no longer used for data taking.
+            If you need to activate this for other reasons or if this poses a problem, please contact your POC</small></div>
 	    <div class="table-responsive">
 	      <table class="table table-condensed table-striped table-bordered">
 	        <thead><tr><th>Name</th><th>PI</th><th>Leader</th><th>Description</th></tr></thead>
@@ -106,7 +108,9 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
     			$("#expswitch_choose_experiment .expswitch_choose_experiment_title").text("Choose new experiment for " + instr + " Station: " + station + "");
     			$.getJSON(experiments_by_instrument)
     			.done(function(data) {
-    				var experiments_for_instrument = data.value[instr];
+    				let experiments_for_instrument = _.filter(data.value[instr], function(x){ return !_.get(x, "is_locked", false)}),
+                        any_locked = _.some(data.value[instr], function(x){ return _.get(x, "is_locked", false)});
+                    if(any_locked) { $('#expswitch_choose_experiment .locked_warning').removeClass("d-none") } else { $('#expswitch_choose_experiment .locked_warning').addClass("d-none") }
     				var rendered = Mustache.render(exper_template, {value: experiments_for_instrument});
     				$("#expswitch_choose_experiment table tbody").html(rendered);
     				$('#expswitch_choose_experiment table').on('click', 'tbody tr', function(event) {

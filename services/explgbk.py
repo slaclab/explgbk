@@ -82,6 +82,26 @@ def logAndAbort(error_msg, ret_status=500):
     logger.error(error_msg)
     return Response(error_msg, status=ret_status)
 
+def experiment_exists(wrapped_function):
+    """
+    Decorator to make sure experiment_name in the argument to the ws call exists.
+    """
+    @wraps(wrapped_function)
+    def function_interceptor(*args, **kwargs):
+        experiment_name = kwargs.get('experiment_name', None)
+        if experiment_name and does_experiment_exist(experiment_name):
+            exp_info = get_experiment_info(experiment_name)
+            g.experiment_name = experiment_name
+            g.instrument = exp_info["instrument"]
+            g.exp_info = exp_info
+            return wrapped_function(*args, **kwargs)
+        else:
+            logger.error("Experiment %s does not exist in the experiment cache", experiment_name)
+            abort(404)
+            return None
+
+    return function_interceptor
+
 def experiment_exists_and_unlocked(wrapped_function):
     """
     Decorator to make sure experiment_name in the argument to the ws call exists.
@@ -128,7 +148,7 @@ def instrument_exists(wrapped_function):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/info", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_getexpinfo(experiment_name):
     """
@@ -707,7 +727,7 @@ def svc_instrument_switch_history():
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/has_role", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 def svc_has_role(experiment_name):
     """
     Check's if the logged in user has a role.
@@ -725,14 +745,14 @@ def svc_has_role(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_elog_entries(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_elog_entries(experiment_name, sample_name=request.args.get("sampleName", None))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/attachment", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_elog_attachment(experiment_name):
     entry_id = request.args.get("entry_id", None)
@@ -764,7 +784,7 @@ def svc_get_elog_attachment(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/ext_preview/<path:path>", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_ext_preview(experiment_name, path):
     """
@@ -834,7 +854,7 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog/<entry_id>/complete_elog_tree", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_complete_elog_tree_for_specified_id(experiment_name, entry_id):
     complete_tree = get_complete_elog_tree_for_specified_id(experiment_name, entry_id)
@@ -843,7 +863,7 @@ def svc_get_complete_elog_tree_for_specified_id(experiment_name, entry_id):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/new_elog_entry", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_post_new_elog_entry(experiment_name):
     """
@@ -965,7 +985,7 @@ def svc_post_new_elog_entry(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/modify_elog_entry", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("edit")
 def svc_modify_elog_entry(experiment_name):
     entry_id = request.args.get("_id", None)
@@ -1005,7 +1025,7 @@ def svc_modify_elog_entry(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/search_elog", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_search_elog(experiment_name):
     search_text   = request.args.get("search_text", "")
@@ -1047,7 +1067,7 @@ def svc_search_elog(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_elog_entry", methods=["DELETE"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("delete")
 def svc_delete_elog_entry(experiment_name):
     entry_id   = request.args.get("_id", None)
@@ -1064,7 +1084,7 @@ def svc_delete_elog_entry(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/cross_post_elogs", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_cross_post_elog_entry(experiment_name):
     """
@@ -1093,56 +1113,56 @@ def svc_cross_post_elog_entry(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog_emails", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_elog_emails(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_elog_emails(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog_email_subscriptions", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_elog_email_subscriptions(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_elog_email_subscriptions(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog_email_subscribe", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_elog_email_subscribe(experiment_name):
     return JSONEncoder().encode({"success": True, "value": elog_email_subscribe(experiment_name, context.security.get_current_user_id())})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/elog_email_unsubscribe", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_elog_email_unsubscribe(experiment_name):
     return JSONEncoder().encode({"success": True, "value": elog_email_unsubscribe(experiment_name, context.security.get_current_user_id())})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_elog_tags", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_elog_tags(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_elog_tags(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_instrument_elogs", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_instrument_elogs(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_instrument_elogs(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_files(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_experiment_files(experiment_name, sample_name=request.args.get("sampleName", None))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/files", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_files_for_run(experiment_name, run_num):
     try:
@@ -1165,7 +1185,7 @@ def svc_get_files_for_run_for_live_mode(experiment_name, run_num):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_runs(experiment_name):
     include_run_params = json.loads(request.args.get("includeParams", "true"))
@@ -1173,7 +1193,7 @@ def svc_get_runs(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs/<run_num>", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_run_document(experiment_name, run_num):
     try:
@@ -1188,7 +1208,7 @@ def svc_get_run_document(experiment_name, run_num):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs_for_calib", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_legacy_runs(experiment_name):
     """
@@ -1218,7 +1238,7 @@ def svc_get_legacy_runs(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/shifts", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_shifts(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_experiment_shifts(experiment_name)})
@@ -1226,7 +1246,7 @@ def svc_get_shifts(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_tables", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_runtables(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_all_run_tables(experiment_name)})
@@ -1234,7 +1254,7 @@ def svc_get_runtables(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_data", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_runtable_data(experiment_name):
     tableName = request.args.get("tableName")
@@ -1243,14 +1263,14 @@ def svc_get_runtable_data(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_sources", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_runtable_sources(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_runtable_sources(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_update_user_run_table_def", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_create_update_user_run_table_def(experiment_name):
     """
@@ -1262,7 +1282,7 @@ def svc_create_update_user_run_table_def(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_editable_update", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_run_table_editable_update(experiment_name):
     """
@@ -1286,7 +1306,7 @@ def svc_run_table_editable_update(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/clone_run_table_def", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_clone_run_table_def(experiment_name):
     existing_run_table_name = request.args.get("existing_run_table_name", None)
@@ -1298,7 +1318,7 @@ def svc_clone_run_table_def(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/replace_system_run_table_def", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_replace_system_run_table_def(experiment_name):
     existing_run_table_name = request.args.get("existing_run_table_name", None)
@@ -1310,7 +1330,7 @@ def svc_replace_system_run_table_def(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_run_table", methods=["DELETE"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_delete_run_table(experiment_name):
     table_name = request.values.get("table_name", None)
@@ -1330,7 +1350,7 @@ def svc_delete_run_table(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runtables/export_as_csv", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_runtable_export_as_csv(experiment_name):
     """
@@ -1433,7 +1453,7 @@ def svc_end_run(experiment_name):
 
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/current_run", methods=["GET"])
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/current_run", methods=["GET"])
-@experiment_exists_and_unlocked
+@experiment_exists
 def svc_current_run(experiment_name):
     """
     Get the run document for the current run.
@@ -1488,7 +1508,7 @@ def svc_add_run_params(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/close_shift", methods=["GET", "POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_close_shift(experiment_name):
     """
@@ -1508,7 +1528,7 @@ def svc_close_shift(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_update_shift", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_create_update_shift(experiment_name):
     """
@@ -1545,7 +1565,7 @@ def svc_create_update_shift(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_latest_shift", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_latest_shift(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_latest_shift(experiment_name)})
@@ -1553,21 +1573,21 @@ def svc_get_latest_shift(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_samples(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_samples(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples/<sample_name>", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_sample_by_name(experiment_name, sample_name):
     return JSONEncoder().encode({"success": True, "value": get_sample_for_experiment_by_name(experiment_name, sample_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples/<sample_name>", methods=["DELETE"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("edit")
 def svc_delete_sample(experiment_name, sample_name):
     status, errormsg, obj = delete_sample_for_experiment(experiment_name, sample_name)
@@ -1581,7 +1601,7 @@ def svc_delete_sample(experiment_name, sample_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/current_sample_name", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_current_sample(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_current_sample_name(experiment_name)})
@@ -1737,7 +1757,7 @@ def svc_register_file(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/file_available_at_location", methods=["GET", "POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 def svc_file_available_at_location(experiment_name):
     location = request.args.get("location", None)
     if not location:
@@ -1760,7 +1780,7 @@ def svc_file_available_at_location(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/check_and_move_run_files_to_location", methods=["GET", "POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_check_and_move_run_files_to_location(experiment_name):
     location = request.args.get("location", None)
@@ -1815,14 +1835,14 @@ def svc_check_and_move_run_files_to_location(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/collaborators", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_collaborators(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_collaborators(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/exp_posix_group_members", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_posix_group_members(experiment_name):
     """
@@ -1840,7 +1860,7 @@ def svc_get_posix_group_members(experiment_name):
         return JSONEncoder().encode({"success": True, "value": []})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/toggle_role", methods=["GET", "POST"])
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authentication_required
 @context.security.authorization_required("manage_groups")
 def svc_toggle_role(experiment_name):
@@ -1870,7 +1890,7 @@ def svc_toggle_role(experiment_name):
     return JSONEncoder().encode({"success": status, "message": "Did not match any entries" if not status else ""})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_collaborator", methods=["GET", "POST"])
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authentication_required
 @context.security.authorization_required("manage_groups")
 def svc_add_collaborator(experiment_name):
@@ -1893,7 +1913,7 @@ def svc_add_collaborator(experiment_name):
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/remove_collaborator", methods=["GET", "POST"])
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authentication_required
 @context.security.authorization_required("manage_groups")
 def svc_remove_collaborator(experiment_name):
@@ -1945,7 +1965,7 @@ def svc_get_modal_param_definitions():
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_feedback_document", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("feedback_read")
 def get_feedback_document(experiment_name):
     """
@@ -1965,7 +1985,7 @@ def get_feedback_document(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_feedback_item", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("feedback_write")
 def add_feedback_item(experiment_name):
     item_name  = request.form.get("item_name", None)
@@ -1978,7 +1998,7 @@ def add_feedback_item(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_run_params_for_all_runs", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_specified_run_params_for_all_runs(experiment_name):
     """
@@ -1997,7 +2017,7 @@ def svc_get_specified_run_params_for_all_runs(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_runs_matching_params", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_runs_matching_param_values(experiment_name):
     """
@@ -2014,21 +2034,21 @@ def svc_get_runs_matching_param_values(experiment_name):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/dm_locations", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_dm_locations(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_dm_locations(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_definitions", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_wf_definitions(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_workflow_definitions(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_triggers", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_wf_triggers(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_workflow_triggers(experiment_name)})
@@ -2069,14 +2089,14 @@ def svc_create_delete_wf_definition(experiment_name, defid):
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow_jobs", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_wf_jobs(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_workflow_jobs(experiment_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/workflow/<job_id>/<path:action>", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_wf_job_action(experiment_name, job_id, action):
     """
@@ -2222,7 +2242,7 @@ def svc_get_site_filemanager_file_types():
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_param_descriptions", methods=["GET"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("read")
 def svc_get_run_param_descriptions(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_run_param_descriptions(experiment_name)})
@@ -2231,7 +2251,7 @@ def svc_get_run_param_descriptions(experiment_name):
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/add_update_run_param_descriptions", methods=["POST"])
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_update_run_param_descriptions", methods=["POST"])
 @context.security.authentication_required
-@experiment_exists_and_unlocked
+@experiment_exists
 @context.security.authorization_required("post")
 def svc_add_update_run_param_descriptions(experiment_name):
     """
