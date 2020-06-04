@@ -893,16 +893,18 @@ def svc_post_new_elog_entry(experiment_name):
     run_num_str = request.form.get("run_num", None);
     if run_num_str:
         if run_num_str == "current":
-            run_num = get_current_run(experiment_name)["num"]
+            current_run_doc = get_current_run(experiment_name)
+            if current_run_doc and "num" in current_run_doc:
+                optional_args["run_num"] = current_run_doc["num"]
         else:
             try:
                 run_num = int(run_num_str)
             except ValueError:
                 run_num = run_num_str # Cryo uses strings for run numbers.
-        run_doc = get_run_doc_for_run_num(experiment_name, run_num)
-        if not run_doc:
-            return JSONEncoder().encode({'success': False, 'errormsg': "Cannot find run with specified run number - " + str(run_num) + " for experiment " + experiment_name})
-        optional_args["run_num"] = run_num
+            run_doc = get_run_doc_for_run_num(experiment_name, run_num)
+            if not run_doc:
+                return JSONEncoder().encode({'success': False, 'errormsg': "Cannot find run with specified run number - " + str(run_num) + " for experiment " + experiment_name})
+            optional_args["run_num"] = run_num
 
     log_title = request.form.get("log_title", None);
     if log_title:
