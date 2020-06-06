@@ -25,13 +25,22 @@
 @color-complement-3: #FFC030;
 @color-complement-4: #FFB305;
 
-@navbarcolor: @color-primary-0;
-@navbarhover: @color-primary-4;
-@activewidgetcolor: @color-complement-0;
-@contrastcolor: @color-complement-4;
+// Define four colors for the palette in order of increasing darkness.
+@cl-0: @color-secondary-2-2; // Use the lightest color for contrast/borders
+@cl-1: @color-complement-0; // An alternate contrast color; use for active samples/shifts/experiments etc.
+@cl-2: @color-primary-0; // Use the darkest but one for the navbar itself.
+@cl-3: @color-primary-4;  // Use the darkest for navbar contrast
+
+
+@navbarcolor: @cl-2;
+@navbarhover: @cl-3;
+@activewidgetcolor: @cl-1;
+@contrastcolor: @cl-0;
 @navbartext: white;
 @tablezebra: #efefef;
-@tblhdrbg: @color-primary-0;
+@tblhdrbg: @navbarcolor;
+@linkcolor: @navbarhover;
+@bordercolor: @contrastcolor;
 
 
 .highlight_mixin {
@@ -89,6 +98,9 @@ body.busy {
           white-space: nowrap;
       }
   }
+  a {
+      color: @linkcolor;
+  }
 }
 
 label {
@@ -130,6 +142,7 @@ label {
         margin-right: 0.5em;
         margin-left: 0.5em;
     }
+    border: solid thin @bordercolor;
 }
 
 #myNavbar {
@@ -527,7 +540,7 @@ label {
 
 #myTabContainer .exp_tab_header {
   .highlight_mixin;
-	border: thin @navbarhover solid;
+	border: thin @bordercolor solid;
 	padding: 0.2em;
 }
 
@@ -893,7 +906,7 @@ label {
 }
 
 #rtbl_content .rbtl_col_hvr {
-  background-color: @color-primary-1;
+  background-color: fade(@navbarcolor, 20%);
   border-left: solid @navbarhover 2px;
   border-right: solid @navbarhover 2px;
 }

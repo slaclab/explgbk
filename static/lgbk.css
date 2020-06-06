@@ -25,7 +25,7 @@
   font-size: 1rem;
 }
 .validation_warning {
-  color: #FFB305;
+  color: #FFED81;
   font-weight: bold;
 }
 .small_btn_mixin {
@@ -54,6 +54,9 @@ body.busy {
 #lgbk_body .infohelp .no-break {
   white-space: nowrap;
 }
+#lgbk_body a {
+  color: #1E48DF;
+}
 label {
   color: #6685F4;
 }
@@ -77,13 +80,14 @@ label {
   padding-right: 0.25em;
 }
 #myNavRow li.session_items.session_timeout a {
-  color: #FFB305;
+  color: #FFED81;
 }
 #myNavRow .navbar_icon_btn {
   color: white;
   background: #6685F4;
   margin-left: 1em;
   margin-right: 1em;
+  border: solid thin #FFED81;
 }
 #myNavRow .navbar_icon_btn .btntext {
   margin-right: 0.5em;
@@ -271,11 +275,11 @@ label {
   color: #6685F4;
 }
 #expswitch_tab .exp_switch_standby {
-  color: #FFB305;
+  color: #FFED81;
   font-weight: bold;
 }
 #expswitch_tab .expswitch_run_open {
-  color: #FFB305;
+  color: #FFED81;
   font-weight: bold;
 }
 #expswitch_choose_experiment table {
@@ -465,7 +469,7 @@ label {
   color: white;
   background: #6685F4;
   font-weight: bold;
-  border: thin #1E48DF solid;
+  border: thin #FFED81 solid;
   padding: 0.2em;
 }
 #myTabContainer .listview-action {
@@ -539,7 +543,7 @@ label {
   text-decoration: line-through;
 }
 #elog_tab .elog_deleted_by {
-  color: #FFB305;
+  color: #FFED81;
   padding-left: 1.25em;
   text-align: left;
 }
@@ -789,7 +793,7 @@ label {
   background-color: #1E48DF;
 }
 #rtbl_content .rbtl_col_hvr {
-  background-color: #BDCBFC;
+  background-color: rgba(102, 133, 244, 0.2);
   border-left: solid #1E48DF 2px;
   border-right: solid #1E48DF 2px;
 }
