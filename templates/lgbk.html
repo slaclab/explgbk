@@ -98,8 +98,8 @@ var showTab = function (e) {
 	var target = $(e.target).attr("href");
     console.log("Showing tab " + target);
     history.pushState(null, null, e.target.hash)
-	if ($(target).is(':empty')) {
-		console.log("Activated tab " + target + " is empty. Triggering load");
+	if ($(target).is(':empty') || $(target).find(".tabcontainer").hasClass("alwaysreload")) {
+		console.log("Activated tab " + target + " is empty or is always reloaded. Triggering load");
 		var template_url = $(e.target).attr("data-url");
 	    $.ajax({
 	      type: "GET",
@@ -109,7 +109,7 @@ var showTab = function (e) {
 	      },
 	      success: function(data){
 	  		console.log("Getting tab data and binding selectors");
-	        $(target).html(data);
+	        $(target).empty().html(data);
             $("#toolbar_for_tab").empty();
 	        $(target).find(".tabcontainer").trigger("lg.loaded.bs.tab", e);
             $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
