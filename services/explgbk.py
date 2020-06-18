@@ -815,14 +815,18 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
             return False
         def generateEMailMsgFromELogDoc(elog_doc):
             msg = EmailMessage()
+            tz = pytz.timezone('America/Los_Angeles')
+            msg_by_at = (elog_doc.get("author", ""), elog_doc.get("relevance_time", datetime.utcnow()).astimezone(tz).strftime('%b/%d/%Y %H:%M:%S'))
             if 'title' in elog_doc:
                 msg.make_mixed()
                 htmlmsg = EmailMessage()
                 htmlmsg.make_alternative()
-                htmlmsg.add_alternative(elog_doc["content"], subtype='html')
+                htmlmsg.add_alternative(
+                    "<p><span>By:</span><span style='padding-left: 0.5em; font-weight: bold'>{0}</span> <span>at:</span><span style='padding-left: 0.5em; font-weight: bold'>{1}</span> </p>\n".format(*msg_by_at)
+                    + elog_doc["content"], subtype='html')
                 msg.attach(htmlmsg)
             else:
-                msg.set_content(elog_doc["content"])
+                msg.set_content("By: {0} at: {1}\n\n".format(*msg_by_at) + elog_doc["content"])
                 msg.make_mixed()
             for attachment in elog_doc.get("attachments", []):
                 if 'type' in attachment and '/' in attachment['type']:
