@@ -54,7 +54,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
-    get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params
+    get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
@@ -2037,6 +2037,31 @@ def svc_get_runs_matching_param_values(experiment_name):
         return logAndAbort("Please specify the query as a JSON document)")
     run_numbers = get_run_nums_matching_params(experiment_name, query_doc)
     return JSONEncoder().encode({"success": True, "value": run_numbers})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_runs_matching_editable", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists
+@context.security.authorization_required("read")
+def svc_get_run_nums_matching_editable_regex(experiment_name):
+    """
+    Get an array of run numbers for all runs that have an editable param matching the specified regex.
+    We do a case insensitive match.
+    This addresses the index/merge use case where we "tag" runs in the UI with a tag using a run table during the indexing step.
+    Then during the merge step, we query for runs matching a set of tags.
+    """
+    param_name = request.args.get("param_name", None)
+    if not param_name:
+        return logAndAbort("Please specify the parameter name")
+    incoming_regex = request.args.get("param_value", None)
+    if not incoming_regex:
+        return logAndAbort("Please specify the regex to match the value against")
+
+    try:
+        run_numbers = get_run_nums_matching_editable_regex(experiment_name, param_name, incoming_regex)
+        return JSONEncoder().encode({"success": True, "value": run_numbers})
+    except Exception as e:
+        logger.exception(e)
+        return logAndAbort("Exception fetching run numbers " + str(e))
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/dm_locations", methods=["GET"])
 @context.security.authentication_required

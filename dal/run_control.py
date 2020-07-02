@@ -93,6 +93,15 @@ def get_run_nums_matching_params(experiment_name, query_document):
     query = { "params." + escape_chars_for_mongo(k) : v for k,v in query_document.items() }
     return [ x["num"] for x in expdb.runs.find(query, projection_op) ]
 
+def get_run_nums_matching_editable_regex(experiment_name, param_name, incoming_regex):
+    """
+    Get an array of run numbers for all runs that have an editable param matching the specified regex.
+    We do a case insensitive match.
+    """
+    expdb = logbookclient[experiment_name]
+    projection_op = {"num": 1}
+    query = { "editable_params." + escape_chars_for_mongo(param_name) + ".value": { "$regex": incoming_regex, "$options": "i" }}
+    return [ x["num"] for x in expdb.runs.find(query, projection_op) ]
 
 def get_sample_for_run(experiment_name, run_num):
     """
