@@ -930,6 +930,15 @@ def svc_post_new_elog_entry(experiment_name):
         tags = log_tags_str.split()
         optional_args["tags"] = tags
 
+    is_issue = request.form.get("elog_support_issue", None)
+    if is_issue:
+        logger.info("Issue detected in experiment %s", experiment_name)
+        optional_args["tags"] = optional_args["tags"] + ["ISSUE"] if "tags" in optional_args else ["ISSUE"]
+    is_roadblock = request.form.get("elog_support_roadblock", None)
+    if is_roadblock:
+        logger.info("Roadblock detected in experiment %s", experiment_name)
+        optional_args["tags"] = optional_args["tags"] + ["ROADBLOCK"] if "tags" in optional_args else ["ROADBLOCK"]
+
     post_to_elogs = [ k.replace('post_to_elog_', '') for k, v in request.form.items() if k.startswith('post_to_elog_') and v.lower() == "on" ]
 
     # Alternate knob for cross posting to the intrument elog (if it exists).
