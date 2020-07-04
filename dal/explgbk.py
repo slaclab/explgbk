@@ -22,6 +22,7 @@ from context import logbookclient, instrument_scientists_run_table_defintions, s
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 from dal.imagestores import parseImageStoreURL
 from dal.exp_cache import get_experiments_for_instrument
+from dal.utils import escape_chars_for_mongo, reverse_escape_chars_for_mongo
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -1228,7 +1229,7 @@ def get_runtable_sources(experiment_name):
 
     # Got thru the param_names_with_categories and update the descriptions from the run_table param_descs
     for pnc in param_names_with_categories:
-        param_name = pnc["source"].replace("params.", "")
+        param_name = reverse_escape_chars_for_mongo(pnc["source"]).replace("params.", "")
         if param_name in param_descs:
             pnc["description"] = param_descs[param_name].get("description", param_name)
         elif param_name in site_param_descs:
