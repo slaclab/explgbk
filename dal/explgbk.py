@@ -1225,6 +1225,15 @@ def get_runtable_sources(experiment_name):
                 "category": "EPICS:Additional parameters",
                 "description": param_name,
                 "source": "params." + param_name })
+
+    # Got thru the param_names_with_categories and update the descriptions from the run_table param_descs
+    for pnc in param_names_with_categories:
+        param_name = pnc["source"].replace("params.", "")
+        if param_name in param_descs:
+            pnc["description"] = param_descs[param_name].get("description", param_name)
+        elif param_name in site_param_descs:
+            pnc["description"] = param_descs[param_name].get("description", param_name)
+
     rtbl_sources.update({ x['category'] : [] for x in param_names_with_categories})
     [ rtbl_sources[x['category']].append(x) for x in param_names_with_categories ]
     return rtbl_sources

@@ -72,7 +72,7 @@ MAX_ATTACHMENT_SIZE = float(os.environ.get("MAX_ATTACHMENT_SIZE", "6291456"))
 instrument_scientists_run_table_defintions = {}
 if os.path.exists("/reg/g/psdm/web/ws/prod/appdata/runtablePVs/sections.json"):
     def reverse_mapping_for_section(section):
-        return { x["name"]: {"section" : section["SECTION"], "title": section["TITLE"], "pv": x["name"], "description": x["descr"]} for x in section["PARAMS"] }
+        return { x["name"]: {"section" : section["SECTION"], "title": section["TITLE"], "pv": x["name"]} for x in section["PARAMS"] }
     with open("/reg/g/psdm/web/ws/prod/appdata/runtablePVs/sections.json", 'r') as f:
         isdefs = json.load(f)
         for instrument, sections in isdefs.items():
