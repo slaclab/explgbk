@@ -27,9 +27,9 @@ all_experiment_names = set()
 roles_with_post_privileges = []
 
 def init_app(app):
-    if 'experiments' not in list(logbookclient['explgbk_cache'].collection_names()):
+    if 'experiments' not in list(logbookclient['explgbk_cache'].list_collection_names()):
         logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] )
-    if 'operations' not in list(logbookclient['explgbk_cache'].collection_names()):
+    if 'operations' not in list(logbookclient['explgbk_cache'].list_collection_names()):
         logbookclient['explgbk_cache']['operations'].create_index( [("name", DESCENDING)], unique=True)
         logbookclient['explgbk_cache']['operations'].insert_one({"name": "explgbk_cache_rebuild", "initiated": datetime.datetime.utcfromtimestamp(0.0), "completed": datetime.datetime.utcfromtimestamp(0.0)})
     global roles_with_post_privileges
@@ -158,7 +158,7 @@ def does_experiment_exist(experiment_name):
     if experiment_name in all_experiment_names: # Check the cache first.
         return True
     expdb = logbookclient[experiment_name]
-    collnames = list(expdb.collection_names())
+    collnames = list(expdb.list_collection_names())
     if 'info' in collnames:
         return True
 
@@ -212,7 +212,7 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
         return
     logger.debug("Gathering the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     expdb = logbookclient[experiment_name]
-    collnames = list(expdb.collection_names())
+    collnames = list(expdb.list_collection_names())
     if 'info' in collnames:
         info = expdb["info"].find_one({}, {"latest_setup": 0})
         if 'name' not in info or 'instrument' not in info:

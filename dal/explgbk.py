@@ -230,7 +230,7 @@ def rename_experiment(experiment_name, new_experiment_name):
     mods["start_time"] = info["start_time"].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     mods["end_time"] = info["end_time"].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
-    copy_specs = { x : True for x in src_exp_db.collection_names() }
+    copy_specs = { x : True for x in src_exp_db.list_collection_names() }
     for cn in ["info", "counters"]:
         copy_specs[cn] = False
     status, msg = clone_experiment(new_experiment_name, experiment_name, mods, copy_specs, skip_initial_objects=True)
