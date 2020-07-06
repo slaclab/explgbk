@@ -1844,7 +1844,7 @@ def svc_check_and_move_run_files_to_location(experiment_name):
                 logger.debug("I think %s is there but it has been removed", mfile)
                 file_not_available_at_location(experiment_name, run_num, mfile, location)
 
-        return JSONEncoder().encode({'success': True, "value": {"run_files": get_experiment_files_for_run(experiment_name, run_num), "dmstatus": resp.get("files", {})} })
+        return JSONEncoder().encode({'success': True, "value": {"run_files": get_experiment_files_for_run(experiment_name, run_num), "matching_files": [x["path"] for x in files_for_run.values()], "dmstatus": resp.get("files", {})} })
     else:
         return JSONEncoder().encode({'success': False, "errormsg": "This site has not been configured with a mover endpoint."})
 
