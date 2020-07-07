@@ -77,7 +77,7 @@ $("#collab_tab").on("lg.shown.bs.tab", function() {
         $.ajax('../../static/html/ms/collab_search_and_add.html')
         .done(function(mdltext) {
             $("#collab_mdl_holder").append(Mustache.render(mdltext, {intromsg: "User/groups are added as players to the Writer role. To give them additional privileges, please use the main matrix"}));
-            $("#collab_mdl_holder").find(".collab_search").on("input", function() {
+            $("#collab_mdl_holder").find(".collab_search").on("input", delayFunction(function() {
                 if($(this).val().length > 2) {
                     var search_params = {}; search_params[param_name] = "*"+$(this).val()+"*";
                     $.getJSON(search_url, search_params)
@@ -87,7 +87,7 @@ $("#collab_tab").on("lg.shown.bs.tab", function() {
                 } else{
                     $("#collab_mdl_holder").find("tbody").empty();
                 }
-            });
+            }));
             $("#collab_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){
                 var add_new_collab_to_role = function(uid, role_fq_name) { return $.getJSON({url: "ws/add_collaborator?uid=" + encodeURIComponent(uid) + "&role_fq_name=" + encodeURIComponent(role_fq_name), method: "POST"}); }
                 var ajax_calls = [];

@@ -51,7 +51,7 @@ $("#global_roles_tab").on("lg.loaded.bs.tab", function() {
             $.ajax('../static/html/ms/collab_search_and_add.html')
             .done(function(mdltext) {
                 $("#glbl_role_mdl_holder").empty().append(Mustache.render(mdltext, {intromsg: "Users/groups added in this tab inherit privileges for all experiments. For safety, users/groups are not added to roles in the database unless you explicitly add them as a player to one or more roles in the matrix below. First, search for, select and add the user/group to the UI. Then, choose one or more roles for the newly added user/group to play. After you add the first role, the default sort order will kick in and the tab will resort itself by user/group id."}));
-                $("#glbl_role_mdl_holder").find(".collab_search").on("input", function() {
+                $("#glbl_role_mdl_holder").find(".collab_search").on("input", delayFunction(function() {
                     if($(this).val().length > 2) {
                         var search_params = {}; search_params[param_name] = "*"+$(this).val()+"*";
                         $.getJSON(search_url, search_params)
@@ -61,7 +61,7 @@ $("#global_roles_tab").on("lg.loaded.bs.tab", function() {
                     } else{
                         $("#glbl_role_mdl_holder").find("tbody").empty();
                     }
-                });
+                }));
                 $("#glbl_role_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){
                     var ugids = [];
                     $("#glbl_role_mdl_holder").find("tbody").find(".glbl_role_select:checked").each(function(){var ugid = uid_prefix + $(this).closest("tr").attr("data-uid"); ugids.push(ugid);});

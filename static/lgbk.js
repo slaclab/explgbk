@@ -322,3 +322,13 @@ var success_message = function(msg, timeout=5000) {
 var error_message = function(msg, timeout=5000) {
     new Noty( { text: msg, layout: "topRight", type: "error", timeout: timeout }).show();
 }
+
+let delayFunction = function(fn, ms=500) {
+    // Function to execute some other function after a delay; resetting each time this is called.
+    // https://stackoverflow.com/questions/1909441/how-to-delay-the-keyup-handler-until-the-user-stops-typing
+    let timer = 0
+    return function(...args) {
+        clearTimeout(timer)
+        timer = setTimeout(fn.bind(this, ...args), ms || 0)
+    }
+}
