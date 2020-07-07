@@ -1953,6 +1953,9 @@ def svc_remove_collaborator(experiment_name):
 @explgbk_blueprint.route("/lgbk/ws/get_matching_uids", methods=["GET"])
 @context.security.authentication_required
 def get_matching_uids():
+    """
+    Get user's who cn matches 
+    """
     uids = request.args.getlist("uid", None)
     if not uids:
         return logAndAbort("Please specify a uid")

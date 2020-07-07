@@ -53,7 +53,7 @@ $("#global_roles_tab").on("lg.loaded.bs.tab", function() {
                 $("#glbl_role_mdl_holder").empty().append(Mustache.render(mdltext, {intromsg: "Users/groups added in this tab inherit privileges for all experiments. For safety, users/groups are not added to roles in the database unless you explicitly add them as a player to one or more roles in the matrix below. First, search for, select and add the user/group to the UI. Then, choose one or more roles for the newly added user/group to play. After you add the first role, the default sort order will kick in and the tab will resort itself by user/group id."}));
                 $("#glbl_role_mdl_holder").find(".collab_search").on("input", function() {
                     if($(this).val().length > 2) {
-                        var search_params = {}; search_params[param_name] = $(this).val()+"*";
+                        var search_params = {}; search_params[param_name] = "*"+$(this).val()+"*";
                         $.getJSON(search_url, search_params)
                         .done(function(data){
                             $("#glbl_role_mdl_holder").find("tbody").empty().append(Mustache.render(ms_template, data));

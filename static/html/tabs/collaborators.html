@@ -79,7 +79,7 @@ $("#collab_tab").on("lg.shown.bs.tab", function() {
             $("#collab_mdl_holder").append(Mustache.render(mdltext, {intromsg: "User/groups are added as players to the Writer role. To give them additional privileges, please use the main matrix"}));
             $("#collab_mdl_holder").find(".collab_search").on("input", function() {
                 if($(this).val().length > 2) {
-                    var search_params = {}; search_params[param_name] = $(this).val()+"*";
+                    var search_params = {}; search_params[param_name] = "*"+$(this).val()+"*";
                     $.getJSON(search_url, search_params)
                     .done(function(data){
                         $("#collab_mdl_holder").find("tbody").empty().append(Mustache.render(ms_template, data));
