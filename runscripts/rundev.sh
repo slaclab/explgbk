@@ -35,6 +35,9 @@ export ACCESS_LOG_FORMAT='%(h)s %(l)s %({REMOTE_USER}i)s %(t)s "%(r)s" "%(q)s" %
 
 export SERVER_IP_PORT=${SERVER_IP_PORT:-"0.0.0.0:5000"}
 
+# Assume that the current directory for the process is this directory.
+export PYTHONPATH="modules/flask_authnz:modules/flask_socket_util:${PYTHONPATH}"
+
 
 # The exec assumes you are calling this from supervisord. If you call this from the command line; your bash shell is proabably gone and you need to log in.
 exec gunicorn start:app -b ${SERVER_IP_PORT} --worker-class eventlet --no-sendfile --reload \

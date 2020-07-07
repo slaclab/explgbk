@@ -31,6 +31,7 @@ def send_js(path):
         # This is code for gettting the JS file from the package data of the python module.
         filepath = pkg_resources.resource_filename(pathparts[1], os.sep.join(pathparts[2:]))
         if os.path.exists(filepath):
+            # logger.debug("Found file %s as part of a python package resources", filepath)
             return send_file(filepath)
 
 
