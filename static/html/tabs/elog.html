@@ -650,7 +650,7 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
     <span id="elog_attachments_only"><i class="fas fa-paperclip fa-lg" title="Toggle attachments only"></i></span>
     <span id="elog_hybrid_mode"><i class="fas fa-table fa-lg" title="Attachments as a table (aka hybrid mode)"></i></span>
     <span id="elog_deleted_entries"><i class="fas fa-strikethrough fa-lg" title="Toggle deleted entries"></i></span>
-    <span id="elog_email_subscribe"><i class="fas fa-envelope-open fa-lg" title="Email subscription"></i></span>`;
+    <span id="elog_email_subscribe"><i class="fas fa-inbox fa-lg" title="Automatically receive email notifications"></i></span>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
     $.getJSON("ws/get_elog_tags").done(function(d0){
