@@ -13,7 +13,7 @@
 <script type="text/javascript">
 $("#samples_tab").on("lg.loaded.bs.tab", function() {
   let display_sample = function(sample_obj) {
-    $.when($.ajax("../../static/html/ms/sampledisplay.html"), $.getJSON("../get_modal_param_definitions", { modal_type: "samples" }))
+    $.when($.ajax("../../static/html/ms/sampledisplay.html"), $.getJSON("ws/get_modal_param_definitions", { modal_type: "samples" }))
     .done(function(d0, d1){
         let tmpl = d0[0], pdd = _.keyBy(_.get(d1[0], "value.params", []), "param_name");
         _.each(_.get(sample_obj, 'params', {}), function(v,k,o){  if(_.has(pdd, k)) { pdd[k]["current_val"] = v } else { pdd[k] = { required: false, param_name: k, current_val: v }}})
@@ -34,7 +34,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
   }
 
   var edit_sample = function(sample_obj) {
-    $.when($.ajax("../../static/html/ms/sampleedit.html"), $.getJSON("../get_modal_param_definitions", { modal_type: "samples" }))
+    $.when($.ajax("../../static/html/ms/sampleedit.html"), $.getJSON("ws/get_modal_param_definitions", { modal_type: "samples" }))
     .done(function(d0, d1){
       var tmpl = d0[0], ss_param_defs = _.get(d1[0], "value.params", []), ss_required_param_names = _.map(_.filter(ss_param_defs, function(d) { return _.get(d, "required", false) }), "param_name");
       let pdd = _.keyBy(ss_param_defs, "param_name");

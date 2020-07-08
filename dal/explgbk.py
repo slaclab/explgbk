@@ -1517,11 +1517,17 @@ def delete_sample_for_experiment(experiment_name, sample_name):
     expdb["samples"].delete_one({"name": sample_name})
     return True, "", None
 
-def get_modal_param_definitions(modal_type):
+def get_modal_param_definitions(modal_type, instrument=None):
     """
     Get the site specific modal param definitions from the site database for the specified modal type.
     """
     sitedb = logbookclient["site"]
+    if instrument:
+        ins = sitedb["instruments"].find_one({ "_id": instrument })
+        if ins and "modal_params" in ins:
+            ins_mdl_prms = { x["_id"] : x for x in ins["modal_params"]}
+            if modal_type in ins_mdl_prms:
+                return ins_mdl_prms[modal_type]
     return sitedb["modal_params"].find_one({"_id": modal_type})
 
 def validate_with_modal_params(modal_type, business_obj):

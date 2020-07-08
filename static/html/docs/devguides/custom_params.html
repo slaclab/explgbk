@@ -39,6 +39,17 @@
 <samp>{ "acknowledged" : true, "insertedId" : "samples" }</samp>
                             </pre>
                     </p>
+                    <p>The <code>modal_params</code> definition can also be defined at a instrument level. For example, to add this to the <code>DIA</code> instrument, use something like so
+                        <pre>&gt; use site
+&gt; db.getSiblingDB("site")["instruments"].updateOne({"_id": "DIA"},
+   { "$addToSet":
+      { "modal_params": {
+         "_id" : "samples",
+         "params" : [
+             {
+...
+                        </pre>
+                    </p>
                     <p>
                         The <code>modal_params</code> is a collection of documents with <code>_id</code> indicating the modal that the document applies to.
                         The <code>params</code> attribute contains an array of parameter definitions. Each definition has the following

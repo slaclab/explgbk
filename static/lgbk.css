@@ -871,6 +871,10 @@ label {
   color: #6685F4;
   font-weight: bold;
 }
+#sample_edit_modal input[type="checkbox"].cp_value {
+  padding-left: 2rem;
+  width: auto;
+}
 #choose_sample td {
   padding: 0.5rem;
 }

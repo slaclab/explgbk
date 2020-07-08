@@ -1954,7 +1954,7 @@ def svc_remove_collaborator(experiment_name):
 @context.security.authentication_required
 def get_matching_uids():
     """
-    Get user's who cn matches 
+    Get user's who cn matches
     """
     uids = request.args.getlist("uid", None)
     if not uids:
@@ -1979,6 +1979,17 @@ def svc_get_modal_param_definitions():
     if not modal_type:
         return logAndAbort("Please specify a modal_type")
     param_defs = get_modal_param_definitions(modal_type)
+    return JSONEncoder().encode({"success": True, "value": param_defs if param_defs else {}})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_modal_param_definitions", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists
+@context.security.authorization_required("read")
+def svc_get_modal_param_definitions_for_experiment(experiment_name):
+    modal_type = request.args.get("modal_type", None)
+    if not modal_type:
+        return logAndAbort("Please specify a modal_type")
+    param_defs = get_modal_param_definitions(modal_type, instrument=g.instrument)
     return JSONEncoder().encode({"success": True, "value": param_defs if param_defs else {}})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_feedback_document", methods=["GET"])
