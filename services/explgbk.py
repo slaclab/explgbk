@@ -280,7 +280,9 @@ def svc_get_experiment_daily_data_breakdown():
     """
     Get the daily data breakdown; that is, data moved by day
     """
-    return JSONEncoder().encode({'success': True, 'value': get_experiment_daily_data_breakdown()})
+    instrument = request.args.get("instrument", "ALL")
+    report_type = request.args.get("report_type", "file_sizes")
+    return JSONEncoder().encode({'success': True, 'value': get_experiment_daily_data_breakdown(report_type, instrument)})
 
 @explgbk_blueprint.route("/lgbk/ws/instrument_station_list", methods=["GET"])
 @context.security.authentication_required

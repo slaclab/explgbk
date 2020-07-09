@@ -136,17 +136,47 @@ def get_experiment_stats():
     """
     return list(logbookclient['explgbk_cache']['experiment_stats'].find({}))
 
-def get_experiment_daily_data_breakdown():
+def get_experiment_daily_data_breakdown(report_type, instrument):
     """
     Run an aggregate on the daily data breakdown.
     Data returned is in TB.
     """
-    return list(logbookclient['explgbk_cache']['experiment_stats'].aggregate([
-      { "$unwind": "$dataDailyBreakdown" },
-      { "$replaceRoot": {"newRoot": "$dataDailyBreakdown" }},
-      { "$group": { "_id": "$_id", "total_size": {"$sum": {"$divide": ["$total_size", 1024]}}}},
-      { "$sort": { "_id": -1 }}
-    ]))
+    if report_type == "file_sizes":
+        if not instrument or instrument == "ALL":
+            return list(logbookclient['explgbk_cache']['experiment_stats'].aggregate([
+              { "$unwind": "$dataDailyBreakdown" },
+              { "$replaceRoot": {"newRoot": "$dataDailyBreakdown" }},
+              { "$group": { "_id": "$_id", "total_size": {"$sum": {"$divide": ["$total_size", 1024]}}}},
+              { "$sort": { "_id": -1 }}
+            ]))
+        else:
+            return list(logbookclient['explgbk_cache']['experiment_stats'].aggregate([
+              { "$lookup": { "from": "experiments", "localField": "_id", "foreignField": "_id", "as": "exp"}},
+              { "$unwind": "$exp" },
+              { "$match": { "exp.instrument": instrument }},
+              { "$unwind": "$dataDailyBreakdown" },
+              { "$replaceRoot": {"newRoot": "$dataDailyBreakdown" }},
+              { "$group": { "_id": "$_id", "total_size": {"$sum": {"$divide": ["$total_size", 1024]}}}},
+              { "$sort": { "_id": -1 }}
+            ]))
+    elif report_type == "run_counts":
+        if not instrument or instrument == "ALL":
+            return list(logbookclient['explgbk_cache']['experiment_stats'].aggregate([
+              { "$unwind": "$runDailyBreakdown" },
+              { "$replaceRoot": {"newRoot": "$runDailyBreakdown" }},
+              { "$group": { "_id": "$_id", "total_runs": {"$sum": "$run_count"}}},
+              { "$sort": { "_id": -1 }}
+            ]))
+        else:
+            return list(logbookclient['explgbk_cache']['experiment_stats'].aggregate([
+              { "$lookup": { "from": "experiments", "localField": "_id", "foreignField": "_id", "as": "exp"}},
+              { "$unwind": "$exp" },
+              { "$match": { "exp.instrument": instrument }},
+              { "$unwind": "$runDailyBreakdown" },
+              { "$replaceRoot": {"newRoot": "$runDailyBreakdown" }},
+              { "$group": { "_id": "$_id", "total_runs": {"$sum": "$run_count"}}},
+              { "$sort": { "_id": -1 }}
+            ]))
 
 def does_experiment_exist(experiment_name):
     """
@@ -241,6 +271,15 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
                         "begin_time": last_run["begin_time"],
                         "end_time": last_run["end_time"]
                     }
+                runDailyBreakdown = list(expdb["runs"].aggregate([
+                    {"$group": { "_id": {"$dateToParts": { "date": {"$convert": { "input": "$begin_time", "to": "date" }}}}, "run_count": {"$sum": 1}}},
+                    {"$project": { "_id.year": 1, "_id.month": 1, "_id.day": 1, "run_count": 1 }},
+                    {"$group": { "_id": {"$dateFromParts": { "year": "$_id.year", "month": "$_id.month", "day": "$_id.day" } }, "run_count": {"$sum": "$run_count"}}},
+                    {"$sort": {"_id": 1}}
+                ]))
+                if runDailyBreakdown:
+                    logbookclient['explgbk_cache']['experiment_stats'].update_one({"_id": experiment_name}, { "$set": { "runDailyBreakdown": runDailyBreakdown } }, upsert=True)
+
         else:
             logger.debug("No runs in experiment " + experiment_name)
         try:
@@ -281,7 +320,7 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
                         {"$group": { "_id": {"$dateFromParts": { "year": "$_id.year", "month": "$_id.month", "day": "$_id.day" } }, "total_size": {"$sum": {"$divide": [ "$total_size", 1024*1024*1024]}}}}
                     ])]
                 if dataDailyBreakdown:
-                    logbookclient['explgbk_cache']['experiment_stats'].update({"_id": experiment_name}, { "_id": experiment_name, "dataDailyBreakdown": dataDailyBreakdown }, upsert=True)
+                    logbookclient['explgbk_cache']['experiment_stats'].update_one({"_id": experiment_name}, { "$set": { "dataDailyBreakdown": dataDailyBreakdown } }, upsert=True)
         except Exception as e:
             logger.exception("Exception computing the file parameters")
 
