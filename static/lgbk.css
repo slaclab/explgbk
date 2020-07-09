@@ -392,6 +392,17 @@ label {
 #ops_reports_tab .chartrow {
   height: 80vw;
 }
+#ops_reports_tab .sellabel {
+  color: #1E48DF;
+  font-weight: bold;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+#ops_reports_tab select {
+  font-weight: normal;
+  font-size: 0.9rem;
+  color: #1E48DF;
+}
 #ops_exp_searchtext {
   border: thin solid #6685F4;
   color: #6685F4;

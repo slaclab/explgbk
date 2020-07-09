@@ -37,7 +37,7 @@
 
  $.getJSON("ws/instruments")
  .done(function(instruments){
-     let insseltmpl = `<div><span class="label">Plot</span><select class="custom-select report_type"><option value="file_sizes">File Sizes</option><option value="run_counts">Run Counts</option></select> for <select class="custom-select choose_instr"><option value="ALL">ALL</option>{{#.}}<option value="{{_id}}">{{_id}}</option>{{/.}}</select></div>`; Mustache.parse(insseltmpl);
+     let insseltmpl = `<div><span class="sellabel">Plot</span><select class="custom-select report_type"><option value="file_sizes">File Sizes</option><option value="run_counts">Run Counts</option></select> for <select class="custom-select choose_instr"><option value="ALL">ALL</option>{{#.}}<option value="{{_id}}">{{_id}}</option>{{/.}}</select></div>`; Mustache.parse(insseltmpl);
      let renderinssel = $(Mustache.render(insseltmpl, instruments.value));
      renderinssel.find(".choose_instr").on("change", function() {
          let report_type = renderinssel.find(".report_type").val();
