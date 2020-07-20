@@ -1,0 +1,4 @@
+// The instrument is optional; but this should still work in Mongo.
+// We should be able to insert run tables with the same name for different instruments
+// and prevent more than one run table with the same name without an instrument (applicable to all instruments)
+db.getSiblingDB("site").run_tables.createIndex({name: 1, instrument: 1}, unique=true)
