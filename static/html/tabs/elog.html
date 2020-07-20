@@ -61,7 +61,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
 
 
-  var elog_run_main_template = `<div class="edat etop" id="{{ elem_id }}" data-spgntr="{{elem_id}}"><div class="row">
+  var elog_run_main_template = `<div class="edat etop" id="{{ elem_id }}" data-runnum="{{num}}" data-spgntr="{{elem_id}}"><div class="row">
        <div class="col-2">
          <span class="elog-expand elog-compressed exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>
          {{#FormatDate}}{{relevance_time}}{{/FormatDate}}
@@ -72,6 +72,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
    var elog_run_child_template = `<div class="row col-12 elog-chid">
      <div class="card">
+      <div class="card-header text-left"><span class="entry_actions"><span class="change_sample" title="Change the sample that this run is associated with"><i class="fas fa-snowflake fa-lg"></i></span></div>
       <div class="card-body">
         {{#param_list}}
           <div class="elog_run_param_category text-left" data-category="{{k}}"><span class="expand_param expand_plus"><i class="fas fa-plus"></i></span>{{k}}<div class="elog_run_params_expanded"></div></div>
@@ -326,6 +327,31 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
                  }
                  rexpdr.toggleClass("expand_plus")
              });
+             rendered.find(".change_sample").on("click", function(){
+                 let run_num = $(this).closest(".edat").attr("data-runnum");
+                 $.when($.ajax('../../static/html/ms/choose_one_of_many.html'), $.getJSON("ws/samples"))
+                 .done(function(d0, d1){
+                     let tmpl = d0[0], smpls = _.map(d1[0].value, "name"); Mustache.parse(tmpl);
+                     let csrndrd = $(Mustache.render(tmpl, {title: "Please choose the sample that run " + run_num + " is to be associated with", choices: smpls, submit_label: "Change"}));
+                     csrndrd.find(".c_o_o_m_submit").on("click", function(){
+                         let chosensmpl = $(this).closest(".modal").find(".c_o_o_n_select").val();
+                         if(!_.isEmpty(chosensmpl)) {
+                             console.log("Need to change " + run_num + " to sample " + chosensmpl);
+                             $.getJSON("ws/change_sample_for_run", {sample_name: chosensmpl, run_num: run_num})
+                             .done(function(data){
+                                 if(!data.success) {
+                                     error_message("Server side exception changing sample for run " + data.errormsg);
+                                 }
+                             })
+                             .fail(function(jqXHR, textStatus, errorThrown) { error_message("Server side exception changing sample for run " + jqXHR.responseText); })
+                         }
+                         $("#elog_tab").find(".mdl_holder").find(".modal").modal("hide");
+                     })
+                     $("#elog_tab").find(".mdl_holder").append(csrndrd);
+                     $("#elog_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#elog_tab").find(".mdl_holder").empty(); });
+                     $("#elog_tab").find(".mdl_holder").find(".modal").modal();
+                 })
+             })
              clicked_elem.closest(".edat").append(rendered);
              expdr.html('<i class="fas fa-minus expand_ctrl"></i>');
          });
@@ -501,7 +527,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       if(skip_websocket_elog_messages) { console.log("Skipping run message from server."); return; }
       var runData = runEvent.value;
       console.log("Processing run event for experiment " + experiment_name + " id=" + runData["num"]);
-      if(_.has(runData, "sample") && sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && runData['sample'] != sample_showing_in_UI) { console.log("Skipping updating elog runs for different sample " + runData['sample']); return; }
+      if(_.has(runData, "sample") && sample_showing_in_UI != null && sample_showing_in_UI != "All Samples" && runData['sample'] != sample_showing_in_UI) {
+          $("#elog_content").find("[data-runnum=" + runData["num"]+"]").remove();
+          console.log("Skipping updating elog runs for different sample " + runData['sample']); return;
+      }
       var newRunEntries = processRunResponse({value: [runData]});
       _.each(newRunEntries, function(r){$("#elog_content").data("spgntr").addObject(r)});
   });

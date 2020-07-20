@@ -51,7 +51,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
-    delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions
+    delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex
@@ -1704,6 +1704,28 @@ def svc_make_sample_current(experiment_name):
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
 
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/change_sample_for_run", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("edit")
+def svc_change_sample_for_run(experiment_name):
+    sample_name = request.args.get("sample_name", None)
+    if not sample_name:
+        return logAndAbort("We need a sample_name as a parameter")
+
+    run_num_str = request.args.get("run_num", None);
+    if not run_num_str:
+        return logAndAbort("We need a run_num as a parameter")
+    try:
+        run_num = int(run_num_str)
+    except ValueError:
+        run_num = run_num_str # Cryo uses strings for run numbers.
+
+    status, errormsg = change_sample_for_run(experiment_name, run_num, sample_name)
+    run_doc = get_run_doc_for_run_num(experiment_name, run_num)
+    context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc})
+    return jsonify({'success': status, 'errormsg': errormsg})
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/register_file", methods=["POST"])

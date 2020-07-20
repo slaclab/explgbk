@@ -1548,6 +1548,19 @@ def validate_with_modal_params(modal_type, business_obj):
             return False, "The parameter {} is not an number".format(num_param)
     return True, ""
 
+def change_sample_for_run(experiment_name, run_num, sample_name):
+    """
+    Change the sample for the specified run.
+    The association between sample and run is expected to be lightweight and purely logical.
+    So, changing the sample for a run is merely changing the attribute in the run document.
+    """
+    sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
+    if not sample_doc:
+        return False, "Cannot find sample with name " + sample_name
+    expdb = logbookclient[experiment_name]
+    expdb["runs"].update_one({"num": run_num}, {"$set": {"sample": sample_doc["_id"]}})
+    return True, ""
+
 def register_file_for_experiment(experiment_name, info):
     """
     Register a file for the experiment.
