@@ -332,6 +332,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
                  $.when($.ajax('../../static/html/ms/choose_one_of_many.html'), $.getJSON("ws/samples"))
                  .done(function(d0, d1){
                      let tmpl = d0[0], smpls = _.map(d1[0].value, "name"); Mustache.parse(tmpl);
+                     if(smpls.length == 0) {
+                         error_message("This experiment does not have any samples defined.");
+                         return;
+                     }
                      let csrndrd = $(Mustache.render(tmpl, {title: "Please choose the sample that run " + run_num + " is to be associated with", choices: smpls, submit_label: "Change"}));
                      csrndrd.find(".c_o_o_m_submit").on("click", function(){
                          let chosensmpl = $(this).closest(".modal").find(".c_o_o_n_select").val();
