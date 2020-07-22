@@ -293,7 +293,7 @@ $(document).ready(function() {
             $.ajax("../../static/html/ms/generic_msg.html")
             .done(function(tmpl) {
                 let rendered = $(Mustache.render(tmpl, { title: "Zoom meeting for " + experiment_name, message: "A zoom meeting is set up for each experiment; please use this meeting URL to login to this meeting." +
-                    "<table class='table table-striped table-bordered mt-2 zoom_meeting_details'><tr><th>URL</th><td>" + _.get(info, "value.params.zoom_url") + "</td></tr><th>Meeting ID</th><td>" + zoom_meeting_id + "</td></tr><tr><th>Password</th><td>" + zoom_meeting_pwd + "</td></tr></table>"}));
+                    "<table class='table table-striped table-bordered mt-2 zoom_meeting_details'><tr><th>URL</th><td><a href='" + _.get(info, "value.params.zoom_url") + "' target='_blank'>" + _.get(info, "value.params.zoom_url") + "</a></td></tr><th>Meeting ID</th><td>" + zoom_meeting_id + "</td></tr><tr><th>Password</th><td>" + zoom_meeting_pwd + "</td></tr></table>"}));
                 $("#glbl_modals_go_here").empty().append(rendered);
                 $("#glbl_modals_go_here").find(".modal").on("hidden.bs.modal", function(){ $("#glbl_modals_go_here").empty(); });
                 $("#glbl_modals_go_here").find(".modal").modal("show");
