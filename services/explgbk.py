@@ -1224,7 +1224,6 @@ def svc_get_run_document(experiment_name, run_num):
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs_for_calib", methods=["GET"])
-@context.security.authentication_required
 @experiment_exists
 def svc_get_legacy_runs(experiment_name):
     """
