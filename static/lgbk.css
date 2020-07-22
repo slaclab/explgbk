@@ -48,11 +48,11 @@ body.busy {
   color: white;
   background: #6685F4;
 }
-#lgbk_body .zoom_meeting_details tr th {
+#lgbk_body .zoom_meeting tr th {
   background: inherit;
   color: #6685F4;
 }
-#lgbk_body .zoom_meeting_details tr td {
+#lgbk_body .zoom_meeting tr td {
   padding: 0.75rem;
 }
 #lgbk_body .infohelp {

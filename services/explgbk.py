@@ -51,7 +51,8 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_global_roles, add_player_to_global_role, remove_player_from_global_role, get_site_config, file_not_available_at_location, \
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
-    delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run
+    delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run, \
+    add_update_experiment_params
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex
@@ -577,6 +578,24 @@ def svc_rename_experiment():
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_update_experiment_params", methods=["POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("experiment_edit")
+def svc_add_update_experiment_params(experiment_name):
+    """
+    Add or update an experiment's parameters.
+    We expect a JSON object of simple name value pairs.
+    """
+    params = request.json
+    if not params:
+        return logAndAbort("Please send the experiment parameters as a simple name value pair JSON dictionary")
+    status, errormsg = add_update_experiment_params(experiment_name, params)
+    if status:
+        info = get_experiment_info(experiment_name)
+        context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Update", "value": info })
+    return jsonify({'success': status, 'errormsg': errormsg})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/", methods=["DELETE"])
 @context.security.authentication_required

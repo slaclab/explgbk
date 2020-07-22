@@ -279,6 +279,16 @@ def delete_experiment(experiment_name):
     logbookclient.drop_database(experiment_name)
     return (True, "")
 
+def add_update_experiment_params(experiment_name, params):
+    """
+    Add or update the experiment params. We expect a dict of key value pairs; we'll add params to all the keys.
+    """
+    expdb = logbookclient[experiment_name]
+    updated_params = { "params." + k : v for k, v in params.items()}
+    logger.debug(updated_params)
+    expdb["info"].update({}, {"$set": updated_params})
+    return True, ""
+
 def migrate_attachments_to_local_store(experiment_name):
     """
     Move the attachments from an external image store to either GridFS or a tar.gz on the file system.
