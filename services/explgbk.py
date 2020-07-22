@@ -2352,3 +2352,25 @@ def svc_get_params_matching_prefix():
     pattern = "^(" + "|".join(prefixes) + ")"
     matches = get_all_param_names_matching_regex(pattern)
     return JSONEncoder().encode({"success": True, "value": matches})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/get_params_matching_prefix", methods=["GET"])
+def svc_get_params_matching_prefix_for_run(experiment_name, run_num):
+    """
+    Return parameter names that match a prefix for an experiment/run
+    """
+    prefixes = request.args.getlist("prefix")
+    if not prefixes:
+        return logAndAbort("Please pass in prefixes using the prefix argument")
+    rgx = "^(" + "|".join(prefixes) + ")"
+    patt = re.compile(rgx)
+    run_num_str = run_num
+    try:
+        run_num = int(run_num_str)
+    except ValueError:
+        run_num = run_num_str # Cryo uses strings for run numbers.
+
+    run_doc = get_run_doc_for_run_num(experiment_name, run_num)
+    if not run_doc:
+        return JSONEncoder().encode({"success": True, "value": []})
+    matches = [ x for x in run_doc.get("params", {}).keys() if patt.match(x) ]
+    return JSONEncoder().encode({"success": True, "value": matches})

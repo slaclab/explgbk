@@ -203,11 +203,11 @@ def text_search_for_experiments(search_terms):
     matching_entries = list(logbookclient['explgbk_cache']['experiments'].find({ "$text": { "$search": search_terms }}))
     return sorted(matching_entries, key=lambda x : x["name"])
 
-def get_all_param_names_matching_regex(regex):
+def get_all_param_names_matching_regex(rgx):
     """
     Get all param names in all experiments matching the incoming regex.
     """
-    patt = re.compile(regex)
+    patt = re.compile(rgx)
     apns = logbookclient['explgbk_cache']["experiments"].distinct("all_param_names")
     return [ x for x in apns if patt.match(x) ]
 
