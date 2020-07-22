@@ -2374,3 +2374,31 @@ def svc_get_params_matching_prefix_for_run(experiment_name, run_num):
         return JSONEncoder().encode({"success": True, "value": []})
     matches = [ x for x in run_doc.get("params", {}).keys() if patt.match(x) ]
     return JSONEncoder().encode({"success": True, "value": matches})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/daq_run_params", methods=["GET"])
+def svc_get_get_daq_run_params(experiment_name, run_num):
+    """
+    Return special parameters for the specified experiment and run.
+    If CalibMan can use auth, then we should eliminate this method and use runs/<run_num>
+    Otherwise this returns params that have a standard prefix.
+    This mostly applies to the LCLS DAQ.
+    """
+    std_prefixes = ["Calibrations/", "DAQ Detector Totals/", "DAQ_Detector_Totals/", "DAQ Detectors/", "DAQ_Detectors/"]
+    run_num_str = run_num
+    try:
+        run_num = int(run_num_str)
+    except ValueError:
+        run_num = run_num_str # Cryo uses strings for run numbers.
+
+    run_doc = get_run_doc_for_run_num(experiment_name, run_num)
+    if not run_doc:
+        return JSONEncoder().encode({"success": True, "value": []})
+
+    matches = {}
+    params = run_doc.get("params", {})
+    for k, v in params.items():
+        if any(k.startswith(x) for x in std_prefixes):
+            matches[k] = v
+
+    return JSONEncoder().encode({"success": True, "value": matches})
