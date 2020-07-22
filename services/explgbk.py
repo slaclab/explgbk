@@ -60,7 +60,7 @@ from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
 from dal.exp_cache import get_experiments, get_experiments_for_user, does_experiment_exist, reload_cache as reload_experiment_cache, \
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
-    get_experiments_with_post_privileges, get_cached_experiment_names
+    get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex
 
 from dal.imagestores import parseImageStoreURL
 
@@ -2339,3 +2339,16 @@ def svc_add_update_run_param_descriptions(experiment_name):
         return JSONEncoder().encode({"success": True})
     add_update_run_param_descriptions(experiment_name, param_descs)
     return JSONEncoder().encode({"success": True})
+
+
+@explgbk_blueprint.route("/lgbk/ws/get_params_matching_prefix", methods=["GET"])
+def svc_get_params_matching_prefix():
+    """
+    Return parameter names across all experiments that match a prefix.
+    """
+    prefixes = request.args.getlist("prefix")
+    if not prefixes:
+        return logAndAbort("Please pass in prefixes using the prefix argument")
+    pattern = "^(" + "|".join(prefixes) + ")"
+    matches = get_all_param_names_matching_regex(pattern)
+    return JSONEncoder().encode({"success": True, "value": matches})

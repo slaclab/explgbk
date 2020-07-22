@@ -203,6 +203,13 @@ def text_search_for_experiments(search_terms):
     matching_entries = list(logbookclient['explgbk_cache']['experiments'].find({ "$text": { "$search": search_terms }}))
     return sorted(matching_entries, key=lambda x : x["name"])
 
+def get_all_param_names_matching_regex(regex):
+    """
+    Get all param names in all experiments matching the incoming regex.
+    """
+    patt = re.compile(regex)
+    apns = logbookclient['explgbk_cache']["experiments"].distinct("all_param_names")
+    return [ x for x in apns if patt.match(x) ]
 
 def __load_experiment_names():
     """ We cache the list of experimemt names to speedup authz/other operations.
@@ -280,6 +287,12 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
                 if runDailyBreakdown:
                     logbookclient['explgbk_cache']['experiment_stats'].update_one({"_id": experiment_name}, { "$set": { "runDailyBreakdown": runDailyBreakdown } }, upsert=True)
 
+                expinfo["all_param_names"] = [x["_id"] for x in expdb["runs"].aggregate([
+                    { "$project": { "params": { "$objectToArray": "$params" }}},
+                    { "$unwind": "$params" },
+                    { "$group": { "_id": "$params.k", "total": { "$sum": 1 }}},
+                    { "$sort": { "_id": 1 }}
+                ])]
         else:
             logger.debug("No runs in experiment " + experiment_name)
         try:
