@@ -582,7 +582,7 @@ def svc_rename_experiment():
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/add_update_experiment_params", methods=["POST"])
 @context.security.authentication_required
 @experiment_exists_and_unlocked
-@context.security.authorization_required("experiment_edit")
+@context.security.authorization_required("manage_groups")
 def svc_add_update_experiment_params(experiment_name):
     """
     Add or update an experiment's parameters.
