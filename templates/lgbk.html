@@ -308,10 +308,10 @@ $(document).ready(function() {
                           if(data.success) {
                               $("#glbl_modals_go_here").find(".modal").modal("hide");
                           } else {
-                            error_msg("Server side exception updating zoom meeting details " + data.errormsg);
+                            error_message("Server side exception updating zoom meeting details " + data.errormsg);
                           }
                         })
-                        .fail( function(jqXHR, textStatus, errorThrown) { error_msg("Server side HTTP updating zoom meeting details " + textStatus); })
+                        .fail( function(jqXHR, textStatus, errorThrown) { error_message("Server side HTTP updating zoom meeting details " + textStatus); })
                     } else {
                         rendered.find(".zoom_meeting_details").addClass("d-none");
                         rendered.find(".zoom_meeting_details_edit").removeClass("d-none");
