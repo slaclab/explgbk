@@ -118,7 +118,6 @@ def backup_experiment(args, database_name):
         if mdp.returncode != 0:
             logger.error(mdp.stdout)
             logger.error("mongodump command - %s - returned non-zero error code %s", " ".join(mdargs), mdp.returncode)
-            sys.exit(-1)
     except:
         logger.exception("Exception dumping database to %s", archive_file_name)
         sys.exit(-1)
