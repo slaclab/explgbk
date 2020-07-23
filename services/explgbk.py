@@ -52,7 +52,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run, \
-    add_update_experiment_params
+    add_update_experiment_params, get_URAWI_details, import_users_from_URAWI
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex
@@ -438,21 +438,10 @@ def svc_lookup_experiment_in_URAWI():
     """
     Lookup the specified experiment in URAWI and return the information from URAWI as the value.
     """
-    URAWI_URL = os.environ.get("URAWI_EXPERIMENT_LOOKUP_URL", None)
     experiment_name = request.args.get("experiment_name", None)
-    if URAWI_URL and experiment_name:
-        try:
-            logger.info("Getting URAWI data for proposal %s using %s", experiment_name, URAWI_URL)
-            urawi_doc = requests.get(URAWI_URL, params={ "proposalNo" : experiment_name }, verify=False).json()
-            if urawi_doc.get("status", "error") == "success":
-                return jsonify({'success': True, "value": urawi_doc})
-            else:
-                logger.warning("Did not get a successful response from URAWI for %s", experiment_name)
-                return jsonify({'success': False})
-        except Exception as e:
-            logger.exception("Exception fetching data from URAWI using URL %s for %s", URAWI_URL, experiment_name)
-            return jsonify({'success': False})
-
+    urawi_doc = get_URAWI_details(experiment_name)
+    if urawi_doc and urawi_doc.get("status", "error") == "success":
+        return jsonify({'success': True, "value": urawi_doc})
     return jsonify({'success': False})
 
 @explgbk_blueprint.route("/lgbk/ws/register_new_experiment", methods=["POST"])
@@ -483,6 +472,12 @@ def svc_register_new_experiment():
         del info['posix_group']
 
     (status, errormsg) = register_new_experiment(experiment_name, info)
+
+    try:
+        import_users_from_URAWI(experiment_name)
+    except:
+        logger.exception("Exception importing users from URAWI")
+
     if status:
         context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Create", "value": info })
         context.kafka_producer.send("shifts", {"experiment_name" : experiment_name, "CRUD": "Create", "value": get_latest_shift(experiment_name) })
@@ -2012,6 +2007,24 @@ def get_matching_groups():
     if not group_name:
         return logAndAbort("Please specify a group_name")
     return JSONEncoder().encode({"success": True, "value": context.usergroups.get_groups_matching_pattern(group_name)})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/sync_collaborators_with_user_portal", methods=["GET"])
+@experiment_exists
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
+def svc_sync_collaborators_with_user_portal(experiment_name):
+    collaborators_before = get_collaborators_list_for_experiment(experiment_name)
+    import_users_from_URAWI(experiment_name)
+    collaborators_after = get_collaborators_list_for_experiment(experiment_name)
+    collaborators_added = collaborators_after - collaborators_before
+    collaborators_removed = []
+
+    if collaborators_added:
+        role_obj = get_role_object(experiment_name, "LogBook/Writer")
+        role_obj.update({'collaborators_added': [x for x in collaborators_added], 'collaborators_removed': [x for x in collaborators_removed], 'requestor': context.security.get_current_user_id() })
+        context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "instrument": get_experiment_info(experiment_name)["instrument"], "CRUD": "Update", "value": role_obj })
+    return JSONEncoder().encode({"success": True})
 
 @explgbk_blueprint.route("/lgbk/get_modal_param_definitions", methods=["GET"])
 @context.security.authentication_required

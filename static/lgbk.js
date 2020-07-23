@@ -124,7 +124,7 @@ var lgbk_create_edit_exp = function(expInfo) {
       .done(function (expdata) {
         console.log(expdata);
         if(expdata.success) {
-          rendered.find(".description").val(expdata.value['proposalAbstract']);
+          rendered.find(".description").val(expdata.value['proposalTitle']);
           rendered.find(".pi_name").val(_.get(expdata.value, 'spokesPerson.firstName') + " " + _.get(expdata.value,'spokesPerson.lastName'));
           rendered.find(".pi_email").val(_.get(expdata.value, 'spokesPerson.email'));
           rendered.find(".leader_account").val(_.get(expdata.value, 'spokesPerson.account[0].unixName'));

@@ -66,7 +66,9 @@ $("#collab_tab").on("lg.loaded.bs.tab", function() {
 $("#collab_tab").on("lg.shown.bs.tab", function() {
     if (!_.get(privileges, "manage_groups", false)) { console.log("User is not an admin; skipping actions."); return; }
     var tab_toolbar = `<span id="collab_add_user" title="Add a user to the experiment as a collaborator"><i class="fas fa-user fa-lg"></i></span>
-    <span id="collab_add_group" title="Add a user group"><i class="fas fa-users fa-lg"></i></span>`;
+    <span id="collab_add_group" title="Add a user group"><i class="fas fa-users fa-lg"></i></span>
+    <span id="collab_sync_user_portal" title="Import collaborators from the user portal"><i class="fas fa-sync fa-lg"></i></span>
+    `;
     var uid_search_results = `{{#value}}<tr data-uid="{{ uid }}"><td>{{ uid }}</td><td>{{ gecos }}</td><td><input class="collab_select" type="checkbox"></td></tr>{{/value}}`;
     var group_search_results = `{{#value}}<tr data-uid="{{ . }}"><td>{{ . }}</td><td>N/A</td><td><input class="collab_select" type="checkbox"></td></tr>{{/value}}`;
     Mustache.parse(uid_search_results);
@@ -94,7 +96,7 @@ $("#collab_tab").on("lg.shown.bs.tab", function() {
                 $("#collab_mdl_holder").find("tbody").find(".collab_select:checked").each(function(){var uid = uid_prefix + $(this).closest("tr").attr("data-uid"); ajax_calls.push(add_new_collab_to_role(uid, "LogBook/Writer"));});
                 $.when.apply(this, ajax_calls)
                 .done(function() { $(".modal-body").html(""); $("#collab_mdl_holder").empty(); $("#collab_tab").data("refresh")(); })
-                .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); alert("Server side exception adding collaborator " + jqXHR.responseText); })
+                .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); error_message("Server side exception adding collaborator " + jqXHR.responseText); })
             });
             $("#collab_mdl_holder").find(".edit_modal").modal("show");
         });
@@ -106,5 +108,10 @@ $("#collab_tab").on("lg.shown.bs.tab", function() {
     $("#collab_add_group").on("click", function(){
         search_and_add("../ws/get_matching_groups", "group_name", group_search_results, "");
     });
+    $("#collab_sync_user_portal").on("click", function(){
+        $.getJSON("ws/sync_collaborators_with_user_portal")
+        .done(function(){ $("#collab_tab").data("refresh")(); })
+        .fail(function(jqXHR, textStatus, errorThrown) { console.log(jqXHR); error_message("Server side exception syncing with the user portal " + jqXHR.responseText); })
+    })
 });
 </script>

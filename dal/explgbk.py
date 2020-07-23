@@ -18,7 +18,8 @@ import subprocess
 from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 
-from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, MAX_ATTACHMENT_SIZE
+from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, \
+    MAX_ATTACHMENT_SIZE, URAWI_URL, LOGBOOK_SITE
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 from dal.imagestores import parseImageStoreURL
 from dal.exp_cache import get_experiments_for_instrument
@@ -1776,3 +1777,49 @@ def update_wf_job(experiment_name, job_id, wf_updates):
         return False, "Cannot find workflow job", None
     expdb["workflow_jobs"].update_one({"_id": ObjectId(job_id)}, {"$set": wf_updates })
     return True, "", get_workflow_job_doc(experiment_name, job_id)
+
+def get_URAWI_details(experiment_name):
+    """
+    Get details for the experiment from URAWI.
+    """
+    if URAWI_URL and experiment_name:
+        URAWI_proposal_id = None
+        try:
+            # Check to see if we have an info object with a PNR
+            expdb = logbookclient[experiment_name]
+            expinfo = expdb['info'].find_one()
+            if expinfo:
+                URAWI_proposal_id = expinfo.get("params", {}).get("PNR", None)
+            if not URAWI_proposal_id:
+                # For LCLS and TestFac, we compose the experiment name by prefixing the instrument and appending the run period.
+                if LOGBOOK_SITE in ["LCLS", "TestFac"]:
+                    URAWI_proposal_id = experiment_name[3:-2].upper()
+                else:
+                    URAWI_proposal_id = experiment_name
+            logger.info("Getting URAWI data for proposal %s using %s", URAWI_proposal_id, URAWI_URL)
+            urawi_doc = requests.get(URAWI_URL, params={ "proposalNo" : URAWI_proposal_id}, verify=False).json()
+            return urawi_doc
+        except Exception as e:
+            logger.exception("Exception fetching data from URAWI using URL %s for %s", URAWI_URL, URAWI_proposal_id)
+            return None
+    return None
+
+def import_users_from_URAWI(experiment_name, role_fq_name="LogBook/Writer"):
+    """
+    Get users from URAWI and add them as collaborators into this experiment.
+    """
+    existing_collaborators = get_collaborators_list_for_experiment(experiment_name)
+    logger.debug(existing_collaborators)
+    urawi_doc = get_URAWI_details(experiment_name)
+    if urawi_doc and urawi_doc.get("status", "error") == "success":
+        for coll in urawi_doc.get("collaborators", []):
+            for acc in coll.get("account", []):
+                if "unixGroup" not in acc or acc.get("unixGroup", "") == "xs":
+                    logger.debug("Skipping adding probable experiment related account %s", acc)
+                    continue
+                accuid = "uid:" + acc["unixName"]
+                if accuid in existing_collaborators:
+                    logger.debug("Collaborator %s is already in the system", accuid)
+                    continue
+                add_collaborator_to_role(experiment_name, accuid, role_fq_name)
+                logger.debug("Done adding collaborator %s to experiment %s", accuid, experiment_name)
