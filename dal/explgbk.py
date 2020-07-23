@@ -1188,6 +1188,10 @@ def get_runtable_sources(experiment_name):
         { "$project": { "editables": { "$objectToArray": "$editable_params" } } },
         { "$unwind": "$editables" },
         { "$group": { "_id": "$editables.k", "total": { "$sum": 1 } } } ])]
+    rtbl_sources["Calibrations"] = [{"label": "Calibrations/comment", "description": "Calibrations/comment", "source": "params.Calibrations/comment", "category": "Calibrations"},
+        {"label": "Calibrations/dark", "description": "Calibrations/dark", "source": "params.Calibrations/dark", "category": "Calibrations"},
+        {"label": "Calibrations/flat", "description": "Calibrations/flat", "source": "params.Calibrations/flat", "category": "Calibrations"},
+        {"label": "Calibrations/geom", "description": "Calibrations/geom", "source": "params.Calibrations/geom", "category": "Calibrations"}]
     rtbl_sources["Misc"] = [{"label": "Separator", "description": "A column separator", "source": "Separator", "category": "Misc"}]
     # Mongo currently does not support finding the leaves of documents if they have embedded fields; so we have to loop thru all the runs and do this in python.
     def join_key(current_key, new_key):
