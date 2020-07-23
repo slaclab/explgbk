@@ -171,7 +171,10 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   var edit_exp_btn_action = function(){
     var expName = $(this).closest("tr").find("td").first().find("a").text()
     console.log("Editing experiment " + expName);
-    lgbk_create_edit_exp($("#register_edit_exp_tab").data("name2info")[expName]);
+    $.getJSON("../lgbk/" + expName + "/ws/info")
+    .done(function(info){
+        lgbk_create_edit_exp(info["value"]);
+    })
   };
 
   var add_exps_to_search_results = function() { // Uses the mustache template to add the contents of data("search_results")
