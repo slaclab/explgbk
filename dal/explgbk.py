@@ -378,7 +378,7 @@ def get_currently_active_experiments():
     sitedb = logbookclient["site"]
     ret = []
     for qry in active_queries:
-        logger.info("Looking for active experiment for %s", qry)
+        logger.debug("Looking for active experiment for %s", qry)
         for exp in sitedb["experiment_switch"].find(qry).sort([( "switch_time", -1 )]).limit(1):
             exp_info = get_experiment_info(exp["experiment_name"]) if not exp.get("is_standby", False) else { "instrument": qry["instrument"], "is_standby": True }
             exp_info["station"] = qry["station"]

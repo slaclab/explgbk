@@ -27,24 +27,23 @@ app = Flask("explgbk")
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300;
 
 app.secret_key = "This is a secret key that is somewhat temporary."
-app.debug = bool(os.environ.get('DEBUG', "False"))
+app.debug = False
 
 @app.template_filter('json')
 def jinga2_jsonfilter(value):
     return json.dumps(value)
 
 
-if app.debug:
-    print("Sending all debug messages to the console")
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
-    logging.getLogger('kafka').setLevel(logging.INFO)
-    logging.getLogger('engineio').setLevel(logging.WARN)
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    root.addHandler(ch)
+root = logging.getLogger()
+root.setLevel(logging.getLevelName(os.environ.get("LOG_LEVEL", "INFO")))
+logging.getLogger('kafka').setLevel(logging.INFO)
+logging.getLogger('engineio').setLevel(logging.WARN)
+logging.getLogger('flask_authnz').setLevel(logging.WARN)
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+root.addHandler(ch)
 
 logger = logging.getLogger(__name__)
 
