@@ -39,9 +39,10 @@ export SERVER_IP_PORT=${SERVER_IP_PORT:-"0.0.0.0:5000"}
 export PYTHONPATH="modules/flask_authnz:modules/flask_socket_util:${PYTHONPATH}"
 
 export LOG_LEVEL=${LOG_LEVEL:-"INFO"}
+export RELOAD=${RELOAD:-""}
 
 # The exec assumes you are calling this from supervisord. If you call this from the command line; your bash shell is proabably gone and you need to log in.
-exec gunicorn start:app -b ${SERVER_IP_PORT} --worker-class eventlet --no-sendfile --reload \
+exec gunicorn start:app -b ${SERVER_IP_PORT} --worker-class eventlet --no-sendfile ${RELOAD} \
        --log-level=${LOG_LEVEL} --capture-output --enable-stdio-inheritance \
        --timeout 300 --graceful-timeout 1 \
        --access-logfile - --access-logformat "${ACCESS_LOG_FORMAT}"
