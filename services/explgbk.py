@@ -216,6 +216,9 @@ def svc_get_experiments():
     For example, lgbk/ws/experiments?categorize=instrument_lastrunyear&sortby=lastrunyear should return a dict of dict of arrays of experiments.
     """
     experiments = get_experiments_for_user(context.security.get_current_user_id())
+    for exp in experiments:
+        if "all_param_names" in exp:
+            del exp["all_param_names"]
     categorizer = categorizers.get(request.args.get("categorize", None), None)
     sortby = sorters.get(request.args.get("sortby", None), None)
     if categorizer and sortby:
