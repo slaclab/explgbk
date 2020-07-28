@@ -152,7 +152,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
 
   var rtnl_row_tmpl; // Set later below.
   var renderRunData = function() {
-      this.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+      this.FormatDate = elog_formatdatetime;
       var rowRendered = $(Mustache.render(rtnl_row_tmpl, this));
       rowRendered.find("td").hover(
         function(){ $("#rtbl_content thead").find("[data-col-idx=" + $(this).closest("td").index() + "]").addClass("tblhighlight"); },

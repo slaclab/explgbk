@@ -44,6 +44,10 @@ body.busy {
   color: white;
   background: #6685F4;
 }
+#lgbk_body span.timezone {
+  color: white;
+  background: #6685F4;
+}
 #lgbk_body span.zoom {
   color: white;
   background: #6685F4;

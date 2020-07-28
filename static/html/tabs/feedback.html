@@ -73,7 +73,7 @@ var update_survey_val = function(attr_name, attr_val) {
         new Noty( { text: "Updated", theme: "sunset", layout: "topRight", type: "success", timeout: 500 }).show();
         $.getJSON("ws/get_feedback_document").done(function(data){
             var feedback_doc = data.value;
-            feedback_doc.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+            feedback_doc.FormatDate = elog_formatdatetime;
             $("#feedback_tab").find(".fd_last_modified").empty().append(Mustache.render(last_changed_template, feedback_doc));
         })
     })
@@ -83,7 +83,7 @@ var update_survey_val = function(attr_name, attr_val) {
 $("#feedback_tab").on("lg.loaded.bs.tab", function() {
     $.when($.getJSON(feedback_survey_def), $.getJSON("ws/get_feedback_document")).done(function(d0, d1){
         var topSurveyElem = $("#feedback_tab").find(".feedback_content").first(), feedback_defs = d0[0], feedback_doc = d1[0].value;
-        feedback_doc.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+        feedback_doc.FormatDate = elog_formatdatetime;
         topSurveyElem.empty();
         $("#feedback_tab").find(".fd_last_modified").empty().append(Mustache.render(last_changed_template, feedback_doc));
         _.each(feedback_defs, function(si){ renderSurveyItem(si, topSurveyElem)});

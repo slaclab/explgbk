@@ -203,7 +203,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
   Mustache.parse(sample_tr_tmpl);
   $.getJSON("ws/samples")
   .done(function(data){
-    data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+    data.FormatDate = elog_formatdatetime;
     $("#samples_tab").data("samples", data);
     var rendered = $(Mustache.render(sample_tr_tmpl, data));
     if(is_locked){ rendered.find(".hide_when_locked").addClass("d-none") }

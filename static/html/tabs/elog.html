@@ -108,7 +108,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
 
   var renderMSTemplate = function(template, entry, partials) { // Convienience method to render time correctly.
-    entry.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+    entry.FormatDate = elog_formatdatetime;
     return $(Mustache.render(template, entry, partials));
   }
 
@@ -657,7 +657,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
               }
           });
           let atl = { attachments: attachments_flat_list.reverse()};
-          atl.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+          atl.FormatDate = elog_formatdatetime;
           let rendered = $(Mustache.render(attachments_only_template, atl));
 
           rendered.find(".elogsync").on("click", function(){

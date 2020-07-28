@@ -97,8 +97,8 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
 			var others = _.differenceWith(ins_st_list.value, active_exps.value, function(av, ov){ return av['instrument'] == ov['instrument'] && av['station'] == ov['station'] });
 			_.each(others, function(ot){ active_exps.value.push(ot); });
             _.each(active_exps.value, function(exp){ exp["background"] = _.get(instruments, exp["instrument"] + ".color", "inherit"); exp["color"] = _.has(instruments, exp["instrument"] + ".color") ? "white" : "black"; });
-            active_exps.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
-            active_exps.FormatDateTime = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+            active_exps.FormatDate = elog_formatdate;
+            active_exps.FormatDateTime = elog_formatdatetime;
     		var rendered = Mustache.render(instrument_template, active_exps);
     		$("#switch_experiment_div tbody").html(rendered);
     		$("span.expswitch").on("click", function() {
@@ -131,7 +131,7 @@ $("#expswitch_tab").on("lg.loaded.bs.tab", function() {
                 .done(function( d0, d1 ) {
                     let htmpl = d0[0], shistories = d1[0].value, ish = {"instrument": instrument, "station": station, "switches": shistories};
                     Mustache.parse(htmpl);
-                    ish.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss");}};
+                    ish.FormatDate = elog_formatdatetime;
                     let rend = Mustache.render(htmpl, ish);
                     $("#switch_mdl_holder").empty().append(rend);
                     $("#switch_mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#switch_mdl_holder").empty(); });

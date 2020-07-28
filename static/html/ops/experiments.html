@@ -181,7 +181,7 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     var sorted_exps = _.sortBy($("#register_edit_exp_tab").data("search_results"), $("#register_edit_exp_tab").data("cur_sort_attr"));
     if(!$("#register_edit_exp_tab").data("cur_sort_desc")) { sorted_exps = _.reverse(sorted_exps); }
     var expdata = { value: sorted_exps, privileges: privileges };
-    expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+    expdata.FormatDate = elog_formatdate;
     var rendered = Mustache.render(exper_template, expdata);
     $("#exp_searchresults tbody").html(rendered);
     $("#exp_searchresults .ops_exp_icons .exp_edit").on("click", edit_exp_btn_action);

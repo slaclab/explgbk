@@ -17,6 +17,7 @@
   <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
   <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
   <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="../../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
   <script type="text/javascript" src="../../js/noty/lib/noty.min.js"></script>
   <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
@@ -71,6 +72,7 @@
       <ul class="nav navbar-nav navbar-right">
           <li class="session_items"><a href="../logout"><span class="logged_in_user_name">{{ logged_in_user }}</span><i class="fas fa-sign-out-alt fa-lg"></i></a></li>
           <li class="pl-2"><a href="../experiments"><i class="fas fa-home fa-lg"></i>  Home</a></li>
+          <li class="pl-2"><span class="timezone" title="Current timezone is Pacific (America/Los_Angeles). Click to change timezone to the local timezone"><i class="fas fa-clock"></i></span></li>
           <li class="pl-2"><span class="help" title="User documentation"><i class="fas fa-question fa-lg"></i></span></li>
       </ul>
     </div>
@@ -183,6 +185,15 @@ $(document).ready(function() {
             let hsh = window.location.hash, hlpurl = "../help";
             if(!_.isNil(hsh)) { hlpurl = hlpurl + hsh; }
             window.open(hlpurl, name="_blank");
+        })
+
+        $("#lgbk_body span.timezone").on("click", function(){
+            if(sessionStorage.getItem("use_local_timezone") != null && sessionStorage.getItem("use_local_timezone")) {
+                sessionStorage.removeItem("use_local_timezone");
+            } else {
+                sessionStorage.setItem("use_local_timezone", true);
+            }
+            window.location.reload();
         })
     });
 
@@ -340,6 +351,12 @@ $(document).ready(function() {
         } else {
             on_session_timeout();
         }
+    }
+
+    if(sessionStorage.getItem("use_local_timezone") != null && sessionStorage.getItem("use_local_timezone")) {
+        $("#lgbk_body span.timezone").attr("title", "Current timezone is the local browser timezone. Click to change timezone to Pacific (America/Los_Angeles)")
+    } else {
+        $("#lgbk_body span.timezone").attr("title", "Current timezone is Pacific (America/Los_Angeles). Click to change timezone to the local timezone");
     }
 });
 

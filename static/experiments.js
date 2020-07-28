@@ -67,7 +67,7 @@ $(function() {
 	        			console.log("Show experiments for " + instr + " for year " + year);
 	        			var yrdt = data.value[instr][(year == "None") ? "null" : year]
 	        			var expdata = {value: yrdt};
-	        			expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+	        			expdata.FormatDate = elog_formatdate;
 	        			var rendered = Mustache.render(exper_template, expdata);
 	                	$(tabtarget + " table tbody").html(rendered);
 	        		});
@@ -90,7 +90,7 @@ $(function() {
         		});
                 myExps = _.reverse(_.sortBy(myExps, ['end_time']));
     			var expdata = {value: myExps};
-    			expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+    			expdata.FormatDate = elog_formatdate;
     			var rendered = Mustache.render(exper_template, expdata);
         		$("#myexptab tbody").html(rendered);
         	});
@@ -100,7 +100,7 @@ $(function() {
         		console.log("Showing active experiments");
         		$.getJSON(active_experiments_url)
         		.done(function(data){
-        			data.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+        			data.FormatDate = elog_formatdate;
         			var rendered = Mustache.render(exper_template, data);
             		$("#activeexptab tbody").html(rendered);
         		});
@@ -134,7 +134,7 @@ $(function() {
                     });
         			if(matchexps.length > 0) {
         				var expdata = {value: matchexps};
-            			expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+            			expdata.FormatDate = elog_formatdate;
             			var rendered = Mustache.render(exper_template, expdata);
                 		$("#searchresults tbody").html(rendered);
         			}

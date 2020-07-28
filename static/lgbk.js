@@ -315,6 +315,15 @@ var clone_experiment = function(src_experiment_name, mdl_holder, path_to_ws="", 
   });
 };
 
+var elog_timezone = "America/Los_Angeles";
+var elog_formatdate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).tz(elog_timezone).format("MMM/D/YYYY")}};
+var elog_formatdatetime = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).tz(elog_timezone).format("MMM/D/YYYY HH:mm:ss")}};
+if(sessionStorage.getItem("use_local_timezone") != null && sessionStorage.getItem("use_local_timezone")) {
+    console.log("Using local timezone from the browser");
+    elog_formatdate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY")}};
+    elog_formatdatetime = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss")}};
+}
+
 var success_message = function(msg, timeout=5000) {
     new Noty( { text: msg, layout: "topRight", type: "success", timeout: timeout }).show();
 }

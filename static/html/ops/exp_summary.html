@@ -43,7 +43,7 @@ $("#exp_summary_tab").on("lg.loaded.bs.tab", function() {
         var sorted_exps = _.sortBy($("#exp_summary_tab").data("experiments"), $("#exp_summary_tab").data("cur_sort_attr"));
         if(!$("#exp_summary_tab").data("cur_sort_desc")) { sorted_exps = _.reverse(sorted_exps); }
         var expdata = { value: sorted_exps };
-        expdata.FormatDate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY");}};
+        expdata.FormatDate = elog_formatdate;
         expdata.FormatNum = function() { return function(numLiteral, render) { var num = render(numLiteral); return _.toNumber(num).toFixed(2)}};
         var rendered = Mustache.render(exper_template, expdata);
         $("#exp_summary_tab tbody").html(rendered);
