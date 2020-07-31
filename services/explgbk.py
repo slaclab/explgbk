@@ -857,7 +857,7 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
             return msg
 
         msg = generateEMailMsgFromELogDoc(elog_doc)
-        msg['Subject'] = '' + "Elog message for " + experiment_name + " " + elog_doc.get("title", "")
+        msg['Subject'] = '' + "Elog message for " + experiment_name + " " + ("for run {0} ".format(elog_doc["run_num"]) if elog_doc.get("run_num", None) else "") + elog_doc.get("title", "")
         msg['From'] = 'exp_logbook_robot@slac.stanford.edu'
         msg['To'] = ", ".join(full_email_addresses)
         parent_msg = msg
