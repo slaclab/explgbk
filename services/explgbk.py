@@ -1499,6 +1499,13 @@ def svc_current_run(experiment_name):
         logger.error("Current run %s for experiment %s is already closed", run_doc.get("num", ""), experiment_name)
         return JSONEncoder().encode({"success": False, "value": None})
 
+    try:
+        # LCLS uses int run numbers. Mongo insists on returning this as a float sometimes.
+        run_num_int = int(run_doc["num"])
+        run_doc["num"] = run_num_int
+    except ValueError:
+        pass
+
     return JSONEncoder().encode({"success": True, "value": run_doc})
 
 @explgbk_blueprint.route("/run_control/<experiment_name>/ws/add_run_params", methods=["POST"])
