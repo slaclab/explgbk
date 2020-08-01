@@ -246,7 +246,8 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
               layout = { title: { text: clkRTblName }, xaxis: { title: { text: _.head(_.tail(coldefs))["label"], xref: "paper" }}};
               if(coldefs.length == 3){ layout["yaxis"] = { title: { text: _.last(coldefs)["label"], yref: "paper" }} }
           }
-          Plotly.newPlot(plotlyDivName, traces, layout, {displaylogo: false});
+          $.ajax({ url: "../../js/plotly.js/dist/plotly.min.js", dataType: "script", cache: true })
+          .done(function(){ Plotly.newPlot(plotlyDivName, traces, layout, {displaylogo: false}); });
           return;
         }
         if (_.get(tblDef, "table_type") == "groupbytable") {

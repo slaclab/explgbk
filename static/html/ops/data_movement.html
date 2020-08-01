@@ -20,17 +20,24 @@
                 lastYearTr = filterAndGenTrace(exp_stats, moment().subtract(1, 'year'), "Last Year", "total_size", "x2", "y2"),
                 lastMonthTr = filterAndGenTrace(exp_stats, moment().subtract(1, 'month'), "Last Month", "total_size", "x3", "y3");
 
-                Plotly.newPlot("dataChart", [lastMonthTr, lastYearTr, allTr],
-                    { grid: { rows: 3, columns: 1, pattern: 'independent', roworder: 'bottom to top'},
-                    yaxis: {title: "Data (in TB)"}, yaxis2: {title: "Data (in TB)"}, yaxis3: {title: "Data (in TB)"}});
+                $.ajax({ url: "../js/plotly.js/dist/plotly.min.js", dataType: "script", cache: true })
+                .done(function(){
+                  Plotly.newPlot("dataChart", [lastMonthTr, lastYearTr, allTr],
+                      { grid: { rows: 3, columns: 1, pattern: 'independent', roworder: 'bottom to top'},
+                      yaxis: {title: "Data (in TB)"}, yaxis2: {title: "Data (in TB)"}, yaxis3: {title: "Data (in TB)"}});
+                });
+
          } else if (report_type == "run_counts") {
              let allTr = { type: 'scatter', name: "Lifetime", x: _.map(exp_stats.value, function(s) { return moment(s["_id"]).toDate(); }), y: _.map(exp_stats.value, "total_runs")},
                 lastYearTr = filterAndGenTrace(exp_stats, moment().subtract(1, 'year'), "Last Year", "total_runs", "x2", "y2"),
                 lastMonthTr = filterAndGenTrace(exp_stats, moment().subtract(1, 'month'), "Last Month", "total_runs", "x3", "y3");
 
-                Plotly.newPlot("dataChart", [lastMonthTr, lastYearTr, allTr],
-                    { grid: { rows: 3, columns: 1, pattern: 'independent', roworder: 'bottom to top'},
-                    yaxis: {title: "Run count"}, yaxis2: {title: "Run count"}, yaxis3: {title: "Run count"}});
+                $.ajax({ url: "../js/plotly.js/dist/plotly.min.js", dataType: "script", cache: true })
+                .done(function(){
+                  Plotly.newPlot("dataChart", [lastMonthTr, lastYearTr, allTr],
+                      { grid: { rows: 3, columns: 1, pattern: 'independent', roworder: 'bottom to top'},
+                      yaxis: {title: "Run count"}, yaxis2: {title: "Run count"}, yaxis3: {title: "Run count"}});
+                    });
          }
      })
  }
