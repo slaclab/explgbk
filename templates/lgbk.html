@@ -299,7 +299,7 @@ $(document).ready(function() {
         let zoom_meeting_pwd = _.get(info, "value.params.zoom_meeting_password", "");
         let zoom_meeting_can_edit = _.get(privileges, "manage_groups", false);
 
-        let zmr = $(`<li class="pl-2"><span class="zoom" title="Zoom meeting for this experiment"><i class="fas fa-phone-alt fa-lg"></i> Zoom</span></li>`);
+        let zmr = $(`<li class="pl-2"><span class="zoom" title="Zoom meeting for this experiment"><a href="#"><i class="fas fa-phone-alt fa-lg"></i> Zoom</a></span></li>`);
         zmr.find("span").on("click", function(){
             $.ajax("../../static/html/ms/zoom_meeting.html")
             .done(function(tmpl) {
