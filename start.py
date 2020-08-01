@@ -24,7 +24,7 @@ __author__ = 'mshankar@slac.stanford.edu'
 # Initialize application.
 app = Flask("explgbk")
 # Set the expiration for static files
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300;
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 60*60;
 
 app.secret_key = "This is a secret key that is somewhat temporary."
 app.debug = False
