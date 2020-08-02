@@ -686,6 +686,13 @@ def svc_switch_experiment():
     if experiment_name in [ x.get('name', '') for x in get_currently_active_experiments() ]:
         return jsonify({'success': False, 'errormsg': "Trying to switch experiment %s onto instrument %s but it is already currently active" % (experiment_name, instrument)})
 
+    if context.LOGBOOK_SITE in ["LCLS"] and os.path.exists("/reg/g/psdm/data/ExpNameDb/experiment-db.dat"):
+        logger.info("Checking to see if the experiment exists in the old style file naming list of experiments - /reg/g/psdm/data/ExpNameDb/experiment-db.dat")
+        with open("/reg/g/psdm/data/ExpNameDb/experiment-db.dat", 'r') as f:
+            lines = f.readlines()
+            if experiment_name in [ x.split()[2] for x in lines ]:
+                return jsonify({'success': False, 'errormsg': "The experiment %s is using old style file names as it exists in /reg/g/psdm/data/ExpNameDb/experiment-db.dat. Mixing and matching file name conventions is not supported." % (experiment_name)})
+
     userid = context.security.get_current_user_id()
 
     (status, errormsg) = switch_experiment(instrument, station, experiment_name, userid)
