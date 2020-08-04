@@ -1,0 +1,22 @@
+<div class="modal fade edit_modal" data-backdrop="static" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+   <div class="modal-content">
+       <div class="modal-header">
+        <h4 class="modal-title w-100">Submit a job for multiple runs.
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </h4>
+       </div>
+       <div class="modal-body">
+         <form class="wf_run_range_form">
+             <div class="form-row pb-1"><label class="col-2">Submit job</label><select class="form-control col-4 job_name" name="job_name">{{#wf_job_names}}<option value="{{.}}">{{.}}</option>{{/wf_job_names}}</select></div>
+             <div class="form-row pb-1"><label class="col-4">for run numbers greater than or equal to </label><input type="text" class="form-control col-2 range_start"></div>
+             <div class="form-row"><label class="col-4">and less than or equal to </label><input type="text" class="form-control col-2 range_end">.</div>
+         </form>
+     </div>
+     <div class="modal-footer">
+         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+         <button class="btn btn-primary panel_btn submit">Submit</button>
+     </div>
+  </div>
+ </div>
+</div>
