@@ -32,7 +32,7 @@
 <body id="log_entry_body">
 <div class="tab_title_bar">
     <span class="exp_title">Logbook entry for {{ experiment_name }}<span id="current_sample_lbl"></span></span>
-    <span id="toolbar_for_tab"><span><a href="../#eLog"><i class="fas fa-book fa-lg"></i></a></span><span><i class="fas fa-sync fa-lg"></i></span></span>
+    <span id="toolbar_for_tab"><span title="Go back to the elog"><a href="../#eLog"><i class="fas fa-book fa-lg"></i></a></span><span title="Go to this particular entry in the elog"><i class="fas fa-sync fa-lg"></i></span></span>
 </div>
 <div class="container-fluid text-center" id="elog_sgl_entry">
 </div>
@@ -82,11 +82,11 @@
           <div class="row col-12">
            <div class="card">
             <div class="card-header text-left">
-               {{#title}}<div class="chid_title{{#deleted_by}}elog_deleted{{/deleted_by}}">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}
+               {{#title}}<div class="chid_title{{#deleted_by}}elog_deleted{{/deleted_by}}">{{title}}</div>{{/title}}
                <div class="row">
                  <div class="col-2">{{#FormatDate}}{{ relevance_time }}{{/FormatDate}}</div>
                  <div class="col-1" title="{{run_num}}">{{ run_num_str }}</div>
-                 <div class="col-5 elog_main_cnt text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}{{/title}}{{^title}}{{ content }}{{/title}}</div><div class="col-3 elog_main_cnt">{{#src_expname}}{{.}}{{#tagcount}}|{{/tagcount}}{{/src_expname}}{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>
+                 <div class="col-5 elog_main_cnt text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}<div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre class="precontent">{{ content }}</pre>{{/title}}</div><div class="col-3 elog_main_cnt">{{#src_expname}}{{.}}{{#tagcount}}|{{/tagcount}}{{/src_expname}}{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>
                  <div class="col-1">{{ author }}</div>
                </div>
              </div>
