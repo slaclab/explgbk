@@ -34,7 +34,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
 
  var elog_child_template = `<div class="row col-12 elog-chid">
    <div class="card">
-    <div class="card-header text-left"><span class="entry_actions">{{^deleted_by}}<span class="followup" title="Followup"><i class="fas fa-paper-plane fa-lg"></i></span>{{#privileges.edit}}<span class="edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span>{{^parent}}<span class="ins_elogs" title="Post to instrument elogs"><i class="fas fa-mail-bulk fa-lg"></i></span>{{/parent}}<span class="delete" title="Delete"><i class="fas fa-trash fa-lg"></i></span>{{/privileges.edit}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre class="precontent">{{content}}</pre>{{/title}}</div>
+    <div class="card-header text-left"><span class="entry_actions">{{^deleted_by}}<span class="followup" title="Followup"><i class="fas fa-paper-plane fa-lg"></i></span>{{#privileges.edit}}<span class="edit" title="Edit"><i class="fas fa-edit fa-lg"></i></span>{{^parent}}<span class="ins_elogs" title="Post to instrument elogs"><i class="fas fa-mail-bulk fa-lg"></i></span><span class="get_link" title="Open this entry in a new tab"><i class="fas fa-external-link-alt fa-lg"></i></span>{{/parent}}<span class="delete" title="Delete"><i class="fas fa-trash fa-lg"></i></span>{{/privileges.edit}}{{/deleted_by}}</span>{{#title}}<div class="chid_title">{{title}}</div><div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre class="precontent">{{content}}</pre>{{/title}}</div>
     <div class="card-body">
       {{> elog_chid_body_content }}
      <div class="row dialog_holder"></div>
@@ -268,6 +268,11 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
      })
  }
 
+ var open_entry_in_new_window = function() {
+   var entry = $(this).closest(".edat").data("entry");
+   window.open("elogs/" + entry["_id"], name="_blank");
+ }
+
  var expandFunction = function() {
 	var entry = $(this).closest(".edat").data("entry"), expdr = $(this).find(".elog-expand");
 	console.log("Expand/contract " + entry["_id"]);
@@ -282,6 +287,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
         clicked_elem.closest(".edat").find(".delete").on("click", delete_elog_entry);
         clicked_elem.closest(".edat").find(".edit").on("click", edit_elog_entry);
         clicked_elem.closest(".edat").find(".ins_elogs").on("click", post_to_instrument_elogs);
+        clicked_elem.closest(".edat").find(".get_link").on("click", open_entry_in_new_window)
 		_.each(_.sortBy(_.map(entry["c_children"], function(chid) { return $("#elog_tab").data("entries")[chid]; }), function(s) { return s["relevance_time"]; }).reverse(), function(ch_entry) {
 		    var rendered = renderMSTemplate(elog_main_template, ch_entry, { main_content_tmpl: elog_main_content_template });
 		    rendered.data("entry", ch_entry).data("ts", moment(ch_entry["relevance_time"]));
