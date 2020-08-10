@@ -686,6 +686,31 @@ label {
     padding-right: 0.25em;
 }
 
+#elog_tab {
+  #elog_attch_ovrly {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2000;
+    width: 100vw;
+    height: 100vw;
+    background: black;
+
+    img {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .ovrlytlbr span {
+      color: white;
+      opacity: 0.5;
+      font-size: 1.1rem;
+      padding-right: 0.5rem;
+    }
+  }
+}
+
 #elog_search_text {
     padding: 0.1em;
     margin: 0;
