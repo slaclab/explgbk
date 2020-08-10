@@ -623,7 +623,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       $("#elog_content").html('<div class="loading">Loading</div>');
       $.getJSON("ws/elog", elog_params)
       .done(function(d0){
-          let attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="img-thumbnail img-fluid"><a href="#" class="thumbnail" data-entryid="{{entry_id}}" data-id="{{_id}}" {{#isimage}}data-isimage="true"{{/isimage}}><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div>`;
+          let attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="img-thumbnail img-fluid atch" data-entryid="{{entry_id}}" data-id="{{_id}}" {{#isimage}}data-isimage="true">{{/isimage}}<span class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></span></div>{{/attachments}}</div>`;
           let entries = d0.value;
           Mustache.parse(attachments_only_template);
           let attachments_flat_list = [];
@@ -637,7 +637,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
               }
           });
           let rendered = $(Mustache.render(attachments_only_template, { attachments: attachments_flat_list.reverse()}));
-          rendered.find(".thumbnail").on("click", function(){
+          rendered.find(".atch").on("click", function(){
             let attchovrlytmpl = `<div id="elog_attch_ovrly"><img class="elog_img img-fluid" src="ws/attachment?entry_id={{entryid}}&attachment_id={{attchid}}"></img><div class="float-right ovrlytlbr"><span class="close"><i class="fas fa-times fa-lg"></i></span><span class="gotoentry" title="Open this entry in a new tab."><i class="fas fa-external-link-alt fa-lg"></i></span></div></div>`;
             let entryid = $(this).attr("data-entryid"), attchid = $(this).attr("data-id");
             if(_.isEmpty($(this).attr("data-isimage"))) {
