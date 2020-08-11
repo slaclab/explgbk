@@ -612,9 +612,10 @@ label {
 }
 #elog_tab #elog_attch_ovrly .ovrlytlbr span {
   color: white;
-  opacity: 0.5;
-  font-size: 1.1rem;
+  font-size: 2rem;
+  padding-top: 0.5rem;
   padding-right: 0.5rem;
+  opacity: 50%;
 }
 #elog_search_text {
   padding: 0.1em;

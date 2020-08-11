@@ -640,7 +640,9 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
           });
           let rendered = $(Mustache.render(attachments_only_template, { attachments: attachments_flat_list.reverse()}));
           rendered.find(".atch").on("click", function(){
-            let attchovrlytmpl = `<div id="elog_attch_ovrly"><img class="elog_img img-fluid" src="ws/attachment?entry_id={{entryid}}&attachment_id={{attchid}}"></img><div class="float-right ovrlytlbr"><span class="close"><i class="fas fa-times fa-lg"></i></span><span class="gotoentry" title="Open this entry in a new tab."><i class="fas fa-external-link-alt fa-lg"></i></span></div></div>`;
+            let attchovrlytmpl = `<div id="elog_attch_ovrly"><img class="elog_img img-fluid" src="ws/attachment?entry_id={{entryid}}&attachment_id={{attchid}}"></img><div class="float-right ovrlytlbr">
+              <span class="gotoentry" title="Open this entry in a new tab."><span class="fa-layers fa-fw"><i class="fas fa-circle" style="color:black"></i><i class="fas fa-external-link-alt fa-lg" data-fa-transform="shrink-8"></i></span></span>
+              <span class="close"><span class="fa-layers fa-fw"><i class="fas fa-circle" style="color:black"></i><i class="fa-inverse fas fa-times" data-fa-transform="shrink-6"></i></span></span></div></div>`;
             let entryid = $(this).attr("data-entryid"), attchid = $(this).attr("data-id"), rootid = $(this).attr("data-rootid");
             if(_.isEmpty($(this).attr("data-isimage"))) {
               window.open("ws/attachment?entry_id=" + entryid + "&attachment_id=" + attchid, name="_blank");
