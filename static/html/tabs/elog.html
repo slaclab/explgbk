@@ -648,9 +648,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
             }
             Mustache.parse(attchovrlytmpl); let rendered = $(Mustache.render(attchovrlytmpl, { attchid: attchid, entryid: entryid }))
             $("#elog_tab").find(".mdl_holder").after(rendered);
-            $(document).on("keyup", function(e) {
-              if (e.keyCode == 27) { $("#elog_attch_ovrly").remove() }
-            });
+            $(document).on("keyup", function(e) { if (e.keyCode == 27) { $("#elog_attch_ovrly").remove() } });
             rendered.find(".close").on("click", function(){ $("#elog_attch_ovrly").remove(); })
             rendered.find(".gotoentry").on("click", function(){ $("#elog_attch_ovrly").remove(); sessionStorage.setItem("eLog_scrollTo", rootid); window.location.reload(true);
 
