@@ -493,7 +493,8 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
               console.log("Scrolling to entry " + scrollToId);
               sessionStorage.removeItem("eLog_scrollTo");
               $("#elog_content").data("spgntr").scrollTo(scrollToId);
-              $("#elog_content").find("[data-spgntr=" + scrollToId + "] .elog-expand").trigger("click");
+              let topElem = $("#elog_content").find("[data-spgntr=" + scrollToId + "]");
+              for (i = 0; i < 25; i++) { topElem.find(".elog-compressed").trigger("click"); }
           }
       });
   };
@@ -623,7 +624,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
       $("#elog_content").html('<div class="loading">Loading</div>');
       $.getJSON("ws/elog", elog_params)
       .done(function(d0){
-          let attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="img-thumbnail img-fluid atch" data-entryid="{{entry_id}}" data-id="{{_id}}" {{#isimage}}data-isimage="true">{{/isimage}}<span class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></span></div>{{/attachments}}</div>`;
+          let attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="img-thumbnail img-fluid atch" data-entryid="{{entry_id}}" data-id="{{_id}}" data-rootid="{{root_id}}" {{#isimage}}data-isimage="true">{{/isimage}}<span class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></span></div>{{/attachments}}</div>`;
           let entries = d0.value;
           Mustache.parse(attachments_only_template);
           let attachments_flat_list = [];
@@ -631,6 +632,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
               if(_.has(entry, 'attachments')) {
                   _.each(entry.attachments, function(attachment){
                       attachment["entry_id"] = entry["_id"];
+                      attachment["root_id"] = _.get(entry, "root", _.get(entry, "parent", entry["_id"]));
                       if(_.startsWith(_.get(attachment, "type", ""), "image/")) { attachment["isimage"] = true; }
                       attachments_flat_list.push(attachment);
                   });
@@ -639,7 +641,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
           let rendered = $(Mustache.render(attachments_only_template, { attachments: attachments_flat_list.reverse()}));
           rendered.find(".atch").on("click", function(){
             let attchovrlytmpl = `<div id="elog_attch_ovrly"><img class="elog_img img-fluid" src="ws/attachment?entry_id={{entryid}}&attachment_id={{attchid}}"></img><div class="float-right ovrlytlbr"><span class="close"><i class="fas fa-times fa-lg"></i></span><span class="gotoentry" title="Open this entry in a new tab."><i class="fas fa-external-link-alt fa-lg"></i></span></div></div>`;
-            let entryid = $(this).attr("data-entryid"), attchid = $(this).attr("data-id");
+            let entryid = $(this).attr("data-entryid"), attchid = $(this).attr("data-id"), rootid = $(this).attr("data-rootid");
             if(_.isEmpty($(this).attr("data-isimage"))) {
               window.open("ws/attachment?entry_id=" + entryid + "&attachment_id=" + attchid, name="_blank");
               return;
@@ -647,7 +649,11 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
             Mustache.parse(attchovrlytmpl); let rendered = $(Mustache.render(attchovrlytmpl, { attchid: attchid, entryid: entryid }))
             $("#elog_tab").find(".mdl_holder").after(rendered);
             rendered.find(".close").on("click", function(){ $("#elog_attch_ovrly").remove(); })
-            rendered.find(".gotoentry").on("click", function(){ $("#elog_attch_ovrly").remove(); window.open("elogs/" + entryid, name="_blank");})
+            rendered.find(".gotoentry").on("click", function(){ $("#elog_attch_ovrly").remove(); sessionStorage.setItem("eLog_scrollTo", rootid); window.location.reload(true);
+
+              $("#elog_content").data("spgntr").scrollTo(rootid);
+              $("#elog_content").find("[data-spgntr=" + rootid + "] .elog-expand").trigger("click");
+            })
           })
           $("#elog_content").html(rendered);
       });
