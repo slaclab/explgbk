@@ -55,7 +55,8 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     add_update_experiment_params, get_URAWI_details, import_users_from_URAWI
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
-    get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex
+    get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex, \
+    map_param_editable_to_run_nums
 
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
@@ -2156,6 +2157,23 @@ def svc_get_run_nums_matching_editable_regex(experiment_name):
     except Exception as e:
         logger.exception(e)
         return logAndAbort("Exception fetching run numbers " + str(e))
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/map_param_editable_to_run_nums", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists
+@context.security.authorization_required("read")
+def svc_map_param_editable_to_run_nums(experiment_name):
+    """
+    Given a run param name or an editable name; returns a dict of param value to array of run numbers.
+    The method looks at both run params (as uploaded by the DAQ) and editable params (as set by the user)
+    Since this is a very user facing call, we let the editable win.
+    That is, if there is an editable param with the same name as a run param, we use the editable param as the source of the pivot.
+    """
+    param_name = request.args.get("param_name", None)
+    if not param_name:
+        return logAndAbort("Please specify the parameter name")
+    return JSONEncoder().encode({"success": True, "value": map_param_editable_to_run_nums(experiment_name, param_name)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/dm_locations", methods=["GET"])
 @context.security.authentication_required

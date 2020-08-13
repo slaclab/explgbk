@@ -83,6 +83,45 @@ def get_specified_run_params_for_all_runs(experiment_name, run_params):
         projection_op["params." + escape_chars_for_mongo(run_param)] = 1
     return [x for x in expdb.runs.find({}, projection_op)]
 
+def map_param_editable_to_run_nums(experiment_name, param_editable):
+    """
+    Pass in a run param name or an editable name.
+    Returns a dict of param value to array of run numbers.
+    The method looks at both run params (as uploaded by the DAQ) and editable params (as set by the user)
+    Since this is a very user facing call, we let the editable win.
+    That is, if there is an editable param with the same name as a run param, we use the editable param as the source of the pivot.
+    """
+    expdb = logbookclient[experiment_name]
+    def __getval__(rn, parts): # Should get you editable_params.TAG.value from { "num" : 23, "editable_params" : { "TAG" : { "value" : "Ravenclaw" } } }
+        ret = rn
+        for part in parts:
+            ret = ret[part]
+        return ret
+
+    def __pivot__(rns, fqn):
+        parts = fqn.split(".")
+        ret = {}
+        for rn in rns:
+            val = __getval__(rn, parts)
+            if val not in ret.keys():
+                ret[val] = []
+            ret[val].append(rn["num"])
+        return ret
+
+    fqn = "editable_params." + escape_chars_for_mongo(param_editable) + ".value"
+    editables = list(expdb.runs.find({fqn: {"$exists": 1}}, {"_id": 0, "num": 1, fqn: 1}))
+    if editables and len(editables) > 0:
+        logger.debug("Found an editable param with name %s", fqn)
+        return __pivot__(editables, fqn)
+
+    fqn = "params." + escape_chars_for_mongo(param_editable)
+    params = list(expdb.runs.find({fqn: {"$exists": 1}}, {"_id": 0, "num": 1, fqn: 1}))
+    if params and len(params) > 0:
+        logger.debug("Found an DAQ param with name %s", fqn)
+        return __pivot__(params, fqn)
+
+    return {}
+
 def get_run_nums_matching_params(experiment_name, query_document):
     """
     Get an array of run numbers for all runs that have the specified value for the specified parameter.
