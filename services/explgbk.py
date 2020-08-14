@@ -12,7 +12,6 @@ import os
 import json
 import logging
 import copy
-import math
 import io
 import re
 
@@ -52,7 +51,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run, \
-    add_update_experiment_params, get_URAWI_details, import_users_from_URAWI
+    add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex, \
@@ -2065,22 +2064,12 @@ def svc_get_modal_param_definitions_for_experiment(experiment_name):
     return JSONEncoder().encode({"success": True, "value": param_defs if param_defs else {}})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_feedback_document", methods=["GET"])
-@context.security.authentication_required
 @experiment_exists
-@context.security.authorization_required("feedback_read")
 def get_feedback_document(experiment_name):
     """
     Reconstructs the current feedback document from a questionnaire like history of changes.
     """
-    poc_feedback_changes = get_poc_feedback_changes(experiment_name)
-    poc_feedback_doc = {}
-    exp_info = get_experiment_info(experiment_name)
-    poc_feedback_doc["basic-scheduled"] = math.ceil((exp_info["end_time"] - exp_info["start_time"]).total_seconds()/(8*3600))
-
-    if poc_feedback_changes:
-        poc_feedback_doc.update({ x['name'] : x['value'] for x in get_poc_feedback_changes(experiment_name) })
-        poc_feedback_doc['last_modified_by'] = poc_feedback_changes[-1]['modified_by']
-        poc_feedback_doc['last_modified_at'] = poc_feedback_changes[-1]['modified_at']
+    poc_feedback_doc = get_poc_feedback_document(experiment_name)
     return JSONEncoder().encode({"success": True, "value": poc_feedback_doc})
 
 
@@ -2090,12 +2079,70 @@ def get_feedback_document(experiment_name):
 @context.security.authorization_required("feedback_write")
 def add_feedback_item(experiment_name):
     item_name  = request.form.get("item_name", None)
-    item_value = request.form.get("item_value", None)
-    if not item_name or not item_value:
-        return logAndAbort("Please specify the item name (item_name) and value (item_value)")
+    item_value = request.form.get("item_value", "")
+    if not item_name:
+        return logAndAbort("Please specify the item name (item_name)")
 
     add_poc_feedback_item(experiment_name, item_name, item_value, context.security.get_current_user_id())
+    # We treat the poc_feedback similar to experiment params and send a Kafka message. Mostly this is to rebuild the cache.
+    info = get_experiment_info(experiment_name)
+    context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Update", "value": info })
     return JSONEncoder().encode({"success": True})
+
+# Tableau integration items - we follow https://jira.slac.stanford.edu/browse/PSWA-61 as much as possible.
+@explgbk_blueprint.route("/lgbk/poc_feedback/schema", methods=["GET"])
+def get_poc_feedback_schema():
+    feedback_defs_file = "static/json/feedback_{}.json".format(context.LOGBOOK_SITE)
+    if not os.path.exists(feedback_defs_file):
+        return JSONEncoder().encode({"status": "error", "message": "No schema definition found for this site {}".format(context.LOGBOOK_SITE)})
+    with open(feedback_defs_file, "r") as f:
+        defs = json.load(f)
+    # Process the definitions and change some attribute names/values. Use hint for title, value for default_value, data_type for type
+    def __map_schema_attrs__(o):
+        if isinstance(o, list):
+            return [ __map_schema_attrs__(x) for x in o ]
+        elif isinstance(o, dict):
+            ret = { "title": o["hint"] }
+            if "groups" in o and "toggler" not in o:
+                ret["groups"] = __map_schema_attrs__(o["groups"])
+            else:
+                ret["id"] = o["id"]
+                if "value" in o:
+                    ret["default_value"] = o["value"]
+                if "datatype" in o:
+                    ret["type"] = o["datatype"]
+                else:
+                    ret["type"] = {"readonly_text": "Number", "input": "String", "checkbox": "Boolean", "selector": "Number"}.get(o["type"], "String")
+                if o["type"] == "selector" or o["type"] == "checkbox" and o.get("notes", False):
+                    ret["id_notes"] = o["id"] + "-notes"
+                if "groups" in o:
+                    ret["groups"] = __map_schema_attrs__(o["groups"])
+            return ret
+    defs = __map_schema_attrs__(defs)
+
+    return JSONEncoder().encode({"status": "success", "defs": defs })
+
+@explgbk_blueprint.route("/lgbk/poc_feedback/experiments", methods=["GET"])
+def svc_get_poc_feedback_experiments():
+    """
+    Return all the experiments that have non-trivial poc feedback.
+    """
+    exps = get_poc_feedback_experiments()
+    tz = pytz.timezone('America/Los_Angeles')
+    ret = []
+    for exp in exps:
+        x = { "exper_name": exp["name"], "instr_name": exp["instrument"] }
+        if exp.get("params", {}).get("PNR", None): x["proposalNo"] = exp["params"]["PNR"]
+        if exp.get("poc_feedback", {}).get("last_modified_by", None): x["last_report_uid"] = exp["poc_feedback"]["last_modified_by"]
+        if exp.get("poc_feedback", {}).get("last_modified_at", None): x["last_report_time"] = exp["poc_feedback"]["last_modified_at"].astimezone(tz).strftime('%Y-%m-%d %H:%M:%S')
+        if exp.get("poc_feedback", {}).get("last_modified_at", None): x["last_modified_at_utc"] = exp["poc_feedback"]["last_modified_at"]
+        if exp.get("poc_feedback", {}).get("num_items", None): x["num_items"] = exp["poc_feedback"]["num_items"]
+        if exp.get("poc_feedback", {}).get("num_items_4_5", None): x["num_items_4_5"] = exp["poc_feedback"]["num_items_4_5"]
+        if exp.get("last_run", {}).get("begin_time", None): x["last_run_begin"] = exp["last_run"]["begin_time"].astimezone(tz).strftime('%Y-%m-%d %H:%M:%S')
+        ret.append(x)
+
+    return JSONEncoder().encode({"status": "success", "experiments": ret})
+
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_run_params_for_all_runs", methods=["GET"])
 @context.security.authentication_required

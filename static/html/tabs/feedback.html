@@ -70,14 +70,14 @@ var update_survey_val = function(attr_name, attr_val) {
     console.log("Updating " + attr_name + " to value " + attr_val);
     $.getJSON({url: "ws/add_feedback_item", data: {item_name: attr_name, item_value: attr_val}, method: "POST"})
     .done(function(){
-        new Noty( { text: "Updated", theme: "sunset", layout: "topRight", type: "success", timeout: 500 }).show();
+      success_message("Updated");
         $.getJSON("ws/get_feedback_document").done(function(data){
             var feedback_doc = data.value;
             feedback_doc.FormatDate = elog_formatdatetime;
             $("#feedback_tab").find(".fd_last_modified").empty().append(Mustache.render(last_changed_template, feedback_doc));
         })
     })
-    .fail(function(){new Noty( { text: "Failed", theme: "sunset", layout: "topRight", type: "error", timeout: 500 }).show();})
+    .fail(function(jqXHR, textStatus, errorThrown) { error_message("Server side error " + jqXHR.responseText); })
 }
 
 $("#feedback_tab").on("lg.loaded.bs.tab", function() {

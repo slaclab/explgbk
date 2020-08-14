@@ -19,6 +19,7 @@
                 "hint": "Actual shifts",
                 "short": "Actual shifts",
                 "type": "input",
+                "datatype": "Number",
                 "value": 0
             },
             {
@@ -915,6 +916,7 @@
         "header": "Summary Notes",
         "hint": "Summary Notes",
         "type": "section_header",
+        "id": "sumheader",
         "groups": [
             {
                 "id": "summary",

@@ -10,6 +10,7 @@ import re
 import copy
 from operator import itemgetter
 import shutil
+import math
 
 import requests
 import tempfile
@@ -22,7 +23,6 @@ from context import logbookclient, instrument_scientists_run_table_defintions, s
     MAX_ATTACHMENT_SIZE, URAWI_URL, LOGBOOK_SITE
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 from dal.imagestores import parseImageStoreURL
-from dal.exp_cache import get_experiments_for_instrument
 from dal.utils import escape_chars_for_mongo, reverse_escape_chars_for_mongo
 
 __author__ = 'mshankar@slac.stanford.edu'
@@ -41,6 +41,13 @@ def get_instruments():
     """
     sitedb = logbookclient["site"]
     return [x for x in sitedb["instruments"].find().sort([("_id", 1)])]
+
+def get_experiments_for_instrument(instrument):
+    """
+    Get a list of experiments from the database for a instrument.
+    Returns basic information and also some info on the first and last runs.
+    """
+    return list(logbookclient['explgbk_cache']['experiments'].find({"instrument": instrument}))
 
 
 def get_experiment_info(experiment_name):
@@ -1683,10 +1690,28 @@ def get_poc_feedback_changes(experiment_name):
     expdb = logbookclient[experiment_name]
     return list(expdb["poc_feedback"].find({}).sort([("modified_at", 1)]))
 
+def get_poc_feedback_document(experiment_name):
+    """
+    Reconstructs the current feedback document from a questionnaire like history of changes.
+    """
+    poc_feedback_changes = get_poc_feedback_changes(experiment_name)
+    poc_feedback_doc = {}
+    exp_info = get_experiment_info(experiment_name)
+    poc_feedback_doc["basic-scheduled"] = math.ceil((exp_info["end_time"] - exp_info["start_time"]).total_seconds()/(8*3600))
+
+    if poc_feedback_changes:
+        poc_feedback_doc.update({ x['name'] : x['value'] for x in get_poc_feedback_changes(experiment_name) })
+        poc_feedback_doc['last_modified_by'] = poc_feedback_changes[-1]['modified_by']
+        poc_feedback_doc['last_modified_at'] = poc_feedback_changes[-1]['modified_at']
+    return poc_feedback_doc
 
 def add_poc_feedback_item(experiment_name, item_name, item_value, modified_by):
     expdb = logbookclient[experiment_name]
     expdb["poc_feedback"].insert_one({"name": item_name, "value": item_value, "modified_by": modified_by, "modified_at": datetime.datetime.utcnow()})
+
+def get_poc_feedback_experiments():
+    cachedb = logbookclient["explgbk_cache"]
+    return list(cachedb["experiments"].find({"poc_feedback.num_items": {"$gte": 1}}, {"_id": 0, "name": 1, "poc_feedback": 1, "instrument": 1, "params.PNR": 1, "last_run": 1 }))
 
 
 def get_workflow_definitions(experiment_name):

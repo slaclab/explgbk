@@ -18,6 +18,7 @@ from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
 from context import logbookclient, instrument_scientists_run_table_defintions, usergroups, kafka_producer
+from dal.explgbk import get_experiments_for_instrument, get_poc_feedback_changes, get_poc_feedback_document
 
 __author__ = 'mshankar@slac.stanford.edu'
 
@@ -72,13 +73,6 @@ def get_experiments():
     Returns basic information and also some info on the first and last runs.
     """
     return list(logbookclient['explgbk_cache']['experiments'].find({}))
-
-def get_experiments_for_instrument(instrument):
-    """
-    Get a list of experiments from the database for a instrument.
-    Returns basic information and also some info on the first and last runs.
-    """
-    return list(logbookclient['explgbk_cache']['experiments'].find({"instrument": instrument}))
 
 def get_experiments_for_user(uid):
     """
@@ -337,9 +331,21 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
         except Exception as e:
             logger.exception("Exception computing the file parameters")
 
+        poc_feedback_changes = get_poc_feedback_changes(experiment_name)
+        if poc_feedback_changes:
+            poc_feedback_doc = get_poc_feedback_document(experiment_name)
+            expinfo["poc_feedback"] = {
+                "num_items": len(poc_feedback_changes),
+                "num_items_4_5": len(list(filter(lambda kv: kv[0] not in ["basic-scheduled", "basic-actual"] and (kv[1] in [ "4", "5" ]), poc_feedback_doc.items()))),
+                "last_modified_by": poc_feedback_changes[-1]["modified_by"],
+                "last_modified_at": poc_feedback_changes[-1]["modified_at"]
+                }
+
         expinfo.update(info)
         expinfo["_id"] = experiment_name
         logbookclient['explgbk_cache']['experiments'].update({"_id": experiment_name}, expinfo, upsert=True)
+
+
         logger.info("Updated the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     else:
         logger.debug("Skipping non-experiment database " + experiment_name)
