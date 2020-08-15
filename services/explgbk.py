@@ -2090,7 +2090,7 @@ def add_feedback_item(experiment_name):
     return JSONEncoder().encode({"success": True})
 
 # Tableau integration items - we follow https://jira.slac.stanford.edu/browse/PSWA-61 as much as possible.
-@explgbk_blueprint.route("/lgbk/poc_feedback/schema", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/ws/poc_feedback/schema", methods=["GET"])
 def get_poc_feedback_schema():
     feedback_defs_file = "static/json/feedback_{}.json".format(context.LOGBOOK_SITE)
     if not os.path.exists(feedback_defs_file):
@@ -2122,7 +2122,7 @@ def get_poc_feedback_schema():
 
     return JSONEncoder().encode({"status": "success", "defs": defs })
 
-@explgbk_blueprint.route("/lgbk/poc_feedback/experiments", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/ws/poc_feedback/experiments", methods=["GET"])
 def svc_get_poc_feedback_experiments():
     """
     Return all the experiments that have non-trivial poc feedback.
