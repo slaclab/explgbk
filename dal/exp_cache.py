@@ -205,6 +205,12 @@ def get_all_param_names_matching_regex(rgx):
     apns = logbookclient['explgbk_cache']["experiments"].distinct("all_param_names")
     return [ x for x in apns if patt.match(x) ]
 
+def get_experiments_proposal_mappings():
+    """
+    Get all the experiments with their PNR's if present.
+    """
+    return list(logbookclient['explgbk_cache']["experiments"].find({}, {"name": 1, "params.PNR": 1}))
+
 def __load_experiment_names():
     """ We cache the list of experimemt names to speedup authz/other operations.
     This reloads the cached list of experiment names from the explgbk_cache

@@ -61,7 +61,7 @@ from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
 from dal.exp_cache import get_experiments, get_experiments_for_user, does_experiment_exist, reload_cache as reload_experiment_cache, \
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
-    get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex
+    get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex, get_experiments_proposal_mappings
 
 from dal.imagestores import parseImageStoreURL
 
@@ -227,6 +227,35 @@ def svc_get_experiments():
         return JSONEncoder().encode({"success": True, "value": sorted(experiments, key=sortby[0], reverse=sortby[1])})
 
     return JSONEncoder().encode({"success": True, "value": experiments})
+
+
+@explgbk_blueprint.route("/lgbk/ws/experiments_to_proposal", methods=["GET"])
+def svc_get_experiments_to_proposal():
+    """
+    Return a best guess mapping of all experiment names to their URAWI proposal ID's.
+    Because of the changing nature of this relationship over the lifetime of various facilities, this is a best guess only and can be badly off.
+    To fix issues where this mapping is incorrect, add a PNR experiment parameter to the experiment which explicitly lists the proposal ID.
+    While this mapping is usually 1-1, sometimes, because of migration of experiments, there can be an occasional many-to-one mapping.
+    That is, more than one experiment can map to the same proposal. However, for an experiment, there is only one proposal id.
+    """
+    experiment_proposals = get_experiments_proposal_mappings()
+    ret = {}
+    for ep in experiment_proposals:
+        expname = ep["name"]
+        if ep.get("params", {}).get("PNR", None):
+            ret[expname] = ep["params"]["PNR"]
+        elif len(expname) == 9:
+            # Newer experiments where we include the full proposal ID.
+            ret[expname] = expname[3:7].upper()
+        elif len(expname) == 8:
+            # Older experiments where we used to drop the L
+            ret[expname] = 'L' + expname[3:6].upper()
+        else:
+            # Possibly internal commissioning experiments which do not have a proposal id
+            ret[expname] = expname
+
+    return JSONEncoder().encode({"success": True, "value": ret})
+
 
 @explgbk_blueprint.route("/lgbk/ws/search_experiment_info", methods=["GET"])
 @context.security.authentication_required
