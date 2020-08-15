@@ -237,22 +237,27 @@ def svc_get_experiments_to_proposal():
     To fix issues where this mapping is incorrect, add a PNR experiment parameter to the experiment which explicitly lists the proposal ID.
     While this mapping is usually 1-1, sometimes, because of migration of experiments, there can be an occasional many-to-one mapping.
     That is, more than one experiment can map to the same proposal. However, for an experiment, there is only one proposal id.
+    In addition, other attributes of an experiment that could possibly be computed from the experiment name but occasionally can't are also returned.
+    The intent is for various services to use this call instead of using substring operations etc.
+    For now, we return the proposal as proposal_id, instrument as instrument.
     """
     experiment_proposals = get_experiments_proposal_mappings()
     ret = {}
     for ep in experiment_proposals:
         expname = ep["name"]
+        einfo = {"name": expname, "instrument": ep.get("instrument", "N/A")}
         if ep.get("params", {}).get("PNR", None):
-            ret[expname] = ep["params"]["PNR"]
+            einfo["proposal_id"] = ep["params"]["PNR"]
         elif len(expname) == 9:
             # Newer experiments where we include the full proposal ID.
-            ret[expname] = expname[3:7].upper()
+            einfo["proposal_id"] = expname[3:7].upper()
         elif len(expname) == 8:
             # Older experiments where we used to drop the L
-            ret[expname] = 'L' + expname[3:6].upper()
+            einfo["proposal_id"] = 'L' + expname[3:6].upper()
         else:
             # Possibly internal commissioning experiments which do not have a proposal id
-            ret[expname] = expname
+            einfo["proposal_id"] = expname
+        ret[expname] = einfo
 
     return JSONEncoder().encode({"success": True, "value": ret})
 

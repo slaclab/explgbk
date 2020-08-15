@@ -209,7 +209,7 @@ def get_experiments_proposal_mappings():
     """
     Get all the experiments with their PNR's if present.
     """
-    return list(logbookclient['explgbk_cache']["experiments"].find({}, {"name": 1, "params.PNR": 1}))
+    return list(logbookclient['explgbk_cache']["experiments"].find({}, {"name": 1, "params.PNR": 1, "instrument": 1}))
 
 def __load_experiment_names():
     """ We cache the list of experimemt names to speedup authz/other operations.
