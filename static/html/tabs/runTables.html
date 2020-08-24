@@ -381,12 +381,10 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
     });
     $("#rtbl_tab").data("make_system_rtbl", function(e) {
         var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name");
-        $.ajax("../../static/html/ms/gen_clone.html")
+        $.ajax("../../static/html/ms/make_system_runtable.html")
         .done(function(tmpl){
             Mustache.parse(tmpl);
-            var t_tmpl = `Replace system run table with {{ existing_object_name }}`,
-                title = Mustache.render(t_tmpl, {existing_object_name: clkRTblName}),
-                rendered = $(Mustache.render(tmpl, {title: title, txtlbl: 'System run table name:', btnlbl: "Replace"}));
+            var rendered = $(Mustache.render(tmpl, { run_table_name: clkRTblName, instrument: instrument_name }));
             rendered.find("#obj_clone_btn").on("click", function(e){
                 console.log("Replacing system run table");
                 e.preventDefault();
@@ -406,7 +404,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                     }
                 });
                 if (v_failed) { e.preventDefault(); return; }
-                $.getJSON({url: "ws/replace_system_run_table_def"+ "?existing_run_table_name=" + encodeURIComponent(clkRTblName) + "&system_run_table_name=" + encodeURIComponent($.trim(formObj.find(".new_object_name").val())), method: "POST"})
+                $.getJSON({url: "ws/replace_system_run_table_def", data: { existing_run_table_name: clkRTblName, system_run_table_name: $.trim(formObj.find(".new_object_name").val()), is_instrument: formObj.find(".instrument_only").is(":checked") } , method: "POST"})
                 .done(function(data, textStatus, jqXHR) {
                     if(data.success) {
                         console.log("Successfully replaced system run table with " + clkRTblName);

@@ -75,6 +75,9 @@ body.busy {
 label {
   color: #6685F4;
 }
+.obj_name {
+  color: #6685F4;
+}
 #myNavRow {
   background-color: #6685F4;
   margin-bottom: 0;

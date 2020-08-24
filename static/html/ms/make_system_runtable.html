@@ -1,0 +1,53 @@
+<div class="modal edit_modal fade" data-backdrop="static" role="dialog">
+  <div class="modal-dialog" role="document">
+   <div class="modal-content">
+       <div class="modal-header">
+           <h4 class="modal-title w-100">Make {{run_table_name}} a system run table
+               <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+           </h4>
+       </div>
+     <div class="modal-body">
+       <div>Move the <span class="obj_name">{{run_table_name}}</span> run table to the system run tables.
+         System run tables are visible to all experiments (or experiments on the {{instrument}} instrument);
+         this move will replace any system run table with the same name.
+         This run table, <span class="obj_name">{{run_table_name}}</span>, will be deleted from this experiment.
+         While it's admissible to have global and instrument specific tables with the same name, this can be confusing to end users. So, overload run table names with care.
+       </div>
+     <form class="register_form mt-2">
+      <div class="form-group px-2">
+        <div class="row">
+          <label class="col">System run table name:</label>
+          <input type="text" class="col-7 form-control new_object_name">
+        </div>
+        <div class="row pt-4">
+         <label class="col-10">Restrict this run table to experiments on the {{instrument}} instrument</label>
+         <input type="checkbox" class="col-1 instrument_only"/>
+       </div>
+      </div>
+      <div class="modal-footer">
+          <button id="obj_clone_btn" class="btn btn-default panel_btn">Replace</button>
+      </div>
+     </form>
+     </div>
+ </div>
+</div>
+</div>
+
+
+<div class="modal validation_modal" role="dialog">
+ <div class="modal-dialog">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h4 class="modal-title w-100">Validation Error
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </h4>
+      </div>
+   <div class="modal-body alert alert-danger" role="alert">
+     <p class="validation_message"></p>
+   </div>
+   <div class="modal-footer">
+     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+   </div>
+  </div>
+ </div>
+</div>

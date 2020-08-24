@@ -1072,7 +1072,7 @@ def get_experiment_run_document(experiment_name, rnum):
 
 
 
-def get_all_run_tables(experiment_name):
+def get_all_run_tables(experiment_name, instrument):
     '''
     Get specifications for both the default and user defined run tables.
     The default run tables are based on these items.
@@ -1087,7 +1087,8 @@ def get_all_run_tables(experiment_name):
         x["is_system_run_table"] = True
         x["is_editable"] = False
         return x
-    system_run_tables = [ mark_sys(r) for r in sitedb["run_tables"].find()]
+    system_run_tables = [ mark_sys(r) for r in sitedb["run_tables"].find({"$or": [ {"instrument": instrument}, {"instrument": { "$exists": False}}]})]
+
     allRunTables.extend(system_run_tables)
     summtables = {}
     pdescs = [ x for x in expdb['run_param_descriptions'].find( { "param_name": re.compile(r'.*\/.*') } ) ]
@@ -1125,14 +1126,14 @@ def get_all_run_tables(experiment_name):
     allRunTables = sorted(allRunTables, key=itemgetter('sort_index', 'name'))
     return allRunTables
 
-def get_runtable_data(experiment_name, tableName, sampleName):
+def get_runtable_data(experiment_name, instrument, tableName, sampleName):
     '''
     Get the data from the run tables for the given table.
     In addition to the basic run data, we add the sources for the given run table.
     This is mostly a matter of constructing the appropriate mongo filters.
     If sampleName is specified, we restrict the returned data to runs associated with the sample. Otherwise, we return all runs.
     '''
-    tableDef = next(x for x in get_all_run_tables(experiment_name) if x['name'] == tableName)
+    tableDef = next(x for x in get_all_run_tables(experiment_name, instrument) if x['name'] == tableName)
     sources = { "num": 1, "begin_time": 1, "end_time": 1 }
     sources.update({ x['source'] : 1 for x in tableDef['coldefs']})
     if tableDef.get("table_type", None) == "generatedtable":
@@ -1279,12 +1280,19 @@ def delete_run_table(experiment_name, table_name):
     expdb["run_tables"].delete_one({"name": table_name})
     return (True, "")
 
-def delete_system_run_table(experiment_name, table_name):
+def delete_system_run_table(experiment_name, instrument, table_name):
     '''
     Delete the specified system run table.
+    We can't really tell if a particular name is a instrument specific run table or a global one just by the name alone.
+    So, we first check to see if there is a instrument specific one; if so, we delete that.
+    If not, we delete the global one.
     '''
     sitedb = logbookclient["site"]
-    sitedb["run_tables"].delete_one({"name": table_name})
+    ins_rt_del = sitedb["run_tables"].delete_one({"name": table_name, "instrument": instrument})
+    if ins_rt_del.deleted_count <= 0:
+        logger.debug("Could not find an instrument specific run table %s", table_name)
+        sitedb["run_tables"].delete_one({"name": table_name})
+
     return (True, "")
 
 def clone_run_table_definition(experiment_name, existing_run_table_name, new_run_table_name):
@@ -1308,7 +1316,7 @@ def clone_run_table_definition(experiment_name, existing_run_table_name, new_run
     expdb["run_tables"].insert_one(new_run_table)
     return (True, "", expdb["run_tables"].find_one({"name": new_run_table_name}))
 
-def replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name):
+def replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name, instrument=None):
     """
     Replace a system run table (defined in the site database) with a run table from this experiment.
     This is a means to edit system run tables using the info available from this experiment.
@@ -1321,7 +1329,12 @@ def replace_system_run_table_definition(experiment_name, existing_run_table_name
     new_run_table = existing_run_table
     del new_run_table["_id"]
     new_run_table["name"] = system_run_table_name
-    sitedb["run_tables"].replace_one({"name": system_run_table_name}, new_run_table, upsert=True)
+    if instrument:
+        new_run_table["instrument"] = instrument
+        sitedb["run_tables"].replace_one({"name": system_run_table_name, "instrument": instrument}, new_run_table, upsert=True)
+    else:
+        sitedb["run_tables"].replace_one({"name": system_run_table_name}, new_run_table, upsert=True)
+
     expdb["run_tables"].delete_one({"name": existing_run_table_name})
     return (True, "", sitedb["run_tables"].find_one({"name": system_run_table_name}))
 

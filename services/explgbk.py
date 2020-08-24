@@ -1322,7 +1322,7 @@ def svc_get_shifts(experiment_name):
 @experiment_exists
 @context.security.authorization_required("read")
 def svc_get_runtables(experiment_name):
-    return JSONEncoder().encode({"success": True, "value": get_all_run_tables(experiment_name)})
+    return JSONEncoder().encode({"success": True, "value": get_all_run_tables(experiment_name, g.instrument)})
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_data", methods=["GET"])
@@ -1332,7 +1332,7 @@ def svc_get_runtables(experiment_name):
 def svc_get_runtable_data(experiment_name):
     tableName = request.args.get("tableName")
     sampleName = request.args.get("sampleName", None)
-    return JSONEncoder().encode({"success": True, "value": list(map(replaceInfNan, get_runtable_data(experiment_name, tableName, sampleName=sampleName)))})
+    return JSONEncoder().encode({"success": True, "value": list(map(replaceInfNan, get_runtable_data(experiment_name, g.instrument, tableName, sampleName=sampleName)))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_sources", methods=["GET"])
 @context.security.authentication_required
@@ -1394,11 +1394,15 @@ def svc_clone_run_table_def(experiment_name):
 @experiment_exists
 @context.security.authorization_required("post")
 def svc_replace_system_run_table_def(experiment_name):
-    existing_run_table_name = request.args.get("existing_run_table_name", None)
-    system_run_table_name = request.args.get("system_run_table_name", None)
+    existing_run_table_name = request.form.get("existing_run_table_name", None)
+    system_run_table_name = request.form.get("system_run_table_name", None)
     if not existing_run_table_name or not system_run_table_name:
         return logAndAbort("Please specify the a table to use as a replacement along with the system run table name")
-    (status, errormsg, val) = replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name)
+
+    is_instrument = json.loads(request.form.get("is_instrument", "false").lower())
+    logger.debug("Making %s a system run table called %s. Is instrument %s", existing_run_table_name, system_run_table_name, is_instrument)
+
+    (status, errormsg, val) = replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name, instrument=g.instrument if is_instrument else None )
     return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_run_table", methods=["DELETE"])
@@ -1413,7 +1417,7 @@ def svc_delete_run_table(experiment_name):
     if is_system_run_table:
         logger.debug("Deleting system run table")
         if context.security.check_privilege_for_experiment("ops_page", None, None):
-            status, errormsg = delete_system_run_table(experiment_name, table_name)
+            status, errormsg = delete_system_run_table(experiment_name, g.instrument, table_name)
             return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": None})
         else:
             return {"success": False, "errormsg": "Not enough permissions to perform this operation", "value": None}
@@ -1435,7 +1439,7 @@ def svc_runtable_export_as_csv(experiment_name):
     if not tableName:
         return logAndAbort("Please specify the table name to export.")
     sampleName = request.args.get("sampleName", None)
-    tbldefs = [x for x in filter(lambda x : x["name"] == tableName, get_all_run_tables(experiment_name))]
+    tbldefs = [x for x in filter(lambda x : x["name"] == tableName, get_all_run_tables(experiment_name, g.instrument))]
     if len(tbldefs) != 1:
         return logAndAbort("Cannot find the definition for table " + tableName)
     coltups = [ ("Run Number", "num") ] # List of tuples of label and attr name
@@ -1456,7 +1460,7 @@ def svc_runtable_export_as_csv(experiment_name):
         if not obj:
             return deflt
         return __tocsv__(obj)
-    for dt in list(map(replaceInfNan, get_runtable_data(experiment_name, tableName, sampleName=sampleName))):
+    for dt in list(map(replaceInfNan, get_runtable_data(experiment_name, g.instrument, tableName, sampleName=sampleName))):
         si.write(",".join([ __ldget__(dt, ct[1], "") for ct in coltups]) + "\n")
     resp = make_response(si.getvalue())
     resp.headers["Content-Disposition"] = "attachment; filename="+tableName+".csv"
