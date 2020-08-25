@@ -52,6 +52,11 @@ body.busy {
   color: white;
   background: #6685F4;
 }
+#lgbk_body span.param_edit {
+  color: #6685F4;
+  background: white;
+  font-size: 1.25em;
+}
 #lgbk_body .zoom_meeting tr th {
   background: inherit;
   color: #6685F4;

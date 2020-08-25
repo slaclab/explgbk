@@ -12,6 +12,9 @@
             <div class="row"><span class="label col-3">PI Email:</span><span class="col-9">{{ info.contact_email }}</span></div>
             <div class="row"><span class="label col-3" title="When the experiment was created, this account was given privileges to add/remove collaborators from the experiment.">Leader Account:</span><span class="col-9">{{info.leader_account}}</span></div>
             <div class="row"><span class="label col-3">Description:</span><span class="col-9">{{ info.description }}</span></div>
+            <div class="row" title="Slack channels in the LCLSUsers workspace">
+              <span class="label col-3">Slack channels:</span><span class="col-9">{{#info.params.slack_channels}}{{.}}{{/info.params.slack_channels}}{{^info.params.slack_channels}}N/A{{/info.params.slack_channels}}<span class="param_edit pl-2" data-param-name="params.slack_channels" data-param-title="Edit Slack channels" data-param-message="Enter a space separated list of Slack channels names in the LCLSUsers workspace"><i class="fab fa-slack"></i></span></span>
+            </div>
             {{#info.params.PNR}}<div class="row"><span class="label col-3">URAWI Proposal:</span><span class="col-9">{{.}}</span></div>{{/info.params.PNR}}
             {{#info.params.DATA_PATH}}<div class="row"><span class="label col-3">Initial mount:</span><span class="col-9">{{.}}</span></div>{{/info.params.DATA_PATH}}
         </div>
@@ -32,6 +35,31 @@
 
 <script type="text/javascript">
 $("#info_tab").on("info_loaded", function(ev, info){
+    $("#info_tab").find(".param_edit").on("click", function(){
+      let param_name = $(this).attr("data-param-name"), param_value = _.get(info, param_name), param_title = $(this).attr("data-param-title"), param_msg = $(this).attr("data-param-message");
+      $.ajax ("../../static/html/ms/gen_oneinput.html")
+      .done(function(d0){
+        console.log(param_msg);
+        let rendered = $(Mustache.render(d0, { title: param_title, message: param_msg, btnlbl: "Submit", curvalue: param_value }));
+        rendered.find(".gen_input_submit").on("click", function(){
+          let update_param_value = rendered.find(".gen_input").val(), updated_params = _.set({}, _.replace(param_name, "params.", ""), update_param_value);
+          $.post({url: "ws/add_update_experiment_params", data: JSON.stringify(updated_params), contentType: "application/json; charset=utf-8", dataType: "json"})
+          .done(function(data, textStatus, jqXHR) {
+            if(data.success) {
+                $("#glbl_modals_go_here").find(".modal").modal("hide");
+                window.location.reload(true);
+            } else {
+              error_message("Server side exception updating experiment parameter " + data.errormsg);
+            }
+          })
+          .fail( function(jqXHR, textStatus, errorThrown) { error_message("Server side HTTP updating experiment parameter " + textStatus); })
+        })
+        $("#glbl_modals_go_here").empty().append(rendered);
+        $("#glbl_modals_go_here").find(".modal").on("hidden.bs.modal", function(){ $("#glbl_modals_go_here").empty(); });
+        $("#glbl_modals_go_here").find(".modal").modal("show");
+      })
+    })
+
     if(_.has(info, "params.PNR")) {
         $("#info_tab").find(".ques_embed").prepend($("<h1 class='pt-2'>Questionnaire</h1>"));
         $.getJSON("../../../questionnaire_slac/ws/questionnaire/urawidata/" + _.get(info, "params.PNR"))
@@ -56,6 +84,7 @@ $("#info_tab").on("info_loaded", function(ev, info){
         $("#info_tab").find(".exp_details").first().append(Mustache.render(poctmpl, info));
     }
 });
+
 </script>
 
 </div>
