@@ -51,7 +51,8 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run, \
-    add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments
+    add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments, \
+    get_experiment_files_for_run_for_live_mode_at_location
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex, \
@@ -1257,6 +1258,28 @@ def svc_get_files_for_run_for_live_mode(experiment_name, run_num):
     except ValueError:
         rnum = run_num_str # Cryo uses strings for run numbers.
     return JSONEncoder().encode({"success": True, "value": get_experiment_files_for_run_for_live_mode(experiment_name, rnum)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/files_for_live_mode_at_location", methods=["GET"])
+def svc_get_files_for_run_for_live_mode_at_location(experiment_name, run_num):
+    """
+    Similar to files_for_live_mode.
+    In addition to the list of files, we accept a location and add a boolean as to whether we think the file is located there.
+    Also include some info on when the run closed etc.
+    The relies on the integration with the data mover/file migration messages being processed correctly and updated external to the logbook
+    """
+    try:
+        rnum = int(run_num)
+    except ValueError:
+        rnum = run_num_str # Cryo uses strings for run numbers.
+    location = request.args.get("location", None)
+    if not location:
+        return logAndAbort("Please pass in a valid data management location name using the location parameter")
+
+    run_doc = get_run_doc_for_run_num(experiment_name, rnum)
+    if not run_doc:
+        return logAndAbort("Cannot find run number %s for experiment %s" % (rnum, experiment_name))
+
+    return JSONEncoder().encode({"success": True, "value": get_experiment_files_for_run_for_live_mode_at_location(experiment_name, rnum, location)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs", methods=["GET"])
 @context.security.authentication_required

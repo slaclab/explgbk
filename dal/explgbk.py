@@ -21,7 +21,7 @@ from bson import ObjectId
 
 from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, \
     MAX_ATTACHMENT_SIZE, URAWI_URL, LOGBOOK_SITE
-from dal.run_control import get_current_run, start_run, end_run, is_run_closed
+from dal.run_control import get_current_run, start_run, end_run, is_run_closed, get_run_doc_for_run_num
 from dal.imagestores import parseImageStoreURL
 from dal.utils import escape_chars_for_mongo, reverse_escape_chars_for_mongo
 
@@ -1044,6 +1044,26 @@ def get_experiment_files_for_run_for_live_mode(experiment_name, run_num):
     expdb = logbookclient[experiment_name]
     ret = [file["path"] for file in expdb['file_catalog'].find({"run_num": run_num, "path": { "$regex": re.compile(".*/xtc/[^/]*[.](xtc|xtc2)$") }}, {"_id": -0, "path": 1}).sort([("path", 1)])]
     return ret
+
+def get_experiment_files_for_run_for_live_mode_at_location(experiment_name, run_num, location):
+    '''
+    Return some basic information on whether the run is complete and files are available at a location.
+    '''
+    expdb = logbookclient[experiment_name]
+    run_doc = get_run_doc_for_run_num(experiment_name, run_num)
+    ret = {
+        "begin_time": run_doc["begin_time"],
+        "end_time": run_doc.get("end_time", None),
+        "is_closed": is_run_closed(experiment_name, run_num),
+        "files": []
+    }
+
+    files = expdb['file_catalog'].find({"run_num": run_num, "path": { "$regex": re.compile(".*/xtc/[^/]*[.](xtc|xtc2)$") }}, {"_id": -0, "path": 1}).sort([("path", 1)])
+    for file in files:
+        ret["files"].append({"path": file["path"], "is_present": "asof" in file.get("locations", {}).get(location, {}).keys()})
+
+    return ret
+
 
 def get_experiment_runs(experiment_name, include_run_params=False, sample_name=None):
     '''
