@@ -134,10 +134,13 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
         } )
 
     if create_auto_roles:
-        expdb["roles"].insert_many([
-            {"app" : "LogBook", "name": "Manager", "players": [ "uid:" + info["leader_account"]] },
-            {"app" : "LogBook", "name": "Editor", "players": [ "uid:" + info["leader_account"]] }
-            ])
+        leaderacc_roles = [ {"app" : "LogBook", "name": "Editor", "players": [ "uid:" + info["leader_account"]] } ]
+        if LOGBOOK_SITE in ["LCLS"]:
+            logger.debug("LCLS does not want to give PI's the Manager role; so skipping for experiment %s", experiment_name)
+        else:
+            leaderacc_roles.append({"app" : "LogBook", "name": "Manager", "players": [ "uid:" + info["leader_account"]] })
+
+        expdb["roles"].insert_many(leaderacc_roles)
         if "posix_group" in info and len(info["posix_group"]) > 1:
             expdb["roles"].insert_one({"app" : "LogBook", "name": "Writer", "players": [ info["posix_group"]] })
         if security.get_current_user_id() != info["leader_account"] and not security.check_privilege_for_experiment("ops_page", None, None):
