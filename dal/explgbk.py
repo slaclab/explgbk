@@ -1062,6 +1062,7 @@ def get_experiment_files_for_run_for_live_mode_at_location(experiment_name, run_
     for file in files:
         ret["files"].append({"path": file["path"], "is_present": "asof" in file.get("locations", {}).get(location, {}).keys()})
 
+    ret["all_present"] = ret["is_closed"] and all(map(lambda x : x["is_present"], ret["files"]))
     return ret
 
 
