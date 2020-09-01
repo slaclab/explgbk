@@ -1,0 +1,3 @@
+// The activeexperiment_for_instrument_station seems to be taking a lot of time because of an incorrect index.
+// This index should hopefully improve the performace.
+db.getSiblingDB("site").experiment_switch.createIndex({instrument: 1, station: 1, switch_time: -1})
