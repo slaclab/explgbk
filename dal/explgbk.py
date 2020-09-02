@@ -406,9 +406,10 @@ def get_currently_active_experiments():
     return ret
 
 def get_active_experiment_name_for_instrument_station(instrument, station):
-    for active_experiment in get_currently_active_experiments():
+    sitedb = logbookclient["site"]
+    for active_experiment in sitedb["experiment_switch"].find({ "instrument": instrument, "station": station }).sort([( "switch_time", -1 )]).limit(1):
         if 'instrument' in active_experiment and active_experiment['instrument'] == instrument and active_experiment['station'] == int(station) and not active_experiment.get('is_standby', False):
-            return active_experiment['name']
+            return get_experiment_info(active_experiment['experiment_name'])
     return None
 
 def switch_experiment(instrument, station, experiment_name, userid):
@@ -417,7 +418,7 @@ def switch_experiment(instrument, station, experiment_name, userid):
     This mostly consists inserting an entry into the experiment_switch database.
     Also switch in/switch out the operator account for the instrument.
     """
-    current_active_experiment = get_active_experiment_name_for_instrument_station(instrument, station)
+    current_active_experiment = get_active_experiment_name_for_instrument_station(instrument, station).get("name", None)
     sitedb = logbookclient["site"]
     sitedb.experiment_switch.insert_one({
         "experiment_name" : experiment_name,

@@ -52,7 +52,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run, \
     add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments, \
-    get_experiment_files_for_run_for_live_mode_at_location
+    get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex, \
@@ -331,7 +331,6 @@ def svc_instrument_station_list():
     """
     return JSONEncoder().encode({'success': True, 'value': get_instrument_station_list()})
 
-
 @explgbk_blueprint.route("/lgbk/ws/activeexperiments", methods=["GET"])
 @context.security.authentication_required
 def svc_get_active_experiments():
@@ -351,9 +350,9 @@ def svc_get_active_experiment_for_instrument_station():
     if not instrument_name:
         return logAndAbort("Please pass in the instrument name, for example, XPP")
     station_num = int(request.args.get("station", "0"))
-    active_experiment = [x for x in filter(lambda x : x.get("instrument", None) == instrument_name and x.get("station", None) == station_num, get_currently_active_experiments())]
-    if len(active_experiment) == 1:
-        return JSONEncoder().encode({'success': True, 'value': active_experiment[0]})
+    active_experiment = get_active_experiment_name_for_instrument_station(instrument_name, station_num)
+    if active_experiment:
+        return JSONEncoder().encode({'success': True, 'value': active_experiment})
     else:
         return logAndAbort("Cannot find a valid active experiment for %s/%s, found %s" % (instrument_name, station_num, active_experiment))
 
