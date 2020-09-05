@@ -1059,7 +1059,7 @@ def get_experiment_files_for_run_for_live_mode_at_location(experiment_name, run_
         "files": []
     }
 
-    files = expdb['file_catalog'].find({"run_num": run_num, "path": { "$regex": re.compile(".*/xtc/[^/]*[.](xtc|xtc2)$") }}, {"_id": -0, "path": 1}).sort([("path", 1)])
+    files = expdb['file_catalog'].find({"run_num": run_num, "path": { "$regex": re.compile(".*/xtc/[^/]*[.](xtc|xtc2)$") }}, {"_id": -0, "path": 1, "locations": 1}).sort([("path", 1)])
     for file in files:
         ret["files"].append({"path": file["path"], "is_present": "asof" in file.get("locations", {}).get(location, {}).keys()})
 
