@@ -418,7 +418,7 @@ def switch_experiment(instrument, station, experiment_name, userid):
     This mostly consists inserting an entry into the experiment_switch database.
     Also switch in/switch out the operator account for the instrument.
     """
-    current_active_experiment = get_active_experiment_name_for_instrument_station(instrument, station).get("name", None)
+    current_active_experiment = get_active_experiment_name_for_instrument_station(instrument, station)
     sitedb = logbookclient["site"]
     sitedb.experiment_switch.insert_one({
         "experiment_name" : experiment_name,
@@ -432,8 +432,9 @@ def switch_experiment(instrument, station, experiment_name, userid):
     if operator_uid:
         fq_role_name = "LogBook/Writer"
         if current_active_experiment:
-            logger.debug("Removing post privileges for uid:" + operator_uid + " from " + current_active_experiment)
-            remove_collaborator_from_role(current_active_experiment, "uid:" + operator_uid, fq_role_name)
+            active_exp_name = current_active_experiment.get("name", None)
+            logger.info("Removing post privileges for uid:" + operator_uid + " from " + active_exp_name)
+            remove_collaborator_from_role(active_exp_name, "uid:" + operator_uid, fq_role_name)
         logger.debug("Adding post privileges for uid:" + operator_uid + " to " + experiment_name)
         add_collaborator_to_role(experiment_name, "uid:" + operator_uid, fq_role_name)
     else:
