@@ -1292,6 +1292,28 @@ def svc_get_files_for_run_for_live_mode_at_location(experiment_name, run_num):
 
     return JSONEncoder().encode({"success": True, "value": get_experiment_files_for_run_for_live_mode_at_location(experiment_name, rnum, location)})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files_for_live_mode_at_location", methods=["GET"])
+def svc_get_files_for_live_mode_at_location(experiment_name):
+    """
+    Similar to files_for_live_mode_for_run except for all runs.
+    In addition to the list of files, we accept a location and add a boolean as to whether we think the file is located there.
+    Also include some info on when the run closed etc.
+    The relies on the integration with the data mover/file migration messages being processed correctly and updated external to the logbook
+    """
+    location = request.args.get("location", None)
+    if not location:
+        return logAndAbort("Please pass in a valid data management location name using the location parameter")
+
+    runs = get_experiment_runs(experiment_name, include_run_params=False)
+    runnums = [ x["num"] for x in  runs ]
+    ret = []
+    for runnum in runnums:
+        live_files = get_experiment_files_for_run_for_live_mode_at_location(experiment_name, runnum, location)
+        live_files["run_num"] = runnum
+        ret.append(live_files)
+    return JSONEncoder().encode({"success": True, "value": ret})
+
+
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/runs", methods=["GET"])
 @context.security.authentication_required
 @experiment_exists
