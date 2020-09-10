@@ -729,6 +729,8 @@ def svc_switch_experiment():
 
     userid = context.security.get_current_user_id()
 
+    previously_active_experiment = get_active_experiment_name_for_instrument_station(instrument, station)
+
     (status, errormsg) = switch_experiment(instrument, station, experiment_name, userid)
     if status:
         context.kafka_producer.send("experiment_switch", {"experiment_name" : experiment_name, "value": {
@@ -737,6 +739,12 @@ def svc_switch_experiment():
             "experiment_name": experiment_name,
             "userid": userid,
         }})
+
+        # We may add/remove operator_uid's etc Rebuild the caches for affected instruments.
+        context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Update", "value": get_experiment_info(experiment_name) })
+        if previously_active_experiment:
+            context.kafka_producer.send("experiments", {"experiment_name" : previously_active_experiment["name"], "CRUD": "Update", "value": get_experiment_info(previously_active_experiment["name"]) })
+
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -763,6 +771,7 @@ def svc_instrument_standby():
         return jsonify({'success': False, 'errormsg': "No station given."})
 
     userid = context.security.get_current_user_id()
+    previously_active_experiment = get_active_experiment_name_for_instrument_station(instrument, station)
 
     (status, errormsg) = instrument_standby(instrument, station, userid)
     if status:
@@ -771,6 +780,9 @@ def svc_instrument_standby():
             "startion": station,
             "userid": userid
         }})
+
+        if previously_active_experiment:
+            context.kafka_producer.send("experiments", {"experiment_name" : previously_active_experiment["name"], "CRUD": "Update", "value": get_experiment_info(previously_active_experiment["name"]) })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
