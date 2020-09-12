@@ -784,7 +784,7 @@ def delete_elog_entry(experiment_name, entry_id, userid):
             logbookclient[post_to_elog]["elog"].update_one({"src_id": current_entry["_id"], "src_expname": experiment_name}, {"$set": { "deleted_by": userid, "deleted_time": datetime.datetime.utcnow()}})
     return True
 
-def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, tags, files, title=None):
+def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, tags, files, title=None, run_num=None):
     """
     Change the content for the specified elog entry.
     We have to retain the history of the change; so we clone the existing entry but make the clone a child of the existing entry.
@@ -816,6 +816,11 @@ def modify_elog_entry(experiment_name, entry_id, userid, new_content, email_to, 
             modification.setdefault("$addToSet", {})["email_to"] = { "$each": email_to }
         if title:
             modification["$set"]["title"] = title
+        if not hist_entry.get("run_num", None) == run_num:
+            if run_num ==  None:
+                modification["$unset"] = { "run_num" : 1 }
+            else:
+                modification["$set"]["run_num"] = run_num
         result = expdb['elog'].update_one({"_id": current_entry["_id"]}, modification)
         if result.modified_count <= 0:
             return False

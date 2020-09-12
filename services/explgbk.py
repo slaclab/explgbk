@@ -1082,6 +1082,17 @@ def svc_modify_elog_entry(experiment_name):
     log_tags_str = request.form.get("log_tags", None)
     tags = log_tags_str.split() if log_tags_str else []
     title = request.form.get("log_title", None)
+    run_num_str = request.form.get("log_run_num", None)
+    if run_num_str:
+        try:
+            run_num = int(run_num_str)
+        except ValueError:
+            run_num = run_num_str
+        if not get_run_doc_for_run_num(experiment_name, run_num):
+            return logAndAbort("Please pass in the a valid run number")
+    else:
+        run_num = None
+
     if not entry_id or not log_content:
         return logAndAbort("Please pass in the _id of the elog entry for " + experiment_name + " and the new content")
 
@@ -1092,7 +1103,7 @@ def svc_modify_elog_entry(experiment_name):
             logger.info(filename)
             files.append((filename, upload))
 
-    status = modify_elog_entry(experiment_name, entry_id, context.security.get_current_user_id(), log_content, email_to, tags, files, title)
+    status = modify_elog_entry(experiment_name, entry_id, context.security.get_current_user_id(), log_content, email_to, tags, files, title, run_num=run_num)
     if status:
         modified_entry = get_specific_elog_entry(experiment_name, entry_id)
         context.kafka_producer.send("elog", {"experiment_name" : experiment_name, "CRUD": "Update", "value": modified_entry})
