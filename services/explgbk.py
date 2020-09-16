@@ -52,7 +52,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run, \
     add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments, \
-    get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station
+    get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station, get_experiment_files_for_live_mode_at_location
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex, \
@@ -1315,13 +1315,7 @@ def svc_get_files_for_live_mode_at_location(experiment_name):
     if not location:
         return logAndAbort("Please pass in a valid data management location name using the location parameter")
 
-    runs = get_experiment_runs(experiment_name, include_run_params=False)
-    runnums = [ x["num"] for x in  runs ]
-    ret = []
-    for runnum in runnums:
-        live_files = get_experiment_files_for_run_for_live_mode_at_location(experiment_name, runnum, location)
-        live_files["run_num"] = runnum
-        ret.append(live_files)
+    ret = get_experiment_files_for_live_mode_at_location(experiment_name, location)
     return JSONEncoder().encode({"success": True, "value": ret})
 
 

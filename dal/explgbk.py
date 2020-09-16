@@ -16,7 +16,7 @@ import requests
 import tempfile
 import subprocess
 
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING, DESCENDING, ReadPreference
 from bson import ObjectId
 
 from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, \
@@ -56,7 +56,7 @@ def get_experiment_info(experiment_name):
     :param experiment_name - for example - diadaq13
     :return: The info JSON document.
     """
-    expdb = logbookclient[experiment_name]
+    expdb = logbookclient.get_database(experiment_name, read_preference=read_preferences.SecondaryPreferred)
     info = expdb['info'].find_one()
     if not info:
         logger.error("Cannot find info for %s. Was the experiment deleted/renamed?", experiment_name)
@@ -1048,7 +1048,7 @@ def get_experiment_files_for_run_for_live_mode(experiment_name, run_num):
     Get a minimal set of information for psana live mode.
     Return only the path information for only the xtc/xtc2 files in the xtc folder ( and not it's children ).
     '''
-    expdb = logbookclient[experiment_name]
+    expdb = logbookclient.get_database(experiment_name, read_preference=ReadPreference.SECONDARY_PREFERRED)
     ret = [file["path"] for file in expdb['file_catalog'].find({"run_num": run_num, "path": { "$regex": re.compile(".*/xtc/[^/]*[.](xtc|xtc2)$") }}, {"_id": -0, "path": 1}).sort([("path", 1)])]
     return ret
 
@@ -1056,8 +1056,9 @@ def get_experiment_files_for_run_for_live_mode_at_location(experiment_name, run_
     '''
     Return some basic information on whether the run is complete and files are available at a location.
     '''
-    expdb = logbookclient[experiment_name]
-    run_doc = get_run_doc_for_run_num(experiment_name, run_num)
+    expdb = logbookclient.get_database(experiment_name, read_preference=ReadPreference.SECONDARY_PREFERRED)
+    run_doc = expdb.runs.find_one({"num": run_num})
+
     ret = {
         "begin_time": run_doc["begin_time"],
         "end_time": run_doc.get("end_time", None),
@@ -1072,6 +1073,24 @@ def get_experiment_files_for_run_for_live_mode_at_location(experiment_name, run_
     ret["all_present"] = ret["is_closed"] and all(map(lambda x : x["is_present"], ret["files"]))
     return ret
 
+def get_experiment_files_for_live_mode_at_location(experiment_name, location):
+    '''
+    A experiment-wide version of get_experiment_files_for_run_for_live_mode_at_location
+    '''
+    expdb = logbookclient.get_database(experiment_name, read_preference=ReadPreference.SECONDARY_PREFERRED)
+    aggr = expdb.runs.aggregate([
+      { "$lookup": { "from": "file_catalog", "localField": "num", "foreignField": "run_num", "as": "files"}},
+      { "$project": { "_id": 0, "num": 1, "begin_time" : 1, "end_time": 1, "files.path": 1, "files.locations." + location + ".asof": 1 } }
+    ])
+    ret = []
+    for x in aggr:
+        robj = { "num": x["num"], "begin_time": x["begin_time"], "end_time": x.get("end_time", None), "is_closed": "end_time" in x and x["end_time"], "files": [] }
+        for f in x["files"]:
+            robj["files"].append({"path": f["path"], "is_present": "asof" in f.get("locations", {}).get(location, {}).keys()})
+        robj["all_present"] = robj["is_closed"] and all(map(lambda x : x["is_present"], robj["files"]))
+        ret.append(robj)
+
+    return ret
 
 def get_experiment_runs(experiment_name, include_run_params=False, sample_name=None):
     '''
