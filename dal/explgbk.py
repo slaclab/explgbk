@@ -1085,7 +1085,7 @@ def get_experiment_files_for_live_mode_at_location(experiment_name, location):
     ])
     ret = []
     for x in aggr:
-        robj = { "num": x["num"], "begin_time": x["begin_time"], "end_time": x.get("end_time", None), "is_closed": "end_time" in x and x["end_time"], "files": [] }
+        robj = { "num": x["num"], "begin_time": x["begin_time"], "end_time": x.get("end_time", None), "is_closed": "end_time" in x and x["end_time"] != None, "files": [] }
         for f in x["files"]:
             robj["files"].append({"path": f["path"], "is_present": "asof" in f.get("locations", {}).get(location, {}).keys()})
         robj["all_present"] = robj["is_closed"] and all(map(lambda x : x["is_present"], robj["files"]))
