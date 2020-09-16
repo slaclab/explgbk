@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from pymongo import MongoClient
+from pymongo import MongoClient, ReadPreference
 
 from flask_authnz import FlaskAuthnz, MongoDBRoles, UserGroups
 
@@ -47,12 +47,12 @@ PREVIEW_PREFIX_SHARED_SECRET = os.environ.get('PREVIEW_PREFIX_SHARED_SECRET', "S
 
 
 # Set up the security manager
-mongorolereaderclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True, readPreference='secondaryPreferred')
+mongorolereaderclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True, read_preference=ReadPreference.SECONDARY_PREFERRED)
 usergroups = UserGroups()
 roleslookup = MongoDBRoles(mongorolereaderclient, usergroups)
 security = FlaskAuthnz(roleslookup, "LogBook")
 
-logbookclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True, readPreference='primaryPreferred')
+logbookclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True, read_preference=ReadPreference.PRIMARY_PREFERRED)
 
 
 def __getKafkaProducer():

@@ -11,7 +11,7 @@ import requests
 import threading
 import sched
 
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING, DESCENDING, ReadPreference
 from bson import ObjectId
 
 from kafka import KafkaConsumer
@@ -248,7 +248,7 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
         logbookclient['explgbk_cache']['experiment_stats'].delete_one({"_id": experiment_name})
         return
     logger.debug("Gathering the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
-    expdb = logbookclient[experiment_name]
+    expdb = logbookclient.get_database(experiment_name, read_preference=ReadPreference.SECONDARY_PREFERRED)
     collnames = list(expdb.list_collection_names())
     if 'info' in collnames:
         info = expdb["info"].find_one({}, {"latest_setup": 0})

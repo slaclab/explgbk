@@ -56,7 +56,7 @@ def get_experiment_info(experiment_name):
     :param experiment_name - for example - diadaq13
     :return: The info JSON document.
     """
-    expdb = logbookclient.get_database(experiment_name, read_preference=read_preferences.SecondaryPreferred)
+    expdb = logbookclient.get_database(experiment_name, read_preference=ReadPreference.SECONDARY_PREFERRED)
     info = expdb['info'].find_one()
     if not info:
         logger.error("Cannot find info for %s. Was the experiment deleted/renamed?", experiment_name)
@@ -1750,7 +1750,7 @@ def get_poc_feedback_changes(experiment_name):
     Gets a list of POC feedback items sorted by ascending modified date.
     To reconstruct the document, simply apply the changes to a dict in sequence.
     """
-    expdb = logbookclient[experiment_name]
+    expdb = logbookclient.get_database(experiment_name, read_preference=ReadPreference.SECONDARY_PREFERRED)
     return list(expdb["poc_feedback"].find({}).sort([("modified_at", 1)]))
 
 def get_poc_feedback_document(experiment_name):
