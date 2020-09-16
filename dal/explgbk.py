@@ -1080,7 +1080,8 @@ def get_experiment_files_for_live_mode_at_location(experiment_name, location):
     expdb = logbookclient.get_database(experiment_name, read_preference=ReadPreference.SECONDARY_PREFERRED)
     aggr = expdb.runs.aggregate([
       { "$lookup": { "from": "file_catalog", "localField": "num", "foreignField": "run_num", "as": "files"}},
-      { "$project": { "_id": 0, "num": 1, "begin_time" : 1, "end_time": 1, "files.path": 1, "files.locations." + location + ".asof": 1 } }
+      { "$project": { "_id": 0, "num": 1, "begin_time" : 1, "end_time": 1, "files.path": 1, "files.locations." + location + ".asof": 1 } },
+      { "$sort": {"num": -1} }
     ])
     ret = []
     for x in aggr:
