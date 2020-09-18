@@ -712,6 +712,7 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
     <span id="elog_attachments_only"><i class="fas fa-paperclip fa-lg" title="Toggle attachments only"></i></span>
     <span id="elog_hybrid_mode"><i class="fas fa-table fa-lg" title="Attachments as a table (aka hybrid mode)"></i></span>
     <span id="elog_deleted_entries"><i class="fas fa-strikethrough fa-lg" title="Toggle deleted entries"></i></span>
+    <span class="d-none" id="elog_daq_ami_issue"><i class="fas fa-bug fa-lg" title="Log a DAQ/AMI issue in the computing log; provides context and timing to PCDS personnel."></i></span>
     <span id="elog_email_subscribe"><i class="fas fa-inbox fa-lg" title="Automatically receive email notifications"></i></span>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
@@ -766,6 +767,13 @@ $("#elog_tab").on("lg.shown.bs.tab", function() {
             $("#elog_email_subscriptions").modal();
         })
     });
+    if(logbook_site == "LCLS") {
+      $("#elog_daq_ami_issue").removeClass("d-none");
+      $("#elog_daq_ami_issue").on("click", function() {
+        $.post("../Computing/ws/new_elog_entry", data={"log_text": "AMI/DAQ issue in experiment " + experiment_name + " user " + logged_in_user, "log_tags": experiment_name + " AMI_DAQ_Issue"})
+        .done(function(){success_message("Logged a AMI/DAQ issue", timeout=1000)})
+      })
+    }
     $("#elog_search_text").on("input", $("#elog_tab").data("search_text_input"));
 });
 
