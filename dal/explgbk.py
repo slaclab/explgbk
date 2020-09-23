@@ -407,6 +407,13 @@ def get_currently_active_experiments():
 
 def get_active_experiment_name_for_instrument_station(instrument, station):
     sitedb = logbookclient["site"]
+    origins = instrument
+    caseinsinslkp = { x["_id"].upper() : x["_id"] for x in sitedb["instruments"].find({}, {"_id": 1})}
+    instrument = caseinsinslkp.get(instrument.upper(), None)
+    if not instrument:
+        logger.error("Cannot find instrument %s", origins)
+        return None
+
     for active_experiment in sitedb["experiment_switch"].find({ "instrument": instrument, "station": station }).sort([( "switch_time", -1 )]).limit(1):
         if 'instrument' in active_experiment and active_experiment['instrument'] == instrument and active_experiment['station'] == int(station) and not active_experiment.get('is_standby', False):
             return get_experiment_info(active_experiment['experiment_name'])
