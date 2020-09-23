@@ -23,6 +23,16 @@
           <select class="form-control wf_def_location">{{#locations}}<option value="{{.}}">{{.}}</option>{{/locations}}</select>
         </div>
        </div>
+       <div class="row d-none run_tbl_trigger_params">
+         <div class="pl-2 pr-2 form-group col-6">
+           <label>Run table attribute name:</label>
+           <input type="text" class="form-control wf_run_param_name" value="{{ run_param_name }}" title="The attribute name of the run table parameter that will be used to trigger this job.">
+         </div>
+         <div class="pl-2 pr-2 form-group col-6">
+           <label>Run table attribute value:</label>
+           <input type="text" class="form-control wf_run_param_value" value="{{ run_param_value }}" title="When this attribute has this (string) value, trigger this job.">
+         </div>
+       </div>
        <div class="pl-2 pr-2 form-group row">
           <label>Executable:</label>
           <input type="text" class="form-control wf_def_executable" value="{{ executable }}">
