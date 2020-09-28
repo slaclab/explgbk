@@ -18,7 +18,7 @@ import re
 import requests
 import context
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
 import urllib
 import base64
@@ -1883,7 +1883,8 @@ def svc_register_file(experiment_name):
     def convert_timestamps(flinfo):
         for k in flinfo.keys():
             if k.endswith('_timestamp'):
-                flinfo[k] = datetime.strptime(flinfo[k], '%Y-%m-%dT%H:%M:%SZ');
+                flinfo[k] = datetime.strptime(flinfo[k], '%Y-%m-%dT%H:%M:%SZ')
+                flinfo[k] = flinfo[k] + timedelta(microseconds=1)
         if 'create_timestamp' not in flinfo:
             flinfo['create_timestamp'] = datetime.utcnow()
         if 'modify_timestamp' not in flinfo:
