@@ -1550,6 +1550,14 @@ def svc_start_run(experiment_name):
     # Currently; there are none (after discussions with the DAQ team)
     # But we may want to make sure the previous run is closed, the specified experiment is the active one etc.
 
+    run_doc = get_current_run(experiment_name)
+    if run_doc and not run_doc.get("end_time", None):
+        logger.warn("Previous run for experiment %s was not closed; closing it", experiment_name)
+        try:
+            run_doc = __end_run_and_publish_message__(experiment_name)
+        except:
+            logger.exception("Exception closing previous unclosed run for experiment %s", experiment_name)
+
     params = { escape_chars_for_mongo(k) : v for k, v in request.get_json().items() }  if request.is_json else None
 
     run_doc = start_run(experiment_name, run_type, user_specified_run_number, user_specified_start_time, params=params)
@@ -1563,17 +1571,7 @@ def svc_start_run(experiment_name):
 
     return JSONEncoder().encode({"success": True, "value": run_doc})
 
-
-@explgbk_blueprint.route("/run_control/<experiment_name>/ws/end_run", methods=["GET", "POST"])
-@context.security.authentication_required
-@experiment_exists_and_unlocked
-@context.security.authorization_required("post")
-def svc_end_run(experiment_name):
-    """
-    End the current run; ending the current run is mostly setting the end time.
-    """
-    user_specified_end_time_str = request.args.get("end_time", None)
-    user_specified_end_time = datetime.strptime(user_specified_end_time_str, '%Y-%m-%dT%H:%M:%S.%fZ') if user_specified_end_time_str else None
+def __end_run_and_publish_message__(experiment_name, user_specified_end_time=None):
     run_doc = end_run(experiment_name, user_specified_end_time)
 
     sample_obj = get_sample_for_run(experiment_name, run_doc['num'])
@@ -1585,7 +1583,21 @@ def svc_end_run(experiment_name):
         logger.exception("Exception computing duration for run %s for experiment %s", run_doc["num"], experiment_name)
     run_doc["file_catalog"] = get_experiment_files_for_run(experiment_name, run_doc['num'])
     context.kafka_producer.send("runs", {"experiment_name" : experiment_name, "CRUD": "Update", "value": run_doc})
+    return run_doc
 
+
+@explgbk_blueprint.route("/run_control/<experiment_name>/ws/end_run", methods=["GET", "POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_end_run(experiment_name):
+    """
+    End the current run; ending the current run is mostly setting the end time.
+    """
+    user_specified_end_time_str = request.args.get("end_time", None)
+    user_specified_end_time = datetime.strptime(user_specified_end_time_str, '%Y-%m-%dT%H:%M:%S.%fZ') if user_specified_end_time_str else None
+
+    run_doc = __end_run_and_publish_message__(experiment_name, user_specified_end_time)
     return JSONEncoder().encode({"success": True, "value": run_doc})
 
 
