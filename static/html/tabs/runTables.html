@@ -223,31 +223,49 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       $("#lgbk_body").addClass("busy");
       $.when($.getJSON("ws/run_table_data", rtbl_data_params), $.getJSON("ws/samples"))
       .done(function(d0, d1){
-        let runData = d0[0], sampleData = d1[0];
+        let runData = d0[0], sampleData = d1[0], hide_outliers=true;
         if(_.get(tblDef, "table_type") == "histogram" || _.get(tblDef, "table_type") == "scatter") {
-          var plotlyDivName = _.get(tblDef, "name") + '_plotlydiv';
+          var plotlyDivName = _.get(tblDef, "name") + '_plotlydiv', faicons = {};
           $("#rtbl_content").html("<div id='" + plotlyDivName + "'></div>");
-          var traces = [], layout = {};
+          var traces = [], layout = {}, gen_traces;
           if(_.get(tblDef, "table_type") == "histogram") {
               layout = { barmode: "overlay", title: { text: clkRTblName }, xaxis: { title: { text: _.head(_.tail(tblDef.coldefs))["label"], xref: "paper" }}};
-              _.each(_.tail(coldefs), function(coldef, idx) {
-                traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram", showlegend: true, name: coldef["label"]});
-                _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
-                let computedBinSize = ((_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount);
-                _.last(traces)['xbins']['size'] = (_.isFinite(computedBinSize) && _.has(tblDef, "bin_size")) ? _.get(tblDef, "bin_size") : computedBinSize;
-                console.log("Bin Size" + _.last(traces)['xbins']['size']);
-              });
+              gen_traces = function() {
+                traces = [];
+                _.each(_.tail(coldefs), function(coldef, idx) {
+                    traces.push({x: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "histogram", showlegend: true, name: coldef["label"]});
+                    _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
+                    let computedBinSize = ((_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount);
+                    _.last(traces)['xbins']['size'] = (_.isFinite(computedBinSize) && _.has(tblDef, "bin_size")) ? _.get(tblDef, "bin_size") : computedBinSize;
+                    console.log("Bin Size" + _.last(traces)['xbins']['size']);
+                  });
+                }
           } else if (_.get(tblDef, "table_type") == "scatter") {
               var dateformatfn = (_.endsWith(_.head(_.tail(coldefs))["source"], "_time")) ? function(d) { return moment(d).toDate() } : function(d) { return d };
               var xaxisdata = _.map(runData.value, function(rd){return dateformatfn(_.get(rd, _.head(_.tail(coldefs))["source"]))});
-              _.each(_.tail(_.tail(coldefs)), function(coldef, idx) {
-                traces.push({x: xaxisdata, y: _.map(runData.value, function(rd){return _.get(rd, coldef["source"])}), type: "scatter", mode: "markers", showlegend: true, name: coldef["label"]});
-              });
+              gen_traces = function() {
+                traces = [];
+                _.each(_.tail(_.tail(coldefs)), function(coldef, idx) {
+                  var dt = _.map(runData.value, function(rd){return _.get(rd, coldef["source"])});
+                  let sd = Plotly.d3.deviation(dt), mean = Plotly.d3.mean(dt), mult = 3.0;
+                  let isOutlier = function(v) { return (v >= mean + (mult * sd)) | (v <= mean - (mult * sd)); };
+                  if(hide_outliers) {dt = _.reject(dt, isOutlier);}
+                  traces.push({x: xaxisdata, y: dt, type: "scatter", mode: "markers", showlegend: true, name: coldef["label"]});
+                });
+              }
               layout = { title: { text: clkRTblName }, xaxis: { title: { text: _.head(_.tail(coldefs))["label"], xref: "paper" }}};
               if(coldefs.length == 3){ layout["yaxis"] = { title: { text: _.last(coldefs)["label"], yref: "paper" }} }
           }
-          $.ajax({ url: "../../js/plotly.js/dist/plotly.min.js", dataType: "script", cache: true })
-          .done(function(){ Plotly.newPlot(plotlyDivName, traces, layout, {displaylogo: false}); });
+          layout["height"] = $(window).height() - ( $("#myNavRow").height() + $(".tab_title_bar").height() + $(".nav-pills").height() + $("#lgbk_footer").height() + 40);
+          $.when($.ajax({ url: "../../js/plotly.js/dist/plotly.min.js", dataType: "script", cache: true }), $.getJSON({ url: "../../static/json/fapaths.json", cache: true }))
+          .done(function(d0, d1){
+            faicons=d1[0];
+            gen_traces();
+            let plotConfig = {displaylogo: false, modeBarButtonsToRemove: ['sendDataToCloud'], modeBarButtonsToAdd: [
+              { name: 'Hide show outliers', icon: faicons["solid/compact-disc"], click: function() { hide_outliers = !hide_outliers; gen_traces(); Plotly.react(plotlyDivName, traces, layout, plotConfig); }}
+            ]};
+            Plotly.newPlot(plotlyDivName, traces, layout, plotConfig);
+          });
           return;
         }
         if (_.get(tblDef, "table_type") == "groupbytable") {
