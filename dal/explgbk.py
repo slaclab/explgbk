@@ -1204,10 +1204,13 @@ def get_runtable_data(experiment_name, instrument, tableName, sampleName):
         sample_doc = get_sample_for_experiment_by_name(experiment_name, sampleName)
         query = { "sample": sample_doc["_id"] } if sample_doc else query
     rtdata = [x for x in logbookclient[experiment_name]['runs'].find(query, sources).sort([("num", -1)])] # Use sources as a filter to find
-    if 'duration' in sources.keys():
-        for rtd in rtdata:
-            if 'end_time' in rtd and rtd['end_time'] and 'begin_time' in rtd:
-                rtd['duration'] = (rtd['end_time'] - rtd['begin_time']).total_seconds()
+    for rtd in rtdata:
+        if 'duration' in sources.keys() and 'end_time' in rtd and rtd['end_time'] and 'begin_time' in rtd:
+            rtd['duration'] = (rtd['end_time'] - rtd['begin_time']).total_seconds()
+        if 'begin_time' in rtd and rtd['begin_time']:
+            rtd['begin_time_epoch'] = int(rtd['begin_time'].timestamp()*1000)
+        if 'end_time' in rtd and rtd['end_time']:
+            rtd['end_time_epoch'] = int(rtd['end_time'].timestamp()*1000)
     if 'sample' in sources.keys():
         samples = { x["_id"] : x for x in get_samples(experiment_name) }
         def __replace_with_sample_name(x):
