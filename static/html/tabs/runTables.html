@@ -272,7 +272,6 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
             let plotConfig = {displaylogo: false, modeBarButtonsToRemove: ['sendDataToCloud'], modeBarButtonsToAdd: [
               { name: 'Hide show outliers', icon: faicons["solid/compact-disc"], click: function() { hide_outliers = !hide_outliers; gen_traces(); Plotly.react(plotlyDivName, traces, layout, plotConfig); }}
             ]};
-            _.each(traces, )
             Plotly.newPlot(plotlyDivName, traces, layout, plotConfig);
           });
           return;
