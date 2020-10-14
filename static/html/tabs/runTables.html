@@ -246,9 +246,9 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                 }
           } else if (_.get(tblDef, "table_type") == "scatter") {
               var xaxissrc = _.head(_.tail(coldefs))["source"], isdatetime = (_.endsWith(xaxissrc, "_time"));
-              let dateformatfn = isdatetime ? function(d) { return new Date(d) } : function(d) { return d };
-              xaxissrc = isdatetime ? xaxissrc + "_epoch" : xaxissrc;
-              var xaxisdata = _.map(runData.value, function(rd){return dateformatfn(_.get(rd, xaxissrc))});
+              let xaxissrcepoch = isdatetime ? xaxissrc + "_epoch" : xaxissrc;
+              let dateformatfn = isdatetime ? function(d) { if(_.has(d, xaxissrcepoch)) {return new Date(_.get(d, xaxissrcepoch))} else {return new moment(_.get(d, xaxissrc)).toDate()}} : function(d) { return _.get(d, xaxissrc) };
+              var xaxisdata = _.map(runData.value, function(rd){return dateformatfn(rd)});
               gen_traces = function() {
                 traces = [];
                 _.each(_.tail(_.tail(coldefs)), function(coldef, idx) {
