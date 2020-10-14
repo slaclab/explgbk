@@ -342,8 +342,9 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
               $("#rtbl_content").find("table").data("spgntr").addObject(existing_uniq_obj);
           }
           return;
+      } else if(_.get(tblDef, "table_type", "table") == "table") {
+        $("#rtbl_content").find("table").data("spgntr").addObject(runData.value);
       }
-      $("#rtbl_content").find("table").data("spgntr").addObject(runData.value);
     });
 
     $("#rtbl_tab").data("new_rtbl_fn", function(e) { col_defs_dialog(); });
