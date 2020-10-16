@@ -55,14 +55,15 @@ security = FlaskAuthnz(roleslookup, "LogBook")
 logbookclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True, read_preference=ReadPreference.PRIMARY_PREFERRED)
 
 
+
 def __getKafkaProducer():
+    misc_params = {}
     if os.environ.get("SKIP_KAFKA_CONNECTION", False):
         return None
     else:
         if LOGBOOK_SITE=="CryoEM":
-            return KafkaProducer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")], value_serializer=lambda m: JSONEncoder().encode(m).encode('utf-8'), acks=0)
-        else:
-            return KafkaProducer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")], value_serializer=lambda m: JSONEncoder().encode(m).encode('utf-8'))
+            misc_params["acks"] = 0
+        return KafkaProducer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")], value_serializer=lambda m: JSONEncoder().encode(m).encode('utf-8'), **misc_params)
 
 kafka_producer = __getKafkaProducer()
 
