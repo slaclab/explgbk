@@ -2,6 +2,8 @@ import json
 import logging
 import os
 
+from queue import Queue
+
 from pymongo import MongoClient, ReadPreference
 
 from flask_authnz import FlaskAuthnz, MongoDBRoles, UserGroups
@@ -54,7 +56,14 @@ security = FlaskAuthnz(roleslookup, "LogBook")
 
 logbookclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True, read_preference=ReadPreference.PRIMARY_PREFERRED)
 
+local_kafka_events = Queue()
 
+class MyKafkaProducer(KafkaProducer):
+    def __init__(self, *args, **kwargs):
+        super(MyKafkaProducer, self).__init__(*args, **kwargs)
+    def send(self, topic, value, *args, **kwargs):
+        local_kafka_events.put({"topic": topic, "value": JSONEncoder().encode(value).encode('utf-8')})            
+        super(MyKafkaProducer, self).send(topic, value, *args, **kwargs)
 
 def __getKafkaProducer():
     misc_params = {}
@@ -63,7 +72,7 @@ def __getKafkaProducer():
     else:
         if LOGBOOK_SITE=="CryoEM":
             misc_params["acks"] = 0
-        return KafkaProducer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")], value_serializer=lambda m: JSONEncoder().encode(m).encode('utf-8'), **misc_params)
+        return MyKafkaProducer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")], value_serializer=lambda m: JSONEncoder().encode(m).encode('utf-8'), **misc_params)
 
 kafka_producer = __getKafkaProducer()
 

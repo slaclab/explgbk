@@ -17,7 +17,7 @@ from bson import ObjectId
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
-from context import logbookclient, instrument_scientists_run_table_defintions, usergroups, kafka_producer
+from context import logbookclient, instrument_scientists_run_table_defintions, usergroups, kafka_producer, local_kafka_events
 from dal.explgbk import get_experiments_for_instrument, get_poc_feedback_changes, get_poc_feedback_document
 
 __author__ = 'mshankar@slac.stanford.edu'
@@ -39,6 +39,7 @@ def init_app(app):
 
     scheduler = sched.scheduler()
     __establish_kafka_consumers()
+    __establish_local_kafka_consumers__()
 
     def __periodic(scheduler, interval, action, actionargs=()):
         # This is the function that runs periodically
@@ -216,7 +217,7 @@ def __load_experiment_names():
     This reloads the cached list of experiment names from the explgbk_cache
     """
     global all_experiment_names
-    all_experiment_names.update([x["name"] for x in logbookclient['explgbk_cache']['experiments'].find({}, {"name": 1, "_id":0})])
+    all_experiment_names = set([x["name"] for x in logbookclient['explgbk_cache']['experiments'].find({}, {"name": 1, "_id":0})])
 
 def __update_experiments_info():
     """
@@ -356,6 +357,34 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
     else:
         logger.debug("Skipping non-experiment database " + experiment_name)
 
+def __establish_local_kafka_consumers__():
+    """
+    This processes from the local queue
+    """
+    def processMessage(msg):
+        try:
+            logger.debug("Kafka/local Message %s", msg)
+            info = json.loads(msg["value"])
+            logger.debug("Kafka/local JSON %s", info)
+            message_type = msg["topic"]
+            if message_type == "explgbk_cache":
+                __load_experiment_names()
+            elif 'experiment_name' in info:
+                experiment_name = info['experiment_name']
+                crud = info.get("CRUD", "Update")
+                # No matter what the message type is, we reload the experiment info.
+                __update_single_experiment_info(experiment_name, crud=crud)
+            else:
+                logger.error("Kafka/local message without an experiment name")
+        except Exception as e:
+            logger.exception("Exception processing Kafka/local message.")
+    def worker():
+        while True:
+            msg = local_kafka_events.get()
+            processMessage(msg)
+            local_kafka_events.task_done()
+    local_msg_thread = threading.Thread(target=worker)
+    local_msg_thread.start()
 
 def __establish_kafka_consumers():
     """
@@ -363,23 +392,12 @@ def __establish_kafka_consumers():
     """
     def subscribe_kafka():
         consumer = KafkaConsumer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")])
-        consumer.subscribe(["runs", "experiments", "roles", "explgbk_cache"])
+        consumer.subscribe(["experiments", "explgbk_cache"])
 
         for msg in consumer:
             try:
-                logger.info("Message from Kafka %s", msg)
-                info = json.loads(msg.value)
-                logger.info("JSON from Kafka %s", info)
-                message_type = msg.topic
-                if message_type == "explgbk_cache":
-                    __load_experiment_names()
-                elif 'experiment_name' in info:
-                    experiment_name = info['experiment_name']
-                    crud = info.get("CRUD", "Update")
-                    # No matter what the message type is, we reload the experiment info.
-                    __update_single_experiment_info(experiment_name, crud=crud)
-                else:
-                    logger.error("Kafka message without an experiment name")
+                logger.info("Message from Kafka in topic %s", msg.topic)
+                __load_experiment_names()
             except Exception as e:
                 logger.exception("Exception processing Kafka message.")
 
