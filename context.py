@@ -62,7 +62,7 @@ class MyKafkaProducer(KafkaProducer):
     def __init__(self, *args, **kwargs):
         super(MyKafkaProducer, self).__init__(*args, **kwargs)
     def send(self, topic, value, *args, **kwargs):
-        local_kafka_events.put({"topic": topic, "value": JSONEncoder().encode(value).encode('utf-8')})            
+        local_kafka_events.put({"topic": topic, "value": JSONEncoder().encode(value).encode('utf-8')})
         super(MyKafkaProducer, self).send(topic, value, *args, **kwargs)
 
 def __getKafkaProducer():
@@ -72,7 +72,7 @@ def __getKafkaProducer():
     else:
         if LOGBOOK_SITE=="CryoEM":
             misc_params["acks"] = 0
-        return MyKafkaProducer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")], value_serializer=lambda m: JSONEncoder().encode(m).encode('utf-8'), **misc_params)
+        return MyKafkaProducer(bootstrap_servers=os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092").split(","), value_serializer=lambda m: JSONEncoder().encode(m).encode('utf-8'), **misc_params)
 
 kafka_producer = __getKafkaProducer()
 

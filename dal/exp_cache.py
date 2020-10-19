@@ -391,7 +391,7 @@ def __establish_kafka_consumers():
     Establish Kafka consumers that listen to new experiments and runs and updates the cache.
     """
     def subscribe_kafka():
-        consumer = KafkaConsumer(bootstrap_servers=[os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092")])
+        consumer = KafkaConsumer(bootstrap_servers=os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092").split(","))
         consumer.subscribe(["experiments", "explgbk_cache"])
 
         for msg in consumer:
