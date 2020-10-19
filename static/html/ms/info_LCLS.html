@@ -60,7 +60,7 @@ $("#info_tab").on("info_loaded", function(ev, info){
       })
     })
 
-    if(_.has(info, "params.PNR")) {
+    if(_.has(info, "params.PNR") && !_.isEqual(_.get(info, "params.PNR"), "N/A")) {
         $("#info_tab").find(".ques_embed").prepend($("<h1 class='pt-2'>Questionnaire</h1>"));
         $.getJSON("../../../questionnaire_slac/ws/questionnaire/urawidata/" + _.get(info, "params.PNR"))
         .done(function(ques_data){

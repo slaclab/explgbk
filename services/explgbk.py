@@ -2244,7 +2244,24 @@ def svc_get_poc_feedback_experiments():
     ret = []
     for exp in exps:
         x = { "exper_name": exp["name"], "instr_name": exp["instrument"] }
-        if exp.get("params", {}).get("PNR", None): x["proposalNo"] = exp["params"]["PNR"]
+        if exp.get("params", {}).get("PNR", None) and exp.get("params", {}).get("PNR") == "N/A":
+            logger.debug("Skipping internal experiment %s", exp["name"])
+            continue
+        if exp.get("params", {}).get("PNR", None):
+            x["proposalNo"] = exp["params"]["PNR"]
+        else:
+            if len(exp["name"]) == 9:
+                # Newer experiments where we include the full proposal ID.
+                x["proposalNo"] = exp["name"][3:7].upper()
+            elif len(exp["name"]) == 8:
+                # Older experiments where we used to drop the L
+                x["proposalNo"] = 'L' + exp["name"][3:6].upper()
+            else:
+                pass
+        if "proposalNo" not in x:
+            logger.debug("No point sending POC feedback if we cannot map to a URAWI proposal for  %s", exp["name"])
+            continue
+
         if exp.get("poc_feedback", {}).get("last_modified_by", None): x["last_report_uid"] = exp["poc_feedback"]["last_modified_by"]
         if exp.get("poc_feedback", {}).get("last_modified_at", None): x["last_report_time"] = exp["poc_feedback"]["last_modified_at"].astimezone(tz).strftime('%Y-%m-%d %H:%M:%S')
         if exp.get("poc_feedback", {}).get("last_modified_at", None): x["last_modified_at_utc"] = exp["poc_feedback"]["last_modified_at"]
