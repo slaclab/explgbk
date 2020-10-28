@@ -20,7 +20,7 @@ __author__ = 'mshankar@slac.stanford.edu'
 logger = logging.getLogger(__name__)
 
 
-def start_run(experiment_name, run_type, user_specified_run_number=None, user_specified_start_time=None, params=None):
+def start_run(experiment_name, run_type, user_specified_run_number=None, user_specified_start_time=None, user_specified_sample=None, params=None):
     '''
     Start a new run for the specified experiment
     If the user_specified_run_number is not specified; we use the next_runnum autoincrement counter.
@@ -45,9 +45,16 @@ def start_run(experiment_name, run_type, user_specified_run_number=None, user_sp
         "end_time" : None,
         "params" : {},
         "editable_params" : {}}
-    current_sample = expdb.current.find_one({"_id": "sample"})
-    if current_sample:
-        run_doc["sample"] = ObjectId(current_sample["sample"])
+    if user_specified_sample:
+        user_sample = expdb.samples.find_one({"name": user_specified_sample})
+        if user_sample:
+            run_doc["sample"] = user_sample["_id"]
+        else:
+            raise Exception("Could not find sample %s for experiment %s" % (user_specified_sample, experiment_name))
+    else:
+        current_sample = expdb.current.find_one({"_id": "sample"})
+        if current_sample:
+            run_doc["sample"] = ObjectId(current_sample["sample"])
     if params:
         run_doc["params"] = params
 

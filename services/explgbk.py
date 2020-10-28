@@ -1545,6 +1545,7 @@ def svc_start_run(experiment_name):
     user_specified_run_number = request.args.get("run_num", None)
     user_specified_start_time_str = request.args.get("start_time", None)
     user_specified_start_time = datetime.strptime(user_specified_start_time_str, '%Y-%m-%dT%H:%M:%S.%fZ') if user_specified_start_time_str else None
+    user_specified_sample = request.args.get("sample", None)
 
     # Here's where we can put validations on starting a new run.
     # Currently; there are none (after discussions with the DAQ team)
@@ -1560,7 +1561,7 @@ def svc_start_run(experiment_name):
 
     params = { escape_chars_for_mongo(k) : v for k, v in request.get_json().items() }  if request.is_json else None
 
-    run_doc = start_run(experiment_name, run_type, user_specified_run_number, user_specified_start_time, params=params)
+    run_doc = start_run(experiment_name, run_type, user_specified_run_number, user_specified_start_time, user_specified_sample, params=params)
 
     sample_obj = get_sample_for_run(experiment_name, run_doc['num'])
     if sample_obj:
