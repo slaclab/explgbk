@@ -119,8 +119,9 @@ var lgbk_create_edit_exp = function(expInfo) {
     rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
     rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
     rendered.find(".experiment_name").on("change", function(){
-      console.log("Checking to see if experiment " + $(this).val() + " is registered in URAWI");
-      $.getJSON(lookup_experiment_in_urawi, {"experiment_name": $(this).val()})
+      let urexpname = $(this).val();
+      console.log("Checking to see if experiment " + urexpname + " is registered in URAWI");
+      $.getJSON(lookup_experiment_in_urawi, {"experiment_name": urexpname})
       .done(function (expdata) {
         console.log(expdata);
         if(expdata.success) {
@@ -128,7 +129,7 @@ var lgbk_create_edit_exp = function(expInfo) {
           rendered.find(".pi_name").val(_.get(expdata.value, 'spokesPerson.firstName') + " " + _.get(expdata.value,'spokesPerson.lastName'));
           rendered.find(".pi_email").val(_.get(expdata.value, 'spokesPerson.email'));
           rendered.find(".leader_account").val(_.get(expdata.value, 'spokesPerson.account[0].unixName'));
-          rendered.find(".posix_group").val($(this).val());
+          rendered.find(".posix_group").val(urexpname);
           if (_.get(expdata.value, 'proposalInstrument') != "") { rendered.find(".instrument").val(_.get(expdata.value, 'proposalInstrument')) };
           if (_.get(expdata.value, "startDate") != "") { rendered.find('.start_time').datetimepicker('date', moment(_.get(expdata.value, "startDate"))) };
           if (_.get(expdata.value, "stopDate") != "") { rendered.find('.end_time').datetimepicker('date', moment(_.get(expdata.value, "stopDate"))) };
