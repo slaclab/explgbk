@@ -128,8 +128,10 @@ var lgbk_create_edit_exp = function(expInfo) {
           rendered.find(".pi_name").val(_.get(expdata.value, 'spokesPerson.firstName') + " " + _.get(expdata.value,'spokesPerson.lastName'));
           rendered.find(".pi_email").val(_.get(expdata.value, 'spokesPerson.email'));
           rendered.find(".leader_account").val(_.get(expdata.value, 'spokesPerson.account[0].unixName'));
-          if (_.get(expdata.value, "startDate") != "") { rendered.find('.start_time').datetimepicker('date').date(moment(_.get(expdata.value, "startDate"))) };
-          if (_.get(expdata.value, "stopDate") != "") { rendered.find('.end_time').datetimepicker('date').date(moment(_.get(expdata.value, "stopDate"))) };
+          rendered.find(".posix_group").val($(this).val());
+          if (_.get(expdata.value, 'proposalInstrument') != "") { rendered.find(".instrument").val(_.get(expdata.value, 'proposalInstrument')) };
+          if (_.get(expdata.value, "startDate") != "") { rendered.find('.start_time').datetimepicker('date', moment(_.get(expdata.value, "startDate"))) };
+          if (_.get(expdata.value, "stopDate") != "") { rendered.find('.end_time').datetimepicker('date', moment(_.get(expdata.value, "stopDate"))) };
         }
       });
     });
