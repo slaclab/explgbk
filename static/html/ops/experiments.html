@@ -226,6 +226,25 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     }
   });
 
+  $(document).on('experiments', function(event, experiment) {
+    console.log("Processing experiment message for " + experiment);
+    if(_.get(experiment, "CRUD", "") == "Create") {
+      $.when($.getJSON(experiment.value["name"] + "/ws/info"), $.getJSON({ url: instruments_url }))
+      .done(function(d0, d1){
+        let exp = d0[0].value, instruments = _.keyBy(d1[0].value, "_id");
+        exp["background"] = _.get(instruments, exp["instrument"] + ".color", "inherit");
+        exp["color"] = _.has(instruments, exp["instrument"] + ".color") ? "white" : "black";
+        $("#register_edit_exp_tab").data("experiments").push(exp);
+        add_exps_to_search_results();
+        if(!_.isNil(window.scrollToExperiment) && window.scrollToExperiment) {
+          var row = $('#exp_searchresults').find('tr[data-expid="' + experiment.value["name"] + '"]');
+          if(row.length > 0) { row[0].scrollIntoView(); }
+          window.scrollToExperiment = false;
+        }
+      })
+    }
+  });
+
   $("#exp_searchresults th[data-sort-attr]").on("click", function() {
       var curr_attr = $("#register_edit_exp_tab").data("cur_sort_attr");
       var sel_attr = $(this).attr("data-sort-attr");

@@ -108,6 +108,7 @@ var showTab = function (e) {
 
 $(document).ready(function() {
     _.each(privileges, function(v,k){if(v){$("#lgbk_body").find(".priv_"+k).removeClass("d-none");}})
+    WebSocketConnection.connect();
     $.getJSON('../static/json/sitespecific_ops_tabs_' + logbook_site + ".json")
     .done(function(tabs) {
         {% raw %}

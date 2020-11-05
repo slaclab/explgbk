@@ -1,5 +1,6 @@
 $(function() {
     $(document).ready(function() {
+      WebSocketConnection.connect();
     	var exper_template = `{{#value}}<tr>
     		    <td> <a target="_blank" href="{{_id}}/">{{ name }}</a> </td>
                 <td class="d-none exp_actions"></td>
@@ -24,14 +25,17 @@ $(function() {
     	Mustache.parse(instrument_tab_content_template);
     	Mustache.parse(year_pill_template);
 
+      var userdata = {}, experiments = {};
+
+
     	$.when($.getJSON (useridgroups_url), $.getJSON ({ url: experiments_url }))
         .done(function( d1, d2 ) {
-        	var userdata = d1[0], data = d2[0];
+        	userdata = d1[0].value, experiments = d2[0].value;
         	console.log("Done getting experiments");
             if(_.get(privileges, "read", false)) {
                 $("#activeexperimentsli").removeClass("d-none");$("#activeexptab").removeClass("d-none");
             }
-            _.each(_.sortBy(_.keys(data.value)).reverse(), function(instr) {
+            _.each(_.sortBy(_.keys(experiments)).reverse(), function(instr) {
               var escaped_instr = instr.replace(/[ \/]/g, '_');
               $("#activeexperimentsli").after(Mustache.render(instrument_tab_template, { instrument: instr, escaped_instr: escaped_instr }));
               $("#activeexptab").after(Mustache.render(instrument_tab_content_template, { instrument: instr, escaped_instr: escaped_instr }))
@@ -58,14 +62,14 @@ $(function() {
         		console.log("Showing experiments for instrument " + instr + " in tab " + tabtarget);
         		if ($(tabtarget + " .tabbable ul").find(".year_pill").length <= 0) {
         			console.log("Adding year pills for " + instr);
-        			_.each(_.reverse(_.sortBy(_.keys(data.value[instr]), function(x){ return _.includes([ "null" ], x) ? 0 : _.toNumber(x)})), function(year) {
+        			_.each(_.reverse(_.sortBy(_.keys(experiments[instr]), function(x){ return _.includes([ "null" ], x) ? 0 : _.toNumber(x)})), function(year) {
 	            		$(tabtarget + " .tabbable ul").append(Mustache.render(year_pill_template, { instrument: instr, year: (year == "null") ? "None" : year }));
 	        		});
 	        		$(tabtarget + " .tabbable ul").find(".year_pill").on("shown.bs.tab", function() {
 	        			var instr = $(this).attr("data-instrument");
 	        			var year = $(this).attr("data-year");
 	        			console.log("Show experiments for " + instr + " for year " + year);
-	        			var yrdt = data.value[instr][(year == "None") ? "null" : year]
+	        			var yrdt = experiments[instr][(year == "None") ? "null" : year]
 	        			var expdata = {value: yrdt};
 	        			expdata.FormatDate = elog_formatdate;
 	        			var rendered = Mustache.render(exper_template, expdata);
@@ -77,11 +81,11 @@ $(function() {
         	$("#myexperimentsli a").on("shown.bs.tab", function(e){
         		console.log("Showing my experiments");
         		var myExps = [];
-        		_.forOwn(data.value, function(value, instr) {
+        		_.forOwn(experiments, function(value, instr) {
         			if (instr != "OPS") {
-            			_.forOwn(data.value[instr], function(value, year) {
-            				_.forEach(data.value[instr][year], function(exp, index) {
-            					if ((exp['leader_account'] == userdata.value.userid) || (_.includes(userdata.value.groups, exp['posix_group'])) || _.includes(exp['players'], 'uid:'+userdata.value.userid )) {
+            			_.forOwn(experiments[instr], function(value, year) {
+            				_.forEach(experiments[instr][year], function(exp, index) {
+            					if ((exp['leader_account'] == userdata.userid) || (_.includes(userdata.groups, exp['posix_group'])) || _.includes(exp['players'], 'uid:'+userdata.userid )) {
             						myExps.push(exp);
             					}
             				});
@@ -116,15 +120,14 @@ $(function() {
         	// Prepare for searches...
         	var exp_names = []
         	var name2info = {};
-    		_.forOwn(data.value, function(value, instr) {
-    			_.forOwn(data.value[instr], function(value, year) {
-    				_.forEach(data.value[instr][year], function(exp, index) {
+    		_.forOwn(experiments, function(value, instr) {
+    			_.forOwn(experiments[instr], function(value, year) {
+    				_.forEach(experiments[instr][year], function(exp, index) {
     					exp_names.push(exp['name']);
     					name2info[exp['name']] = exp;
     				})
     			})
     		});
-
 
         	$("#searchtab").on("input", function(e) {
         		if($("#searchtext").val().length > 1) {
@@ -142,6 +145,24 @@ $(function() {
             		$("#searchresults tbody").empty();
         		}
         	});
+
+          $(document).on('experiments', function(event, experiment) {
+            let experiment_name = experiment.value["name"];
+            console.log("Processing experiment message for " + experiment_name);
+            if(_.get(experiment, "CRUD", "") == "Create") {
+              $.getJSON(experiment_name + "/ws/info")
+              .done(function(d0){
+                let exp = d0.value;
+                if(_.isNil(_.get(experiments, [ exp["instrument"], null ], null))) { _.set(experiments, [ exp["instrument" ], null ], []) }
+                _.get(experiments, [ exp["instrument"], null]).push(exp);
+                if($('#myexperimentsli a').hasClass("active")) { $('#myexperimentsli a').trigger("shown.bs.tab") }
+              })
+              .fail(function(){
+                console.log("Experiment added for which we probably do not have permission " + experiment_name);
+              })
+            }
+          });
+
         })
         .fail(function (errmsg) {
         	noty( { text: errmsg, layout: "topRight", type: "error" } );

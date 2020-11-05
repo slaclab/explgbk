@@ -212,7 +212,7 @@ var lgbk_create_edit_exp = function(expInfo) {
             $("#exp_mdl_holder").find(".edit_modal").modal("hide");
             sessionStorage.setItem("ops_active_tab", "experiments");
             sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
-            window.location.reload(true);
+            window.scrollToExperiment = true;
         } else {
           show_validation_message("Server failure: " + data.errormsg);
         }
@@ -305,7 +305,7 @@ var clone_experiment = function(src_experiment_name, mdl_holder, path_to_ws="", 
                 sessionStorage.setItem("ops_active_tab", "experiments");
                 sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
             }
-            window.location.reload(true);
+            window.scrollToExperiment = true;
         } else {
           show_validation_message("Server failure: " + data.errormsg);
         }
