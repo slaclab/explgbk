@@ -70,8 +70,8 @@ def __getKafkaProducer():
     if os.environ.get("SKIP_KAFKA_CONNECTION", False):
         return None
     else:
-        if LOGBOOK_SITE=="CryoEM":
-            misc_params["acks"] = 0
+        # if LOGBOOK_SITE=="CryoEM":
+        #     misc_params["acks"] = 0
         return MyKafkaProducer(bootstrap_servers=os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9092").split(","), value_serializer=lambda m: JSONEncoder().encode(m).encode('utf-8'), **misc_params)
 
 kafka_producer = __getKafkaProducer()
