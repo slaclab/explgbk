@@ -60,6 +60,7 @@ $(function() {
         		var instr = $(e.target).text();
         		var tabtarget = $(e.target).attr("href");
         		console.log("Showing experiments for instrument " + instr + " in tab " + tabtarget);
+            if ($(tabtarget + " .tabbable ul").find(".year_pill").length > 0) { $(tabtarget + " .tabbable ul").empty(); }
         		if ($(tabtarget + " .tabbable ul").find(".year_pill").length <= 0) {
         			console.log("Adding year pills for " + instr);
         			_.each(_.reverse(_.sortBy(_.keys(experiments[instr]), function(x){ return _.includes([ "null" ], x) ? 0 : _.toNumber(x)})), function(year) {
@@ -154,7 +155,8 @@ $(function() {
               .done(function(d0){
                 let exp = d0.value;
                 if(_.isNil(_.get(experiments, [ exp["instrument"], null ], null))) { _.set(experiments, [ exp["instrument" ], null ], []) }
-                _.get(experiments, [ exp["instrument"], null]).push(exp);
+                let eidx = _.findIndex(_.get(experiments, [ exp["instrument"], null]), {"name": experiment_name});
+                if (eidx >= 0) { _.get(experiments, [ exp["instrument"], null])[eidx] = exp; console.log("Replacing"); } else { _.get(experiments, [ exp["instrument"], null]).push(exp); }
                 if($('#myexperimentsli a').hasClass("active")) { $('#myexperimentsli a').trigger("shown.bs.tab") }
               })
               .fail(function(){
