@@ -332,7 +332,7 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
                         {"$group": { "_id": {"$dateToParts": { "date": {"$convert": { "input": "$create_timestamp", "to": "date" }}}}, "total_size": {"$sum": "$size"}}},
                         {"$project": { "_id.year": 1, "_id.month": 1, "_id.day": 1, "total_size": 1 }},
                         {"$group": { "_id": {"$dateFromParts": { "year": "$_id.year", "month": "$_id.month", "day": "$_id.day" } }, "total_size": {"$sum": {"$divide": [ "$total_size", 1024*1024*1024]}}}}
-                    ])]
+                    ], allowDiskUse=True)]
                 if dataDailyBreakdown:
                     logbookclient['explgbk_cache']['experiment_stats'].update_one({"_id": experiment_name}, { "$set": { "dataDailyBreakdown": dataDailyBreakdown } }, upsert=True)
         except Exception as e:
