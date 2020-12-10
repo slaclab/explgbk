@@ -684,6 +684,18 @@ def svc_reload_experiment_cache():
     reload_experiment_cache()
     return jsonify({'success': True})
 
+@explgbk_blueprint.route("/lgbk/ws/rebuild_experiment_cache_for_experiment", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("edit")
+def svc_rebuild_experiment_cache():
+    """
+    Rebuild the experiment cache for the specified experiment
+    """
+    experiment_name = request.args.get("experiment_name", None)
+    if experiment_name:
+        context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Update", "value": get_experiment_info(experiment_name)})
+    return jsonify({'success': True})
+
 
 @explgbk_blueprint.route("/lgbk/ws/switch_experiment", methods=["POST"])
 @context.security.authentication_required

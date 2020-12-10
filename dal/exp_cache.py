@@ -254,7 +254,7 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
     if 'info' in collnames:
         info = expdb["info"].find_one({}, {"latest_setup": 0})
         if 'name' not in info or 'instrument' not in info:
-            logger.debug("Database %s has a info collection but the info object does not have an instrument or name", experiment_name)
+            logger.error("Database %s has a info collection but the info object does not have an instrument or name. Note this could also be a timing issue if you are using secondaries", experiment_name)
             return
         all_experiment_names.add(experiment_name)
         expinfo = { "_id": experiment_name }
@@ -352,10 +352,10 @@ def __update_single_experiment_info(experiment_name, crud="Update"):
         expinfo["_id"] = experiment_name
         logbookclient['explgbk_cache']['experiments'].update({"_id": experiment_name}, expinfo, upsert=True)
 
-
         logger.info("Updated the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     else:
-        logger.debug("Skipping non-experiment database " + experiment_name)
+        logger.error("Database %s does not have a info collection. Note this could also be a timing issue if you are using secondaries", experiment_name)
+
 
 def __establish_local_kafka_consumers__():
     """
@@ -371,6 +371,7 @@ def __establish_local_kafka_consumers__():
                 __load_experiment_names()
             elif 'experiment_name' in info:
                 experiment_name = info['experiment_name']
+                logger.info("Got a Kafka/local message for experiment %s - building the cache entry", experiment_name)
                 crud = info.get("CRUD", "Update")
                 # No matter what the message type is, we reload the experiment info.
                 __update_single_experiment_info(experiment_name, crud=crud)
