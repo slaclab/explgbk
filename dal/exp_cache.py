@@ -372,7 +372,9 @@ def __establish_local_kafka_consumers__():
             elif 'experiment_name' in info:
                 experiment_name = info['experiment_name']
                 logger.info("Got a Kafka/local message for experiment %s - building the cache entry", experiment_name)
-                crud = info.get("CRUD", "Update")
+                crud = "Update"
+                if message_type == "experiments":
+                    crud = info.get("CRUD", "Update")
                 # No matter what the message type is, we reload the experiment info.
                 __update_single_experiment_info(experiment_name, crud=crud)
             else:
