@@ -27,6 +27,27 @@ logger = logging.getLogger(__name__)
 all_experiment_names = set()
 roles_with_post_privileges = []
 
+class PeriodicUpdates():
+    """
+    Gather experiment names to be updated periodically in the future.
+    """
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.experiment_names = set()
+    def add(self, experiment_name):
+        with self.lock:
+            try:
+                self.experiment_names.add(experiment_name)
+            except Exception as e:
+                logger.exception("Exception adding %s to periodic updater", experiment_name)
+    def getAndReset(self):
+        with self.lock:
+            ret = self.experiment_names
+            self.experiment_names = set()
+            return ret
+
+periodic_updates = PeriodicUpdates()
+
 def init_app(app):
     if 'experiments' not in list(logbookclient['explgbk_cache'].list_collection_names()):
         logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] )
@@ -58,6 +79,34 @@ def init_app(app):
 
     __cache_update_thread = threading.Thread(target=__kickoff_cache_update_thread)
     __cache_update_thread.start()
+
+
+    def _non_immediate_update():
+        try:
+            global periodic_updates
+            exps = periodic_updates.getAndReset()
+            logger.info("Processing the non immediate cache for %s experiments", len(exps))
+            for exp in exps:
+                try:
+                    __update_single_experiment_info(exp)
+                except:
+                    logger.exception("Exception in periodic updater updating %s", exp)
+        except:
+            logger.exception("Exception in periodic updater")
+    def __non_immediate_periodic(scheduler, interval, action, actionargs=()):
+        scheduler.enter(interval, 1, __non_immediate_periodic, (scheduler, interval, action, actionargs))
+        action(*actionargs)
+
+    nonimmediatesched = sched.scheduler()
+
+    def __kickoff_non_immediate_thread():
+        __non_immediate_periodic(nonimmediatesched, 5*60, _non_immediate_update)
+        nonimmediatesched.run()
+
+    __non_immediate_updater_thread = threading.Thread(target=__kickoff_non_immediate_thread)
+    __non_immediate_updater_thread.start()
+
+
 
 
 def reload_cache():
@@ -369,16 +418,22 @@ def __establish_local_kafka_consumers__():
             message_type = msg["topic"]
             if message_type == "explgbk_cache":
                 __load_experiment_names()
-            elif 'experiment_name' in info:
-                experiment_name = info['experiment_name']
-                logger.info("Got a Kafka/local message for experiment %s - building the cache entry", experiment_name)
-                crud = "Update"
-                if message_type == "experiments":
-                    crud = info.get("CRUD", "Update")
-                # No matter what the message type is, we reload the experiment info.
-                __update_single_experiment_info(experiment_name, crud=crud)
+            elif message_type in ["experiments", "roles", "samples"]:
+                if 'experiment_name' in info:
+                    experiment_name = info['experiment_name']
+                    logger.info("Got a Kafka/local message %s for experiment %s - building the cache entry", message_type, experiment_name)
+                    crud = info.get("CRUD", "Update") if message_type == "experiments" else "Update"
+                    __update_single_experiment_info(experiment_name, crud=crud)
+                else:
+                    logger.error("Kafka/local message in immediate topics without an experiment name %s", message_type)
             else:
-                logger.error("Kafka/local message without an experiment name")
+                logger.debug("Not re-building immediately for a non immediate topic %s", message_type)
+                global periodic_updates
+                if 'experiment_name' in info:
+                    experiment_name = info['experiment_name']
+                    periodic_updates.add(experiment_name)
+                else:
+                    logger.error("Kafka/local message in non-immediate topics without an experiment name %s", message_type)
         except Exception as e:
             logger.exception("Exception processing Kafka/local message.")
     def worker():
