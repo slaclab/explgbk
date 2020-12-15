@@ -88,7 +88,7 @@ def init_app(app):
             logger.info("Processing the non immediate cache for %s experiments", len(exps))
             for exp in exps:
                 try:
-                    __update_single_experiment_info(exp)
+                    update_single_experiment_info(exp)
                 except:
                     logger.exception("Exception in periodic updater updating %s", exp)
         except:
@@ -281,13 +281,13 @@ def __update_experiments_info():
     for experiment_name in database_names:
         if experiment_name in ["admin", "config", "local", "site"]:
             continue
-        __update_single_experiment_info(experiment_name)
+        update_single_experiment_info(experiment_name)
         db_time_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
         logbookclient['explgbk_cache']['operations'].update_one({"name": "explgbk_cache_rebuild"}, {"$set": {"completed": db_time_utc}})
     kafka_producer.send("explgbk_cache", { "cache_rebuild": True } )
 
 
-def __update_single_experiment_info(experiment_name, crud="Update"):
+def update_single_experiment_info(experiment_name, crud="Update"):
     """
     Load a single experiment's info and return the info as a dict
     """
@@ -423,7 +423,7 @@ def __establish_local_kafka_consumers__():
                     experiment_name = info['experiment_name']
                     logger.info("Got a Kafka/local message %s for experiment %s - building the cache entry", message_type, experiment_name)
                     crud = info.get("CRUD", "Update") if message_type == "experiments" else "Update"
-                    __update_single_experiment_info(experiment_name, crud=crud)
+                    update_single_experiment_info(experiment_name, crud=crud)
                 else:
                     logger.error("Kafka/local message in immediate topics without an experiment name %s", message_type)
             else:

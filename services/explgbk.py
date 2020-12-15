@@ -62,7 +62,8 @@ from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
 from dal.exp_cache import get_experiments, get_experiments_for_user, does_experiment_exist, reload_cache as reload_experiment_cache, \
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
-    get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex, get_experiments_proposal_mappings
+    get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex, get_experiments_proposal_mappings, \
+    update_single_experiment_info
 
 from dal.imagestores import parseImageStoreURL
 
@@ -693,6 +694,7 @@ def svc_rebuild_experiment_cache():
     """
     experiment_name = request.args.get("experiment_name", None)
     if experiment_name:
+        update_single_experiment_info(experiment_name, "Update")
         context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Update", "value": get_experiment_info(experiment_name)})
     return jsonify({'success': True})
 
