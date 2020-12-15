@@ -1854,7 +1854,7 @@ def svc_make_sample_current(experiment_name):
         sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
         context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Make_Current", "value": sample_doc })
         userid = context.security.get_current_user_id()
-        post_new_log_entry(experiment_name, userid, "Sample {} was activated by {}".format(sample_name, userid), [], **{"run_num": get_current_run(experiment_name)["num"]})
+        post_new_log_entry(experiment_name, userid, "Sample {} was activated by {}".format(sample_name, userid), [])
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
