@@ -275,7 +275,7 @@ def __update_experiments_info():
     We update this using Kafka; but we also periodically do a full reload of this information
     """
     logger.info("Updating the experiment info cached in 'explgbk_cache'.")
-    database_names = list(logbookclient.database_names())
+    database_names = sorted(list(logbookclient.database_names()), reverse=True)
     db_time_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
     logbookclient['explgbk_cache']['operations'].update_one({"name": "explgbk_cache_rebuild"}, {"$set": {"initiated": db_time_utc}})
     for experiment_name in database_names:
