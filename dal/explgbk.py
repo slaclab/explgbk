@@ -631,6 +631,14 @@ def get_elog_entries_by_tag(experiment_name, tag):
 
     return list(sorted(matching_entries.values(), key=lambda x : x["insert_time"]))
 
+def get_run_numbers_with_tag(experiment_name, tag):
+    """
+    Get elog entries with the specified tag
+    """
+    expdb = logbookclient[experiment_name]
+    run_nums = set([ x["run_num"] for x in expdb['elog'].find({ "tags": tag, "run_num": {"$exists": 1} }, {"run_num": 1} ) ])
+    return sorted(list(run_nums))
+
 def get_elogs_for_specified_id(experiment_name, specified_id):
     """
     Get the elog entries related to the entry with the specified id.
