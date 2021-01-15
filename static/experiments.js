@@ -37,8 +37,8 @@ $(function() {
             }
             _.each(_.sortBy(_.keys(experiments)).reverse(), function(instr) {
               var escaped_instr = instr.replace(/[ \/]/g, '_');
-              $("#activeexperimentsli").after(Mustache.render(instrument_tab_template, { instrument: instr, escaped_instr: escaped_instr }));
-              $("#activeexptab").after(Mustache.render(instrument_tab_content_template, { instrument: instr, escaped_instr: escaped_instr }))
+              $("#searchli").before(Mustache.render(instrument_tab_template, { instrument: instr, escaped_instr: escaped_instr }));
+              $("#searchtab").before(Mustache.render(instrument_tab_content_template, { instrument: instr, escaped_instr: escaped_instr }))
             });
 
             if(_.get(privileges, "experiment_create", false)) {
@@ -99,8 +99,6 @@ $(function() {
     			var rendered = Mustache.render(exper_template, expdata);
         		$("#myexptab tbody").html(rendered);
         	});
-        	$('#myexperimentsli a').tab('show');
-
         	$("#activeexperimentsli a").on("shown.bs.tab", function(e){
         		console.log("Showing active experiments");
         		$.getJSON(active_experiments_url)
@@ -110,6 +108,12 @@ $(function() {
             		$("#activeexptab tbody").html(rendered);
         		});
         	});
+
+          if($("#activeexperimentsli").hasClass("d-none")) {
+            $('#myexperimentsli a').tab('show');
+          } else {
+            $('#activeexperimentsli a').tab('show');
+          }
 
             _.each(privileges, function(v, k){
                 if(v) {
