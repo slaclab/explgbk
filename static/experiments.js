@@ -35,7 +35,7 @@ $(function() {
             if(_.get(privileges, "read", false)) {
                 $("#activeexperimentsli").removeClass("d-none");$("#activeexptab").removeClass("d-none");
             }
-            _.each(_.sortBy(_.keys(experiments)).reverse(), function(instr) {
+            _.each(_.sortBy(_.keys(experiments)), function(instr) {
               var escaped_instr = instr.replace(/[ \/]/g, '_');
               $("#searchli").before(Mustache.render(instrument_tab_template, { instrument: instr, escaped_instr: escaped_instr }));
               $("#searchtab").before(Mustache.render(instrument_tab_content_template, { instrument: instr, escaped_instr: escaped_instr }))
