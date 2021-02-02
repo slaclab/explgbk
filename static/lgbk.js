@@ -139,7 +139,7 @@ var lgbk_create_edit_exp = function(expInfo) {
     if (_.has(expInfo, "name")) { rendered.find(".register_btn").text("Update"); }
     rendered.find(".register_btn").on("click", function(e) {
       e.preventDefault();
-      var formObj = $("#exp_mdl_holder").find("form");
+      var formObj = rendered.find("form");
       var validations = [
           [function() { return $.trim(formObj.find(".experiment_name").val()) == ""; }, "Experiment name cannot be blank."],
           [function() { return $.trim(formObj.find(".instrument").val()) == ""; }, "Please choose a valid instrument."],
