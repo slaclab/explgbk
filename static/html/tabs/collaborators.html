@@ -3,7 +3,7 @@
     <div class="container-fluid text-center" id="collab_content">
         <div class="table-responsive">
           <table class="table table-condensed table-striped table-bordered collabtbl">
-            <thead><tr><th>Id</th><th>Full Name</th><th title="Is this user a member of the experiment specific posix group?">Posix Member</th><th>Permissions</th></tr></thead>
+            <thead><tr><th>Id</th><th>Full Name</th><th>UID number</th><th title="Is this user a member of the experiment specific posix group?">Posix Member</th><th>Permissions</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -13,7 +13,7 @@
 
 <script type="text/javascript">
 $("#collab_tab").on("lg.loaded.bs.tab", function() {
-  var collab_tr_tmpl = `{{#collabs}}<tr data-uid="{{ uid }}"><td>{{#is_group}}<i class="fas fa-users" aria-hidden="true"></i>{{/is_group}}{{^is_group}}<i class="fas fa-user" aria-hidden="true"></i>{{/is_group}}<span title="{{ uidNumber }}">{{ id }}</span></td><td>{{ full_name }}</td><td>{{#inPosixGroup}}<i class="fas fa-check"></i>{{/inPosixGroup}}</td><td class="collab_admin_actions"></td></tr>{{/collabs}}`;
+  var collab_tr_tmpl = `{{#collabs}}<tr data-uid="{{ uid }}"><td>{{#is_group}}<i class="fas fa-users" aria-hidden="true"></i>{{/is_group}}{{^is_group}}<i class="fas fa-user" aria-hidden="true"></i>{{/is_group}}<span title="{{ uidNumber }}">{{ id }}</span></td><td>{{ full_name }}</td><td>{{ uidNumber }}</td><td>{{#inPosixGroup}}<i class="fas fa-check"></i>{{/inPosixGroup}}</td><td class="collab_admin_actions"></td></tr>{{/collabs}}`;
   var actions_tmpl = `<span title="{{#hasrole}}Click to deny {{/hasrole}}{{^hasrole}}Click to grant {{/hasrole}}{{ tooltip }}" data-role-fq-name="{{ rl }}">{{^hasrole}}<i class="fas fa-lg {{ ic }} collab-no-role" aria-hidden="true"></i>{{/hasrole}}
     {{#hasrole}}<span><i class="fas {{ ic }} fa-lg" aria-hidden="true"></i><span class="croxxout">x</span></span>{{/hasrole}}</span>`;
   Mustache.parse(collab_tr_tmpl);
