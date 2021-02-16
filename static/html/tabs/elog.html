@@ -83,7 +83,7 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
      </div>
    </div>`;
 
-   var elog_run_child_expanded_params_template = `<table class="table table-condensed table-striped table-bordered"><thead><tr><th>Name</th><th>Value</th><th>Description</th></tr></thead><tbody>{{#params}}<tr><td>{{k}}</td><td>{{v}}</td><td>{{d}}</td></tr>{{/params}}</tbody></table>`;
+   var elog_run_child_expanded_params_template = `<table class="table table-condensed table-striped table-bordered"><thead><tr><th>Name</th><th>Value</th><th>Description</th></tr></thead><tbody>{{#params}}<tr><td>{{l}}</td><td>{{v}}</td><td>{{d}}</td></tr>{{/params}}</tbody></table>`;
 
 
    var id2entry = {};
@@ -313,10 +313,10 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
              let param_defs = d0[0];
              entry["params"] = _.get(d1[0], "value.params", {});
              // src2catdesc is a flattened dict of arrays of dicts into a dict indexed by the source attribute.
-             var src2catdesc = _.fromPairs(_.map(_.flatten(_.concat(_.values(param_defs.value))), function(pd) { return [_.replace(pd['source'], "params.", ""), { category: pd['category'], description: pd['description']}]})), categorized_params = {};
+             var src2catdesc = _.fromPairs(_.map(_.flatten(_.concat(_.values(param_defs.value))), function(pd) { return [_.replace(pd['source'], "params.", ""), { category: pd['category'], description: pd['description'], label: pd['label']}]})), categorized_params = {};
              _.each(entry["params"], function(v, k){
-                 var category = _.get(src2catdesc, k + ".category", "Misc"), desc = _.get(src2catdesc, k + ".description", "N/A");
-                 _.defaults(categorized_params, _.fromPairs([[category,[]]]))[category].push({k: k, v: v, d: desc});
+                 var category = _.get(src2catdesc, k + ".category", "Misc"), desc = _.get(src2catdesc, k + ".description", "N/A"), label = _.get(src2catdesc, k + ".label", k);
+                 _.defaults(categorized_params, _.fromPairs([[category,[]]]))[category].push({k: k, v: v, d: desc, l: label});
              })
              var cat_params_list = _.sortBy(_.map(categorized_params, function(v, k){ return {k: k, v: v}}), function(o){return o['k']});
              var rendered = renderMSTemplate(elog_run_child_template, { param_list: cat_params_list });
