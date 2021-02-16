@@ -1313,6 +1313,12 @@ def get_runtable_sources(experiment_name):
                 "category": site_param_descs[unescaped_param_name]['category'],
                 "description": site_param_descs[unescaped_param_name].get("description", param_name),
                 "source": "params." + param_name })
+        elif re.match("DAQ (.*)/(.*)", unescaped_param_name):
+            param_names_with_categories.append({
+                "label" : unescaped_param_name,
+                "category": "DAQ",
+                "description": unescaped_param_name,
+                "source": "params." + param_name })
         else:
             param_names_with_categories.append({
                 "label" : param_name,
