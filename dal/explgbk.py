@@ -1288,29 +1288,30 @@ def get_runtable_sources(experiment_name):
     # Update the category and description from the instrument_scientists_run_table_defintions if present
     param_names_with_categories = []
     for param_name in sorted(param_names):
-        if instrument in instrument_scientists_run_table_defintions and param_name in instrument_scientists_run_table_defintions[instrument]:
+        unescaped_param_name = reverse_escape_chars_for_mongo(param_name)
+        if instrument in instrument_scientists_run_table_defintions and unescaped_param_name in instrument_scientists_run_table_defintions[instrument]:
             param_names_with_categories.append({
-                "label" : param_name,
-                "category": "EPICS/" + instrument_scientists_run_table_defintions[instrument][param_name]["title"],
-                "description": instrument_scientists_run_table_defintions[instrument][param_name].get("description", param_name),
+                "label" : unescaped_param_name,
+                "category": "EPICS/" + instrument_scientists_run_table_defintions[instrument][unescaped_param_name]["title"],
+                "description": instrument_scientists_run_table_defintions[instrument][unescaped_param_name].get("description", param_name),
                 "source": "params." + param_name })
-        elif 'HEADER' in instrument_scientists_run_table_defintions and param_name in instrument_scientists_run_table_defintions['HEADER']:
+        elif 'HEADER' in instrument_scientists_run_table_defintions and unescaped_param_name in instrument_scientists_run_table_defintions['HEADER']:
             param_names_with_categories.append({
-                "label" : param_name,
-                "category": "EPICS/" + instrument_scientists_run_table_defintions['HEADER'][param_name]["title"],
-                "description": instrument_scientists_run_table_defintions['HEADER'][param_name].get("description", param_name),
+                "label" : unescaped_param_name,
+                "category": "EPICS/" + instrument_scientists_run_table_defintions['HEADER'][unescaped_param_name]["title"],
+                "description": instrument_scientists_run_table_defintions['HEADER'][unescaped_param_name].get("description", param_name),
                 "source": "params." + param_name })
-        elif param_name in param_descs:
+        elif unescaped_param_name in param_descs:
             param_names_with_categories.append({
-                "label" : param_name,
-                "category": param_descs[param_name]['category'],
-                "description": param_descs[param_name].get("description", param_name),
+                "label" : unescaped_param_name,
+                "category": param_descs[unescaped_param_name]['category'],
+                "description": param_descs[unescaped_param_name].get("description", param_name),
                 "source": "params." + param_name })
-        elif param_name in site_param_descs:
+        elif unescaped_param_name in site_param_descs:
             param_names_with_categories.append({
-                "label" : param_name,
-                "category": site_param_descs[param_name]['category'],
-                "description": site_param_descs[param_name].get("description", param_name),
+                "label" : unescaped_param_name,
+                "category": site_param_descs[unescaped_param_name]['category'],
+                "description": site_param_descs[unescaped_param_name].get("description", param_name),
                 "source": "params." + param_name })
         else:
             param_names_with_categories.append({
