@@ -2153,12 +2153,8 @@ def get_matching_groups():
         return logAndAbort("Please specify a group_name")
     return JSONEncoder().encode({"success": True, "value": context.usergroups.get_groups_matching_pattern(group_name)})
 
-
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/sync_collaborators_with_user_portal", methods=["GET"])
-@experiment_exists
-@context.security.authentication_required
-@context.security.authorization_required("manage_groups")
-def svc_sync_collaborators_with_user_portal(experiment_name):
+def sync_collaborators_with_user_portal(experiment_name):
+    logger.info("Importing collaborators from URAWI for %s", experiment_name)
     collaborators_before = get_collaborators_list_for_experiment(experiment_name)
     import_users_from_URAWI(experiment_name)
     collaborators_after = get_collaborators_list_for_experiment(experiment_name)
@@ -2169,6 +2165,13 @@ def svc_sync_collaborators_with_user_portal(experiment_name):
         role_obj = get_role_object(experiment_name, "LogBook/Writer")
         role_obj.update({'collaborators_added': [x for x in collaborators_added], 'collaborators_removed': [x for x in collaborators_removed], 'requestor': context.security.get_current_user_id() })
         context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "instrument": get_experiment_info(experiment_name)["instrument"], "CRUD": "Update", "value": role_obj })
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/sync_collaborators_with_user_portal", methods=["GET"])
+@experiment_exists
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
+def svc_sync_collaborators_with_user_portal(experiment_name):
+    sync_collaborators_with_user_portal(experiment_name)
     return JSONEncoder().encode({"success": True})
 
 @explgbk_blueprint.route("/lgbk/get_modal_param_definitions", methods=["GET"])
