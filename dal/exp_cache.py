@@ -124,6 +124,15 @@ def get_experiments():
     """
     return list(logbookclient['explgbk_cache']['experiments'].find({}))
 
+def get_experiments_starting_in_time_frame(start_time, end_time):
+    """
+    Get a list of experiments whose start_time is in the given time range.
+    """
+    return list(logbookclient['explgbk_cache']['experiments'].find({"$and": [
+        {"start_time": {"$gte": start_time}},
+        {"start_time": {"$lte": end_time}}
+        ]}, {"name": 1, "start_time": 1}))
+
 def get_experiments_for_user(uid):
     """
     Get a list of experiments for which the user has read access.

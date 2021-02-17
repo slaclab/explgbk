@@ -64,7 +64,7 @@ from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 from dal.exp_cache import get_experiments, get_experiments_for_user, does_experiment_exist, reload_cache as reload_experiment_cache, \
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
     get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex, get_experiments_proposal_mappings, \
-    update_single_experiment_info
+    update_single_experiment_info, get_experiments_starting_in_time_frame
 
 from dal.imagestores import parseImageStoreURL
 
@@ -2175,15 +2175,15 @@ def svc_sync_collaborators_with_user_portal(experiment_name):
     return JSONEncoder().encode({"success": True})
 
 
-@explgbk_blueprint.route("/lgbk/ws/sync_collaborators_with_user_portal_for_active_experiments", methods=["GET"])
-def svc_sync_collaborators_with_user_portal_for_active_experiments():
+@explgbk_blueprint.route("/lgbk/ws/sync_collaborators_with_user_portal_for_upcoming_experiments", methods=["GET"])
+def svc_sync_collaborators_with_user_portal_for_upcoming_experiments():
     """
     This is used primarily from a cron job to sync with URAWI and get the latest set of collaborators.
     """
-    active_experiments = get_currently_active_experiments()
-    for active_experiment in active_experiments:
-        if "name" in active_experiment:
-            sync_collaborators_with_user_portal(active_experiment["name"])
+    upcoming_experiments = get_experiments_starting_in_time_frame(datetime.utcnow() - timedelta(days=2), datetime.utcnow() + timedelta(days=10))
+    for upcoming_experiment in upcoming_experiments:
+        if "name" in upcoming_experiment:
+            sync_collaborators_with_user_portal(upcoming_experiment["name"])
     return JSONEncoder().encode({"success": True})
 
 
