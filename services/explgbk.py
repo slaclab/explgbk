@@ -2174,6 +2174,19 @@ def svc_sync_collaborators_with_user_portal(experiment_name):
     sync_collaborators_with_user_portal(experiment_name)
     return JSONEncoder().encode({"success": True})
 
+
+@explgbk_blueprint.route("/lgbk/ws/sync_collaborators_with_user_portal_for_active_experiments", methods=["GET"])
+def svc_sync_collaborators_with_user_portal_for_active_experiments():
+    """
+    This is used primarily from a cron job to sync with URAWI and get the latest set of collaborators.
+    """
+    active_experiments = get_currently_active_experiments()
+    for active_experiment in active_experiments:
+        if "name" in active_experiment:
+            sync_collaborators_with_user_portal(active_experiment["name"])
+    return JSONEncoder().encode({"success": True})
+
+
 @explgbk_blueprint.route("/lgbk/get_modal_param_definitions", methods=["GET"])
 @context.security.authentication_required
 def svc_get_modal_param_definitions():
