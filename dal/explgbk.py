@@ -1827,7 +1827,7 @@ def get_site_config():
     return siteinfo
 
 def get_workflow_triggers(experiment_name):
-    return [{"value": "MANUAL", "label": "Manually triggered"}, {"value": "START_OF_RUN", "label": "Start of a run"}, {"value": "END_OF_RUN", "label": "End of a run"}, {"value": "FIRST_FILE_TRANSFERRED", "label": "First file transfer"}, {"value": "ALL_FILES_TRANSFERRED", "label": "All files transferred"}, {"value": "RUN_PARAM_IS_VALUE", "label": "Run table param has value"}]
+    return [{"value": "MANUAL", "label": "Manually triggered"}, {"value": "START_OF_RUN", "label": "Start of a run"}, {"value": "END_OF_RUN", "label": "End of a run"}, {"value": "FIRST_FILE_TRANSFERRED", "label": "First file transfer"}, {"value": "ALL_FILES_TRANSFERRED", "label": "All files transferred"}, {"value": "ALL_NONREC_FILES_TRANSFERRED", "label": "All non-recorder files transferred"}, {"value": "RUN_PARAM_IS_VALUE", "label": "Run table param has value"}]
 
 def create_update_wf_definition(experiment_name, wf_obj):
     expdb = logbookclient[experiment_name]
