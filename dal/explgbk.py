@@ -1156,29 +1156,11 @@ def get_all_run_tables(experiment_name, instrument):
     system_run_tables = [ mark_sys(r) for r in sitedb["run_tables"].find({"$or": [ {"instrument": instrument}, {"instrument": { "$exists": False}}]})]
 
     allRunTables.extend(system_run_tables)
-    summtables = {}
-    pdescs = [ x for x in expdb['run_param_descriptions'].find( { "param_name": re.compile(r'.*\/.*') } ) ]
+    allRunTables.extend([x for x in expdb['run_tables'].find()])
+    
     mimes = { "params." + x["param_name"] : x["type"] for x in sitedb['run_param_descriptions'].find({"type": { "$exists": True }})}
     mimes.update({ "params." + x["param_name"] : x["type"] for x in expdb['run_param_descriptions'].find({"type": { "$exists": True }})})
-    for pdesc in pdescs:
-        categoryName, paramName = pdesc['param_name'].split("/")
-        if categoryName not in summtables:
-            summtables[categoryName] = {
-                "name" : categoryName,
-                "description" : pdesc["description"],
-                "is_editable" : False,
-                "coldefs" : []
-                }
-        summtables[categoryName]["coldefs"].append({
-            "label" : paramName,
-            "type" : categoryName,
-            "source": "params." + categoryName + "/" + paramName,
-            "pvName": paramName,
-            "is_editable" : False,
-            "position" : 0
-            })
-    allRunTables.extend([summtables[x] for x in sorted(summtables.keys())])
-    allRunTables.extend([x for x in expdb['run_tables'].find()])
+
     # The run table categories change with time. This is where we patch for versions of the instrument scientist source list.
     for rt in allRunTables:
         for coldef in rt["coldefs"]:
