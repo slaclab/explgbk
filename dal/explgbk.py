@@ -1157,7 +1157,7 @@ def get_all_run_tables(experiment_name, instrument):
 
     allRunTables.extend(system_run_tables)
     allRunTables.extend([x for x in expdb['run_tables'].find()])
-    
+
     mimes = { "params." + x["param_name"] : x["type"] for x in sitedb['run_param_descriptions'].find({"type": { "$exists": True }})}
     mimes.update({ "params." + x["param_name"] : x["type"] for x in expdb['run_param_descriptions'].find({"type": { "$exists": True }})})
 
@@ -1542,6 +1542,11 @@ def create_update_sample(experiment_name, sample_name, createp, info, automatica
         return (False, "Sample %s already exists" % sample_name)
     if not createp and not expdb['samples'].find_one({"_id": ObjectId(info["_id"])}):
         return (False, "Sample %s does not exist" % sample_name)
+    if not createp:
+        sample_with_id = expdb['samples'].find_one({"_id": ObjectId(info["_id"])})
+        sample_with_name = expdb['samples'].find_one({"name": sample_name})
+        if sample_with_name and sample_with_id["_id"] != sample_with_name["_id"]:
+            return (False, "Cannot rename sample %s to one that already exists %s" % (sample_with_id["name"], sample_name))
     validation, erromsg = validate_with_modal_params("samples", info)
     if not validation:
         return validation, erromsg
