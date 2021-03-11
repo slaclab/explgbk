@@ -1425,8 +1425,12 @@ def svc_create_update_user_run_table_def(experiment_name):
     """
     Create or update an existing user definition table.
     """
-    # logger.info(json.dumps(request.json, indent=2))
-    return JSONEncoder().encode({"success": True, "status": create_update_user_run_table_def(experiment_name, request.json)})
+    logger.error(json.dumps(request.json, indent=2))
+    (status, errormsg, rtbl_obj) = create_update_user_run_table_def(experiment_name, g.instrument, request.json)
+    if status:
+        return JSONEncoder().encode({"success": True, "value": rtbl_obj})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/run_table_editable_update", methods=["POST"])

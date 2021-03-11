@@ -63,6 +63,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
        if (!_.isNil(editTableName)) {
          console.log("Editing table " + editTableName);
          var tblDef = $("#rtbl_tab").data("tblData")[editTableName];
+         $("#rtbl_def_id").val(tblDef["_id"]);
          $("#rtbl_def_name").val(tblDef["name"]);
          $("#rtbl_def_desc").val(tblDef["description"]);
          $("#rtbl_def_bin_size").val(_.get(tblDef, "bin_size", 1));
@@ -107,6 +108,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
              sort_index: _.toInteger($("#rtbl_sort_index").val()),
              coldefs: []
            };
+           if(!_.isEmpty($("#rtbl_def_id").val())) { tbl_def["_id"] = $("#rtbl_def_id").val() }
            if(tbl_def['table_type'] == "histogram") { tbl_def['bin_size'] = parseFloat($("#rtbl_def_bin_size").val()); }
            if(tbl_def['table_type'] == "generatedtable") { tbl_def['patterns'] = $.trim($("#rtbl_gentable_patterns").val()); tbl_def['showvalues'] = $("#rtbl_gentable_showvalues").is(':checked'); }
            if(tbl_def['table_type'] != "generatedtable") {
@@ -132,10 +134,9 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
        		    contentType: 'application/json'
        		 })
        		 .done(function(data, textStatus, jqXHR) {
-       			 if(data.success) { console.log("Successfully updated user run table definition"); sessionStorage['runtable_active_tab'] = $("#rtbl_def_name").val(); window.location.reload(true); } else { alert("Server side exception updating user run table definition " + data.errormsg); }
+       			 if(data.success) { console.log("Successfully updated user run table definition"); sessionStorage['runtable_active_tab'] = $("#rtbl_def_name").val(); $("#rtbl_new_entry_modal").modal("hide"); window.location.reload(true); } else { error_message(data.errormsg); }
        		 })
-       		 .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception updating user run table definition " + jqXHR.responseText); })
-           $("#rtbl_new_entry_modal").modal("hide");
+       		 .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); error_message("Server side exception updating user run table definition " + jqXHR.responseText); })
          }
        });
        $("#rtbl_new_entry_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); });

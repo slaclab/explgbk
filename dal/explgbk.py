@@ -1321,14 +1321,33 @@ def get_runtable_sources(experiment_name):
     return rtbl_sources
 
 
-def create_update_user_run_table_def(experiment_name, table_definition):
+def create_update_user_run_table_def(experiment_name, instrument, table_definition):
     '''
     Create or update an existing user run table definition for an experiment
     We expect a fully formed table_definition here...
     '''
     expdb = logbookclient[experiment_name]
-    expdb['run_tables'].update({'name': table_definition['name']}, table_definition, True)
-    return (True, "")
+    createp = "_id" not in table_definition.keys()
+    rtbl_name = table_definition["name"]
+    rtbl_id = None if createp else ObjectId(table_definition["_id"])
+    all_rtbls = {x["name"] : x for x in get_all_run_tables(experiment_name, instrument)}
+    if createp and rtbl_name in all_rtbls.keys():
+        return (False, f"We already have a run table definition with the same name {rtbl_name}", None)
+    if not createp and not expdb["run_tables"].find_one({"_id": rtbl_id}):
+        return (False, f"Cannot update a table definition that does not exist for name {rtbl_name}", None)
+    if not createp:
+        rtbl_with_id = expdb["run_tables"].find_one({"_id": rtbl_id})
+        if rtbl_name in all_rtbls and all_rtbls[rtbl_name]["_id"] != rtbl_id:
+            exn = rtbl_with_id["name"]
+            return (False, f"Cannot rename table {exn} to table {rtbl_name} that already exists ", None)
+
+    if createp:
+        expdb["run_tables"].insert_one(table_definition)
+    else:
+        table_definition["_id"] = rtbl_id # Replace string with ObjectId
+        expdb["run_tables"].replace_one({"_id": rtbl_id}, table_definition)
+
+    return (True, "", expdb["run_tables"].find_one({"name": table_definition["name"]}))
 
 def delete_run_table(experiment_name, table_name):
     '''
