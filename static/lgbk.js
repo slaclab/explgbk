@@ -22,31 +22,34 @@ var setCurrentUISample = function() {
              $("#current_sample_lbl").addClass("samples_different");
              $("#current_sample_name").tooltip({html: true, delay: 500, title: Mustache.render(ttip_template, samplesDict)});
          }
-         $("#current_sample_name").parent().on("click", function(){
-             $.when($.ajax("../../static/html/ms/chooseSample.html"), $.getJSON("ws/samples"))
-             .done(function(d1, d2){
-                 var tmpl = d1[0], samples = d2[0], sample_names = _.union(_.map(samples.value, "name"), ["Current Sample", "All Samples"]);
-                 Mustache.parse(tmpl);
-                 var rendered = $(Mustache.render(tmpl, samplesDict));
-                 rendered.find("#choose_sample tbody").append($(Mustache.render(choose_sample_template, {sample_names: sample_names})));
-                 rendered.find("#choose_sample tbody tr").on("click", function(){
-                     var selected_sample = $(this).attr("data-sample");
-                     if(selected_sample == "All Samples") {
-                         sample_showing_in_UI = "All Samples";
-                     } else if (selected_sample == "Current Sample") {
-                         sample_showing_in_UI = current_sample_at_DAQ;
-                     } else{
-                         sample_showing_in_UI = selected_sample;
-                     }
-                     $("#glbl_modals_go_here").find(".edit_modal").modal("hide");
-                     setCurrentUISample();
-                     $(".tabcontainer").trigger("lg.refresh");
-                 });
-                 $("#glbl_modals_go_here").append(rendered);
-                 $("#glbl_modals_go_here").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#glbl_modals_go_here").empty(); });
-                 $("#glbl_modals_go_here").find(".edit_modal").modal("show");
-           });
-       });
+         if(!$("#current_sample_name").parent().hasClass("click_attached")){
+           $("#current_sample_name").parent().on("click", function(){
+             $(this).addClass("click_attached");
+               $.when($.ajax("../../static/html/ms/chooseSample.html"), $.getJSON("ws/samples"))
+               .done(function(d1, d2){
+                   var tmpl = d1[0], samples = d2[0], sample_names = _.union(_.map(samples.value, "name"), ["Current Sample", "All Samples"]);
+                   Mustache.parse(tmpl);
+                   var rendered = $(Mustache.render(tmpl, samplesDict));
+                   rendered.find("#choose_sample tbody").append($(Mustache.render(choose_sample_template, {sample_names: sample_names})));
+                   rendered.find("#choose_sample tbody tr").on("click", function(){
+                       var selected_sample = $(this).attr("data-sample");
+                       if(selected_sample == "All Samples") {
+                           sample_showing_in_UI = "All Samples";
+                       } else if (selected_sample == "Current Sample") {
+                           sample_showing_in_UI = current_sample_at_DAQ;
+                       } else{
+                           sample_showing_in_UI = selected_sample;
+                       }
+                       $("#glbl_modals_go_here").find(".edit_modal").modal("hide");
+                       setCurrentUISample();
+                       $(".tabcontainer").trigger("lg.refresh");
+                   });
+                   $("#glbl_modals_go_here").append(rendered);
+                   $("#glbl_modals_go_here").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#glbl_modals_go_here").empty(); });
+                   $("#glbl_modals_go_here").find(".edit_modal").modal("show");
+             });
+         });
+     }
      } else {
          $("#current_sample_lbl").empty();
      }
