@@ -100,9 +100,11 @@
 
   $(document).on('workflow_jobs', function(event, wfjobdoc) {
       if(wfjobdoc["CRUD"] == "Create") {
+        if($("#wf_ctrls_content").find("[data-jobid="+wfjobdoc["value"]["_id"]+"]").length <= 0) {
           let rendered = $(Mustache.render(wf_job_tmpl, wfjobdoc["value"])); job_attach_actions_fn(rendered);
           console.log("WS jobs create "); console.log(wfjobdoc);
           $("#wf_ctrls_content").find("[data-spgntr="+wfjobdoc["value"]["run_num"]+"]").find(".jobsdiv").prepend(rendered);
+        }
       } else if(wfjobdoc["CRUD"] == "Delete") {
           $("#wf_ctrls_content").find("[data-jobid="+wfjobdoc["value"]["_id"]+"]").remove();
       } else {
