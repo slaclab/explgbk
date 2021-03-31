@@ -99,20 +99,21 @@
 
 
   $(document).on('workflow_jobs', function(event, wfjobdoc) {
-      if(wfjobdoc["CRUD"] == "Create") {
-        if($("#wf_ctrls_content").find("[data-jobid="+wfjobdoc["value"]["_id"]+"]").length <= 0) {
-          let rendered = $(Mustache.render(wf_job_tmpl, wfjobdoc["value"])); job_attach_actions_fn(rendered);
-          console.log("WS jobs create "); console.log(wfjobdoc);
-          $("#wf_ctrls_content").find("[data-spgntr="+wfjobdoc["value"]["run_num"]+"]").find(".jobsdiv").prepend(rendered);
-        }
-      } else if(wfjobdoc["CRUD"] == "Delete") {
-          $("#wf_ctrls_content").find("[data-jobid="+wfjobdoc["value"]["_id"]+"]").remove();
+    let wfjobid = _.get(wfjobdoc, "value._id");
+    if(_.isNil(wfjobid)) { console.log("Got a workflow_jobs without an _id"); console.log(wfjobdoc); return }
+    if(wfjobdoc["CRUD"] == "Delete") {
+      $("#wf_ctrls_content").find("[data-jobid="+wfjobid+"]").remove();
+    } else {
+      wfjobdoc["value"].running = _.includes(["RUNNING", "SUBMITTED"], _.get(wfjobdoc["value"], "status", ""));
+      let rendered = $(Mustache.render(wf_job_tmpl, wfjobdoc["value"])); job_attach_actions_fn(rendered);
+      if($("#wf_ctrls_content").find("[data-jobid="+wfjobid+"]").length <= 0) {
+        console.log("WF jobs add new entry "); console.log(wfjobdoc);
+        $("#wf_ctrls_content").find("[data-spgntr="+wfjobdoc["value"]["run_num"]+"]").find(".jobsdiv").prepend(rendered);
       } else {
-          wfjobdoc["value"].running = _.includes(["RUNNING", "SUBMITTED"], _.get(wfjobdoc["value"], "status", ""));
-          let rendered = $(Mustache.render(wf_job_tmpl, wfjobdoc["value"])); job_attach_actions_fn(rendered);
-          $("#wf_ctrls_content").find("[data-jobid="+wfjobdoc["value"]["_id"]+"]").replaceWith(rendered);
-          console.log("WS jobs update "); console.log(wfjobdoc);
+        console.log("WF jobs update existing entry"); console.log(wfjobdoc);
+        $("#wf_ctrls_content").find("[data-jobid="+wfjobid+"]").replaceWith(rendered);
       }
+    }
   });
 
   $("#lcls_wf_ctrls_tab").on("lg.shown.bs.tab", function() {
