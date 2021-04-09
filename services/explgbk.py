@@ -2440,6 +2440,12 @@ def svc_create_update_wf_definition(experiment_name):
     if info['location'] not in [ x["name"] for x in get_dm_locations(experiment_name) if "jid_prefix" in x and x["jid_prefix"] ]:
         return JSONEncoder().encode({"success": False, "errormsg": "Invalid location %s in create/update workflow" % info['location'], "value": None})
     info["run_as_user"] = context.security.get_current_user_id()
+    if info["run_as_user"] == "root" or (len(info["run_as_user"]) == 6 and info["run_as_user"].endswith("opr")):
+        return JSONEncoder().encode({"success": False, "errormsg": "Cannot create a workflow definition for the user %s for security reasons" % info["run_as_user"], "value": None})
+    current_wfdefs = { x["name"] : x for x in get_workflow_definitions(experiment_name) }
+    if info["name"] in current_wfdefs.keys() and "_id" not in info:
+        return JSONEncoder().encode({"success": False, "errormsg": "There already exists a workflow definition for %s" % info["name"], "value": None})
+
 
     (status, errormsg, val) = create_update_wf_definition(experiment_name, info)
     return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
