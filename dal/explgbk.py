@@ -1621,6 +1621,22 @@ def make_sample_current(experiment_name, sample_name):
     expdb.current.find_one_and_update({"_id": "sample"}, {"$set": { "_id": "sample", "sample" : sample_doc["_id"] }} , upsert=True)
     return (True, "")
 
+def stop_current_sample(experiment_name, sample_name):
+    """
+    Stop the sample specified by the sample_name if it is the current sample and set the current sample to null
+    """
+    expdb = logbookclient[experiment_name]
+    sample_doc = expdb['samples'].find_one({"name": sample_name})
+    if not sample_doc:
+        return (False, "Sample %s does not exist" % sample_name)
+
+    current_sample = get_current_sample_name(experiment_name)
+    if current_sample and current_sample != sample_name:
+        return (False, "Sample %s is not the current sample" % sample_name)
+
+    expdb.current.delete_one({"_id": "sample"})
+    return (True, "")
+
 def delete_sample_for_experiment(experiment_name, sample_name):
     """ Delete the sample for an experiment. We only allow deletion of samples if there are no runs associated with the sample and it is not current"""
     expdb = logbookclient[experiment_name]

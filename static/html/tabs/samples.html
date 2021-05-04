@@ -198,7 +198,8 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
       <span title="Display sample details"><i class="fas fa-info-circle listview-action"></i></span>
       <span title="Edit sample details" class="hide_when_locked"><i class="fas fa-edit listview-action"></i></span>
       <span title="Clone sample" class="hide_when_locked"><i class="fas fa-clone listview-action"></i></span>
-      <span title="Make this sample the current sample" class="hide_when_locked">{{^current}}<span><i class="fas fa-play listview-action"></i></span>{{/current}}</span>
+      {{^current}}<span title="Make this sample the current sample" class="hide_when_locked"><span><i class="fas fa-play listview-action"></i></span></span>{{/current}}
+      {{#current}}<span title="Stop this sample and set the current sample to null" class="hide_when_locked"><span><i class="fas fa-stop listview-action"></i></span></span>{{/current}}
       <span title="Delete sample; a sample can be deleted only if there are no runs associated with it."><i class="fas fa-trash listview-action"></i></span></td></tr>{{/value}}`;
   Mustache.parse(sample_tr_tmpl);
   $.getJSON("ws/samples")
@@ -212,7 +213,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
       $.getJSON({url: "ws/make_sample_current?sample_name="+encodeURIComponent(sample_name), method: "POST" })
       .done(function(data, textStatus, jqXHR) {
         if(data.success) {
-            console.log("Successfully closed sample " + sample_name);
+            console.log("Successfully played sample " + sample_name);
             window.location.reload(true);
         } else {
           alert("Server side exception playing sample " + sample_name + "\n" + data.errormsg);
@@ -220,6 +221,19 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
       })
       .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure closing sample " + textStatus); })
     });
+    rendered.find(".fa-stop").parent().on("click", function(){
+      var sample_name = $(this).closest("tr").find("td").first().text();
+      $.getJSON({url: "ws/stop_current_sample?sample_name="+encodeURIComponent(sample_name), method: "POST" })
+      .done(function(data, textStatus, jqXHR) {
+        if(data.success) {
+            console.log("Successfully stopped sample " + sample_name);
+            window.location.reload(true);
+        } else {
+          alert("Server side exception stopping sample " + sample_name + "\n" + data.errormsg);
+        }
+      })
+      .fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure closing sample " + textStatus); })
+    })
     rendered.find(".fa-edit").parent().on("click", function(){
       var sample_name = $(this).closest("tr").find("td").first().text();
       $.getJSON("ws/samples/"+sample_name).done(function(data){edit_sample(data["value"]);})

@@ -53,7 +53,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run, \
     add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments, \
     get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station, \
-    get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag
+    get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag, stop_current_sample
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex, \
@@ -1860,6 +1860,25 @@ def svc_make_sample_current(experiment_name):
         context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Make_Current", "value": sample_doc })
         userid = context.security.get_current_user_id()
         post_new_log_entry(experiment_name, userid, "Sample {} was activated by {}".format(sample_name, userid), [])
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/stop_current_sample", methods=["GET", "POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_stop_current_sample(experiment_name):
+    sample_name = request.args.get("sample_name", None)
+    if not sample_name:
+        return logAndAbort("We need a sample_name as a parameter")
+    (status, errormsg) = stop_current_sample(experiment_name, sample_name)
+    if status:
+        # Check with Cryp before publishing this message; we do not publish stop when messages when we switch samples.
+        # sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
+        # context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Stop", "value": sample_doc })
+        userid = context.security.get_current_user_id()
+        post_new_log_entry(experiment_name, userid, "Sample {} was stopped by {}".format(sample_name, userid), [])
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
