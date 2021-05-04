@@ -2208,7 +2208,7 @@ def svc_get_modal_param_definitions_for_experiment(experiment_name):
     modal_type = request.args.get("modal_type", None)
     if not modal_type:
         return logAndAbort("Please specify a modal_type")
-    param_defs = get_modal_param_definitions(modal_type, instrument=g.instrument)
+    param_defs = get_modal_param_definitions(modal_type)
     return JSONEncoder().encode({"success": True, "value": param_defs if param_defs else {}})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_feedback_document", methods=["GET"])

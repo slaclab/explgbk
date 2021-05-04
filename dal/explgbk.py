@@ -19,6 +19,9 @@ import subprocess
 from pymongo import ASCENDING, DESCENDING, ReadPreference
 from bson import ObjectId
 
+# This (g) should be the only import from Flask; we use this as a thread local context variable.
+from flask import g
+
 from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, \
     MAX_ATTACHMENT_SIZE, URAWI_URL, LOGBOOK_SITE
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed, get_run_doc_for_run_num
@@ -1634,12 +1637,13 @@ def delete_sample_for_experiment(experiment_name, sample_name):
     expdb["samples"].delete_one({"name": sample_name})
     return True, "", None
 
-def get_modal_param_definitions(modal_type, instrument=None):
+def get_modal_param_definitions(modal_type):
     """
     Get the site specific modal param definitions from the site database for the specified modal type.
     """
     sitedb = logbookclient["site"]
-    if instrument:
+    if "instrument" in g:
+        instrument = g.instrument
         ins = sitedb["instruments"].find_one({ "_id": instrument })
         if ins and "modal_params" in ins:
             ins_mdl_prms = { x["_id"] : x for x in ins["modal_params"]}
