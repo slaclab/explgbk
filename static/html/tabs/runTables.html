@@ -36,7 +36,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         [function() { return $.trim($("#rtbl_def_name").val()) == ""; }, "Table name cannot be blank."],
         [function() { return $.trim($("#rtbl_def_desc").val()) == ""; }, "Please enter a brief description."],
         [function() { return !/^([\w-\s]+)$/.test($("#rtbl_def_name").val())}, "We limit the special characters that can be used in table names. Alpha-numeric with underscores and spaces only."],
-        [function() { return !/^([0-9.]+)$/.test($("#rtbl_def_bin_size").val())}, "Please enter the size of each bin."],
+        [function() { return !_.isEmpty($("#rtbl_def_bin_size").val()) && !/^([0-9.]+)$/.test($("#rtbl_def_bin_size").val())}, "Please enter the size of each bin."],
         [function() { return !/^([0-9]+)$/.test($("#rtbl_sort_index").val())}, "Please enter an integer value for the sort index."],
         [function() { return $("#rtbl_def_table_type").val() == "generatedtable" && $.trim($("#rtbl_gentable_patterns").val()) == ""; }, "Please enter a pattern for the attribute names"],
         [function() { return $("#rtbl_def_table_type").val() != "generatedtable" && $("#rtbl_def_tbl tbody tr").filter(function(){ return $(this).find(".nonblank").filter(function(){return $(this).val() == "";}).length == 0;}).length <= 0; }, "At least one column definition should have a complete column definition."],
@@ -66,7 +66,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
          $("#rtbl_def_id").val(tblDef["_id"]);
          $("#rtbl_def_name").val(tblDef["name"]);
          $("#rtbl_def_desc").val(tblDef["description"]);
-         $("#rtbl_def_bin_size").val(_.get(tblDef, "bin_size", 1));
+         $("#rtbl_def_bin_size").val(_.get(tblDef, "bin_size", ""));
          $("#rtbl_sort_index").val(_.get(tblDef, "sort_index", 100));
          $("#rtbl_gentable_patterns").val(_.get(tblDef, "patterns", ".*"));
          $("#rtbl_gentable_showvalues").prop("checked", _.get(tblDef, "showvalues", true));
@@ -109,7 +109,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
              coldefs: []
            };
            if(!_.isEmpty($("#rtbl_def_id").val())) { tbl_def["_id"] = $("#rtbl_def_id").val() }
-           if(tbl_def['table_type'] == "histogram") { tbl_def['bin_size'] = parseFloat($("#rtbl_def_bin_size").val()); }
+           if(tbl_def['table_type'] == "histogram" && !_.isEmpty($("#rtbl_def_bin_size").val())) { tbl_def['bin_size'] = parseFloat($("#rtbl_def_bin_size").val()); }
            if(tbl_def['table_type'] == "generatedtable") { tbl_def['patterns'] = $.trim($("#rtbl_gentable_patterns").val()); tbl_def['showvalues'] = $("#rtbl_gentable_showvalues").is(':checked'); }
            if(tbl_def['table_type'] != "generatedtable") {
                $("#rtbl_def_tbl tbody tr").each(function(index, defnrow){
@@ -234,15 +234,19 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
               gen_traces = function() {
                 traces = [];
                 _.each(_.tail(coldefs), function(coldef, idx) {
-                  var dt = _.map(runData.value, function(rd){return _.get(rd, coldef["source"])});
-                  let sd = Plotly.d3.deviation(dt), mean = Plotly.d3.mean(dt), mult = 3.0;
-                  let isOutlier = function(v) { return (v >= mean + (mult * sd)) | (v <= mean - (mult * sd)); };
-                  if(hide_outliers) {dt = _.reject(dt, isOutlier);}
+                  var dt = _.map(runData.value, function(rd){ var ret = _.get(rd, coldef["source"]); if(/^([0-9.]+)$/.test(ret)) { ret = _.toNumber(ret); } return ret; });
+                  if(hide_outliers) {
+                    let sd = Plotly.d3.deviation(dt), mean = Plotly.d3.mean(dt), mult = 3.0;
+                    let isOutlier = function(v) { return (v >= mean + (mult * sd)) | (v <= mean - (mult * sd)); };
+                    dt = _.reject(dt, isOutlier);
+                  }
                   traces.push({x: dt, type: "histogram", showlegend: true, name: coldef["label"]});
-                  _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
-                  let computedBinSize = ((_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount);
-                  _.last(traces)['xbins']['size'] = (_.isFinite(computedBinSize) && _.has(tblDef, "bin_size")) ? _.get(tblDef, "bin_size") : computedBinSize;
-                  console.log("Bin Size" + _.last(traces)['xbins']['size']);
+                  if(!_.isEmpty(_.get(tblDef, "bin_size"))) {
+                    _.last(traces)['xbins'] = {start: _.min(_.last(traces)['x']), end: _.max(_.last(traces)['x'])};
+                    let computedBinSize = ((_.last(traces)['xbins']['end'] - _.last(traces)['xbins']['start'])/binCount);
+                    _.last(traces)['xbins']['size'] = (_.isFinite(computedBinSize) && _.has(tblDef, "bin_size")) ? _.get(tblDef, "bin_size") : computedBinSize;
+                    console.log("Bin Size" + _.last(traces)['xbins']['size']);
+                  }
                   });
                 }
           } else if (_.get(tblDef, "table_type") == "scatter") {
