@@ -30,12 +30,14 @@
 @cl-1: @color-complement-0; // An alternate contrast color; use for active samples/shifts/experiments etc.
 @cl-2: @color-primary-0; // Use the darkest but one for the navbar itself.
 @cl-3: @color-primary-4;  // Use the darkest for navbar contrast
+@cl-4: @color-complement-4; // Extreme standout
 
 
 @navbarcolor: @cl-2;
 @navbarhover: @cl-3;
 @activewidgetcolor: @cl-1;
 @contrastcolor: @cl-0;
+@extremecontrast: @cl-4;
 @navbartext: white;
 @tablezebra: #efefef;
 @tblhdrbg: @navbarcolor;
@@ -84,7 +86,7 @@ body.busy {
 #lgbk_body {
   .font_family_choices_mixin;
   span.help {
-      color: @activewidgetcolor;
+      color: @extremecontrast;
       background: @navbarcolor;
   }
 
