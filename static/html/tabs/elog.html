@@ -639,11 +639,15 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
                   });
               }
           });
-          let rendered = $(Mustache.render(attachments_only_template, { attachments: attachments_flat_list.reverse()}));
+          attachments_flat_list = attachments_flat_list.reverse();
+          let rendered = $(Mustache.render(attachments_only_template, { attachments: attachments_flat_list}));
           rendered.find(".atch").on("click", function(){
-            let attchovrlytmpl = `<div id="elog_attch_ovrly"><img class="elog_img img-fluid" src="ws/attachment?entry_id={{entryid}}&attachment_id={{attchid}}"></img><div class="float-right ovrlytlbr">
+            let attchovrlytmpl = `<div id="elog_attch_ovrly" data-attchid="{{attchid}}"><img class="elog_img img-fluid" src="ws/attachment?entry_id={{entryid}}&attachment_id={{attchid}}"></img><div class="float-right ovrlytlbr">
               <span class="gotoentry" title="Open this entry in a new tab."><span class="fa-layers fa-fw"><i class="fas fa-circle" style="color:black"></i><i class="fas fa-external-link-alt fa-lg" data-fa-transform="shrink-8"></i></span></span>
-              <span class="close"><span class="fa-layers fa-fw"><i class="fas fa-circle" style="color:black"></i><i class="fa-inverse fas fa-times" data-fa-transform="shrink-6"></i></span></span></div></div>`;
+              <span class="preventry" title="Display the previous attachment"><span class="fa-layers fa-fw"><i class="fas fa-circle" style="color:black"></i><i class="fa-inverse fas fa-chevron-up" data-fa-transform="shrink-6"></i></span></span>
+              <span class="nextentry" title="Display the next attachment"><span class="fa-layers fa-fw"><i class="fas fa-circle" style="color:black"></i><i class="fa-inverse fas fa-chevron-down" data-fa-transform="shrink-6"></i></span></span>
+              <span class="close"><span class="fa-layers fa-fw"><i class="fas fa-circle" style="color:black"></i><i class="fa-inverse fas fa-times" data-fa-transform="shrink-6"></i></span></span>
+            </div></div>`;
             let entryid = $(this).attr("data-entryid"), attchid = $(this).attr("data-id"), rootid = $(this).attr("data-rootid");
             if(_.isEmpty($(this).attr("data-isimage"))) {
               window.open("ws/attachment?entry_id=" + entryid + "&attachment_id=" + attchid, name="_blank");
@@ -654,10 +658,11 @@ $("#elog_tab").on("lg.loaded.bs.tab", function() {
             $(document).on("keyup", function(e) { if (e.keyCode == 27) { $("#elog_attch_ovrly").remove() } });
             rendered.find(".close").on("click", function(){ $("#elog_attch_ovrly").remove(); })
             rendered.find(".gotoentry").on("click", function(){ $("#elog_attch_ovrly").remove(); sessionStorage.setItem("eLog_scrollTo", rootid); window.location.reload(true);
-
               $("#elog_content").data("spgntr").scrollTo(rootid);
               $("#elog_content").find("[data-spgntr=" + rootid + "] .elog-expand").trigger("click");
             })
+            rendered.find(".preventry").on("click", function(){ let current_attach_id = $("#elog_attch_ovrly").attr("data-attchid"), prevElem = $("#elog_tab").find('[data-id="' + current_attach_id + '"]').prev(); $("#elog_attch_ovrly").remove(); if(!_.isNil(prevElem)) { prevElem.trigger("click"); } })
+            rendered.find(".nextentry").on("click", function(){ let current_attach_id = $("#elog_attch_ovrly").attr("data-attchid"), nextElem = $("#elog_tab").find('[data-id="' + current_attach_id + '"]').next(); $("#elog_attch_ovrly").remove(); if(!_.isNil(nextElem)) { nextElem.trigger("click"); } })
           })
           $("#elog_content").html(rendered);
       });
