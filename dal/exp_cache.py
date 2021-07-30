@@ -180,8 +180,12 @@ def get_experiments_with_post_privileges(userid):
     site_roles = [ x for x in logbookclient["site"]["roles"].find({"app": "LogBook", "privileges": { "$in": ["post"]}, "players": { "$in": u_a_g }})]
     if site_roles:
         logger.debug("User %s has post privileges for all experiments")
-        return get_experiments()
-    return list(logbookclient['explgbk_cache']["experiments"].find({"post_players": {"$in": u_a_g}}))
+        postable_exps = get_experiments()
+    else:
+        postable_exps = list(logbookclient['explgbk_cache']["experiments"].find({"post_players": {"$in": u_a_g}}))
+    # Sort
+    ret_exps = [ { attr : x[attr] for attr in ["_id", "name", "instrument", "description", "start_time", "end_time", "posix_group", "params"] } for x in postable_exps ]
+    return ret_exps
 
 def get_experiment_stats():
     """
