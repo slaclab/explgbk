@@ -50,9 +50,7 @@ db['roles'].insertMany([
 		"delete"
 	],
 	"players" : [
-		"uid:mshankar",
-		"uid:wilko",
-    "uid:yee"    
+		"uid:editor"    
 	]
 },
 {
@@ -63,10 +61,8 @@ db['roles'].insertMany([
 		"read"
 	],
 	"players" : [
-		"ps-pcds",
-    "uid:mshankar",
-		"uid:wilko",
-    "uid:yee"    
+		"group_containing_all_writers",
+    "uid:writer"    
 	]
 },
 {
@@ -76,12 +72,8 @@ db['roles'].insertMany([
 		"read"
 	],
 	"players" : [
-		"ps-sci",
-    "ps-data",
-		"ps-mgt",
-    "uid:mshankar",
-		"uid:wilko",
-    "uid:yee"    
+		"group_containing_all_readers",
+    "uid:reader"    
 	]
 }
 ])
