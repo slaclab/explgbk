@@ -9,6 +9,24 @@ import eventlet
 import requests
 import urllib3
 
+
+root = logging.getLogger()
+root.setLevel(logging.getLevelName(os.environ.get("LOG_LEVEL", "INFO")))
+logging.getLogger('kafka').setLevel(logging.INFO)
+logging.getLogger('engineio').setLevel(logging.WARN)
+logging.getLogger('flask_authnz').setLevel(logging.WARN)
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+root.addHandler(ch)
+
+logger = logging.getLogger(__name__)
+
+# Turn off a RFC compliance warning; remove this once we get a SSL cert that works with requests.
+urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
+
+
 from context import app, security
 
 from pages import pages_blueprint
@@ -33,22 +51,6 @@ app.debug = False
 def jinga2_jsonfilter(value):
     return json.dumps(value)
 
-
-root = logging.getLogger()
-root.setLevel(logging.getLevelName(os.environ.get("LOG_LEVEL", "INFO")))
-logging.getLogger('kafka').setLevel(logging.INFO)
-logging.getLogger('engineio').setLevel(logging.WARN)
-logging.getLogger('flask_authnz').setLevel(logging.WARN)
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-root.addHandler(ch)
-
-logger = logging.getLogger(__name__)
-
-# Turn off a RFC compliance warning; remove this once we get a SSL cert that works with requests.
-urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 
 
 # Register routes.
