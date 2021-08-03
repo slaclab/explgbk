@@ -168,7 +168,7 @@ def get_cached_experiment_names():
     global all_experiment_names
     return list(all_experiment_names)
 
-def get_experiments_with_post_privileges(userid):
+def get_experiments_with_post_privileges(userid, active_exps):
     """
     Get the list of experiments that the logged in user has post privileges for.
     If the logged in user (or one of her groups) is in the site database, we return all experiments.
@@ -185,6 +185,10 @@ def get_experiments_with_post_privileges(userid):
         postable_exps = list(logbookclient['explgbk_cache']["experiments"].find({"post_players": {"$in": u_a_g}}))
     # Sort
     ret_exps = [ { attr : x[attr] for attr in ["_id", "name", "instrument", "description", "start_time", "end_time", "posix_group", "params"] } for x in postable_exps ]
+    active_exp_names = [x["name"] for x in active_exps ]
+    for exp in ret_exps:
+        if exp["name"] in active_exp_names:
+            exp["is_active"] = True
     return ret_exps
 
 def get_experiment_stats():

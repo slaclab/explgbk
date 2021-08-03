@@ -289,7 +289,7 @@ def svc_get_experiments_with_post_privileges():
     Else we query the experiment cache and return those.
     """
     userid = context.security.get_current_user_id()
-    return jsonify({'success': True, 'value': get_experiments_with_post_privileges(userid)})
+    return jsonify({'success': True, 'value': get_experiments_with_post_privileges(userid, get_currently_active_experiments())})
 
 @explgbk_blueprint.route("/lgbk/ws/get_cached_experiment_names", methods=["GET"])
 def svc_get_cached_experiment_names():
