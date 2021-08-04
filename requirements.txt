@@ -17,7 +17,7 @@ MarkupSafe==1.0
 pycparser==2.18
 pymongo==3.11.0
 PyMySQL==0.7.9
-pyOpenSSL==17.2.0
+pyOpenSSL==17.5.0
 PySocks==1.6.7
 python-engineio==3.13.1
 python-socketio==4.6.0
