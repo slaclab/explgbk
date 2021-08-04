@@ -185,7 +185,7 @@ def get_experiments_with_post_privileges(userid, active_exps):
         postable_exps = list(logbookclient['explgbk_cache']["experiments"].find({"post_players": {"$in": u_a_g}}))
     # Sort
     ret_exps = [ { attr : x.get(attr, None) for attr in ["_id", "name", "instrument", "description", "start_time", "end_time", "posix_group", "params"] } for x in postable_exps ]
-    active_exp_names = [x["name"] for x in active_exps ]
+    active_exp_names = [ x["name"] for x in active_exps if "name" in x ]
     for exp in ret_exps:
         if exp["name"] in active_exp_names:
             exp["is_active"] = True
