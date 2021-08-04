@@ -1020,13 +1020,17 @@ def get_site_file_types():
 def get_instrument_elogs(experiment_name, include_site_spanning_elogs=True):
     '''
     Get the associated elogs for experiment.
-    This consists of the elog for the instrument (instrument param elog in the instrument object)
+    This consists of the elog(s) for the instrument (instrument param elog in the instrument object).
     And global experiment_spanning_elogs logs (like the LCLS sample delivery elog) in the site's info object.
+    Also can be specified on a per experiment basis as the experiment parameter xpost_elogs ( comma separated list ).
     '''
+    ret = []
     exp_info = get_experiment_info(experiment_name)
+    exp_x_post_elogs = exp_info.get("params", {}).get("xpost_elogs", None)
+    if exp_x_post_elogs:
+        ret.extend([x.strip() for x in exp_x_post_elogs.split(",")])
     sitedb = logbookclient["site"]
     instrument_elog = sitedb["instruments"].find_one({"_id": exp_info["instrument"]}).get("params", {}).get("elog", None)
-    ret = []
     if instrument_elog:
         ret.append(instrument_elog)
     if include_site_spanning_elogs:
