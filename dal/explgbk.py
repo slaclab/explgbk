@@ -642,6 +642,37 @@ def get_run_numbers_with_tag(experiment_name, tag):
     run_nums = set([ x["run_num"] for x in expdb['elog'].find({ "tags": tag, "run_num": {"$exists": 1} }, {"run_num": 1} ) ])
     return sorted(list(run_nums))
 
+def get_tag_to_run_numbers(experiment_name):
+    """
+    Get a dict of tag to the run number that have elog statements containing the tag
+    """
+    expdb = logbookclient[experiment_name]
+    runs_with_tags = [ x for x in expdb['elog'].find({ "tags": {"$exists": 1}, "run_num": {"$exists": 1} }, {"run_num": 1, "tags": 1} ) ]
+    ret = {}
+    for run_with_tags in runs_with_tags:
+        for tag in run_with_tags["tags"]:
+            if tag not in ret:
+                ret[tag] = []
+            ret[tag].append(run_with_tags["run_num"])
+    return ret
+
+def get_tags_for_runs(experiment_name):
+    """
+    Get a dict of run number to array of tags.
+    """
+    expdb = logbookclient[experiment_name]
+    runs_with_tags = [ x for x in expdb['elog'].find({ "tags": {"$exists": 1}, "run_num": {"$exists": 1} }, {"run_num": 1, "tags": 1} ) ]
+    ret = {}
+    for run_with_tags in runs_with_tags:
+        for tag in run_with_tags["tags"]:
+            run_num = run_with_tags["run_num"]
+            if run_num not in ret:
+                ret[run_num] = []
+            ret[run_num].extend(run_with_tags["tags"])
+    for k, v in ret.items():
+        ret[k] = sorted(set(v))
+    return ret
+
 def get_elogs_for_specified_id(experiment_name, specified_id):
     """
     Get the elog entries related to the entry with the specified id.

@@ -53,7 +53,8 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run, \
     add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments, \
     get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station, \
-    get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag, stop_current_sample
+    get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag, stop_current_sample, get_tag_to_run_numbers, \
+    get_tags_for_runs
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex, \
@@ -2401,6 +2402,43 @@ def svc_get_run_nums_matching_tag(experiment_name):
         return logAndAbort("Please specify the tag")
     run_numbers = get_run_numbers_with_tag(experiment_name, tag)
     return JSONEncoder().encode({"success": True, "value": run_numbers})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_tags_to_runs", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists
+@context.security.authorization_required("read")
+def svc_get_tag_to_run_numbers(experiment_name):
+    """
+    Get a dict of tag to the run number that have elog statements containing the tag
+    """
+    return JSONEncoder().encode({"success": True, "value": get_tag_to_run_numbers(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_runs_to_tags", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists
+@context.security.authorization_required("read")
+def svc_get_tags_for_runs(experiment_name):
+    """
+    Get a dict of run number to the union of tags for all elog statments associated with that run
+    """
+    return JSONEncoder().encode({"success": True, "value": get_tags_for_runs(experiment_name)})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/get_tags_for_run", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists
+@context.security.authorization_required("read")
+def svc_get_tags_for_run(experiment_name, run_num):
+    """
+    Get the union of tags for all elog statments associated with the specified run
+    """
+    run_num_str = run_num
+    try:
+        run_num = int(run_num_str)
+    except ValueError:
+        run_num = run_num_str # Cryo uses strings for run numbers.
+
+    tags_for_runs = get_tags_for_runs(experiment_name)
+    return JSONEncoder().encode({"success": True, "value": tags_for_runs.get(run_num, [])})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/map_param_editable_to_run_nums", methods=["GET"])
 @context.security.authentication_required
