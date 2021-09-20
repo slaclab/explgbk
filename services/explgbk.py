@@ -687,6 +687,19 @@ def svc_reload_experiment_cache():
     reload_experiment_cache()
     return jsonify({'success': True})
 
+@explgbk_blueprint.route("/lgbk/ws/reload_named_cache", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("edit")
+def svc_reload_named_cache():
+    """
+    Reload the specified named cache.
+    """
+    cache_name = request.args.get("cache_name", None)
+    if cache_name:
+        context.kafka_producer.send("explgbk_cache", { "named_cache": cache_name } )
+        return jsonify({'success': True})
+    return jsonify({'success': False})
+
 @explgbk_blueprint.route("/lgbk/ws/rebuild_experiment_cache_for_experiment", methods=["GET"])
 @context.security.authentication_required
 @context.security.authorization_required("edit")

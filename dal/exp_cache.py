@@ -17,7 +17,7 @@ from bson import ObjectId
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 
-from context import logbookclient, instrument_scientists_run_table_defintions, usergroups, kafka_producer, local_kafka_events
+from context import logbookclient, instrument_scientists_run_table_defintions, usergroups, kafka_producer, local_kafka_events, reload_named_caches
 from dal.explgbk import get_experiments_for_instrument, get_poc_feedback_changes, get_poc_feedback_document
 
 __author__ = 'mshankar@slac.stanford.edu'
@@ -434,6 +434,9 @@ def __establish_local_kafka_consumers__():
             logger.debug("Kafka/local JSON %s", info)
             message_type = msg["topic"]
             if message_type == "explgbk_cache":
+                if info.get("named_cache", None):
+                    logger.info("Reloading named cache %s", info["named_cache"])
+                    reload_named_caches(info["named_cache"])
                 __load_experiment_names()
             elif message_type in ["experiments", "roles", "samples"]:
                 if 'experiment_name' in info:

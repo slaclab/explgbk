@@ -87,13 +87,25 @@ MAX_ATTACHMENT_SIZE = float(os.environ.get("MAX_ATTACHMENT_SIZE", "6291456"))
 # There is a per instrument breakdown in this file and a all-instrument section called "HEADER" which I presume we add to all instruments
 instrument_scientists_run_table_defintions = {}
 run_table_secions_json = os.environ.get("RUNTABLE_SECTIONS_JSON", None)
-if run_table_secions_json and os.path.exists(run_table_secions_json):
-    logger.info("Loading run table instrument scientist descriptions from %s", run_table_secions_json)
-    def reverse_mapping_for_section(section):
-        return { x["name"]: {"section" : section["SECTION"], "title": section["TITLE"], "pv": x["name"]} for x in section["PARAMS"] }
-    with open(run_table_secions_json, 'r') as f:
-        isdefs = json.load(f)
-        for instrument, sections in isdefs.items():
-            instrument_scientists_run_table_defintions[instrument] = {}
-            for section in sections:
-                instrument_scientists_run_table_defintions[instrument].update(reverse_mapping_for_section(section))
+
+def load_sections_json():
+    if run_table_secions_json and os.path.exists(run_table_secions_json):
+        logger.info("Loading run table instrument scientist descriptions from %s", run_table_secions_json)
+        new_instrument_scientists_run_table_defintions = {}
+        def reverse_mapping_for_section(section):
+            return { x["name"]: {"section" : section["SECTION"], "title": section["TITLE"], "pv": x["name"]} for x in section["PARAMS"] }
+        with open(run_table_secions_json, 'r') as f:
+            isdefs = json.load(f)
+            for instrument, sections in isdefs.items():
+                new_instrument_scientists_run_table_defintions[instrument] = {}
+                for section in sections:
+                    new_instrument_scientists_run_table_defintions[instrument].update(reverse_mapping_for_section(section))
+        global instrument_scientists_run_table_defintions
+        instrument_scientists_run_table_defintions = new_instrument_scientists_run_table_defintions
+
+load_sections_json()
+
+def reload_named_caches(cache_name):
+    if cache_name == "instrument_scientists_run_table_defintions":
+        logger.info("Reloading the instrument_scientists_run_table_defintions named cache")
+        load_sections_json()
