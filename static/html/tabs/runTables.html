@@ -360,11 +360,22 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
         window.open("ws/runtables/export_as_csv?" + $.param(params), "_blank");
     });
     $("#rtbl_tab").data("del_rtbl_fn", function(e) {
-        var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name");
-        $.ajax({ url: "ws/delete_run_table", "data": { table_name: clkRTblName, is_system_run_table: _.get($("#rtbl_tab").data("tblData")[clkRTblName], 'is_system_run_table', false)}, method: "DELETE"})
-        .done(function(data) { if(_.get(data, "success", true)) { window.location.reload(true); } else { alert("Server side error deleting run table " + data.errormsg); }})
-        .fail(function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure deleting run table " + textStatus); })
-    });
+        let clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name"), is_system_run_table = _.get($("#rtbl_tab").data("tblData")[clkRTblName], 'is_system_run_table', false);
+        let yesnomsg = is_system_run_table ? "<div><b>" + clkRTblName + "</b> is a system run table. Deleting a system run table also deletes the run table for other experiments.</div><div>Are you sure you want to do this?</div>" : "Do you want to delete the experiment run table <b>" + clkRTblName + "</b>?";
+        $.ajax ("../../static/html/ms/generic_yes_no.html")
+        .done(function( tmpl ) {
+          Mustache.parse(tmpl);
+          var rendered = $(Mustache.render(tmpl, {"title": "Delete run table", "message": yesnomsg }));
+          rendered.find(".yesbutton").on("click", function(e) {
+            $.ajax({ url: "ws/delete_run_table", "data": { table_name: clkRTblName, is_system_run_table: is_system_run_table }, method: "DELETE"})
+            .done(function(data) { if(_.get(data, "success", true)) { window.location.reload(true); } else { alert("Server side error deleting run table " + data.errormsg); }})
+            .fail(function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure deleting run table " + textStatus); })
+          });
+          $("#rtbl_tab").find(".mdl_holder").empty().append(rendered);
+          $("#rtbl_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#rtbl_tab").find(".mdl_holder").empty(); });
+          $("#rtbl_tab").find(".mdl_holder").find(".modal").modal("show");
+        })
+      })
     $("#rtbl_tab").data("clone_rtbl_fn", function(e) {
         var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name");
         $.ajax("../../static/html/ms/gen_clone.html")
