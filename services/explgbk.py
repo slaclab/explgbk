@@ -18,7 +18,9 @@ import re
 import requests
 import context
 from functools import wraps
+from collections import OrderedDict
 from datetime import datetime, timedelta
+import types
 import hashlib
 import urllib
 import base64
@@ -28,7 +30,7 @@ import smtplib
 from email.message import EmailMessage
 
 from flask import Blueprint, jsonify, request, url_for, Response, stream_with_context, send_file, \
-    abort, redirect, make_response, g
+    abort, redirect, make_response, g, current_app
 
 from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_setup, register_new_experiment, \
     get_instruments, get_currently_active_experiments, switch_experiment, get_elog_entries, post_new_log_entry, get_specific_elog_entry, \
@@ -54,7 +56,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments, \
     get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station, \
     get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag, stop_current_sample, get_tag_to_run_numbers, \
-    get_tags_for_runs
+    get_tags_for_runs, clone_system_template_run_tables_into_experiment
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex, \
@@ -157,9 +159,27 @@ def instrument_exists(wrapped_function):
 @context.security.authorization_required("read")
 def svc_getexpinfo(experiment_name):
     """
-    Get the info for an experiment
-    :param experiment_name - The name of the experiment - diadaq13
-    :return: The info document for the experiment.
+    <div>Gets the basic info for the specified experiment
+    <pre class="json">{
+  "success": true,
+  "value": {
+    "_id": "diadaq13",
+    "name": "diadaq13",
+    "description": "Testing the DAQ system software of the instrument",
+    "instrument": "DIA",
+    "registration_time": "2013-05-24T03:52:25+00:00",
+    "start_time": "2013-05-24T03:50:49+00:00",
+    "end_time": "2013-05-24T03:50:50+00:00",
+    "leader_account": "gapon",
+    "contact_info": "Igor Gaponenko (gapon@slac.stanford.edu)",
+    "posix_group": "diadaq13",
+    "params": {
+      "DATA_PATH": "/reg/data/ana01/",
+      "dm_locations": "NERSC"
+    }
+  }
+}</pre>
+    </div>
     """
     info = get_experiment_info(experiment_name)
     return JSONEncoder().encode({'success': True, 'value': info})
@@ -1495,9 +1515,23 @@ def svc_replace_system_run_table_def(experiment_name):
 
     is_instrument = json.loads(request.form.get("is_instrument", "false").lower())
     logger.debug("Making %s a system run table called %s. Is instrument %s", existing_run_table_name, system_run_table_name, is_instrument)
+    is_template = json.loads(request.form.get("is_template", "false").lower())
 
-    (status, errormsg, val) = replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name, instrument=g.instrument if is_instrument else None )
+    (status, errormsg, val) = replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name, instrument=g.instrument if is_instrument else None, is_template=is_template )
     return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/clone_system_template_run_tables", methods=["GET"])
+@context.security.authentication_required
+@experiment_exists
+@context.security.authorization_required("post")
+def svc_clone_system_template_run_tables(experiment_name):
+    """
+    Some system run tables are marked as templates; these run tables are copied into an experiment on creation.
+    To get the latest ( or to install a new template in an old experiment ), use this method to clone any template system run tables into this experiment.
+    If there is a run table with the same name as the template, it is not replaced. To get the latest in this case, delete the local run table and rerun this method.
+    """
+    clone_system_template_run_tables_into_experiment(experiment_name, g.instrument)
+    return JSONEncoder().encode({"success": True})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/delete_run_table", methods=["DELETE"])
 @context.security.authentication_required
@@ -2769,3 +2803,24 @@ def svc_get_get_daq_run_params(experiment_name, run_num):
             matches[k] = v
 
     return JSONEncoder().encode({"success": True, "value": matches})
+
+@explgbk_blueprint.route("/lgbk/ws/api_endpoints", methods=["GET"])
+@context.security.authentication_required
+def svc_get_api_endpoints():
+    fnnames = []
+    for k, v in globals().items():
+        if type(v) is types.FunctionType:
+            fnnames.append(v.__name__)
+    api_endpoints_docs = {}
+    for rule in current_app.url_map.iter_rules():
+        if rule.endpoint != 'static':
+            if current_app.view_functions[rule.endpoint].__doc__:
+                epname = current_app.view_functions[rule.endpoint].__name__
+                if epname not in api_endpoints_docs:
+                    api_endpoints_docs[epname] = []
+                api_endpoints_docs[epname].append({ "endpoint": rule.rule, "methods": list(rule.methods - set(["HEAD", "OPTIONS"])),  "docstring": current_app.view_functions[rule.endpoint].__doc__})
+    sorted_api_endpoints = []
+    for fn in fnnames:
+        if fn in api_endpoints_docs:
+            sorted_api_endpoints.extend(api_endpoints_docs[fn])
+    return JSONEncoder().encode(sorted_api_endpoints)

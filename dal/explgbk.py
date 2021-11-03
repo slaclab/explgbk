@@ -163,6 +163,11 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
             logger.exception("Exception creating an initial sample. Please create the sample manually.")
             return (True, "Exception creating an initial sample. Please create the sample manually.")
 
+    try:
+        clone_system_template_run_tables_into_experiment(experiment_name, info["instrument"])
+    except:
+        logger.exception("Exception creating copies of template system run tables")
+
     return (True, "")
 
 def update_existing_experiment(experiment_name, incoming_info):
@@ -225,6 +230,11 @@ def clone_experiment(experiment_name, source_experiment_name, incoming_info, cop
     current_user = security.get_current_user_id()
     expdb["roles"].update_one({"app" : "LogBook", "name": "Manager"}, {"$addToSet": {"players": "uid:" + current_user}}, upsert=True)
     expdb["roles"].update_one({"app" : "LogBook", "name": "Editor"}, {"$addToSet": {"players": "uid:" + current_user}}, upsert=True)
+
+    try:
+        clone_system_template_run_tables_into_experiment(experiment_name, info["instrument"])
+    except:
+        logger.exception("Exception creating copies of template system run tables")
 
     return (True, "")
 
@@ -1431,7 +1441,7 @@ def clone_run_table_definition(experiment_name, existing_run_table_name, new_run
     expdb["run_tables"].insert_one(new_run_table)
     return (True, "", expdb["run_tables"].find_one({"name": new_run_table_name}))
 
-def replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name, instrument=None):
+def replace_system_run_table_definition(experiment_name, existing_run_table_name, system_run_table_name, instrument=None, is_template=False):
     """
     Replace a system run table (defined in the site database) with a run table from this experiment.
     This is a means to edit system run tables using the info available from this experiment.
@@ -1444,6 +1454,8 @@ def replace_system_run_table_definition(experiment_name, existing_run_table_name
     new_run_table = existing_run_table
     del new_run_table["_id"]
     new_run_table["name"] = system_run_table_name
+    if is_template:
+        new_run_table["is_template"] = True
     if instrument:
         new_run_table["instrument"] = instrument
         sitedb["run_tables"].replace_one({"name": system_run_table_name, "instrument": instrument}, new_run_table, upsert=True)
@@ -1452,6 +1464,28 @@ def replace_system_run_table_definition(experiment_name, existing_run_table_name
 
     expdb["run_tables"].delete_one({"name": existing_run_table_name})
     return (True, "", sitedb["run_tables"].find_one({"name": system_run_table_name}))
+
+
+def clone_system_template_run_tables_into_experiment(experiment_name, instrument):
+    """
+    Clone all system run tables that are marked as being a template into the specified experiment.
+    Note, we do not replace any existing run table with the same name.
+    """
+    expdb = logbookclient[experiment_name]
+    sitedb = logbookclient["site"]
+    template_run_tables = [ r for r in sitedb["run_tables"].find({"$and": [ {"$or": [ {"instrument": instrument}, {"instrument": { "$exists": False}}]}, {"is_template": True} ]})]
+    existing_run_tables = [ x["name"] for x in expdb["run_tables"].find() ]
+    for tr in template_run_tables:
+        if tr["name"] in existing_run_tables:
+            logger.debug("Skipping existing run table %s", tr["name"])
+            continue
+        logger.debug("Cloning template run table %s", tr["name"])
+        del tr["is_template"]
+        del tr["_id"]
+        if "instrument" in tr.keys():
+            del tr["instrument"]
+        expdb["run_tables"].insert_one(tr)
+    return (True, "", list(sitedb["run_tables"].find()))
 
 def update_editable_param_for_run(experiment_name, runnum, source, value, userid):
     '''

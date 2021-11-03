@@ -23,6 +23,10 @@
          <label class="col-10">Restrict this run table to experiments on the {{instrument}} instrument</label>
          <input type="checkbox" class="col-1 instrument_only"/>
        </div>
+       <div class="row pt-4">
+        <label class="col-10">Make this a <i>template</i> run table. Template run tables are automatically cloned into new experiments as a separate copy of the system run table.</label>
+        <input type="checkbox" class="col-1 is_template"/>
+      </div>
       </div>
       <div class="modal-footer">
           <button id="obj_clone_btn" class="btn btn-default panel_btn">Replace</button>

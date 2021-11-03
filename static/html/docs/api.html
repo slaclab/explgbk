@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Logbook endpoints</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" type="text/css" href="../../js/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="../../js/@fortawesome/fontawesome-free/css/all.min.css">
+
+  <script type="text/javascript" src="../../js/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
+  <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
+  <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="../../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
+  <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
+  <script type="text/javascript" src="../../static/spgntr.js"></script>
+
+<style type="text/css">
+body {
+    padding: 1.0em;
+}
+</style>
+
+</head>
+<body>
+<div class="container-fluid">
+<h4>Documentation for the logbook endpoints.</h4>
+<div id="api_endpoints">
+</div>
+
+<h4>Guides</h4>
+<ul>
+  <li><a href="roles.html">Role based access control</a></li>
+  <li><a href="devguides/custom_params.html">Custom Parameters</a></li>
+  <li><a href="devguides/external_previews.html">External previews</a></li>
+  <li><a href="devguides/pagination.html">Pagintion</a></li>
+</ul>
+</div>
+
+<script type="text/javascript">
+$(function() {
+    $(document).ready(function() {
+        $.getJSON ("../../lgbk/ws/api_endpoints")
+        .done(function( endpoints ) {
+          let epl = _.map(endpoints, function(v){ v["methods"] = _.join(v["methods"].sort(), ","); v["fmt"] = v["docstring"].includes("<div>"); return v });
+          console.log(epl);
+          let endpointtmpl = `{{#.}}<div><h6>{{endpoint}}</h6><div class="float-right">{{methods}}</div></div><div>{{^fmt}}<pre>{{docstring}}</pre>{{/fmt}}{{#fmt}}{{{docstring}}}{{/fmt}}</div>{{/.}}`; Mustache.parse(endpointtmpl);
+          $("#api_endpoints").append($(Mustache.render(endpointtmpl, epl)));
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
+    })
+})
+</script>
+</body>
+</html>

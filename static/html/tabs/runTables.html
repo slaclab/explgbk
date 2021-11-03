@@ -210,6 +210,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
       tdef.coldefs = _.sortBy(tdef.coldefs, function(v){ return v["position"];});
       tdef.coldefs.unshift({"label": "Run", "source": "num", "is_editable": false, "position": -1 })
     });
+    tblData.value = _.reject(tblData.value, function(x){ return _.get(x, "is_template", false)});
     $("#rtbl_tab").data("tblData", _.keyBy(tblData.value, function(o) {  return o.name; }));
     console.log($("#rtbl_tab").data("tblData"));
     var rendered = $(Mustache.render(run_tbl_pill_template, tblData));
@@ -422,6 +423,11 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
             $("#rtbl_tab").find(".mdl_holder").find(".edit_modal").modal("show");
         });
     });
+    $("#rtbl_tab").data("clone_template_run_tables_fn", function(e) {
+      $.getJSON("ws/clone_system_template_run_tables")
+      .done(function(data, textStatus, jqXHR) { if(data.success) { window.location.reload(true); } else { error_message("Server side exception cloning run table " + data.errormsg)} })
+      .fail( function(jqXHR, textStatus, errorThrown) { error_message("Server side HTTP failure cloning run table " + textStatus); })
+    });
     $("#rtbl_tab").data("make_system_rtbl", function(e) {
         var clkRTblName = $("#rtbl_tab .nav-pills a.active").attr("data-rtbl-name");
         $.ajax("../../static/html/ms/make_system_runtable.html")
@@ -447,7 +453,7 @@ $("#rtbl_tab").on("lg.loaded.bs.tab", function() {
                     }
                 });
                 if (v_failed) { e.preventDefault(); return; }
-                $.getJSON({url: "ws/replace_system_run_table_def", data: { existing_run_table_name: clkRTblName, system_run_table_name: $.trim(formObj.find(".new_object_name").val()), is_instrument: formObj.find(".instrument_only").is(":checked") } , method: "POST"})
+                $.getJSON({url: "ws/replace_system_run_table_def", data: { existing_run_table_name: clkRTblName, system_run_table_name: $.trim(formObj.find(".new_object_name").val()), is_instrument: formObj.find(".instrument_only").is(":checked"), is_template: formObj.find(".is_template").is(":checked") } , method: "POST"})
                 .done(function(data, textStatus, jqXHR) {
                     if(data.success) {
                         console.log("Successfully replaced system run table with " + clkRTblName);
@@ -476,6 +482,7 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
     var tab_toolbar = `<span id="new_rtbl" title="Create a new run table"><i class="fas fa-plus fa-lg tlbr"></i></span>
     <span id="edit_rtbl" title="Edit this run table"><i class="fas fa-edit fa-lg tlbr"></i></span>
     <span id="clone_rtbl" title="Clone this run table"><i class="fas fa-clone fa-lg tlbr"></i></span>
+    <span id="clone_tmpl" title="Clone system template run tables to this experiment"><i class="fas fa-redo-alt"></i></span>
     <span id="del_rtbl" title="Delete this run table"><i class="fas fa-trash fa-lg tlbr"></i></span>
     <span id="export_rtbl" title="Export this run table as a CSV"><i class="fas fa-download fa-lg tlbr"></i></span>
     <span id="make_system_rtbl" title="Move this run table to the system run tables. These are visible to all experiments; the move will replace any system run table with the same name. This run table will be removed from this experiment."><i class="fab fa-superpowers fa-lg tlbr"></i></span>
@@ -487,6 +494,7 @@ $("#rtbl_tab").on("lg.shown.bs.tab", function() {
     $("#edit_rtbl").on("click", function(e) { $("#rtbl_tab").data("edit_rtbl_fn")(e)});
     $("#export_rtbl").on("click", function(e) { $("#rtbl_tab").data("csv_rtbl_fn")(e)});
     $("#clone_rtbl").on("click", function(e) { $("#rtbl_tab").data("clone_rtbl_fn")(e)});
+    $("#clone_tmpl").on("click", function(e) { $("#rtbl_tab").data("clone_template_run_tables_fn")(e)});
     $("#del_rtbl").on("click", function(e) { $("#rtbl_tab").data("del_rtbl_fn")(e)});
     $("#make_system_rtbl").on("click", function(e) { $("#rtbl_tab").data("make_system_rtbl")(e)});
 });
