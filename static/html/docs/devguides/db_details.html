@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>LCLS data management system databases</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="../../../js/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="../../../js/@fortawesome/fontawesome-free/css/all.min.css">
+
+  <script type="text/javascript" src="../../../js/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="../../../js/mustache/mustache.min.js"></script>
+  <script type="text/javascript" src="../../../js/lodash/lodash.min.js"></script>
+  <script type="text/javascript" src="../../../js/moment/min/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="../../../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
+  <script type="text/javascript" src="../../../js/bootstrap/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
+  <script type="text/javascript" src="../../../js/plotly.js/dist/plotly.min.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <div class="apidoc-header">
+            <h1 class="apidoc-title">LCLS DM databases</h1>
+        </div>
+
+        <div class="row">
+            <div class="apidoc-main">
+                <div class="apidoc-post">
+                    <p>This document describes the documents ( and Kafka messages ) used by the LCLS data management system (aka <b> LCLS DM</b>).
+                      The LCLS DM consists of a suite of applications cooperating around a Kafka message bus.
+                      Many of the applications used are open-source projects from various scientific collaborations ( for example, RUCIO ) and are described in their respective web sites.
+                      Integrations with these external projects typically involve a small amount of glue code that translates LCLS DM documents into API calls to these applications.
+                      The rest of the applications in the suite are home-grown applications; the documents and messages for these applications are described in this document.
+                    </p>
+                    <p>The LCLS DM uses MongoDB as its central document store and Kafka as the message bus.
+                      API calls to the LCLS DM typically return DM documents; ocassionally with minor modifications.
+                      Both API calls and Kafka messages use an envelope pattern; where the DM document is enclosed in a container; said container has information about the operation like status, errors etc.
+                      The LCLS DM creates a separate Mongo database for each experiment with the same name as the experiment. For example, the experiment <code>diadaq13</code> stores all its documents in collections in a separate database called <code>diadaq13</code>.
+                      In Mongo-speak, to look at the documents for the the experiment <code>diadaq13</code>, one would <pre>&lt; use diadaq13
+switched to db diadaq13
+&lt; db.getCollectionNames()
+[
+  "runs",
+  "file_catalog",
+  "roles",
+  "samples",
+  "run_tables",
+  "workflow_definitions",
+  "workflow_jobs",
+  "elog",
+  "info",
+  "run_param_descriptions",
+  "shifts",
+]</pre></p>
+              <p>A couple of databases are considered global databases, the <code>site</code> database contains instance wide documents ( for example, instance wide role to privilege associations) while another database <code>explgbk_cache</code> serves as a cluster-wide cache for performance optimization.</p>
+            </div>
+          </div>
+          The rest of this document contains some documentation and examples on the documents in these collections.
+        </div>
+
+        <div class="row">
+            <div>
+                <div class="apidoc-post">
+                  <h6>Runs</h6>
+                  <p>In LCLS, data is taken in units of runs. The DAQ initiates a run by first getting a run number from the DM and then sending a signal to its various components to start recording.
+                  At the end of the run (typically user initiated), the files containing these various datasets are closed.
+                  A run is also the unit of analysis; for example, given the run number, psana has API's that get a detector's data for an experiment for that run.</p>
+                  Runs are stored in the run collection.<pre>{
+"_id" : ObjectId("5e5xxxx"),
+"num" : 8,
+"type" : "EPICS",
+"begin_time" : ISODate("2013-05-24T04:36:20Z"),
+"end_time" : ISODate("2013-05-24T04:36:25Z"),
+"params" : {
+  "AT1L0:SOLID:MPA:01:POS_STATE_RBV" : "RETRACTED",
+  "AT1L0:SOLID:MPA:02:POS_STATE_RBV" : "RETRACTED",
+  "MFX:DIA:MMS:07:DF" : "1",
+  "DAQ Detectors/BldEb-0|NoDevice-0" : true,
+  "DAQ Detectors/EpicsArch-0|NoDevice-0" : true,
+  "DAQ Detectors/MfxEndstation-0|Epix10ka2M-0" : true,
+  "DAQ Detector Totals/Damaged" : 0,
+  "DAQ Detector Totals/Events" : 1094,
+  "DAQ Detector Totals/Size" : 4.824235104,
+  ...
+},
+"editable_params" : {
+  "pauls_comment" : {
+    "value" : "Reverted back to previous setting",
+    "modified_by" : "pdirac",
+    "modified_time" : ISODate("2021-12-06T18:33:14.778Z")
+  }
+ },
+ "sample" : ObjectId("5dexxx")
+}</pre>
+                <ul>
+                  <li><code>num</code> - In LCLS and Testfac, run numbers are auto-increment integers, automatically generated using a counter in the <code>counters</code> collection. For CryoEM, run numbers are string prefixes generated by the CryoEM software.</li>
+                  <li><code>begin_time</code> - The start of the run. All times are stored as UTC timestamps.</li>
+                  <li><code>end_time</code> - The end of the run. A run with a valid end time is a run that was closed properly. Runs without valid end times could indicate a run in progress or some issue with data gathering.</li>
+                  <li><code>sample</code> - Samples are sometimes used to group runs logically. When a run is associated with a sample, the sample's objectid is stored in the sample attribute.</li>
+                  <li><code>params</code> - Run parameters - these are usually EPICS PV's uploaded by the DAQ but may also include results of analysis etc.
+                    For legacy and future-proofing reasons, rather than having deeply nested documents for run parameters, we use a single key/value dict with the <b>/</b> character to sorta support a hierarchical namespace.
+                    The <code>DESC</code> field for these EPICS PVs is stored globally for the experiment in the <code>run_param_descriptions</code> collection.<pre>{
+	"param_name" : "AT1L0:SOLID:MPA:01:POS_STATE_RBV",
+	"description" : "at1l0_SolidAttenuator_1"
+}</pre></li>
+                  <li><code>editable_params</code> - These are user run specific comments (strings) managed as an editable comment in a run table.</li>
+                  <li><code>type</code> - An enum that is used to distinguish runs with actual data from calibration/test runs etc. Not clear if this is used anymore. </li>
+                </ul>
+
+
+                </div>
+              </div>
+            </div>
+            <div class="row">
+                <div>
+                    <div class="apidoc-post">
+                      <h6>File catalog</h6>
+                      <p>The file catalog contains a list of files for each run. The duties of the file catalog are shared between the DM and external applications (currently iRods, soon to be RUCIO)
+                      </p>
+                      <pre>{
+"_id" : ObjectId("618cxxxxx"),
+"absolute_path" : "/u2/pcds/pds/xpp/xppabcd19/xtc/xppabcd19-r0001-s00-c00.xtc",
+"hostname" : "daq-xpp-node01",
+"gen" : 1,
+"path" : "/xpp/xppabcd19/xtc/xppabcd19-r0001-s00-c00.xtc",
+"run_num" : 1,
+"create_timestamp" : ISODate("2021-11-10T22:23:04.782Z"),
+"modify_timestamp" : ISODate("2021-11-10T22:23:04.782Z"),
+"locations" : {
+  "SRCF_FFB" : {
+    "asof" : ISODate("2021-11-10T22:25:21.494Z")
+  },
+  "SLAC" : {
+    "asof" : ISODate("2021-11-10T22:25:40.423Z")
+  }
+},
+"size" : NumberLong("3805078488")
+}
+</pre>
+                    <ul>
+                      <li><code>run_num</code> - The associated run number.</li>
+                      <li><code>path</code> - The logical path to the data file.
+                        Typically, adding a location specific prefix to the path yields the absolute path for the data file in that location.
+                        The <i>path</i> attribute serves as the identity for this data file in the DM and in the external system.
+                      </li>
+                      <li>Information from the external system cached locally for performance reasons<ul>
+                        <li><code>create_timestamp</code> - The time the file was created.</li>
+                        <li><code>modify_timestamp</code> - The time the file was last modified.</li>
+                        <li><code>size</code> - The size of the file as reported by the DAQ.</li>
+                        <li><code>locations</code> - The various DM locations where the file is present. Each location has a <code>asof</code> parameter that indicates when this existence check was made.</li>
+                        <li><code>hostname</code> - The hostname where the file was original recorded.</li>
+                        <li><code>absolute_path</code> - The absolute path where the file was original recorded.</li>
+                        <li><code>gen</code> - Which generation of data file. LCLS1 and LCLS2 have slightly different data file naming conventions.</li>
+                      </li></ul></li>
+                    </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <div class="apidoc-post">
+                          <h6>Roles</h6>
+                          <p>The LCLS DM supports <a href="../roles.html">role based access controls</a>.
+                            The set of collaborators and their corresponding roles in the experiment are stored in the <i>roles</i> collection.
+                          </p>
+                          <pre>{
+"_id" : ObjectId("602d9xxx"),
+"app" : "LogBook",
+"name" : "Writer",
+"players" : [
+  "experiment_specific_group",
+  "uid:collaborator1",
+  "uid:collaborator2",
+]
+}</pre>
+                                              <ul>
+                                                <li><code>app</code> - The application name that the role applies to; this is almost always <i>LogBook</i></li>
+                                                <li><code>name</code> - The name of the role.</li>
+                                                <li><code>players</code> - A list of collaborators that perform this role. Group names are listed as is; individual user id's are added using a <code>uid:</code> prefix.</li>
+                                                <li><code>privileges</code> - The privileges ( just a list of privilege strings ) associated with the role are only listed in the global <code>site</code> database. <pre>"privileges" : [
+		"post",
+		"read"
+	],</pre></li>
+                                              </ul>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div class="row">
+                                              <div>
+                                                  <div class="apidoc-post">
+                                                    <h6>Samples</h6>
+                                                    <p>Samples are used to logically group runs ( in a previous incarnation, they were called <i>run groups</i>)
+                                                    </p>
+                                                    <pre>{
+	"_id" : ObjectId("5de9xxx"),
+	"name" : "MmpL3",
+	"description" : "CryoEM Time",
+	"params" : {
+		"imaging_method" : "single-particle",
+		"imaging_software" : "SerialEM",
+		"imaging_format" : ".tif",
+		"apix" : "1.06",
+		"fmdose" : "1.42",
+		"preprocess/enable" : "1",
+		"preprocess/convert_gainref" : "1",
+		"preprocess/apply_gainref" : "1",
+		"preprocess/align/motioncor2/throw" : "0",
+		"preprocess/align/motioncor2/outstk" : "0"
+	}
+}</pre>
+                                                                        <ul>
+                                                                          <li><code>name</code> - The name of the sample</li>
+                                                                          <li><code>description</code> - The description of the sample.</li>
+                                                                          <li><code>params</code> - A list of arbitrary key value pairs. The LCLS DM supports the ability to declaratively specify <a href=custom_params.html>constraints</a> on parameters.</li>
+                                                                        </ul>
+                                                                        </div>
+                                                                      </div>
+                                                                    </div>
+
+            <div class="row">
+              <div>
+                <div class="apidoc-post">
+                  <h6>Run tables</h6>
+                  <p>Tabular representations ( and graphs of ) run parameters</p>
+                  <pre>{
+"_id" : ObjectId("619xxx"),
+"name" : "test table",
+"description" : "scan info",
+"is_editable" : true,
+"table_type" : "table",
+"sort_index" : 100,
+"coldefs" : [
+{
+  "label" : "scan motor",
+  "type" : "EPICS/Scan Info",
+  "source" : "params.XPP:SCAN:SCANVAR00",
+  "is_editable" : false,
+  "position" : 0
+},
+{
+  "label" : "",
+  "type" : "EPICS/Scan Info",
+  "source" : "params.XPP:SCAN:MIN00",
+  "is_editable" : false,
+  "position" : 1
+},
+{
+  "label" : "",
+  "type" : "EPICS/Scan Info",
+  "source" : "params.XPP:SCAN:MAX00",
+  "is_editable" : false,
+  "position" : 2
+},
+{
+  "label" : "comments",
+  "type" : "Editables",
+  "source" : "editable_params.comments.value",
+  "is_editable" : true,
+  "position" : 3
+}
+]
+}</pre>
+                  <ul>
+                    <li><code>name</code> - The name of the run table</li>
+                    <li><code>description</code> - A description for the run table</li>
+                    <li><code>is_editable</code> - Whether the run table has been locked for edits; no longer used</li>
+                    <li><code>table_type</code> - An enum that indicates how this table should be rendered.
+                      <ul>
+                        <li><code>table</code> - Run parameters as tablular data.</li>
+                        <li><code>histogram</code> - The attribute <code>bin_size</code> is used to compute the bins.</li>
+                        <li><code>scatter</code> - If a <i>coldefs.source</i> ends with a "_time" suffix, it is intepreted as a date time.</li>
+                        <li><code>groupbytable</code> - Pivot tables.</li>
+                        <li><code>generatedtable</code> - Render all run parameters matching a regex. If the attribute <code>showvalues</code> is false, then only the presence/absence of the parameter is indicated ( used, for example, to enumerate the detectors used in a run ).</li>
+                      </ul>
+                    </li>
+                    <li><code>sort_index</code> - Position in the list of run tables; lower sort numbers show up earlier in the list of run tables.</li>
+                    <li><code>coldefs</code> - Definitions for each column</li>
+                    <li><code>coldefs.label</code> - Label</li>
+                    <li><code>coldefs.source</code> - The path into the run document for this column</li>
+                    <li><code>coldefs.type</code> - Really the category; run parameters are categorized into logical groups that are defined by the instrument scientists.</li>
+                    <li><code>coldefs.is_editable</code> - Whether the column should be displayed as an editable widget.</li>
+                    <li><code>coldefs.position</code> - The column number ( location in the table )</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <div class="apidoc-post">
+                  <h6>workflow_definitions</h6>
+                  <p>Workflow definitions for the ARP.</p>
+                  <pre>{
+"_id" : ObjectId("5f45xxx"),
+"name" : "#submit_offbyone",
+"executable" : "/reg/g/psdm/utils/arp/offbyone",
+"parameters" : "",
+"trigger" : "START_OF_RUN",
+"run_as_user" : "userid",
+"location" : "SLAC"
+}</pre>
+                  <ul>
+                    <li><code>name</code> - The name of the workflow definition</li>
+                    <li><code>executable</code> - The absolute path to the executable.</li>
+                    <li><code>parameters</code> - Additional parameters passed to the executable.</li>
+                    <li><code>trigger</code> - The LCLS DM event that triggers the job - please see the ARP documentation for more details.</li>
+                    <li><code>run_as_user</code> - The SLURM userid to be used when running the job.</li>
+                    <li><code>location</code> - The DM location where the workflow is to be executed. For example, <b>NERSC</b></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <div class="apidoc-post">
+                  <h6>workflow_jobs</h6>
+                  <p>This is mostly an operational table ( used internally by the ARP)</p>
+                  <pre>{
+"_id" : ObjectId("601ecfxxx"),
+"run_num" : 279,
+"def_id" : ObjectId("601xxx"),
+"user" : "userid",
+"status" : "DONE",
+"submit_time" : ISODate("2021-02-06T17:18:37.396Z"),
+"tool_id" : 573,
+"counters" : [
+{
+  "key" : "<b>Last Event</b>",
+  "value" : 920
+}
+]
+}</pre>
+                  <ul>
+                    <li><code>run_num</code> - The run number.</li>
+                    <li><code>def_id</code> - The workflow definition id</li>
+                    <li><code>user</code></li>
+                    <li><code>status</code> - The ARP status of the job.</li>
+                    <li><code>submit_time</code></li>
+                    <li><code>tool_id</code> - The workload management infrastructure id, almost always the SLURM id.</li>
+                    <li><code>counters</code> - List of key/value pairs for progress bar counters. Both <code>key</code> and <code>value</code> can be simple HTML strings with a small amount of formatting.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <div class="apidoc-post">
+                  <h6>elog</h6>
+                  <p>The electronic logbook</p>
+                  <pre>{
+"_id" : ObjectId("5e5554xxx"),
+"insert_time" : ISODate("2018-03-16T23:12:42Z"),
+"relevance_time" : ISODate("2018-03-16T23:12:42Z"),
+"author" : "userid",
+"content" : "Elog text message",
+"run_num" : 32,
+"tags" : [ "Laser", "THz", "800nm", "OPA" ],
+"content_type" : "TEXT",
+"attachments" : [
+  {
+    "_id" : ObjectId("5e55xxx"),
+    "name" : "Attachment name",
+    "type" : "image/jpeg",
+    "url" : "mongo://5e555xxx",
+    "preview_url" : "mongo://5e555xxx"
+  }
+]
+}</pre>
+                  <ul>
+                    <li><code>insert_time</code> - The time the entry was made.</li>
+                    <li><code>relevance_time</code> - The time that the entry should be associated with ( for example, so that entries can made for the future as reminders)</li>
+                    <li><code>author</code> - Who made the entry</li>
+                    <li><code>content</code> - The entry text. HTML if the entry is a HTML entry.</li>
+                    <li><code>title</code> - The title for the entry if the entry is a HTML entry.</li>
+                    <li><code>tags</code> - A list of string tags associated with the entry.</li>
+                    <li><code>root</code> - The id of the top level entry in the entry tree (followups create a entry tree).</li>
+                    <li><code>parent</code> - The parent of the current entry in the entry tree.</li>
+                    <li><code>attachments</code> - List of attachments for this entry</li>
+                    <li><code>attachments.name</code> - The name (filename) of the attachment</li>
+                    <li><code>attachments.type</code> - The MIME type of the attachment</li>
+                    <li><code>attachments.url</code> - The href for the attachment.</li>
+                    <li><code>attachments.preview_url</code> - The href for the attachment preview.</li>
+                    <li><code>run_num</code> - If the elog entry is associated with a run.</li>
+                    <li><code>email_to</code> - All the email addresses that the entry was emailed to.</li>
+                    <li><code>deleted_by</code> - Who deleted the entry - for logical deletes</li>
+                    <li><code>deleted_time</code> - When was the entry deleted.</li>
+                    <li><code>previous_version</code> - If the entry was edited, pointer to the previous version.</li>
+                    <li><code>shift</code> - Associated shift id.</li>
+                    <li><code>content_type</code> - Type of content - not used.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <div class="apidoc-post">
+                  <h6>info</h6>
+                  <p>A single document that contains information about the experiment.</p>
+                  <pre>{
+"_id" : "experiment_name",
+	"name" : "experiment_name",
+	"instrument" : "XPP",
+	"description" : "Description for the experiment",
+	"start_time" : ISODate("2021-03-06T17:00:00Z"),
+	"end_time" : ISODate("2021-03-11T05:00:00Z"),
+	"leader_account" : "leader_unix_account",
+	"contact_info" : "Principal Investigator (principal.investigator@gmail.com)",
+	"posix_group" : "experiment_name",
+	"params" : {
+		"PNR" : "Proposal ID from the user portal",
+		"zoom_meeting_id" : "917 1111 1111",
+		"zoom_meeting_pwd" : "5555555",
+		"zoom_meeting_url" : "https://zoom.us/j/9171111111?pwd=kerplunk",
+		"dm_locations" : "SRCF_FFB"
+	}
+}</pre>
+                  <ul>
+                    <li><code>name</code> - Name of the experiment</li>
+                    <li><code>instrument</code> - Instrument the experiment is scheduled on.</li>
+                    <li><code>start_time</code></li>
+                    <li><code>end_time</code></li>
+                    <li><code>leader_account</code> - The userid of the PI</li>
+                    <li><code>contact_info</code> - Contact info for the PI</li>
+                    <li><code>posix_group</code> - The POSIX group used for experiment file permissions; typically the same as the experiment name</li>
+                    <li><code>params</code> - Any number of key value pairs for misc information.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <div class="apidoc-post">
+                  <h6>Kafka topics and messages</h6>
+                  <p>Most Kafka messages are simply the DM documents wrapped in an envelope. For example, the elog topic would look something like this
+<pre>{
+"experiment_name": "expname",
+"CRUD": "Create",
+"value": {
+  "_id": "61afxxx",
+  "relevance_time": "2021-12-07T13:57:54.977000+00:00",
+  ...
+</pre>
+                  <ul>
+                    <li><code>experiment_name</code> - The experiment that this message applies to.</li>
+                    <li><code>CRUD</code> - One of <code>Create</code>, <code>Update</code> and <code>Delete</code></li>
+                    <li><code>value</code> - The actual LCLS DM document</li>
+                  </ul>
+                  Sometimes the LCLS DM document has some additional attributes for performance reasons.
+                  </p>
+                  <p>List of Kafka topics
+                  <ul>
+                    <li><code>elog</code></li>
+                    <li><code>experiment_switch</code> - Sent when a new experiment is switched into an experiment station</li>
+                    <li><code>experiments</code></li>
+                    <li><code>explgbk_cache</code> - Internal message for cache refreshes </li>
+                    <li><code>file_catalog</code></li>
+                    <li><code>file_migration</code> - Messages from the data mover.</li>
+                    <li><code>file_purge</code></li>
+                    <li><code>instrument_standby</code> - When an instrument is switched into standby.</li>
+                    <li><code>instruments</code></li>
+                    <li><code>mvrstats</code> - Statistics from the movers.</li>
+                    <li><code>roles</code></li>
+                    <li><code>runs</code></li>
+                    <li><code>samples</code></li>
+                    <li><code>shifts</code></li>
+                    <li><code>workflow_jobs</code></li>
+                  </ul></p>
+                </div>
+              </div>
+            </div>
+    </div>
+</body>
+</html>
