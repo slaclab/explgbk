@@ -1,14 +1,14 @@
 <div class="container-fluid text-center tabcontainer alwaysreload" id="lcls_wf_ctrls_tab">
    <div class="mdl_holder"></div>
    <div class="container-fluid text-center" id="wf_ctrls_content">
-       <div class="row ctrls_hdr"><span class="col-1">Run</span><span class="col-2">Job</span><span class="col-2">Status</span><span class="col-2">Actions</span><span class="col-5">Report</span></div>
+       <div class="row ctrls_hdr"><span class="col-1">Run</span><span class="col-2">Job</span><span class="col-1">Status</span><span class="col-1">Job ID</span><span class="col-2">Actions</span><span class="col-5">Report</span></div>
        <div class="ctrls_content spgntr_append"></div>
    </div>
 </div>
 
 <script type="text/javascript">
  $("#lcls_wf_ctrls_tab").on("lg.loaded.bs.tab", function() {
-  let wf_job_tmpl = `<div class="row jobrow" data-jobid="{{_id}}"><span class="col-1"></span><span class="col-2">{{def.name}}</span><span class="col-2">{{status}}</span>
+  let wf_job_tmpl = `<div class="row jobrow" data-jobid="{{_id}}"><span class="col-1"></span><span class="col-2">{{def.name}}</span><span class="col-1">{{status}}</span><span class="col-1">{{tool_id}}</span>
       <span class="col-2"><span class="listview-action wact kill-job" title="Kill a running job" {{^running}}disabled{{/running}}><i class="fas fa-skull-crossbones"></i></span><span class="listview-action wact view-log" title="View the log file"><i class="fas fa-align-justify"></i></span><span class="listview-action wact view-details" title="View job details"><i class="fas fa-info-circle"></i></span><span class="listview-action wact delete-job" title="Delete this job entry" {{#running}}disabled{{/running}}><i class="fas fa-trash"></i></span></span><span class="col-5 wf_counters"><ul>{{#counters}}<li><span class="wf_counter_key">{{{key}}}</span>:<span class="wf_counter_value">{{{value}}}</span></li>{{/counters}}</ul></span></div>`,
       wf_run_tmpl = `<div class="runrow" data-spgntr="{{num}}"><div class="row runhdr"><span class="col-1">{{num}}</span><span class="col-2"><select><option value=""> </option>{{#wf_defs}}<option value="{{.}}">{{.}}</option>{{/wf_defs}}</select></span></div>
       <div class="jobsdiv">{{#jobs}}`+wf_job_tmpl+`{{/jobs}}</div></div>`;
