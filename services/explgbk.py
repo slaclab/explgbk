@@ -704,6 +704,12 @@ def svc_reload_experiment_cache():
     """
     Reload the cached experiment info. This is also done automatically; use if the caches have no caught up for some reason.
     """
+    experiment_name = request.args.get("experiment_name", None)
+    if experiment_name:
+        reload_experiment_cache(experiment_name=experiment_name)
+        return jsonify({'success': True})
+
+
     reload_experiment_cache()
     return jsonify({'success': True})
 

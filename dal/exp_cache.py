@@ -109,12 +109,19 @@ def init_app(app):
 
 
 
-def reload_cache():
+def reload_cache(experiment_name=None):
     """
     Reload the experiment cache from the database.
     Use only if you make changes directly in the database bypassing the app.
     If you are using to recover from invalid cache issues; please do generate a bug report.
     """
+    if experiment_name:
+        logger.debug("Refreshing the cache for experiment %s", experiment_name)
+        if experiment_name in ["admin", "config", "local", "site"]:
+            return
+        update_single_experiment_info(experiment_name)
+        return
+
     __update_experiments_info()
 
 def get_experiments():
