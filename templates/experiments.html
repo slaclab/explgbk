@@ -27,16 +27,16 @@
     <script type="text/javascript" src="../static/experiments.js"></script>
 
     <script type="text/javascript">
-		var experiments_url   = "ws/experiments?categorize=instrument_lastrunyear&sortby=lastrunyear";
-		var useridgroups_url  = "ws/usergroups";
-        var instruments_url   = "ws/instruments";
-		var active_experiments_url = "ws/activeexperiments";
-        var lookup_experiment_in_urawi = "ws/lookup_experiment_in_urawi";
-        var register_experiment_url = "ws/register_new_experiment";
-        var logged_in_user  = "{{ logged_in_user }}";
-        var logbook_site = "{{ logbook_site }}";
-        var privileges = {{ privileges|safe }};
-        var logged_in_user_details = {{ logged_in_user_details|safe }}
+    var logbook_site = "{{ logbook_site }}";
+    var experiments_url   = ( logbook_site == "LCLS" ? experiments_url = "ws/experiments?categorize=instrument_runperiod&sortby=runperiod" :  "ws/experiments?categorize=instrument_lastrunyear&sortby=lastrunyear" );
+    var useridgroups_url  = "ws/usergroups";
+    var instruments_url   = "ws/instruments";
+    var active_experiments_url = "ws/activeexperiments";
+    var lookup_experiment_in_urawi = "ws/lookup_experiment_in_urawi";
+    var register_experiment_url = "ws/register_new_experiment";
+    var logged_in_user  = "{{ logged_in_user }}";
+    var privileges = {{ privileges|safe }};
+    var logged_in_user_details = {{ logged_in_user_details|safe }}
     </script>
 </head>
 

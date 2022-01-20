@@ -171,7 +171,7 @@ $(function() {
 
         })
         .fail(function (errmsg) {
-        	noty( { text: errmsg, layout: "topRight", type: "error" } );
+          new Noty( { text: errmsg, layout: "topRight", type: "error", timeout: 2000 }).show();
         });
     });
 });

@@ -199,14 +199,23 @@ def svc_saveexpinfosetup(experiment_name):
 
     return jsonify({"success": True})
 
+def __estimate_run_period__(exp):
+    """ Estimate the LCLS run period """
+    return int(exp.get("params", {}).get("run_period", exp["name"][-2:] if exp["name"][-2:].isdigit() else "0"))
+def __bucket_run_period__(exp):
+    rp = __estimate_run_period__(exp)
+    return "Run " + str(rp) if rp else "null"
+
 categorizers = {
     "instrument": [(lambda exp : exp.get("instrument", None))],
-    "instrument_lastrunyear": [(lambda exp : exp.get("instrument", None)), (lambda exp : exp["last_run"]["begin_time"].year if "last_run" in exp else None)]
+    "instrument_lastrunyear": [(lambda exp : exp.get("instrument", None)), (lambda exp : exp["last_run"]["begin_time"].year if "last_run" in exp else None)],
+    "instrument_runperiod": [(lambda exp : exp.get("instrument", None)), (lambda exp : __bucket_run_period__(exp))],
     }
 
 sorters = {
     "name": ((lambda exp: exp["name"]), False),
-    "lastrunyear": ((lambda exp: exp["last_run"]["begin_time"] if "last_run" in exp else exp["start_time"]), True)
+    "lastrunyear": ((lambda exp: exp["last_run"]["begin_time"] if "last_run" in exp else exp["start_time"]), True),
+    "runperiod": ((lambda exp : __estimate_run_period__(exp)), False)
     }
 
 def categorize(explist, categorizers, sorter):
