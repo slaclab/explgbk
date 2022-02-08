@@ -201,7 +201,10 @@ def svc_saveexpinfosetup(experiment_name):
 
 def __estimate_run_period__(exp):
     """ Estimate the LCLS run period """
-    return int(exp.get("params", {}).get("run_period", exp["name"][-2:] if exp["name"][-2:].isdigit() else "0"))
+    override = exp.get("params", {}).get("run_period", None)
+    if override:
+        return int(override[-2:])
+    return int(exp["name"][-2:] if exp["name"][-2:].isdigit() else "0")
 def __bucket_run_period__(exp):
     rp = __estimate_run_period__(exp)
     return "Run " + str(rp) if rp else "null"
