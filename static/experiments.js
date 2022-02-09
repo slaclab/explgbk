@@ -63,7 +63,7 @@ $(function() {
             if ($(tabtarget + " .tabbable ul").find(".year_pill").length > 0) { $(tabtarget + " .tabbable ul").empty(); }
         		if ($(tabtarget + " .tabbable ul").find(".year_pill").length <= 0) {
         			console.log("Adding year pills for " + instr);
-        			_.each(_.reverse(_.sortBy(_.keys(experiments[instr]), function(x){ return _.includes([ "null" ], x) ? 0 : _.toNumber(x)})), function(year) {
+        			_.each(_.reverse(_.sortBy(_.keys(experiments[instr]), function(x){ return _.includes([ "null" ], x) ? 0 : (isNaN(parseInt(x)) ? x : _.toNumber(x))})), function(year) {
 	            		$(tabtarget + " .tabbable ul").append(Mustache.render(year_pill_template, { instrument: instr, year: (year == "null") ? "None" : year }));
 	        		});
 	        		$(tabtarget + " .tabbable ul").find(".year_pill").on("shown.bs.tab", function() {
