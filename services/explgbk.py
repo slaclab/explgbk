@@ -988,7 +988,9 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
             parent_msg = child_message
 
         s = smtplib.SMTP("smtp.slac.stanford.edu")
-        s.sendmail(msg['From'], full_email_addresses, msg.as_string())
+        mailstatus = s.sendmail(msg['From'], full_email_addresses, msg.as_string())
+        if mailstatus:
+            logger.warn(mailstatus)
         s.quit()
     except Exception:
         logger.exception("Exception sending elog emails for experiment " + experiment_name)
