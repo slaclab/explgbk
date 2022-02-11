@@ -101,7 +101,8 @@ def load_sections_json():
                 for section in sections:
                     new_instrument_scientists_run_table_defintions[instrument].update(reverse_mapping_for_section(section))
         global instrument_scientists_run_table_defintions
-        instrument_scientists_run_table_defintions = new_instrument_scientists_run_table_defintions
+        instrument_scientists_run_table_defintions.clear()
+        instrument_scientists_run_table_defintions.update(new_instrument_scientists_run_table_defintions)
 
 load_sections_json()
 
