@@ -11,7 +11,7 @@
   <script type="text/javascript" src="../../../js/mustache/mustache.min.js"></script>
   <script type="text/javascript" src="../../../js/lodash/lodash.min.js"></script>
   <script type="text/javascript" src="../../../js/moment/min/moment-with-locales.min.js"></script>
-  <script type="text/javascript" src="../../../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>  
+  <script type="text/javascript" src="../../../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
   <script type="text/javascript" src="../../../js/bootstrap/js/bootstrap.min.js"></script>
   <script type="text/javascript" src="../../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
   <script type="text/javascript" src="../../../js/plotly.js/dist/plotly.min.js"></script>
@@ -60,6 +60,7 @@
                             <dt><code>required</code></dt><dd>Optional, if not specified, defaults to not required.</dd>
                             <dt><code>param_type</code></dt><dd>Optional - One of the following <code>bool</code>, <code>int</code>, <code>float</code>, <code>enum</code>, <code>string</code>. Defaults to string.</dd>
                             <dt><code>options</code></dt><dd>Optional; applies only to <code>enum</code>&quot;s. An array of string options for the enum; or an array of <code>{label: x, value: y}</code> pairs</dd>
+                            <dt><code>children</code></dt><dd>Optional; an array of parameter definitions that are dependent on this definition. Ideal usecase is where this parameter is a checkbox ( <code>bool</code> ); then when checked, the children parameters are expanded and displayed.</dd>
                             <dt><code>description</code></dt><dd>Optional; text that is shown as a tooltip</dd>
                         </dl>
                     </p>

@@ -12,7 +12,7 @@
         <thead><tr><th>Name</th><th>Value</th></thead>
         <tbody>
           {{#paramkvs}}
-          <tr {{#description}}title="{{description}}"{{/description}}><td class="text-left"><span>{{label}}</span></td><td class="text-left">
+          <tr {{#description}}title="{{description}}"{{/description}}><td class="text-left"><span>{{{label}}}</span></td><td class="text-left">
               {{#is_bool}}<span title="Clone sample"><i class="fas {{#is_checked}}fa-check{{/is_checked}}{{^is_checked}}fa-times{{/is_checked}}"></i></span>{{/is_bool}}
               {{^is_bool}}<span>{{current_val}}</span>{{/is_bool}}
           </td></tr>

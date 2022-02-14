@@ -1,4 +1,4 @@
-<div class="modal fade edit_modal" data-backdrop="static" role="dialog" id="sample_edit_modal">
+<div class="modal fade edit_modal custom_param_modal" data-backdrop="static" role="dialog" id="sample_edit_modal">
   <div class="modal-dialog modal-lg" role="document">
    <div class="modal-content">
      <div class="modal-header">
@@ -31,7 +31,7 @@
         <thead><tr><th>Param Name</th><th>Param Value</th><th></th></thead>
         <tbody>
           {{#paramkvs}}
-          <tr class="defkv" {{#description}}title="{{description}}"{{/description}}><td class="text-left align-middle"><span class="cp_key" data-param-name={{param_name}}>{{label}}</span>{{#required}}<span class="pl-1 text-danger lbl-req">*</span>{{/required}}</td><td>
+          <tr class="defkv{{#ischild}} childparam d-none{{/ischild}}{{#has_children}} has_children{{/has_children}}" {{#ischild}}data-parent-param-name="{{data-parent-param-name}}"{{/ischild}}  title="{{description}}"><td class="text-left align-middle"><span class="cp_key" data-param-name={{param_name}}>{{{label}}}</span>{{#required}}<span class="pl-1 text-danger lbl-req">*</span>{{/required}}</td><td>
               {{#is_bool}}<input type="checkbox" class="form-control cp_value" {{#is_checked}}checked{{/is_checked}} ss_validate="bool">{{/is_bool}}
               {{#is_int}}<input type="text" class="form-control cp_value {{#required}}cp_required{{/required}}" value="{{current_val}}" ss_validate="int">{{/is_int}}
               {{#is_float}}<input type="text" class="form-control cp_value {{#required}}cp_required{{/required}}" value="{{current_val}}" ss_validate="float">{{/is_float}}

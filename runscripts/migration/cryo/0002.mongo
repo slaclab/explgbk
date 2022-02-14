@@ -1,0 +1,123 @@
+db.getSiblingDB("site")["instruments"].updateOne({"_id": "FIB1"}, {
+  "$set": {
+    "modal_params": [{
+      "_id" : "samples",
+      "params" : [
+        {
+          "param_name" : "grids_gis_coated",
+          "label": "Grids GIS Coated",
+          "required" : true,
+          "param_type" : "string",
+          "description": "Long description about Grids GIS Coated."
+        },
+        {
+          "param_name" : "gis_coating_time",
+          "label": "GIS coating time",
+          "required" : true,
+          "param_type" : "string",
+          "description": "Long description about GIS coating time."
+        },
+        {
+          "param_name" : "premill_sputter_coating",
+          "label": "Pre-Mill Sputter Coating",
+          "param_type" : "bool",
+          "description": "Long description about Pre-Mill Sputter Coating.",
+          "children": [
+            {
+              "param_name" : "premill_sputter_coating_time",
+              "label": "&#8594;Time",
+              "required" : true,
+              "param_type" : "string",
+              "description": "Long description about Pre-Mill Sputter Coating Time."
+            },
+            {
+              "param_name" : "premill_sputter_coating_amp",
+              "label": "&#8594;Amp",
+              "required" : true,
+              "param_type" : "string",
+              "description": "Long description about Pre-Mill Sputter Coating Amp."
+            },
+            {
+              "param_name" : "premill_sputter_coating_volt",
+              "label": "&#8594;Volt",
+              "required" : true,
+              "param_type" : "string",
+              "description": "Long description about Pre-Mill Sputter Coating Volt."
+            },
+            {
+              "param_name" : "premill_sputter_coating_pressure",
+              "label": "&#8594;Pressure",
+              "required" : true,
+              "param_type" : "string",
+              "description": "Long description about Pre-Mill Sputter Coating Pressure."
+            }
+          ]
+        },
+        {
+          "param_name" : "used_maps",
+          "label": "Used Maps",
+          "param_type" : "bool",
+          "description": "Long description about Used Maps."
+        },
+        {
+          "param_name" : "automation_software",
+          "label": "Automation software",
+          "required" : true,
+          "param_type" : "enum",
+          "options" : [ "AutoTEM", "Slice and View", "None" ],
+          "description": "Long description about Automation software."
+        },
+        {
+          "param_name" : "post_lamellae_sputter_coating",
+          "label": "Post-Lamellae Sputter Coating",
+          "param_type" : "bool",
+          "description": "Long description about Post-Lamellae Sputter Coating.",
+          "children": [
+            {
+              "param_name" : "post_lamellae_coating_time",
+              "label": "&#8594;Time",
+              "required" : true,
+              "param_type" : "string",
+              "description": "Long description about Post-Lamellae Sputter Coating Time."
+            },
+            {
+              "param_name" : "post_lamellae_coating_amp",
+              "label": "&#8594;Amp",
+              "required" : true,
+              "param_type" : "string",
+              "description": "Long description about Post-Lamellae Sputter Coating Amp."
+            },
+            {
+              "param_name" : "post_lamellae_coating_volt",
+              "label": "&#8594;Volt",
+              "required" : true,
+              "param_type" : "string",
+              "description": "Long description about Post-Lamellae Sputter Coating Volt."
+            },
+            {
+              "param_name" : "post_lamellae_coating_pressure",
+              "label": "&#8594;Pressure",
+              "required" : true,
+              "param_type" : "string",
+              "description": "Long description about Post-Lamellae Sputter Coating Pressure."
+            }
+          ]
+        },
+        {
+          "param_name" : "num_lamellae_attempted_started",
+          "label": "Number of Lamellae Attempted/Started",
+          "required" : false,
+          "param_type" : "int",
+          "description": "Long description about Number of Lamellae Attempted/Started."
+        },
+        {
+          "param_name" : "num_lamellae_successful",
+          "label": "Number of Successful Lamellae",
+          "required" : false,
+          "param_type" : "int",
+          "description": "Long description about Number of Successful Lamellae."
+        },
+      ]
+    }]
+  }
+})

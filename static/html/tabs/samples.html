@@ -15,16 +15,23 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
   let display_sample = function(sample_obj) {
     $.when($.ajax("../../static/html/ms/sampledisplay.html"), $.getJSON("ws/get_modal_param_definitions", { modal_type: "samples" }))
     .done(function(d0, d1){
-        let tmpl = d0[0], pdd = _.keyBy(_.get(d1[0], "value.params", []), "param_name");
-        _.each(_.get(sample_obj, 'params', {}), function(v,k,o){  if(_.has(pdd, k)) { pdd[k]["current_val"] = v } else { pdd[k] = { required: false, param_name: k, current_val: v }}})
+        let tmpl = d0[0], pdd = _.keyBy(_.get(d1[0], "value.params", []), "param_name"), kvs = [];
         _.each(pdd, function(v,k,o){
-            v["is_"+ _.get(v, "param_type", "string")] = true;
-            _.defaults(v, {"label": _.get(v, "param_name")});
-            _.defaults(v, {"description": _.get(v, "description")});
-            if(_.get(v, "param_type", "string") == "bool") {v["is_checked"] = _.get(sample_obj, "params." + v["param_name"], false)}
-            if(_.has(v, "options")){ _.each(v["options"], function(x){ if(_.get(x, "value", x) == _.get(v, "current_val")) { v["current_val"] = _.get(x, "label", x) }})}
+          let prep_cp = function(p) {
+              p["is_"+ _.get(p, "param_type", "string")] = true;
+              _.defaults(p, {"label": _.get(p, "param_name")});
+              _.defaults(p, {"description": _.get(p, "description")});
+              if(_.get(p, "param_type", "string") == "bool") {p["is_checked"] = _.get(sample_obj, "params." + p["param_name"], false)}
+              if(_.has(p, "options")){ _.each(p["options"], function(x){ if(_.get(x, "value", x) == _.get(p, "current_val")) { p["current_val"] = _.get(x, "label", x) }})}
+              kvs.push(p);
+            }
+            prep_cp(v);
+            if(_.has(v, "children") && _.get(sample_obj, "params." + v["param_name"], false) == true) { v["has_children"] = true; _.each(v["children"], function(c){ c["ischild"] = true; c["data-parent-param-name"] =  v["param_name"]; prep_cp(c); }) }
         })
-        sample_obj.paramkvs = _.values(pdd);
+        pdd = _.keyBy(kvs, "param_name");
+        _.each(_.get(sample_obj, 'params', {}), function(v,k,o){  if(_.has(pdd, k)) { pdd[k]["current_val"] = v } else { kvs.push({ required: false, param_name: k, label: k, current_val: v })}})
+        sample_obj.paramkvs = kvs;
+        console.log(sample_obj);
         Mustache.parse(tmpl);
         var rendered = $(Mustache.render(tmpl, sample_obj));
         $("#samples_tab").find("#mdl_holder").append(rendered);
@@ -37,21 +44,33 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
     $.when($.ajax("../../static/html/ms/sampleedit.html"), $.getJSON("ws/get_modal_param_definitions", { modal_type: "samples" }))
     .done(function(d0, d1){
       var tmpl = d0[0], ss_param_defs = _.get(d1[0], "value.params", []), ss_required_param_names = _.map(_.filter(ss_param_defs, function(d) { return _.get(d, "required", false) }), "param_name");
-      let pdd = _.keyBy(ss_param_defs, "param_name");
-      _.each(_.get(sample_obj, 'params', {}), function(v,k,o){  if(_.has(pdd, k)) { pdd[k]["current_val"] = v } else { pdd[k] = { required: false, param_name: k, current_val: v }}})
+      let pdd = _.keyBy(ss_param_defs, "param_name"), kvs = [];
       _.each(pdd, function(v,k,o){ // Prep the param definitions.
-          v["is_"+ _.get(v, "param_type", "string")] = true;
-          _.defaults(v, {"label": _.get(v, "param_name")});
-          if(_.get(v, "param_type", "string") == "bool") {v["is_checked"] = _.get(sample_obj, "params." + v["param_name"], false)}
-          if(_.has(v, "options")){ v["exp_options"] = _.map(v["options"], function(x){ return {"option_label": _.get(x, "label", x), "option_value": _.get(x, "value", x), "issel": _.get(x, "value", x) == _.get(v, "current_val")}})}
+        let prep_cp = function(p) {
+          p["is_"+ _.get(p, "param_type", "string")] = true;
+          _.defaults(p, {"label": _.get(p, "param_name")});
+          if(_.get(p, "param_type", "string") == "bool") {p["is_checked"] = _.get(sample_obj, "params." + p["param_name"], false)}
+          if(_.has(p, "options")){ p["exp_options"] = _.map(p["options"], function(x){ return {"option_label": _.get(x, "label", x), "option_value": _.get(x, "value", x), "issel": _.get(x, "value", x) == _.get(p, "current_val")}})}
+          kvs.push(p);
+        }
+        prep_cp(v);
+        if(_.has(v, "children",)) { v["has_children"] = true; _.each(v["children"], function(c){ c["ischild"] = true; c["data-parent-param-name"] =  v["param_name"]; prep_cp(c); }) }
       })
+      pdd = _.keyBy(kvs, "param_name");
+      _.each(_.get(sample_obj, 'params', {}), function(v,k,o){  if(_.has(pdd, k)) { pdd[k]["current_val"] = v } else { kvs.push({ required: false, param_name: k, label: k, current_val: v, "is_string": true })}})
       sample_obj.sample_description = _.get(sample_obj, "description"); _.unset(sample_obj, "description");
-      sample_obj.paramkvs = _.values(pdd);
+      sample_obj.paramkvs = kvs;
       Mustache.parse(tmpl);
       var rendered = $(Mustache.render(tmpl, sample_obj)), param_template_tr = rendered.find("tr:last").clone(true);
       if(_.has(sample_obj, '_id')) { rendered.find("#sample_create").text("Update");}
       rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after(param_template_tr.clone(true))});
       rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
+      let expandCh = function() {
+        let pelemname = $(this).closest("tr").find("[data-param-name]").attr("data-param-name");
+        if(this.checked) { $(this).closest("tbody").find("[data-parent-param-name=" + pelemname +  "]").removeClass("d-none");  } else { $(this).closest("tbody").find("[data-parent-param-name=" + pelemname +  "]").addClass("d-none"); }
+      }
+      rendered.find(".has_children").find("input").each(expandCh);
+      rendered.find(".has_children").find("input").on("change", expandCh)
       rendered.find("#sample_create").on("click", function(e) {
         e.preventDefault();
         var formObj = $("#samples_tab").find("#mdl_holder").find("form");
@@ -63,7 +82,7 @@ $("#samples_tab").on("lg.loaded.bs.tab", function() {
           [function() { return formObj.find("tbody tr.arbkv").map(function() { return $(this).find("input.cp_key").val() != "" && $(this).find("input.cp_value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."],
           [function() { return _.some(formObj.find("[ss_validate='int']"), function(x){ return $(x).val().length > 0 && !/^[-+]?[0-9]+$/.test($(x).val())})}, $(_.find(formObj.find("[ss_validate='int']"), function(x){ return $(x).val().length > 0 && !/^[-+]?[0-9]+$/.test($(x).val())})).closest("tr").find(".cp_key").text() + " does not seem to be an int."],
           [function() { return _.some(formObj.find("[ss_validate='float']"), function(x){ return $(x).val().length > 0 && !/^[-+]?[0-9]*\.?[0-9]+$/.test($(x).val())})}, $(_.find(formObj.find("[ss_validate='float']"), function(x){ return $(x).val().length > 0 && !/^[-+]?[0-9]*\.?[0-9]+$/.test($(x).val())})).closest("tr").find(".cp_key").text() + " does not seem to be an float."],
-          [function() { return _.some(formObj.find(".cp_required"), function(x){ return $(x).val().length <= 0})}, "The required parameter " + $(_.find(formObj.find(".cp_required"), function(x){ return $(x).val().length <= 0})).closest("tr").find(".cp_key").text() + " was not specified." ],
+          [function() { return _.some(formObj.find(".cp_required"), function(x){ return !$(x).closest("tr").hasClass("d-none") && $(x).val().length <= 0})}, "The required parameter " + $(_.find(formObj.find(".cp_required"), function(x){ return !$(x).closest("tr").hasClass("d-none") && $(x).val().length <= 0})).closest("tr").find(".cp_key").text() + " was not specified." ],
           ];
         // Various validations
         var v_failed = false;

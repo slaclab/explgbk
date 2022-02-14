@@ -265,6 +265,9 @@ label {
   padding-top: 0.25em;
   padding-bottom: 0.25em;
 }
+.custom_param_modal .childparam .cp_key {
+  padding-left: 2rem;
+}
 .ops_list_icons {
   padding-left: 0.1rem;
   padding-right: 0.1rem;
