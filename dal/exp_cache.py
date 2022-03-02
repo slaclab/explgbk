@@ -482,6 +482,14 @@ def __establish_kafka_consumers():
         for msg in consumer:
             try:
                 logger.info("Message from Kafka in topic %s", msg.topic)
+                message_type = msg.topic
+                if message_type == "explgbk_cache":
+                    info = json.loads(msg.value)
+                    logger.debug("JSON from Kafka %s", info)
+                    if info.get("named_cache", None):
+                        logger.info("Reloading named cache %s", info["named_cache"])
+                        reload_named_caches(info["named_cache"])
+
                 __load_experiment_names()
             except Exception as e:
                 logger.exception("Exception processing Kafka message.")

@@ -106,7 +106,19 @@ def load_sections_json():
 
 load_sections_json()
 
+# Cache some of the instrument definitions.
+instrument_definitions = {}
+def load_instrument_definitions():
+    global instrument_definitions
+    instrument_definitions.clear()
+    instrument_definitions.update({ x["_id"]: x for x in logbookclient["site"]["instruments"].find() })
+
+load_instrument_definitions()
+
 def reload_named_caches(cache_name):
     if cache_name == "instrument_scientists_run_table_defintions":
         logger.info("Reloading the instrument_scientists_run_table_defintions named cache")
         load_sections_json()
+    elif cache_name == "instrument_defintions":
+        logger.info("Reloading the instrument_defintions named cache")
+        load_instrument_definitions()

@@ -14,6 +14,7 @@ import logging
 import copy
 import io
 import re
+import abc
 
 import requests
 import context
@@ -199,26 +200,59 @@ def svc_saveexpinfosetup(experiment_name):
 
     return jsonify({"success": True})
 
-def __estimate_run_period__(exp):
-    """ Estimate the LCLS run period """
-    override = exp.get("params", {}).get("run_period", None)
-    if override:
-        return int(override[-2:])
-    return int(exp["name"][-2:] if exp["name"][-2:].isdigit() else "0")
-def __bucket_run_period__(exp):
-    rp = __estimate_run_period__(exp)
-    return "Run " + str(rp) if rp else "null"
+class LegacyCatSort(metaclass=abc.ABCMeta):
+    def __init__(self):
+        self.legacy_run_period = -1 # Run periods older than this run are categorized into a legacy bucket
+    @abc.abstractmethod
+    def set_legacy_cutoff(self, legacy_run_period):
+        """ Set the run period before which all experiment are bucketed into a legacy bucket"""
+        raise NotImplementedError
+    def __estimate_run_period__(self, exp):
+        """ Estimate the LCLS run period """
+        erp = 0
+        override = exp.get("params", {}).get("run_period", None)
+        if override:
+            erp = int(override[-2:])
+        else:
+            erp = int(exp["name"][-2:] if exp["name"][-2:].isdigit() else "0")
+        if erp and erp <= self.legacy_run_period:
+            return 1
+        ins = exp["instrument"]
+        ctx_lg_cutoff = context.instrument_definitions.get(ins, {}).get("params", {}).get("legacy_cutoff", None)
+        if ctx_lg_cutoff and erp <= int(ctx_lg_cutoff):
+            return 1
+        return erp
+
+class CategorizerWithLegacy(LegacyCatSort):
+    def __bucket_run_period__(self, exp):
+        rp = self.__estimate_run_period__(exp)
+        if rp == 1:
+            return "Previous"
+        return "Run " + str(rp) if rp else "null"
+    def __call__(self, exp):
+        return self.__bucket_run_period__(exp)
+    def set_legacy_cutoff(self, legacy_run_period):
+        self.legacy_run_period = legacy_run_period
+
+class SorterWithLegacy(LegacyCatSort):
+    def __init__(self):
+        self.legacy_run_period = -1 # Run periods older than this run are categorized into a legacy bucket
+    def __call__(self, exp):
+        return self.__estimate_run_period__(exp)
+    def set_legacy_cutoff(self, legacy_run_period):
+        self.legacy_run_period = legacy_run_period
+
 
 categorizers = {
     "instrument": [(lambda exp : exp.get("instrument", None))],
     "instrument_lastrunyear": [(lambda exp : exp.get("instrument", None)), (lambda exp : exp["last_run"]["begin_time"].year if "last_run" in exp else None)],
-    "instrument_runperiod": [(lambda exp : exp.get("instrument", None)), (lambda exp : __bucket_run_period__(exp))],
+    "instrument_runperiod": [(lambda exp : exp.get("instrument", None)), CategorizerWithLegacy() ],
     }
 
 sorters = {
     "name": ((lambda exp: exp["name"]), False),
     "lastrunyear": ((lambda exp: exp["last_run"]["begin_time"] if "last_run" in exp else exp["start_time"]), True),
-    "runperiod": ((lambda exp : __estimate_run_period__(exp)), False)
+    "runperiod": ((lambda exp: exp["last_run"]["begin_time"] if "last_run" in exp else exp["start_time"]), True),
     }
 
 def categorize(explist, categorizers, sorter):
@@ -257,6 +291,16 @@ def svc_get_experiments():
             del exp["all_param_names"]
     categorizer = categorizers.get(request.args.get("categorize", None), None)
     sortby = sorters.get(request.args.get("sortby", None), None)
+    legacy_run_period_str = request.args.get("legacy_cutoff", None)
+    if legacy_run_period_str:
+        legacy_run_period = int(legacy_run_period_str)
+        for cat in categorizer:
+            if isinstance(cat, LegacyCatSort):
+                cat.set_legacy_cutoff(legacy_run_period)
+        for srt in sortby:
+            if isinstance(srt, LegacyCatSort):
+                srt.set_legacy_cutoff(legacy_run_period)
+
     if categorizer and sortby:
         return JSONEncoder().encode({"success": True, "value": categorize(experiments, categorizer, sortby)})
     if sortby:
