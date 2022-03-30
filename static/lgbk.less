@@ -39,11 +39,11 @@
 @contrastcolor: @cl-0;
 @extremecontrast: @cl-4;
 @navbartext: white;
+@maintext: black;
 @tablezebra: #efefef;
 @tblhdrbg: @navbarcolor;
 @linkcolor: @navbarhover;
 @bordercolor: @contrastcolor;
-
 
 .highlight_mixin {
     color: @navbartext;
@@ -950,6 +950,21 @@ label {
         padding: 0;
         .fmfi {
             padding-left: 1.5rem;
+        }
+        .all_files {
+          background-color: @navbarcolor;
+          color: @navbartext;
+          transition: background-color 2s, color 2s;
+        }
+        .some_files {
+          background-color: @contrastcolor;
+          color: @maintext;
+          transition: background-color 2s, color 2s;
+        }
+        .no_files {
+          background-color: #FFB7B7;
+          color: @maintext;
+          transition: background-color 2s, color 2s;
         }
     }
     .exp_tab_header {

@@ -16,9 +16,9 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
 
   var file_main_templ = `<div class="fdat" data-entry-id="{{ _id }}" data-spgntr="{{run_num}}" ><div class="row">
       <div class="col-md-2 fmfi"><span class="fmgr-expand exp_icons_left"><i class="fas fa-plus expand_ctrl"></i></span>{{ run_num }}</div><div class="col-md-3 text-left">{{ num_files }}</div><div class="col-md-2 text-left">{{ hrsize }}</div><div class="col-md-2"></div>
-      <div class="col"><div class="row align-items-center d-flex flex-wrap">{{#fstat}}{{#visible}}<div class="locbtngrp" data-loc-name={{name}} title="According to the system, {{#all}}all{{/all}}{{^all}}{{#some}}some{{/some}}{{^some}}no{{/some}}{{/all}} files are estimated to be present at this location. Please use the update button to get a current picture of file availability. Please use the restore button to make files available at this location."><span>
-              <button class="runloc-btn refresh pl-1 pr-1 {{#all}}btn-primary{{/all}}{{^all}}{{#some}}btn-warning{{/some}}{{^some}}btn-secondary{{/some}}{{/all}}" data-restore="false">Update</button>
-              <button class="runloc-btn restore pl-1 pr-1 {{#all}}btn-primary{{/all}}{{^all}}{{#some}}btn-warning{{/some}}{{^some}}btn-secondary{{/some}}{{/all}}" data-restore="true">Restore</button>
+      <div class="col"><div class="row align-items-center d-flex flex-wrap">{{#fstat}}{{#visible}}<div class="locbtngrp" data-loc-name={{name}} title="According to the system, {{#all}}all{{/all}}{{^all}}{{#some}}some{{/some}}{{^some}}no{{/some}}{{/all}} files are estimated to be present at this location. Please use the check now button to get a current picture of file availability. Please use the restore button to make files available at this location."><span>
+              <button class="runloc-btn refresh pl-1 pr-1 checknow {{#all}}all_files{{/all}}{{^all}}{{#some}}some_files{{/some}}{{^some}}no_files{{/some}}{{/all}}" data-restore="false">Check now</button>
+              <button class="runloc-btn restore pl-1 pr-1 {{#all}}all_files{{/all}}{{^all}}{{#some}}some_files{{/some}}{{^some}}no_files{{/some}}{{/all}}" data-restore="true">Restore</button>
           </span></div>{{/visible}}{{/fstat}}</div></div></div></div>`;
 
   var fmgr_child_template = `<div class="row col-md-12 fmgr-chid"><div class="card w-100"><div class="card-body">
@@ -182,6 +182,31 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
       if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
           $("#fmgr_content").data("spgntr").pageDown();
       }
+  });
+  $("#fmgr_tab").on("lg.shown.bs.tab", function() {
+      var tab_toolbar = `<span id="check_now_for_all_runs" title="Check the file system now for the presence of files for all runs."><i class="fas fa-refresh fa-lg tlbr"></i></span>`;
+      var toolbar_rendered = $(tab_toolbar);
+      $("#toolbar_for_tab").append(toolbar_rendered);
+      $("#check_now_for_all_runs").on("click", function(e) {
+        let file_types_to_restore = _.join($("#fmgr_tab .fmgr_types").find("[data-ftype]:checked").map(function(){ return $(this).attr("data-ftype"); }).toArray(), ",");
+        if(_.isEmpty(file_types_to_restore)) { error_message("Please select at least one file type to restore"); return; }
+        $("#fmgr_content .checknow").each(function(){
+          let btn = $(this), run_num = $(this).closest("[data-spgntr]").attr("data-spgntr"), run_files = $(this).closest("[data-spgntr]").data("run_files"), loc_name = $(this).closest("[data-loc-name]").attr("data-loc-name");
+          btn.closest(".row").find("button").removeClass(["all_files", "some_files", "no_files"]);
+          $.getJSON("ws/check_and_move_run_files_to_location", data={run_num: run_num, location: loc_name, restore_missing_files: false, file_types_to_restore: file_types_to_restore})
+          .done(function(fcheck){
+            run_files.files = [];
+            _.each(_.get(fcheck, "value.run_files", []), function(fdoc){
+              _.remove(run_files.files, ["path", fdoc["path"]]);
+              add_file_to_run_files(fdoc, run_files)
+            })
+            $("#fmgr_content").data("spgntr").addObject(run_files);
+
+            let files_present = _.values(_.get(fcheck, "value.dmstatus", {}));
+            if(_.every(files_present)) { btn.closest(".row").find("button").addClass("all_files") }else { if(_.some(files_present)) { btn.closest(".row").find("button").addClass("some_files") } else { btn.closest(".row").find("button").addClass("no_files") }};
+          }).fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure " + textStatus); })
+        })
+      });
   });
 });
 </script>

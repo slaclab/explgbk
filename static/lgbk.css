@@ -828,6 +828,21 @@ label {
 #fmgr_tab #fmgr_content .fmfi {
   padding-left: 1.5rem;
 }
+#fmgr_tab #fmgr_content .all_files {
+  background-color: #6685F4;
+  color: white;
+  transition: background-color 2s, color 2s;
+}
+#fmgr_tab #fmgr_content .some_files {
+  background-color: #FFED81;
+  color: black;
+  transition: background-color 2s, color 2s;
+}
+#fmgr_tab #fmgr_content .no_files {
+  background-color: #FFB7B7;
+  color: black;
+  transition: background-color 2s, color 2s;
+}
 #fmgr_tab .exp_tab_header .row {
   margin: 0;
 }
