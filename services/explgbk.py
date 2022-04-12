@@ -308,6 +308,21 @@ def svc_get_experiments():
 
     return JSONEncoder().encode({"success": True, "value": experiments})
 
+def __map_experiment_to_URAWI_proposal__(expname, ep):
+    einfo = {"name": expname, "instrument": ep.get("instrument", "N/A")}
+    if ep.get("params", {}).get("PNR", None):
+        einfo["proposal_id"] = ep["params"]["PNR"]
+    elif len(expname) == 9:
+        # Newer experiments where we include the full proposal ID.
+        einfo["proposal_id"] = expname[3:7].upper()
+    elif len(expname) == 8:
+        # Older experiments where we used to drop the L
+        einfo["proposal_id"] = 'L' + expname[3:6].upper()
+    else:
+        # Possibly internal commissioning experiments which do not have a proposal id
+        einfo["proposal_id"] = expname
+    return einfo
+
 
 @explgbk_blueprint.route("/lgbk/ws/experiments_to_proposal", methods=["GET"])
 def svc_get_experiments_to_proposal():
@@ -325,19 +340,7 @@ def svc_get_experiments_to_proposal():
     ret = {}
     for ep in experiment_proposals:
         expname = ep["name"]
-        einfo = {"name": expname, "instrument": ep.get("instrument", "N/A")}
-        if ep.get("params", {}).get("PNR", None):
-            einfo["proposal_id"] = ep["params"]["PNR"]
-        elif len(expname) == 9:
-            # Newer experiments where we include the full proposal ID.
-            einfo["proposal_id"] = expname[3:7].upper()
-        elif len(expname) == 8:
-            # Older experiments where we used to drop the L
-            einfo["proposal_id"] = 'L' + expname[3:6].upper()
-        else:
-            # Possibly internal commissioning experiments which do not have a proposal id
-            einfo["proposal_id"] = expname
-        ret[expname] = einfo
+        ret[expname] = __map_experiment_to_URAWI_proposal__(expname, ep)
 
     return JSONEncoder().encode({"success": True, "value": ret})
 
