@@ -185,6 +185,29 @@ def svc_getexpinfo(experiment_name):
     info = get_experiment_info(experiment_name)
     return JSONEncoder().encode({'success': True, 'value': info})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/internalinfo", methods=["GET"])
+@experiment_exists
+def svc_get_internal_info(experiment_name):
+    """
+    Returns non-secure internal info about the experiment. This is an open endpoint meant for scripts and services.
+    Returns these items
+    --> Instrument
+    --> URAWI proposal mapping
+    --> params
+    --> start date and end date
+    """
+    info = get_experiment_info(experiment_name)
+    ret = {
+        "instrument": info["instrument"],
+        "proposal_id": __map_experiment_to_URAWI_proposal__(experiment_name, info)["proposal_id"],
+        "start_time": info.get("start_time"),
+        "end_time": info.get("end_time"),
+        "posix_group": info.get("posix_group"),
+        "params": info.get("params", {}),
+    }
+    return JSONEncoder().encode({'success': True, 'value': ret})
+
+
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/info/setup", methods=["POST"])
 @context.security.authentication_required
 @experiment_exists_and_unlocked
