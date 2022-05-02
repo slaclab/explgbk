@@ -50,7 +50,7 @@ periodic_updates = PeriodicUpdates()
 
 def init_app(app):
     if 'experiments' not in list(logbookclient['explgbk_cache'].list_collection_names()):
-        logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" )] )
+        logbookclient['explgbk_cache']['experiments'].create_index( [("name", "text" ), ("description", "text" ), ("instrument", "text" ), ("contact_info", "text" ), ("params.PNR", "text" )] )
     if 'operations' not in list(logbookclient['explgbk_cache'].list_collection_names()):
         logbookclient['explgbk_cache']['operations'].create_index( [("name", DESCENDING)], unique=True)
         logbookclient['explgbk_cache']['operations'].insert_one({"name": "explgbk_cache_rebuild", "initiated": datetime.datetime.utcfromtimestamp(0.0), "completed": datetime.datetime.utcfromtimestamp(0.0)})

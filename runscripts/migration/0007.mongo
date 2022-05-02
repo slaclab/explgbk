@@ -1,0 +1,3 @@
+// Add the PNR to the experiment search text index
+db.getSiblingDB("explgbk_cache").experiments.dropIndex("name_text_description_text_instrument_text_contact_info_text")
+db.getSiblingDB("explgbk_cache").experiments.createIndex({"name": "text", "description": "text", "instrument": "text", "contact_info": "text", "params.PNR": "text" }, {"name": "experiments_text_search"})

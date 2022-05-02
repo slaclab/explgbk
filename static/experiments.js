@@ -138,7 +138,7 @@ $(function() {
         		if($("#searchtext").val().length > 1) {
                     var curnamerx = new RegExp(".*"+$("#searchtext").val()+".*", 'i');
                     var matchexps = _.filter(_.values(name2info), function(exp) {
-                        return curnamerx.test(exp["name"]) || curnamerx.test(exp["contact_info"]) || curnamerx.test(exp["description"]);
+                        return curnamerx.test(exp["name"]) || curnamerx.test(exp["contact_info"]) || curnamerx.test(exp["description"]) || curnamerx.test(_.get(exp, "params.PNR"));
                     });
         			if(matchexps.length > 0) {
         				var expdata = {value: matchexps};
