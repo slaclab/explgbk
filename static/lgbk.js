@@ -124,7 +124,9 @@ var lgbk_create_edit_exp = function(expInfo) {
     rendered.find(".experiment_name").on("change", function(){
       let urexpname = $(this).val();
       console.log("Checking to see if experiment " + urexpname + " is registered in URAWI");
-      $.getJSON(lookup_experiment_in_urawi, {"experiment_name": urexpname})
+      var exp_params = {"experiment_name": urexpname};
+      rendered.find("form").find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { exp_params[key] = val; }});
+      $.getJSON(lookup_experiment_in_urawi, exp_params)
       .done(function (expdata) {
         console.log(expdata);
         if(expdata.success) {
@@ -133,7 +135,10 @@ var lgbk_create_edit_exp = function(expInfo) {
           rendered.find(".pi_email").val(_.get(expdata.value, 'spokesPerson.email'));
           rendered.find(".leader_account").val(_.get(expdata.value, 'spokesPerson.account[0].unixName'));
           rendered.find(".posix_group").val(urexpname);
-          if (_.get(expdata.value, 'proposalInstrument') != "") { rendered.find(".instrument").val(_.get(expdata.value, 'proposalInstrument')) };
+          if (_.get(expdata.value, 'instrument') != "") {
+            let inschc = _.find(_.map(rendered.find(".instrument option"), "value"), x => { if (x.toUpperCase() == _.get(expdata.value, 'instrument')) return x; });
+            rendered.find(".instrument").val(inschc)
+          };
           if (_.get(expdata.value, "startDate") != "") { rendered.find('.start_time').datetimepicker('date', moment(_.get(expdata.value, "startDate"))) };
           if (_.get(expdata.value, "stopDate") != "") { rendered.find('.end_time').datetimepicker('date', moment(_.get(expdata.value, "stopDate"))) };
         }

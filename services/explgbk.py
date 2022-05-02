@@ -581,7 +581,8 @@ def svc_lookup_experiment_in_URAWI():
     Lookup the specified experiment in URAWI and return the information from URAWI as the value.
     """
     experiment_name = request.args.get("experiment_name", None)
-    urawi_doc = get_URAWI_details(experiment_name)
+    proposal_id = request.args.get("PNR", None)
+    urawi_doc = get_URAWI_details(experiment_name, proposal_id)
     if urawi_doc and urawi_doc.get("status", "error") == "success":
         return jsonify({'success': True, "value": urawi_doc})
     return jsonify({'success': False})

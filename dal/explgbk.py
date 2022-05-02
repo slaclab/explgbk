@@ -1987,12 +1987,12 @@ def update_wf_job(experiment_name, job_id, wf_updates):
     expdb["workflow_jobs"].update_one({"_id": ObjectId(job_id)}, {"$set": wf_updates })
     return True, "", get_workflow_job_doc(experiment_name, job_id)
 
-def get_URAWI_details(experiment_name):
+def get_URAWI_details(experiment_name, proposal_id=None):
     """
     Get details for the experiment from URAWI.
     """
     if URAWI_URL and experiment_name:
-        URAWI_proposal_id = None
+        URAWI_proposal_id = proposal_id
         try:
             # Check to see if we have an info object with a PNR
             expdb = logbookclient[experiment_name]
@@ -2006,7 +2006,16 @@ def get_URAWI_details(experiment_name):
                 else:
                     URAWI_proposal_id = experiment_name
             logger.info("Getting URAWI data for proposal %s using %s", URAWI_proposal_id, URAWI_URL)
-            urawi_doc = requests.get(URAWI_URL, params={ "proposalNo" : URAWI_proposal_id}, verify=False).json()
+            params={ "proposalNo" : URAWI_proposal_id }
+            additionalAuthToken = os.environ.get("PSDM_AUTHTOKEN", None)
+            if additionalAuthToken:
+                prts = additionalAuthToken.split("=")
+                params[prts[0]] = prts[1]
+            urawi_doc = requests.get(URAWI_URL, params, verify=False).json()
+            if LOGBOOK_SITE in ["LCLS", "TestFac"]:
+                if urawi_doc.get("instrument") == "CRIXS":
+                    logger.debug("Mapping one off instrument for LCLS/UED for proposal %s", URAWI_proposal_id)
+                    urawi_doc["instrument"] = "RIX"
             return urawi_doc
         except Exception as e:
             logger.exception("Exception fetching data from URAWI using URL %s for %s", URAWI_URL, URAWI_proposal_id)
