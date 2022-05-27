@@ -20,6 +20,9 @@
 </div>
 
 <script type="text/javascript">
+// Use server side pagination support. The following var's contains the data structures for this support.
+var curr_exp_ids = [], all_exp_ids, pg_id_to_details = {}, showing_search_results = false;
+
 $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   var show_validation_message = function(message) {
     $("#exp_mdl_holder").find(".validation_message").html(message);
@@ -177,46 +180,66 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
     })
   };
 
-  var add_exps_to_search_results = function() { // Uses the mustache template to add the contents of data("search_results")
-    var sorted_exps = _.sortBy($("#register_edit_exp_tab").data("search_results"), $("#register_edit_exp_tab").data("cur_sort_attr"));
-    if(!$("#register_edit_exp_tab").data("cur_sort_desc")) { sorted_exps = _.reverse(sorted_exps); }
-    var expdata = { value: sorted_exps, privileges: privileges };
-    expdata.FormatDate = elog_formatdate;
-    var rendered = Mustache.render(exper_template, expdata);
-    $("#exp_searchresults tbody").html(rendered);
-    $("#exp_searchresults .ops_exp_icons .exp_edit").on("click", edit_exp_btn_action);
-    $("#exp_searchresults .ops_exp_icons .exp_clone").on("click", function(){
-        let src_experiment_name = $(this).closest("tr").find("td").first().find("a").text()
-        clone_experiment(src_experiment_name, $("#exp_mdl_holder"));
-    });
-    $("#exp_searchresults .ops_exp_icons .exp_rename").on("click", rename_exp);
-    $("#exp_searchresults .ops_exp_icons .lock_unlock").on("click", lock_unlock_experiment);
-    $("#exp_searchresults .ops_exp_icons .exper_migrate_attachments").on("click", migrate_attachments);
-    $("#exp_searchresults .ops_exp_icons .exper_delete").on("click", delete_experiment);
+  var render_current_exps = function(use_append) {
+    let displayed_experiment_ids = $("#exp_searchresults tbody tr").map(function(x) { return $(this).attr("data-expid") }).get();
+    let exps_to_display = _.difference(curr_exp_ids, displayed_experiment_ids);
+    if(_.isEmpty(exps_to_display)) { return; }
+    if(_.isEmpty(displayed_experiment_ids)) { use_append = true }
+    let exps_missing_info = _.difference(curr_exp_ids, _.keys(pg_id_to_details)), ins2colors = $("#register_edit_exp_tab").data("ins2colors");
+    console.log("Getting details using POST for these experiments");
+    console.log(exps_missing_info);
+    $.post({url: "../lgbk/ws/get_experiment_infos", data: JSON.stringify(exps_missing_info), contentType: "application/json; charset=utf-8", dataType: "json"})
+    .done(function(d0){
+      _.each(d0.value, function(e){ pg_id_to_details[e["_id"]] = e; e["background"] = ins2colors[e["instrument"]]["bg"]; e["color"] = ins2colors[e["instrument"]]["fg"]; });
+      let expdata = { value: _.reject(_.map(exps_to_display, (x) => { return pg_id_to_details[x] }), _.isNil) , privileges: privileges, FormatDate: elog_formatdate };
+      var rendered = $(Mustache.render(exper_template, expdata));
+      rendered.find(".ops_exp_icons .exp_edit").on("click", edit_exp_btn_action);
+      rendered.find(".ops_exp_icons .exp_clone").on("click", function(){
+          let src_experiment_name = $(this).closest("tr").find("td").first().find("a").text()
+          clone_experiment(src_experiment_name, $("#exp_mdl_holder"));
+      });
+      rendered.find(".ops_exp_icons .exp_rename").on("click", rename_exp);
+      rendered.find(".ops_exp_icons .lock_unlock").on("click", lock_unlock_experiment);
+      rendered.find(".ops_exp_icons .exper_migrate_attachments").on("click", migrate_attachments);
+      rendered.find(".ops_exp_icons .exper_delete").on("click", delete_experiment);
+      if(use_append) { $("#exp_searchresults tbody").append(rendered); } else { $("#exp_searchresults tbody").prepend(rendered); }
+    })
   }
 
-  $("#register_edit_exp_tab").data("search_function", function() { // Register the search function.
-    if($("#ops_exp_searchtext").val().length > 0) {
-      var curnamerx = new RegExp(".*"+$("#ops_exp_searchtext").val()+".*", 'i');
-      var matchexps = _.filter($("#register_edit_exp_tab").data("experiments"), function(exp) {
-          return curnamerx.test(exp["name"]) || curnamerx.test(exp["contact_info"]) || curnamerx.test(exp["description"]);
-      });
-      $("#register_edit_exp_tab").data("search_results", matchexps);
-      add_exps_to_search_results();
-    } else {
-        $("#register_edit_exp_tab").data("search_results", $("#register_edit_exp_tab").data("experiments"));
-        add_exps_to_search_results();
+  $(window).scroll(function () {
+    if(showing_search_results) return;
+    if ($(window).scrollTop() >= $(document).height() - $(window).height() - 10) {
+      let next_page_exp_names = _.union(curr_exp_ids, _.slice(all_exp_ids, curr_exp_ids.length, curr_exp_ids.length+100));
+      curr_exp_ids = next_page_exp_names
+      render_current_exps(true);
     }
   });
 
-  $.when($.getJSON({ url: experiments_url }), $.getJSON({ url: instruments_url }))
+  $("#register_edit_exp_tab").data("search_function", function() { // Register the search function.
+    if($("#ops_exp_searchtext").val().length > 2) {
+      $.getJSON({ url: "ws/ops_search_exp_infos", data: { search_text: $("#ops_exp_searchtext").val(), sort: JSON.stringify([[$("#register_edit_exp_tab").data("cur_sort_attr"), $("#register_edit_exp_tab").data("cur_sort_desc") ? -1 : 1 ]]) } })
+      .done(function(d0){
+        $("#exp_searchresults tbody").empty();
+        showing_search_results = true;
+        curr_exp_ids = d0.value;
+        render_current_exps(true);
+      })
+    } else {
+      if(showing_search_results) {
+        showing_search_results = false;
+        $("#exp_searchresults tbody").empty();
+        curr_exp_ids = _.slice(all_exp_ids, 0, 100);
+        render_current_exps(true);
+      }
+    }
+  });
+
+  $.when($.getJSON({ url: "ws/sorted_experiment_ids" }), $.getJSON({ url: instruments_url }))
   .done(function(d0, d1) {
-    var experiments = d0[0], instruments = _.keyBy(d1[0].value, "_id");
-    $("#register_edit_exp_tab").data("experiments", experiments.value); // Prepare for searches.
-    _.map($("#register_edit_exp_tab").data("experiments"), function(exp){ exp["background"] = _.get(instruments, exp["instrument"] + ".color", "inherit"); exp["color"] = _.has(instruments, exp["instrument"] + ".color") ? "white" : "black"; });
-    $("#register_edit_exp_tab").data("name2info", _.keyBy(experiments.value, "name"));
-    $("#register_edit_exp_tab").data("search_results", $("#register_edit_exp_tab").data("experiments"));
-    add_exps_to_search_results();
+    all_exp_ids = d0[0].value, instruments = _.keyBy(d1[0].value, "_id");
+    curr_exp_ids = _.slice(all_exp_ids, 0, 100);
+    $("#register_edit_exp_tab").data("ins2colors", _.fromPairs(_.map(instruments, (ii) => { return [ ii["_id"], { "bg": _.get(ii, "color", "inherit"), "fg": _.has(ii, "color") ? "white" : "black" }]})));
+    render_current_exps(true);
 
     if(sessionStorage.getItem("scroll_to_exp_id") != null) {
         console.log("Scrolling to " + sessionStorage.getItem("scroll_to_exp_id"));
@@ -229,14 +252,11 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
   $(document).on('experiments', function(event, experiment) {
     console.log("Processing experiment message for " + experiment.value["name"]);
     if(_.get(experiment, "CRUD", "") == "Create") {
-      $.when($.getJSON(experiment.value["name"] + "/ws/info"), $.getJSON({ url: instruments_url }))
-      .done(function(d0, d1){
-        let exp = d0[0].value, instruments = _.keyBy(d1[0].value, "_id");
-        exp["background"] = _.get(instruments, exp["instrument"] + ".color", "inherit");
-        exp["color"] = _.has(instruments, exp["instrument"] + ".color") ? "white" : "black";
-        let eidx = _.findIndex($("#register_edit_exp_tab").data("experiments"), {"name": experiment.value["name"]});
-        if (eidx >= 0) { $("#register_edit_exp_tab").data("experiments")[eidx] = exp; console.log("Replacing"); } else { $("#register_edit_exp_tab").data("experiments").push(exp); }
-        add_exps_to_search_results();
+      $.getJSON(experiment.value["name"] + "/ws/info")
+      .done(function(d0){
+        console.log(d0);
+        curr_exp_ids.unshift(d0.value["_id"]);
+        render_current_exps(false);
         if(!_.isNil(window.scrollToExperiment) && window.scrollToExperiment) {
           var row = $('#exp_searchresults').find('tr[data-expid="' + experiment.value["name"] + '"]');
           if(row.length > 0) { row[0].scrollIntoView(); }
@@ -258,7 +278,13 @@ $("#register_edit_exp_tab").on("lg.loaded.bs.tab", function() {
           $(this).closest("thead").find(".sric").remove();
       }
       $(this).closest("th").append($("#register_edit_exp_tab").data("cur_sort_desc") ? $('<i class="fas fa-sort-down sric"></i>') : $('<i class="fas fa-sort-up sric"></i>'))
-      add_exps_to_search_results();
+      $.getJSON({ url: "ws/sorted_experiment_ids", data: {sort: JSON.stringify([[$("#register_edit_exp_tab").data("cur_sort_attr"), $("#register_edit_exp_tab").data("cur_sort_desc") ? -1 : 1 ]])} })
+      .done(function(d0){
+        $("#exp_searchresults tbody").empty();
+        all_exp_ids = d0.value;
+        curr_exp_ids = _.slice(all_exp_ids, 0, 100);
+        render_current_exps(true);
+      });
   });
 
   $("#register_edit_exp_tab").on("lg.shown.bs.tab", function() {

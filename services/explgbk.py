@@ -68,7 +68,8 @@ from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 from dal.exp_cache import get_experiments, get_experiments_for_user, does_experiment_exist, reload_cache as reload_experiment_cache, \
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
     get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex, get_experiments_proposal_mappings, \
-    update_single_experiment_info, get_experiments_starting_in_time_frame
+    update_single_experiment_info, get_experiments_starting_in_time_frame, get_sorted_experiments_ids, get_cached_experiment_info, \
+    search_experiments_for_common_fields
 
 from dal.imagestores import parseImageStoreURL
 
@@ -330,6 +331,50 @@ def svc_get_experiments():
         return JSONEncoder().encode({"success": True, "value": sorted(experiments, key=sortby[0], reverse=sortby[1])})
 
     return JSONEncoder().encode({"success": True, "value": experiments})
+
+@explgbk_blueprint.route("/lgbk/ws/sorted_experiment_ids", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("experiment_create")
+def svc_get_sorted_experiments_ids():
+    """
+    Get just the experiment ids ( normalized names ) sorted by the specified criteria.
+    This is used ( along with the getExperimentInfos ) to support paging.
+    Pass in a sort criteria as a URL encoded JSON array or arrays.
+    For example, to sort by last_run.begin_time (descending) and then by end_time (descending) and then by name(ascending),
+    encode [["last_run.begin_time", -1], ["end_time", -1], ["name", 1]] and pass this as the value of the parameter sort.
+    If no parameter is specified, we use a descending sort on experiment start time; that is, [["start_time",-1]]
+    """
+    sort_criteria = json.loads(request.args.get("sort", '[["start_time", -1]]'))
+    logger.info("Sorting by " + json.dumps(sort_criteria))
+    return JSONEncoder().encode({"success": True, "value": get_sorted_experiments_ids(sort_criteria)})
+
+@explgbk_blueprint.route("/lgbk/ws/get_experiment_infos", methods=["POST"])
+@context.security.authentication_required
+@context.security.authorization_required("experiment_create")
+def svc_get_experiment_infos():
+    """
+    Pass in a JSON array of experiment ids to get the experiment infos for them as an array.
+    """
+    exp_ids = request.json
+    ret = [ get_cached_experiment_info(exp_id) for exp_id in exp_ids ]
+    for exp in ret:
+        if "all_param_names" in exp:
+            del exp["all_param_names"]
+    return JSONEncoder().encode({"success": True, "value": ret})
+
+@explgbk_blueprint.route("/lgbk/ws/ops_search_exp_infos", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("experiment_create")
+def svc_ops_search_experiment_infos():
+    """
+    A experiment info search targeted at operators.
+    Pass is the substring ( regex ) as a search_text parameter.
+    Also, pass in the current sort as a sort parameter. The sort parameter is similar to svc_get_sorted_experiments_ids
+    """
+    search_term = request.args["search_text"]
+    sort_criteria = json.loads(request.args.get("sort", '[["start_time", -1]]'))
+    matching_experiment_ids = [x["_id"] for x in search_experiments_for_common_fields(search_term, sort_criteria)]
+    return JSONEncoder().encode({"success": True, "value": matching_experiment_ids})
 
 def __map_experiment_to_URAWI_proposal__(expname, ep):
     einfo = {"name": expname, "instrument": ep.get("instrument", "N/A")}

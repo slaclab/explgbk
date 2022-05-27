@@ -131,6 +131,12 @@ def get_experiments():
     """
     return list(logbookclient['explgbk_cache']['experiments'].find({}))
 
+def get_cached_experiment_info(experiment_id):
+    """
+    Returns basic information and also some info on the first and last runs.
+    """
+    return logbookclient['explgbk_cache']['experiments'].find_one({"_id": experiment_id})
+
 def get_experiments_starting_in_time_frame(start_time, end_time):
     """
     Get a list of experiments whose start_time is in the given time range.
@@ -139,6 +145,13 @@ def get_experiments_starting_in_time_frame(start_time, end_time):
         {"start_time": {"$gte": start_time}},
         {"start_time": {"$lte": end_time}}
         ]}, {"name": 1, "start_time": 1}))
+
+def get_sorted_experiments_ids(sort_criteria):
+    """
+    Get only the experiment ids sorted according to the sort criteria.
+    Sort criteria is a JSON array of [[sort_attr, sort_direction]]
+    """
+    return [ x["_id"] for x in logbookclient['explgbk_cache']['experiments'].find({}, { "_id": 1, "name": 1 }).sort(sort_criteria)]
 
 def get_experiments_for_user(uid):
     """
@@ -270,6 +283,21 @@ def text_search_for_experiments(search_terms):
     """
     matching_entries = list(logbookclient['explgbk_cache']['experiments'].find({ "$text": { "$search": search_terms }}))
     return sorted(matching_entries, key=lambda x : x["name"])
+
+def search_experiments_for_common_fields(search_term, sort_criteria):
+    """
+    Search the experiment cache for experiments regex matching the search term in a subset of fields.
+    The fields searched are _id, name, contact_info, description
+    """
+    patt = re.compile(search_term)
+    matching_entries = list(logbookclient['explgbk_cache']['experiments'].find(
+        { "$or": [
+            { "_id": { "$regex": patt } },
+            { "name": { "$regex": patt } },
+            { "contact_info": { "$regex": patt } },
+            { "description": { "$regex": patt } }
+        ]}, {"_id": 1, "name": 1}).sort(sort_criteria))
+    return matching_entries
 
 def get_all_param_names_matching_regex(rgx):
     """
