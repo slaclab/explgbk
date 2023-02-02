@@ -1137,7 +1137,12 @@ def svc_post_new_elog_entry(experiment_name):
     if not log_content or not log_content.strip():
         return logAndAbort("Cannot post empty message")
 
-    userid = context.security.get_current_user_id()
+    author = context.security.get_current_user_id()
+    if request.form.get("author", None):
+        author = request.form["author"]
+        logger.debug("Overriding the author with %s", author)
+        if not author.endswith("opr") and (author == "" or not context.usergroups.get_userids_matching_pattern(author)):
+            raise Exception(f"Cannot override author with non-existent user {author}")
 
     optional_args = {}
     parent = request.form.get("parent", None);
@@ -1217,7 +1222,7 @@ def svc_post_new_elog_entry(experiment_name):
             logger.info(filename)
             files.append((filename, upload))
     try:
-        inserted_doc = post_new_log_entry(experiment_name, userid, log_content, files, **optional_args)
+        inserted_doc = post_new_log_entry(experiment_name, author, log_content, files, **optional_args)
     except LgbkException as e:
         return JSONEncoder().encode({'success': False, 'errormsg': str(e), 'value': None})
     if 'run_num' in inserted_doc:
