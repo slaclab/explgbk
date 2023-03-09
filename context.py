@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import datetime
 
 from queue import Queue
 
@@ -12,6 +13,7 @@ from kafka import KafkaProducer
 from kafka.errors import KafkaError
 
 from dal.utils import JSONEncoder
+import jwt
 
 logger = logging.getLogger(__name__)
 
@@ -122,3 +124,11 @@ def reload_named_caches(cache_name):
     elif cache_name == "instrument_defintions":
         logger.info("Reloading the instrument_defintions named cache")
         load_instrument_definitions()
+
+
+def generateArpToken(userid, experiment_name, token_duration_in_mins=10):
+    if "WFLOW_TRIG_ARP_PRIVATE_KEY" not in os.environ:
+        raise Exception("Please specify the ARP private key in the environment variable WFLOW_TRIG_ARP_PRIVATE_KEY")
+    with open(os.environ["WFLOW_TRIG_ARP_PRIVATE_KEY"], "rb") as f:
+        private_key = f.read()
+    return jwt.encode({"user": userid, "experiment_name": experiment_name, "expires": (datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(minutes=token_duration_in_mins)).timestamp()}, private_key, algorithm="RS256").decode('utf-8')

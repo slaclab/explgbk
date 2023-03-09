@@ -26,6 +26,7 @@ import hashlib
 import urllib
 import base64
 import pytz
+import jwt
 
 import smtplib
 from email.message import EmailMessage
@@ -2732,7 +2733,8 @@ def svc_get_wf_job_action(experiment_name, job_id, action):
             client_cert_params["cert"] = (location["jid_client_cert"], location["jid_client_key"])
         if "jid_ca_cert" in location:
             client_cert_params["verify"] = location["jid_ca_cert"]
-        req = requests.post(location["jid_prefix"]+"jid/ws/"+action, data=JSONEncoder().encode(wf_job), stream=True, headers={"Content-Type": "application/json"}, **client_cert_params)
+        arp_token = context.generateArpToken(context.security.get_current_user_id(), experiment_name)
+        req = requests.post(location["jid_prefix"]+"jid/ws/"+experiment_name+"/"+action, data=JSONEncoder().encode(wf_job), stream=True, headers={"Content-Type": "application/json", "Authorization": "Bearer " + arp_token}, **client_cert_params)
         resp = Response(stream_with_context(req.iter_content(chunk_size=1024)))
         return resp
 
@@ -2833,7 +2835,8 @@ def svc_kill_workflow_job(experiment_name):
         client_cert_params["cert"] = (location["jid_client_cert"], location["jid_client_key"])
     if "jid_ca_cert" in location:
         client_cert_params["verify"] = location["jid_ca_cert"]
-    resp = requests.post(location["jid_prefix"] + "jid/ws/kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json"}, **client_cert_params)
+    arp_token = context.generateArpToken(context.security.get_current_user_id(), experiment_name)
+    resp = requests.post(location["jid_prefix"] + "jid/ws/"+experiment_name+"/"+"kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json", "Authorization": "Bearer " + arp_token}, **client_cert_params)
     respdoc = resp.json()["value"]
     (status, errormsg, val) = update_wf_job(experiment_name, job_id, {"status": respdoc.get("status", wf_job["status"])})
     if status:
