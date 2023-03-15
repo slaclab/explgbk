@@ -2734,6 +2734,8 @@ def svc_get_wf_job_action(experiment_name, job_id, action):
         if "jid_ca_cert" in location:
             client_cert_params["verify"] = location["jid_ca_cert"]
         arp_token = context.generateArpToken(context.security.get_current_user_id(), experiment_name)
+        # The ARP does an exact match on userid in wf_job; so for these mostly innocent calls, we change the useird on the job doc
+        wf_job["user"] = context.security.get_current_user_id()
         req = requests.post(location["jid_prefix"]+"jid/ws/"+experiment_name+"/"+action, data=JSONEncoder().encode(wf_job), stream=True, headers={"Content-Type": "application/json", "Authorization": "Bearer " + arp_token}, **client_cert_params)
         resp = Response(stream_with_context(req.iter_content(chunk_size=1024)))
         return resp
