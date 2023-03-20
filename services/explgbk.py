@@ -1752,6 +1752,15 @@ def svc_start_run(experiment_name):
     """
     run_type = request.args.get("run_type", "DATA")
     user_specified_run_number = request.args.get("run_num", None)
+    if user_specified_run_number:
+        try:
+            # LCLS uses int run numbers; Cryo users strings.
+            rn = int(user_specified_run_number)
+            user_specified_run_number = rn
+            logger.debug("Converting user specified run number as int %s", user_specified_run_number)
+        except ValueError:
+            logger.debug("Using run number as is %s", user_specified_run_number)
+            pass
     user_specified_start_time_str = request.args.get("start_time", None)
     user_specified_start_time = datetime.strptime(user_specified_start_time_str, '%Y-%m-%dT%H:%M:%S.%fZ') if user_specified_start_time_str else None
     user_specified_sample = request.args.get("sample", None)
