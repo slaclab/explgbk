@@ -5,11 +5,7 @@
 
 # Use this pattern to setup configuration.
 # However, please use the EXTERNAL_CONFIG_FILE that is NOT part of this repo to set up sensitive/installation-specific config.
-[ -z "$ROLES_DATABASE_HOST" ] && export ROLES_DATABASE_HOST="localhost"
-[ -z "$ROLES_DATABASE_DB" ] && export ROLES_DATABASE_DB="ROLES"
-[ -z "$ROLES_DATABASE_USER" ] && export ROLES_DATABASE_USER="test"
-[ -z "$ROLES_DATABASE_PASSWORD" ] && export ROLES_DATABASE_PASSWORD="test"
-
+# [ -z "$ROLES_DATABASE_HOST" ] && export ROLES_DATABASE_HOST="localhost"
 
 # We pick up installation-specific config from a file outside of this repo.
 PRNT_DIR=`dirname $PWD`
