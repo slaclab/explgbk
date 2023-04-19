@@ -180,6 +180,12 @@ def get_experiments_for_user(uid):
         exp_for_uid[exp["_id"]] = exp
     return exp_for_uid.values()
 
+def get_direct_experiments_for_user(uid):
+    """
+    Get a list of experiments for which the user is a direct collaborator.
+    This information typically comes in from the URAWI BTR.
+    """
+    return list(logbookclient['explgbk_cache']["experiments"].find({"players": {"$in": ["uid:" + uid]}}, {"name": 1, "instrument": 1}))
 
 def get_cached_experiment_names():
     """

@@ -70,7 +70,7 @@ from dal.exp_cache import get_experiments, get_experiments_for_user, does_experi
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
     get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex, get_experiments_proposal_mappings, \
     update_single_experiment_info, get_experiments_starting_in_time_frame, get_sorted_experiments_ids, get_cached_experiment_info, \
-    search_experiments_for_common_fields
+    search_experiments_for_common_fields, get_direct_experiments_for_user
 
 from dal.imagestores import parseImageStoreURL
 
@@ -413,6 +413,20 @@ def svc_get_experiments_to_proposal():
 
     return JSONEncoder().encode({"success": True, "value": ret})
 
+@explgbk_blueprint.route("/lgbk/ws/experiments_with_user_as_collaborator", methods=["GET"])
+def svc_get_experiments_with_user_as_collaborator():
+    """
+    Returns a list of experiment for which the user is listed as a collaborator in the roles
+    This information originally comes from URAWI.
+    Note this call expects a userid as a parameter and returns a minimal amount of information.
+    It is used primarily for backend integration with other systems.
+    For a more comprehensive list of experiments for a user, please use the /experiments calls.
+    """
+    uid = request.args.get("uid", None)
+    if not uid:
+        return logAndAbort("Please specify a uid")
+    
+    return JSONEncoder().encode({"success": True, "value": get_direct_experiments_for_user(uid)})
 
 @explgbk_blueprint.route("/lgbk/ws/search_experiment_info", methods=["GET"])
 @context.security.authentication_required
