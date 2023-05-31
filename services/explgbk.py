@@ -931,12 +931,15 @@ def svc_switch_experiment():
 
     (status, errormsg) = switch_experiment(instrument, station, experiment_name, userid)
     if status:
-        context.kafka_producer.send("experiment_switch", {"experiment_name" : experiment_name, "value": {
+        expswdoc = {
             "instrument": instrument,
             "station": station,
             "experiment_name": experiment_name,
             "userid": userid,
-        }})
+        }
+        if previously_active_experiment:
+            expswdoc["previous_experiment_name"] = previously_active_experiment["name"]
+        context.kafka_producer.send("experiment_switch", {"experiment_name" : experiment_name, "value": expswdoc})
 
         # We may add/remove operator_uid's etc Rebuild the caches for affected instruments.
         context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Update", "value": get_experiment_info(experiment_name) })
