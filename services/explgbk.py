@@ -933,7 +933,7 @@ def svc_switch_experiment():
     if status:
         context.kafka_producer.send("experiment_switch", {"experiment_name" : experiment_name, "value": {
             "instrument": instrument,
-            "startion": station,
+            "station": station,
             "experiment_name": experiment_name,
             "userid": userid,
         }})
