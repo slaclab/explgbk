@@ -25,7 +25,7 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
       {{#files}}<div class="row run_file" data-file-path="{{path}}"><div class="col-md-5 text-left fmgr_exp_file_name">{{ trunc_path }}</div><div class="col-md-2 text-left">{{ hrsize }}</div><div class="col-md-2 text-left">{{#FormatDate}}{{ create_timestamp }}{{/FormatDate}}</div>
       </div>{{/files}}</div></div></div>`;
   var fmgr_file_types_locs_tmpl = `<span class='fmgr_type_label'>For file restores, please select the types of files you wish to restore: </span>{{#ftypes}}<input class="ft_chkbx" type="checkbox" id="ft_{{name}}" data-ftype="{{name}}" {{#selected}}checked{{/selected}}><label for="ft_{{name}}" title="{{tooltip}}">{{label}}</label>{{/ftypes}}
-  <span class='fmgr_locs_label'>Please choose a location where you wish to restore the file:</span>{{#locs}}<input class="loc_chkbx" type="radio" id="loc_{{name}}" value="{{name}}" name="location" {{#selected}}checked{{/selected}}><label for="ft_{{name}}">{{name}}</label>{{/locs}}`;
+  {{^locslen}}<span class='fmgr_locs_label'>No data management locations have been associated with this experiment. Please contact LCLS data management to correct this.</span>{{/locslen}}{{#locslen}}<span class='fmgr_locs_label'>Please choose a location where you wish to restore the file:</span>{{/locslen}}{{#locs}}<input class="loc_chkbx" type="radio" id="loc_{{name}}" value="{{name}}" name="location" {{#selected}}checked{{/selected}}><label for="ft_{{name}}">{{name}}</label>{{/locs}}`;
 
   Mustache.parse(file_main_templ);
   Mustache.parse(fmgr_child_template);
@@ -127,7 +127,7 @@ $("#fmgr_tab").on("lg.loaded.bs.tab", function() {
   let process_file_types = function(fmgr_file_types) {
       $("#fmgr_tab").data("ftype_patterns", ".*");
       if(!_.isEmpty(fmgr_file_types)) {
-          let ftype_rdr = $(Mustache.render(fmgr_file_types_locs_tmpl, { ftypes: _.values(fmgr_file_types), locs: _.map(dm_locations, function(l, i){ return { name: l, selected: (i==0)}})}));
+          let ftype_rdr = $(Mustache.render(fmgr_file_types_locs_tmpl, { ftypes: _.values(fmgr_file_types), locs: _.map(dm_locations, function(l, i){ return { name: l, selected: (i==0)}}), locslen: dm_locations.length }));
           $("#fmgr_tab .fmgr_types").empty().append(ftype_rdr);
           let fpat = function() { $("#fmgr_tab").data("ftype_patterns", _.flatten(_.concat(_.map(_.filter(fmgr_file_types, function(ft){ return $("#fmgr_tab .fmgr_types").find("[data-ftype="+ft["name"]+"]").is(":checked")}), function(ft){ return ft["patterns"]; }))))};
           $("#fmgr_tab .fmgr_types").find(".ft_chkbx").on("change", function(){ fpat(); $("#fmgr_content").data("spgntr").redraw(); })
