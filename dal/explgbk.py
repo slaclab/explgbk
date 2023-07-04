@@ -1058,7 +1058,7 @@ def get_site_file_types():
         return s_config.get("filemanager_file_types", {})
     return {}
 
-def get_instrument_elogs(experiment_name, include_site_spanning_elogs=True):
+def get_instrument_elogs(experiment_name, include_instrument_elogs=True, include_site_spanning_elogs=True):
     '''
     Get the associated elogs for experiment.
     This consists of the elog(s) for the instrument (instrument param elog in the instrument object).
@@ -1071,9 +1071,10 @@ def get_instrument_elogs(experiment_name, include_site_spanning_elogs=True):
     if exp_x_post_elogs:
         ret.extend([x.strip() for x in exp_x_post_elogs.split(",")])
     sitedb = logbookclient["site"]
-    instrument_elog = sitedb["instruments"].find_one({"_id": exp_info["instrument"]}).get("params", {}).get("elog", None)
-    if instrument_elog:
-        ret.append(instrument_elog)
+    if include_instrument_elogs:
+        instrument_elog = sitedb["instruments"].find_one({"_id": exp_info["instrument"]}).get("params", {}).get("elog", None)
+        if instrument_elog:
+            ret.append(instrument_elog)
     if include_site_spanning_elogs:
         siteinfo = sitedb["site_config"].find_one()
         if siteinfo and 'experiment_spanning_elogs' in siteinfo and siteinfo['experiment_spanning_elogs']:

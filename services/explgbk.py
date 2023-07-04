@@ -1457,7 +1457,9 @@ def svc_get_elog_tags(experiment_name):
 @experiment_exists
 @context.security.authorization_required("read")
 def svc_get_instrument_elogs(experiment_name):
-    return JSONEncoder().encode({"success": True, "value": get_instrument_elogs(experiment_name)})
+    include_site_spanning_elogs = json.loads(request.args.get("include_site_spanning_elogs", "true"))
+    include_instrument_elogs = json.loads(request.args.get("include_instrument_elogs", "true"))
+    return JSONEncoder().encode({"success": True, "value": get_instrument_elogs(experiment_name, include_instrument_elogs=include_instrument_elogs, include_site_spanning_elogs=include_site_spanning_elogs)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files", methods=["GET"])
 @context.security.authentication_required
