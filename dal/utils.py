@@ -27,7 +27,7 @@ def replaceInfNan(d):
     If you could potentially encounter these in the data being sent over, use this function to massage the data.
     """
     for k, v in d.items():
-        if isinstance(v, collections.Mapping):
+        if isinstance(v, collections.abc.Mapping):
             d[k] = replaceInfNan(v)
         elif isinstance(v, float) and not math.isfinite(v):
             d[k] = str(v)

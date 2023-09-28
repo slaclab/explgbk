@@ -1,5 +1,11 @@
 [
     {
+        "id": "feedback",
+        "label": "Feedback",
+        "data-lg-url": "../../static/html/tabs/lcls/feedback/tab.js",
+        "class": "d-none priv_feedback_read"
+    },
+    {
         "id": "workflow",
         "label": "Workflow",
         "dropdown": true,
@@ -7,18 +13,18 @@
             {
                 "id": "lcls_wf_defs",
                 "label": "Definitions",
-                "data-url": "../../static/html/tabs/lcls/workflow_definitions.html"
+                "data-lg-url": "../../static/html/tabs/lcls/wf/defs/tab.js"
             },
             {
                 "id": "lcls_wf_jobs",
                 "label": "Control",
-                "data-url": "../../static/html/tabs/lcls/workflow_jobs.html"
+                "data-lg-url": "../../static/html/tabs/lcls/wf/jobs/tab.js"
             }
         ]
     },
     {
         "id": "summaries",
         "label": "Summaries",
-        "data-url": "../../static/html/tabs/summaries_iframe.html"
+        "data-lg-url": "../../static/html/tabs/lcls/summary/tab.js"
     }
 ]

@@ -66,8 +66,8 @@ def get_current_run(experiment_name):
     Get the run document for the run with the maximum run number.
     '''
     expdb = logbookclient.get_database(experiment_name, read_preference=ReadPreference.PRIMARY)
-    current_run_doc = expdb.runs.find().sort([("num", DESCENDING)]).limit(1)
-    return list(current_run_doc)[0] if current_run_doc.count() else None
+    current_run_doc = list(expdb.runs.find().sort([("num", DESCENDING)]).limit(1))
+    return current_run_doc[0] if current_run_doc else None
 
 def get_run_doc_for_run_num(experiment_name, run_num):
     """

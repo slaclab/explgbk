@@ -1,10 +1,9 @@
-<div class="modal fade edit_modal" data-backdrop="static" role="dialog">
+<div class="modal fade edit_modal" data-bs-backdrop="static" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
    <div class="modal-content">
        <div class="modal-header">
-          <h4 class="modal-title w-100">Rename experiment {{ src_experiment_name }}
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          </h4>
+          <h4 class="modal-title w-100">Rename experiment {{ src_experiment_name }}</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
        </div>
        <div class="modal-body">
          <form class="clone_form">
@@ -14,7 +13,7 @@
            <input type="text" class="form-control experiment_name" value="{{ name }}">
           </div>
           <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
               <button class="btn btn-primary panel_btn rename_btn">Rename</button>
           </div>
          </form>
@@ -28,15 +27,14 @@
  <div class="modal-dialog">
   <div class="modal-content">
       <div class="modal-header">
-         <h4 class="modal-title w-100">Validation Error
-           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-         </h4>
+         <h4 class="modal-title w-100">Validation Error</h4>
+         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
    <div class="modal-body alert alert-danger" role="alert">
      <p class="validation_message"></p>
    </div>
    <div class="modal-footer">
-     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+     <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
    </div>
   </div>
  </div>

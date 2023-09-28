@@ -1,0 +1,92 @@
+<div id="elog_new_entry_modal" class="modal fade" data-bs-backdrop="static" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title w-100">Post new eLog entry</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form role="form" id="elog_new_entry_form">
+                    <div class="row"><span class="w-100 text-center validation_warning"></span></div>
+                    {{#entry}}<input type="hidden" name="_id" value="{{ entry._id }}">{{/entry}}
+                    {{#parent_id}}<input type="hidden" name="parent" value="{{ parent_id }}">{{/parent_id}}
+                    <div class="input-group row log_title_div d-none">
+                        <label  class="col-1 col-form-label" for="elog_new_entry_log_title">Title*</label>
+                        <div class="col-11">
+                            <input type="text" class="form-control" name="log_title" id="elog_new_entry_log_title" value="{{entry.title}}"/>
+                        </div>
+                    </div>
+                    <div class="log_text_div">
+                        <label class="form-label" for="elog_new_entry_log_text">Text* <span class="elog_html px-2"><i class="fa-solid fa-table fa-lg" title="HTML log entry"></i><span></label>
+                        <textarea class="form-control" rows="5" name="log_text" id="elog_new_entry_log_text">{{entry.content}}</textarea>
+                    </div>
+                    <div class="input-group row">
+                        <label class="col-1 col-form-label" for="elog_new_entry_email_dest" title="Email this log entry to folks specified in this list:">Email:</label>
+                        <div class="col-6">
+                            <select class="form-control contacts email_select" id="elog_new_entry_email_select" name="log_emails_shown" placeholder="email1 email2@institution.edu"></select>
+                            <input class="d-none email_input" name="log_emails" id="elog_new_entry_email_dest" value="{{#entry.email_to}}{{.}} {{/entry.email_to}}"></input>
+                        </div>
+                        {{^entry}}
+                        {{^parent_id}}
+                        <label  class="col-1 col-form-label" for="elog_new_entry_run_num" title="Specify an optional run number">Run:</label>
+                        <div class="col-3">
+                            <input type="text" class="form-control" name="run_num" id="elog_new_entry_run_num" value="{{current_run_num}}"/>
+                        </div>
+                        {{/parent_id}}
+                        {{/entry}}
+                    </div>
+                    <div class="row">
+                        <label class="col-1 col-form-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
+                        <span class="col-4">
+                            <span class="input-group">
+                                <select class="form-control contacts tag_select" id="elog_new_entry_tag_select" name="log_tags_shown" placeholder="tag1 tag2" multiple></select>
+                                <input class="d-none tag_input" name="log_tags" id="elog_new_entry_tag_dest" value="{{#entry.tags}}{{.}} {{/entry.tags}}"></input>
+                            </span>
+                        </span>
+                        <span class="col-7">
+                            <span class="files_div">
+                                <span class="custom-file">
+                                    <input type="file" name="files" class="custom-file-input" id="elog_new_entry_file_upload" multiple>
+                                    <label class="custom-file-label" for="elog_new_entry_file_upload"><span class="pe-2"><i class="fa-solid fa-cloud fa-lg"></i></span>Attach files</label>
+                                </span>
+                            </span>
+                        </span>
+                    </div>
+                    {{^entry}}
+                    {{^parent_id}}
+                    <div class="input-group row">
+                        {{#post_to_instrument_elogs}}
+                        <label class="col-1" title="Cross post this entry to other elogs like the instrument elog">Cross-post:</label>
+                        <div class="col-5">
+                            <ul class="list-unstyled text-start">
+                                {{#instrument_elogs}}
+                                <li>
+                                    <label class="form-check-label">{{.}}</label><input class="form-check-input ml-1" type="checkbox" name="post_to_elog_{{.}}">
+                                </li>
+                                {{/instrument_elogs}}
+                            </ul>
+                        </div>
+                        {{/post_to_instrument_elogs}}
+                        <label class="col-1 pr-4" title="Check these if you are having issues that need to be looked into">Support:</label>
+                        <div class="col-5">
+                            <ul class="list-unstyled text-start">
+                                <li>
+                                    <label class="w-25 form-check-label" title="This will mark this entry as an ISSUE; this entry will be automatically propagated to various backend issue tracking systems.">Issue:</label><input class="form-check-input ml-1" type="checkbox" name="elog_support_issue">
+                                </li>
+                                <li>
+                                    <label class="w-25 form-check-label" title="This will mark this entry as a ROADBLOCK; this entry will be automatically propagated to various backend issue tracking systems. It will also alert personnel who are listening on Slack channels for ROADBLOCK messages.">Roadblock:</label><input class="form-check-input ml-1" type="checkbox" name="elog_support_roadblock">
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    {{/parent_id}}
+                    {{/entry}}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="elog_new_entry_modal_post">Post</button>
+            </div>
+        </div>
+    </div>
+</div>

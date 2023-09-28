@@ -1,0 +1,1521 @@
+
+.row.content {height:auto;}
+
+$color-primary-0: #6685F4;	/* Main Primary color */
+$color-primary-1: #BDCBFC;
+$color-primary-2: #8CA4F8;
+$color-primary-3: #4367ED;
+$color-primary-4: #1E48DF;
+
+$color-secondary-1-0: #9064F4;	/* Main Secondary color (1) */
+$color-secondary-1-1: #D0BCFC;
+$color-secondary-1-2: #AC8BF8;
+$color-secondary-1-3: #7540ED;
+$color-secondary-1-4: #571BE0;
+
+$color-secondary-2-0: #FFE757;	/* Main Secondary color (2) */
+$color-secondary-2-1: #FFF5B7;
+$color-secondary-2-2: #FFED81;
+$color-secondary-2-3: #FFE130;
+$color-secondary-2-4: #FFDB05;
+
+$color-complement-0: #FFCC57;	/* Main Complement color */
+$color-complement-1: #FFE9B7;
+$color-complement-2: #FFD981;
+$color-complement-3: #FFC030;
+$color-complement-4: #FFB305;
+
+// Define four colors for the palette in order of increasing darkness.
+$cl-0: $color-secondary-2-2; // Use the lightest color for contrast/borders
+$cl-1: $color-complement-0; // An alternate contrast color; use for active samples/shifts/experiments etc.
+$cl-2: $color-primary-0; // Use the darkest but one for the navbar itself.
+$cl-3: $color-primary-4;  // Use the darkest for navbar contrast
+$cl-4: $color-complement-4; // Extreme standout
+
+
+$navbarcolor: $cl-2;
+$navbarhover: $cl-3;
+$activewidgetcolor: $cl-1;
+$contrastcolor: $cl-0;
+$extremecontrast: $cl-4;
+$navbartext: white;
+$maintext: black;
+$tablezebra: #efefef;
+$tblhdrbg: $navbarcolor;
+$linkcolor: $navbarhover;
+$bordercolor: $contrastcolor;
+
+@mixin highlight_mixin {
+    color: $navbartext;
+	background: $navbarcolor;
+	font-weight: bold;
+}
+
+@mixin bold_text_mixin {
+  color: $navbarcolor;
+  font-weight: bold;
+}
+
+@mixin font_family_choices_mixin {
+  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+  font-size: 0.85rem;
+}
+
+@mixin section_label_mixin {
+    color: $navbarhover;
+    font-weight: bold;
+    font-size: 0.75vw;
+    border-bottom: thin solid $navbarcolor;;
+  }
+  
+
+@mixin listview_icon_mixin {
+  opacity: .5;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  font-size: 1.0rem
+}
+
+@mixin validation_warning_mixin {
+    color: $contrastcolor;
+    font-weight: bold;
+}
+
+@mixin small_btn_mixin {
+    font-size: 0.5rem;
+    padding: 1px;
+    margin: 1px;
+}
+
+@mixin search_text_mixin {
+    padding: 0.25em;
+	border: thin solid $navbarcolor;
+	margin: 0.25em;
+	color: $navbarcolor;
+	font-size: 17px;
+}
+
+@mixin ops_list_icons_mixin {
+    padding-left: 0.1rem;
+    padding-right: 0.1rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: $navbarcolor;
+}
+
+body.busy {
+    cursor: progress;
+}
+
+#lgbk_body {
+  @include font_family_choices_mixin;
+  span.help {
+      color: $extremecontrast;
+      background: $navbarcolor;
+  }
+
+  span.timezone {
+      color: $navbartext;
+      background: $navbarcolor;
+  }
+
+  span.zoom {
+      color: $navbartext;
+      background: $navbarcolor;
+  }
+
+  span.param_edit {
+      color: $navbarcolor;
+      background: $navbartext;
+      font-size: 1.25em;
+  }
+
+  .zoom_meeting {
+      tr th {
+          background: inherit;
+          color: $navbarcolor;
+      }
+      tr td {
+          padding: 0.75rem;
+      }
+  }
+
+  .infohelp {
+      font-style: italic;
+      span.helpd {
+          background: $navbartext;
+          color: $navbarcolor;
+      }
+      .no-break {
+          white-space: nowrap;
+      }
+  }
+  a {
+      color: $linkcolor;
+  }
+}
+
+label {
+	color: $navbarcolor;
+}
+
+.obj_name {
+  color: $navbarcolor;
+}
+
+#myNavRow {
+  background-color: $navbarcolor;
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+#myNavRow li a.active {
+  background-color: $navbarhover;
+  color: $navbartext;
+}
+
+#myNavRow li:hover a {
+  background-color: $navbarhover;
+  color: $navbartext;
+}
+
+#myNavRow li a {
+  color: $navbartext;
+}
+
+#myNavRow .logged_in_user_name {
+    padding-right: 0.25em;
+}
+#myNavRow li.session_items.session_timeout a {
+    color: $contrastcolor;
+}
+#myNavRow .navbar_icon_btn {
+    color: white;
+    background: $navbarcolor;
+    margin-left: 1.0em;
+    margin-right: 1.0em;
+    .btntext {
+        margin-right: 0.5em;
+        margin-left: 0.5em;
+    }
+    border: solid thin $bordercolor;
+}
+
+#myNavbar {
+    .currently_active {
+        margin-right: 1.0em;
+        margin-left: 1.0em;
+        color: $navbartext;
+        .standby {
+            padding-left: 0.25rem;
+        }
+    }
+
+    .clone_tb {
+        padding-left: 0.25em;
+        padding-right: 0.25em;
+        color: $navbartext;
+    }
+}
+
+#lgbk_footer {
+    left: auto;
+}
+
+.pagetitle {
+    @include highlight_mixin;
+}
+
+.slac_logo {
+  height: 28px;
+  margin-top: 6px;
+  float: right;
+  padding-right: 2.0em;
+  padding-bottom: 0.5em;
+}
+
+.tab_title_bar {
+    margin: 0px;
+    padding-top: 0.1em;
+	padding-bottom: 0.1em;
+	background-color: $navbarcolor;
+    text-align: center;
+}
+
+.exp_title {
+    font-size: 1.25em;
+	text-align: center;
+    display: inline-block;
+    font-weight: bold;
+	color: $navbartext;
+}
+
+#toolbar_for_tab {
+    float: right;
+    margin-right: 15px;
+    margin-left: 10px;
+}
+
+#toolbar_for_tab .pushedin {
+    color: $activewidgetcolor;
+}
+
+#toolbar_for_tab span {
+    color: $navbartext;
+    background: $navbarcolor;
+}
+
+.exp_info h1 {
+	font-size: 1.1em;
+	font-weight: bold;
+	color: $navbarcolor;
+	border-bottom: thin solid $navbarcolor;
+	text-align: left;
+}
+
+.exp_info .group .header {
+	font-weight: bold;
+	float: left;
+}
+
+.exp_info textarea {
+    margin-left: 1%;
+    width: 98%;
+}
+
+.exp_info input {
+    margin-left: 1%;
+    width: 98%;
+}
+
+.exp_info {
+    .exp_details {
+        padding-left: 0.5em;
+        span.label {
+            color: $navbarcolor;
+            font-weight: bold;
+        }
+        span {
+            text-align: left;
+        }
+    }
+}
+
+@media screen and (max-width: 767px) {
+ .dl-horizontal dt, dd {
+	text-align: left;
+	padding-left: 1px;
+ }
+}
+
+#info_toolbar {
+	float: right;
+	color: $navbartext;
+	padding-right: 1.0em;
+}
+
+#cryo_info_samples {
+    margin-top: 1.0em;
+    text-align: left;
+    h3 {
+        font-size: 1.0em;
+    	color: $navbarcolor;
+    	border-bottom: thin solid $navbarcolor;
+    	text-align: left;
+        font-weight: bold;
+    }
+    .sample_info {
+        border-bottom: thin solid $navbarcolor;
+        padding-bottom: 0.5em;
+        .label {
+            color: $navbarcolor;
+        }
+    }
+}
+
+#searchtext {
+    @include search_text_mixin;
+}
+
+.modal {
+    .modal-header {
+        @include highlight_mixin;
+        padding: 0.5rem;
+    }
+    text-align: left;
+    table {
+        tr th {
+            @include highlight_mixin;
+        }
+        td {
+            padding: 0;
+            margin: 0;
+        }
+        input {
+            background-color: inherit;
+        }
+        select {
+            background-color: inherit;
+        }
+    }
+    .nav {
+        button {
+            background-color: $navbarcolor;
+            color: $navbartext;
+        }
+        button.active {
+            background-color: $navbarhover;
+            color: $navbartext;
+        }
+    }
+    label { 
+        color: $navbarcolor;
+        font-weight: bold;
+    }
+    input, select {
+        @include font_family_choices_mixin;
+        background: inherit;
+    }
+    .icon { 
+        color: $navbarhover;
+    }
+
+    input::file-selector-button {
+        padding: 0.25rem;
+        padding-left: 0.50rem;
+        padding-right: 0.50rem;
+        @include font_family_choices_mixin;
+        background-color: $navbarcolor;
+        color: $navbartext;
+        border: none;
+    }
+}
+
+
+.custom_param_modal {
+  .childparam {
+    .cp_key {
+      padding-left: 2.0rem;
+    }
+  }
+}
+
+
+#switch_experiment_div th {
+  @include highlight_mixin;
+}
+
+#switch_experiment_div .btn {
+  @include highlight_mixin;
+}
+
+#expswitch_choose_experiment {
+    .rowselect {
+        @include bold_text_mixin;
+        background: $activewidgetcolor;
+    }
+}
+
+#expswitch_tab .ops_switch_icons {
+  white-space: nowrap;
+  span {
+      @include ops_list_icons_mixin;
+  }
+}
+
+#expswitch_tab .exp_switch_standby {
+    color: $contrastcolor;
+    font-weight: bold;
+}
+
+#expswitch_tab .expswitch_run_open {
+    color: $contrastcolor;
+    font-weight: bold;
+}
+
+
+
+#expswitch_choose_experiment {
+    table {
+        overflow-y: scroll;
+        td {
+            padding: 0.25rem;
+            a {
+                color: $navbarcolor;
+            }
+        }
+    }
+}
+
+#switch_hist {
+    .histdiv {
+        max-height: 20.0rem;
+    }
+    table {
+        overflow-y: scroll;
+    }
+}
+
+
+#expswitch_choose_experiment {
+    .btn-group .btn {
+        margin-top: 0.25em;
+        margin-left: 0.5em;
+        margin-right: 0.5em;
+        @include highlight_mixin;
+    }
+}
+
+#switch_hist {
+    table {
+        tr th {
+            @include highlight_mixin;
+        }
+        td {
+            padding: 0.25rem;
+        }
+    }
+}
+
+
+#register_edit_exp_tab .modal-content {
+  padding: 0.5em;
+}
+
+#register_edit_exp_tab .panel-body {
+  padding: 0.5em;
+}
+
+#register_edit_exp_tab .btn {
+  @include highlight_mixin;
+}
+
+#exp_searchresults th {
+  @include highlight_mixin;
+  white-space: nowrap;
+  .fas { padding-left: 0.25em; }
+}
+
+#register_edit_exp_tab .ops_exp_icons {
+  white-space: nowrap;
+  span {
+      @include ops_list_icons_mixin;
+  }
+}
+
+#register_edit_exp_tab .clone_select_attrs td {
+    text-align: left;
+    padding-left: 2.0em;
+}
+
+#ops_instruments_tab .editinsbtn {
+    @include ops_list_icons_mixin;
+}
+
+#ops_instruments_tab .instrument_lbl {
+  @include bold_text_mixin;
+}
+
+@mixin param_table_mixin {
+     tr th {
+        @include highlight_mixin;
+        padding-left: 2.0em;
+    }
+    .fas {
+        opacity: 0.5;
+    }
+}
+
+#ops_instruments_tab .modal .table {
+  @include param_table_mixin;
+
+  .param_action {
+      @include listview_icon_mixin;
+      font-size: inherit;
+      color: $navbarhover;
+  }
+}
+
+#ops_instruments_tab th {
+  @include highlight_mixin;
+}
+
+#ops_reports_tab {
+    .chartrow {
+        height: 80vw;
+    }
+
+    .sellabel {
+        color: $navbarhover;
+        font-weight: bold;
+        padding-left: 1.0em;
+        padding-right: 1.0em;
+    }
+
+    select {
+        font-weight: normal;
+        font-size: 0.9rem;
+        color: $navbarhover;
+    }
+}
+
+
+#ops_exp_searchtext {
+	border: thin solid $navbarcolor;
+	color: $navbarcolor;
+}
+
+#myNavRow .ops_user {
+    margin-left: 1.0rem;
+    float: right;
+    a {
+        @include highlight_mixin;
+    }
+}
+
+
+#register_edit_exp_tab .modal .param_table {
+  @include param_table_mixin;
+
+  .param_action {
+      @include listview_icon_mixin;
+      font-size: inherit;
+      color: $navbarhover;
+  }
+}
+
+#experiments_container thead th {
+	color: $navbarhover;
+}
+
+#experiments_container tbody td a {
+  color: $navbarhover;
+}
+
+#experiments_container li a.year_pill {
+	color: $navbarcolor;
+	font-weight: bold;
+}
+
+@mixin year_pill_active_mixin {
+  @include highlight_mixin;
+}
+
+#experiments_container li a.active {
+  @include year_pill_active_mixin;
+}
+
+#experiments_container li a:hover {
+  @include year_pill_active_mixin;
+}
+
+#panel_title {
+	color: $navbarcolor;
+	background: $navbarcolor;
+	font-weight: bold;
+}
+
+#panel_btn {
+	color: $navbarcolor;
+	background: linear-gradient($navbarcolor, $navbarhover);
+	font-weight: bold;
+}
+
+#switch_in_exp_mdl {
+    .rowselect {
+        td {
+            @include bold_text_mixin;
+            background: $activewidgetcolor;
+        }
+    }
+    td {
+        padding: 0.25rem;
+    }
+    .message {
+        font-size: 1.25em;
+    }
+}
+
+#myTabContainer {
+    .icon { 
+        color: $navbarhover;
+    }
+}
+
+#myTabContainer .exp_tab_header {
+  @include highlight_mixin;
+	border: thin $bordercolor solid;
+	padding: 0.2em;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+}
+
+#myTabContainer .listview-action {
+  @include listview_icon_mixin;
+}
+
+#myTabContainer .param_action {
+    @include listview_icon_mixin;
+    font-size: inherit;
+    color: $navbarhover;
+}
+
+#myTabContainer .modal .btn {
+  @include highlight_mixin;
+}
+
+#info_tab {
+    .ques_tabs {
+        .sitespecific_iframe {
+            width: 100vw;
+            height: 100vw;
+            padding: 0;
+            border: 0;
+        }
+        .no_ques {
+            text-align: left;
+            font-style: italic;
+            padding-left: 2.0em;
+            padding-right: 2.0em;
+        }
+    }
+}
+
+#elog_tab div.edat {
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}
+
+#elog_tab div.followup_div {
+    margin-left: 0.5em;
+    width: 100%;
+
+    .email_select {
+        width: inherit;
+    }
+    .col-sm-8 {
+        padding-left: inherit;
+    }
+    .card {
+        border: 3px solid $navbarcolor;
+    }
+    .custom-file-label {
+        color: $navbarcolor;
+    }
+}
+
+#elog_tab .elog_main_content {
+    text-align: left;
+}
+
+#elog_tab .elog_attachments_only {
+    height: 100%;
+    overflow-y: scroll;
+}
+
+#elog_tab .elog_hybrid_row {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: thin solid $navbarcolor;
+    .tblr {
+        color: $navbarcolor;
+        padding-left: 0.1rem;
+    }
+}
+
+#elog_tab .elog_deleted {
+    text-decoration: line-through;
+}
+
+#elog_tab .elog_deleted_by {
+    color: $contrastcolor;
+    padding-left: 1.25em;
+    text-align: left;
+}
+
+#elog_tab div.etop:nth-child(odd) {
+	background: $tablezebra;
+}
+
+#elog_tab .elog_tag {
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+}
+
+#elog_tab .elog_tag:not(:first-child) {
+    border-left: thin solid $navbarhover;
+}
+
+#elog_tab .seloption {
+    color: $navbarcolor;
+}
+#elog_tab .selectedoption {
+    background: $navbarcolor;
+    color: $navbartext;
+    padding-left: 0.25em;
+    padding-right: 0.25em;
+}
+
+#elog_tab {
+  #elog_attch_ovrly {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2000;
+    width: 100vw;
+    height: 100vw;
+    background: black;
+
+    img {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      height: 100%;
+      object-fit: scale-down;
+    }
+    .ovrlytlbr span {
+      color: white;
+      font-size: 2.0rem;
+      padding-top: 0.5rem;
+      padding-right: 0.5rem;
+      opacity: 50%;
+    }
+  }
+}
+
+#elog_search_text {
+    padding: 0.1em;
+    margin: 0;
+    border: none;
+    border-radius: 4px;
+    width: 20em;
+    color: $navbarcolor;
+    font-weight: bold;
+}
+
+#elog_select_by_tag {
+    padding: 0.1em;
+    padding-right: 0.25rem;
+    margin: 0;
+    color: $navbarcolor;
+    font-weight: bold;
+}
+
+#elog_tab .elog_run_param_category {
+    background: $tablezebra;
+    .expand_param {
+        padding-right: 0.25em;
+    }
+}
+
+#elog_new_entry_modal {
+    margin-left: 1.0em;
+    text-align: left;
+    .custom-file-label {
+        color: $navbarcolor;
+    }
+}
+
+#elog_email_subscriptions {
+    margin-left: 1.0em;
+    .modal-body {
+        text-align: left;
+    }
+    .uid {
+        font-weight: bold;
+        color: $navbarcolor;
+        white-space: nowrap;
+    }
+    .btn {
+        background: $navbarcolor;
+        color: $navbartext;
+    }
+    pre {
+        background: lightgray;
+    }
+}
+
+#current_sample_lbl .fas {
+    padding-right: 0.25em;
+}
+#current_sample_lbl {
+    font-weight: lighter;
+    font-size: small;
+    font-style: italic;
+    margin-left: 1.0em;
+}
+
+#current_sample_lbl.samples_different {
+    color: $activewidgetcolor;
+}
+
+// Sample change tooltip
+.tooltip .tooltip-inner {
+  background-color: $navbarcolor;
+  border: solid thin thin solid $navbarhover;
+  padding: 0.25em;
+}
+
+.tooltip .arrow::before {
+  border-left-color: $navbarcolor;
+  border: solid thin thin solid $navbarhover;
+  padding: 0.25em;
+}
+
+#myTabContainer .expand_ctrl {
+  font-size: 0.75em;
+}
+
+#myTabContainer .exp_icons_left {
+	float: left;
+  padding-right: 0.2em;
+}
+
+#myTabContainer .text_truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#myTabContainer ul.nav-pills li a {
+	color: $navbarcolor;
+	font-weight: bold;
+}
+
+#myTabContainer ul.nav-pills a.active {
+  color: $navbarcolor;
+  @include highlight_mixin;
+}
+
+#myTabContainer ul.nav-pills li  a:hover {
+  @include highlight_mixin;
+}
+
+#myTabContainer .sitespecific_iframe_parent {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#myTabContainer .sitespecific_iframe {
+    width: 100%;
+    height: 100%;
+}
+
+#elog_content {
+    padding: 0px;
+    margin: 0px;
+    padding-top: 0px;
+}
+
+#elog_content .entry_actions {
+	float:right;
+	font-size: 0.90em;
+	padding-right: 0.25em;
+
+    span {
+        padding-left: 0.15em;
+        padding-right: 0.15em;
+        opacity: .5;
+    }
+}
+
+#elog_content .precontent {
+    white-space: pre-line;
+}
+
+#elog_content .elog-chid .card {
+	width: 100%;
+}
+
+#log_entry_body {
+    #toolbar_for_tab span {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        color: $navbartext;
+        background: $navbarcolor;
+        a {
+            color: $navbartext;
+            background: $navbarcolor;
+        }
+    }
+    .tab_title_bar {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+}
+#elog_sgl_entry {
+    @include font_family_choices_mixin;
+    .card {
+        width: 100%;
+        .elog_deleted {
+            text-decoration: line-through;
+        }
+    }
+}
+
+#fmgr_tab {
+    padding: 0;
+    .fmgr_types {
+        padding-left: 1.5rem;
+        font-weight: bold;
+        margin-top: 0.5rem;
+        .ft_chkbx {
+            padding-left: 0.5rem;
+            margin-left: 0.5rem;
+        }
+        label {
+            padding-left: 0.25rem;
+        }
+    }
+    .fmgr_locs_label {
+        padding-left: 1.5rem;
+    }
+    .loc_chkbx {
+        padding-left: 0.5rem;
+        margin-left: 0.5rem;
+        label {
+            padding-left: 0.25rem;
+        }
+    }
+    .run_file:nth-child(odd) {
+    	background: $tablezebra;
+    }
+    .fdat {
+        padding-top: 0.1em;
+        padding-bottom: 0.1em;
+    }
+    .fdat:nth-child(odd) {
+    	background: $tablezebra;
+    }
+    .fas {
+    	opacity: .5;
+    }
+    .fmgr_exp_file_name {
+        padding-left: 2.0em;
+        word-break: break-all;
+    }
+    #fmgr_content {
+        padding: 0;
+        .fmfi {
+            padding-left: 1.5rem;
+        }
+        .all_files {
+          background-color: $navbarcolor;
+          color: $navbartext;
+          transition: background-color 2s, color 2s;
+        }
+        .some_files {
+          background-color: $contrastcolor;
+          color: $maintext;
+          transition: background-color 2s, color 2s;
+        }
+        .no_files {
+          background-color: #FFB7B7;
+          color: $maintext;
+          transition: background-color 2s, color 2s;
+        }
+    }
+    .exp_tab_header {
+        .row{
+            margin: 0;
+        }
+    }
+}
+
+#rtbl_content table {
+  width: 100%;
+
+  .rtblbooltick {
+      color: $navbarcolor;
+  }
+}
+
+#rtbl_content .sticky-table {
+    height: 80vh;
+    thead tr th {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+    }
+}
+
+#rtbl_content table thead tr th {
+  overflow: hidden;
+  white-space: nowrap;
+  background: $tblhdrbg;
+  color: $navbartext;
+  opacity: .75;
+  font-weight: normal;
+}
+
+#rtbl_content .tblhighlight {
+  background-color: $navbarhover
+}
+
+#rtbl_content .rbtl_col_hvr {
+  background-color: fade($navbarcolor, 20%);
+  border-left: solid $navbarhover 2px;
+  border-right: solid $navbarhover 2px;
+}
+
+#rtbl_content .rtbldef_action {
+    @include listview_icon_mixin;
+    font-size: inherit;
+    color: $navbarhover;
+}
+
+#rtbl_content td.rtbl_separator {
+  background: $tablezebra;
+  width: 0.25em;
+}
+
+#rtbl_content .rtbl_thumbnail {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
+  height: 100px;
+}
+
+#rtbl_content div.rtbl_editable_column {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    padding: 3px;
+}
+
+#rtbl_content div.rtbl_editable_column:empty::before {
+    content: '\feff';
+}
+
+
+#shifts_tab .table th {
+  @include highlight_mixin;
+}
+
+
+#shifts_tab .btnbar {
+  margin-left: 0.5em;
+  text-align: left;
+}
+
+
+#shifts_tab .shiftstbl tr.active_shift td {
+  @include bold_text_mixin;
+  background: $activewidgetcolor;
+  margin: 0.1em;
+  padding: 0.1em;
+}
+
+#sample_content {
+    padding: 1px;
+    margin: 0px;
+    padding-top: 0px;
+}
+
+#samples_tab .table th {
+  @include highlight_mixin;
+}
+
+
+#samples_tab .btnbar {
+  margin-left: 0.5em;
+  text-align: left;
+}
+
+#samples_tab .samplestbl tr.active_sample td {
+  @include bold_text_mixin;
+  background: $activewidgetcolor;
+  margin: 0.1em;
+  padding: 0.1em;
+}
+
+#samples_tab {
+    .modal {
+        table {
+            td {
+                padding-top: .25rem;
+                padding-bottom: .25rem;
+                padding-left: .25rem;
+                @include bold_text_mixin;
+            }
+        }
+    }
+}
+
+#sample_edit_modal {
+    input[type="checkbox"].cp_value {
+        padding-left: 2.0rem;
+        width: auto;
+    }
+}
+
+#choose_sample {
+    td {
+        padding: 0.5rem;
+    }
+    .chsmpic {
+        @include ops_list_icons_mixin;
+    }
+}
+
+.note-callout {
+    border: thin $navbarcolor solid;
+    padding: 0.5em;
+    margin-top: 0.25em;
+    color: $navbarcolor;
+    font-style: italic;
+}
+
+@mixin collab_msg_mixin {
+    padding-left: 1.0em;
+    padding-bottom: 0.25em;
+    text-align: left;
+}
+
+#collab_mdl_holder .msg {
+    @include collab_msg_mixin;
+}
+#glbl_role_mdl_holder .msg {
+    @include collab_msg_mixin;
+}
+
+#collab_tab .collabtbl {
+    thead tr th {
+        text-align: center;
+        @include highlight_mixin;
+    }
+    tbody tr td {
+        text-align: left;
+        padding-left: 1.0em
+    }
+    tbody tr td .fas {
+        padding-right: 1.0em;
+    }
+    tbody tr td .fa-trash {
+        opacity: 0.7;
+    }
+    tbody tr td .role_present {
+        color: red;
+    }
+    tbody tr td .role_absent {
+        color: green;
+    }
+    .croxxout {
+        vertical-align: sub;
+        font-size: small;
+        position: relative;
+        bottom: -0.25em;
+        right: 0.25em;
+    }
+    .collab-no-role {
+        opacity: 0.5;
+    }
+}
+
+#collab_mdl_holder {
+    tbody  {
+        .fas {
+            padding-right: 0.75em;
+        }
+
+        .fa.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        td {
+            padding: 0.25rem;
+        }
+    }
+}
+
+#logout {
+    h2 {
+        background-color: $navbarcolor;
+        color:  $navbartext;
+        padding-top: 0.25em;
+        padding-bottom: 0.25em;
+        padding-left: 1.0em;
+        text-align: center;
+    }
+}
+
+#feedback_tab {
+
+.fd_section_hdr {
+    color:  $navbarcolor;
+    font-weight: bold;
+    text-align: left;
+    border-bottom: solid thin $navbarcolor;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.fd_plain_hdr {
+    text-align: left;
+    padding-left: 1.0em;
+}
+
+.fd_item {
+    text-align: left;
+    padding-left: 1.0em;
+}
+
+.fd_input input {
+    border: solid thin black;
+}
+
+select {
+    margin-bottom: 0.25em;
+}
+
+.fd_notes {
+    text-align: left;
+    padding-left: 1.5em;
+}
+
+.fd_survey_notes {
+    text-align: left;
+    padding-left: 1.5em;
+}
+
+.fd_callout {
+    margin-top: 1.0em;
+    text-align: left;
+}
+
+.fd_instructions {
+    border: solid thin $navbarcolor;
+    padding: 0.25em;
+}
+
+.ins_ls_title {
+    color: $navbarcolor;
+}
+
+.fd_last_modified {
+    margin-top: 2.0em;
+    font-size: smaller;
+    font-style: italic;
+}
+
+.fd_text_instructions {
+    overflow: auto;
+    color: $navbarcolor;
+    font-style: italic;
+}
+
+.survey_item {
+    text-align: left;
+}
+
+}
+
+#lcls_wf_defs_tab {
+  .wf_run_params {
+    color: $navbarhover;
+  }
+}
+
+#lcls_wf_ctrls_tab {
+    .wfj_runnum {
+        border-bottom: 0;
+    }
+
+    .ctrls_hdr {
+        @include bold_text_mixin;
+    }
+
+    .ctrls_content {
+        border: thin black solid;
+        .runrow {
+            border-bottom: thin black solid;
+        }
+        .runhdr span {
+            margin-top: 0.25em;
+        }
+        .runrow:nth-child(even) {
+            background: #efefef;
+        }
+        .wact {
+            color: $navbarhover;
+        }
+        .wact[disabled] {
+            color: $tablezebra;
+        }
+    }
+
+    .wf_counters {
+        text-align: left;
+
+        ul {
+            margin-bottom: 0em;
+        }
+        .wf_counter_key {
+            font-weight: bold;
+        }
+        .wf_counter_value {
+            padding-left: 0.25rem;
+        }
+
+        .red {
+            color:red;
+        }
+        .yellow {
+            color:yellow;
+        }
+        .green {
+            color:green;
+        }
+        .blue {
+            color:blue;
+        }
+    }
+}
+
+
+#global_roles_tab {
+    .role_check {
+        color: $navbarcolor;
+    }
+}
+
+#inst_roles_tab {
+    .inshdr {
+        margin: 0;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+    .insrolchs {
+        font-weight: bold;
+        padding-left: 1.0rem;
+        padding-right: 0.5rem;
+    }
+    .role_check {
+        color: $navbarcolor;
+    }
+    .choose_instr {
+        color: $navbarcolor;
+        font-weight: bold;
+    }
+}
+
+#lgbk_help {
+    @include font_family_choices_mixin;
+    .title {
+        @include highlight_mixin;
+        text-align: center;
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+    }
+    .helptext {
+        .hh {
+            color: $navbarcolor;
+        }
+        .hhb {
+            color: $navbarcolor;
+            font-weight: bold;
+        }
+        .st {
+            color: $navbarcolor;
+            font-weight: bold;
+            border-bottom: thin solid;
+            padding-top: 0.25rem;
+        }
+        .sut {
+            color: $navbarcolor;
+            font-weight: bold;
+            padding-top: 0.25rem;
+        }
+        .ic {
+            color: $navbarcolor;
+            background-color: $navbartext;
+        }
+        ul {
+            margin-bottom: 0;
+        }
+    }
+}
+
+#projectlist {
+    .card-header {
+        background-color: $navbarcolor;
+        color: white;
+        .prjopen a {
+            color: $extremecontrast;
+        }
+    }
+    .card { 
+        width: 25rem;
+    }
+}
+
+#sampprep_tab {
+    #sampprep_content {
+        display: grid;
+        grid-gap: 2px;
+        grid-template-columns: [col1-start] 1fr  [col2-start] 1fr  [col3-start] 1fr [col3-end];
+        grid-template-rows: [row1-start] 25vh [row2-start] 75vh [row2-end];
+        background-color: #fff;
+        color: #444;
+    }
+    .box {
+        border: thin solid $navbarcolor;
+        border-radius: 5px;
+        padding: 20px;
+    }
+    .a {
+        grid-column: col1-start;
+        grid-row: row1-start / row2-end;
+    }
+    .b {
+        grid-column: col2-start ;
+        grid-row: row1-start;
+    }
+    .c {
+        grid-column: col3-start;
+        grid-row: row1-start ;
+    }
+    .d {
+        grid-column: col2-start / col3-end;
+        grid-row: row2-start ;
+    }
+    #prjcomment {
+        .lbl {
+            @include section_label_mixin;
+        }
+        textarea {
+            width: 100%;
+        }    
+    }
+    .zebradiv { 
+        text-align: start;
+        .row {
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;    
+        }
+        .row:nth-child(odd) {
+            background: $tablezebra;
+        }
+        .lbl { 
+            color: $navbarhover;
+        }
+    }
+    .griddetails {
+        .hdr {
+            @include highlight_mixin;
+        }
+        .grid:nth-child(odd) {
+            background: $tablezebra;
+        }
+        .gbsub {
+            color: $navbartext;
+            background: $color-primary-2;
+            .sblbl {
+                font-weight: bold;
+            }
+        }
+    }
+}

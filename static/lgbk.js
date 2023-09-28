@@ -1,3 +1,36 @@
+let lgbkabspath = function(path) { 
+  return window.location.toString().split(pagepath)[0] + path; 
+}
+
+let lgbksetuptabs = function(tabload) {
+  document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
+    tab.addEventListener('shown.bs.tab', event => {
+        let target = event.target.getAttribute("data-bs-target"), taburl = event.target.getAttribute("data-lg-url");
+        if("#"+tabname !== target) {
+            const newtab = target.replace("#", "");
+            console.log(`Changing the location to ${newtab}`);
+            history.pushState({}, newtab, newtab);
+            tabname=newtab;
+            pagepath = pagepath.replace(new RegExp("\\/\\w+$"), "/"+tabname);
+        }
+        console.log(`Displaying tab ${target} using URL ${taburl}`);
+        tabload(taburl, event.target);
+        if(event.target.classList.contains("dropdown-item")) {
+            new bootstrap.Dropdown(event.target.closest(".dropdown")).hide();
+        }
+    })
+    tab.addEventListener('hidden.bs.tab', event => {
+        let target = event.target.getAttribute("data-bs-target");
+        console.log(`Hiding tab ${target}`);
+        let trgt = document.querySelector(target); 
+        trgt.querySelector(".tabcontainer").dispatchEvent(new Event("lg.hidden.bs.tab"));
+        trgt.innerHTML="";
+        document.querySelector("#toolbar_for_tab").innerHTML = "";
+    })
+  });
+  new bootstrap.Tab(document.querySelector(`#myNavbar [data-bs-target="#${tabname}"]`)).show();
+}
+
 /*
  * Sets the current sample in the logbook titlebar.
  */
@@ -42,7 +75,7 @@ var setCurrentUISample = function() {
                        }
                        $("#glbl_modals_go_here").find(".edit_modal").modal("hide");
                        setCurrentUISample();
-                       $(".tabcontainer").trigger("lg.refresh");
+                       $(".tabcontainer").trigger("lg.refreshOnSampleChange");
                    });
                    $("#glbl_modals_go_here").append(rendered);
                    $("#glbl_modals_go_here").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#glbl_modals_go_here").empty(); });
@@ -55,294 +88,37 @@ var setCurrentUISample = function() {
      }
 }
 
-/*
- * Get the value of the first URL parameter with the given name.
- * Note that there can be more than one parameter with the same name; if need be, extend this to return an array later.
- */
-var getURLParameter = function(paramName) {
-	var queryString = window.location.search;
-	if(!_.isNil(queryString) && queryString.length > 2) {
-		var queries = queryString.substring(1).split("&");
-		for ( i = 0, l = queries.length; i < l; i++ ) {
-			var parts = queries[i].split('='), name = parts[0], val =  decodeURIComponent(parts[1]);
-            if(name == paramName) {
-                return val;
-            }
-		}
-	}
-    return null;
-}
+const elog_timezone = "America/Los_Angeles";
+window.elog_formatdate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).tz(elog_timezone).format("MMM/D/YYYY")}};
+window.elog_formatdatetime = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).tz(elog_timezone).format("MMM/D/YYYY HH:mm:ss")}};
 
-/*
-A div with the contenteditable attr is more flexible from a run table layout perspective.
-However, this does not plugin to the jQuery change notification framework easily.
-This shim will kick off a change event when the contenteditable has changed.
-*/
+let message_tmpl = `  <div class="toast-container top-0 end-0 p-3">
+<div class="toast align-items-center {{colorclass}} data-bs-autohide="{{timeout}}" border-0" role="warning" aria-live="assertive" aria-atomic="true">
+<div class="d-flex">
+  <div class="toast-body">
+    {{message}}
+  </div>
+  <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+</div>
+</div></div>`; Mustache.parse(message_tmpl);
 
-var content_editable_trigger_change = function(rowRendered) {
-  rowRendered.find("[contenteditable]").on('focus', function() {
-      var $this = $(this);
-      $this.data('before', $this.html());
-      return $this;
-  }).on('focusout', function() {
-      var $this = $(this);
-      if ($this.data('before') !== $this.html()) {
-          $this.data('before', $this.html());
-          $this.trigger('change');
-      }
-      return $this;
-  });
-}
-
-var lgbk_create_edit_exp = function(expInfo) {
-  var show_validation_message = function(message) {
-        $("#exp_mdl_holder").find(".validation_message").html(message);
-        $("#exp_mdl_holder").find(".validation_modal").modal("show");
-  }
-  if(/.+\(.+\)/.test(expInfo['contact_info'])) {
-    expInfo['contact_info_name'] = expInfo['contact_info'].split("(")[0];
-    expInfo['contact_info_email'] = expInfo['contact_info'].split("(")[1].split(")")[0];
-  } else {
-    expInfo['contact_info_name'] = expInfo['contact_info'];
-    expInfo['contact_info_email'] = expInfo['contact_info'];
-  }
-  expInfo['paramkvs'] = _.map(expInfo['params'], function(value, key) { return { key: key, value: value };});
-  $.when($.ajax ("../static/html/ms/expreg.html"), $.getJSON(instruments_url), $.getJSON("naming_conventions"), $.getJSON("get_modal_param_definitions", { modal_type: "experiments" }))
-  .done(function( d1, d2, d3, d4) {
-    var tmpl = d1[0], instruments = d2[0], options = `{{#value}}<option value="{{ _id }}">{{ _id }}</option>{{/value}}`, site_naming_conventions = _.get(d3[0], "value", {}), ignore_experiment_name_regex = false, site_options = d4[0].value;
-    Mustache.parse(tmpl); Mustache.parse(options);
-    if(_.has(site_naming_conventions, "experiment.name.placeholder")) { expInfo.name_placeholder = _.get(site_naming_conventions, "experiment.name.placeholder"); }
-    if(_.has(site_naming_conventions, "experiment.name.tooltip")) { expInfo.name_tooltip = _.get(site_naming_conventions, "experiment.name.tooltip"); }
-    if(_.get(site_options, "options.disable_posix")) { expInfo.disable_posix = true; }
-    var rendered = $(Mustache.render(tmpl, expInfo));
-    rendered.find(".start_time").datetimepicker({defaultDate: moment(expInfo['start_time']), sideBySide: true });
-    rendered.find(".end_time").datetimepicker({defaultDate: moment(expInfo['end_time']), sideBySide: true });
-    rendered.find(".instrument").append($(Mustache.render(options, instruments)));
-    rendered.find(".instrument").val(expInfo['instrument']);
-    rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
-    rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
-    rendered.find(".experiment_name").on("change", function(){
-      let urexpname = $(this).val();
-      console.log("Checking to see if experiment " + urexpname + " is registered in URAWI");
-      var exp_params = {"experiment_name": urexpname};
-      rendered.find("form").find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { exp_params[key] = val; }});
-      $.getJSON(lookup_experiment_in_urawi, exp_params)
-      .done(function (expdata) {
-        console.log(expdata);
-        if(expdata.success) {
-          rendered.find(".description").val(expdata.value['proposalTitle']);
-          rendered.find(".pi_name").val(_.get(expdata.value, 'spokesPerson.firstName') + " " + _.get(expdata.value,'spokesPerson.lastName'));
-          rendered.find(".pi_email").val(_.get(expdata.value, 'spokesPerson.email'));
-          rendered.find(".leader_account").val(_.get(expdata.value, 'spokesPerson.account[0].unixName'));
-          rendered.find(".posix_group").val(urexpname);
-          if (_.get(expdata.value, 'instrument') != "") {
-            let inschc = _.find(_.map(rendered.find(".instrument option"), "value"), x => { if (x.toUpperCase() == _.get(expdata.value, 'instrument')) return x; });
-            rendered.find(".instrument").val(inschc)
-          };
-          if (_.get(expdata.value, "startDate") != "") { rendered.find('.start_time').datetimepicker('date', moment(_.get(expdata.value, "startDate"))) };
-          if (_.get(expdata.value, "stopDate") != "") { rendered.find('.end_time').datetimepicker('date', moment(_.get(expdata.value, "stopDate"))) };
-        }
-      });
-    });
-    if (_.has(expInfo, "name")) { rendered.find(".register_btn").text("Update"); }
-    rendered.find(".register_btn").on("click", function(e) {
-      e.preventDefault();
-      var formObj = rendered.find("form");
-      var validations = [
-          [function() { return $.trim(formObj.find(".experiment_name").val()) == ""; }, "Experiment name cannot be blank."],
-          [function() { return $.trim(formObj.find(".instrument").val()) == ""; }, "Please choose a valid instrument."],
-          [function() { return $.trim(formObj.find(".start_time input").val()) == ""; }, "Please choose a valid start time."],
-          [function() { return $.trim(formObj.find(".end_time input").val()) == ""; }, "Please choose a valid end time."],
-          [function() { return formObj.find('.end_time').datetimepicker('date').isSameOrBefore(formObj.find('.start_time').datetimepicker('date'), 'minute') ; }, "The end time should be after the start time."],
-          [function() { return $.trim(formObj.find(".leader_account").val()) == ""; }, "Please specify the UNIX account of the leader for the experiment. This user will have privileges to add and remove collaborators from the experiment."],
-          [function() { return $.trim(formObj.find(".pi_name").val()) == ""; }, "Please specify the full name of the principal investigator."],
-          [function() { return $.trim(formObj.find(".pi_email").val()) == ""; }, "Please specify the email address for the principal investigator."],
-          [function() {
-            var email = $.trim(formObj.find(".pi_email").val());
-            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-            return !re.test(email.toLowerCase());
-            }, "Please specify the email address for the principal investigator."],
-          [function() { return $.trim(formObj.find(".description").val()) == ""; }, "A brief description of the experiment is very helpful."],
-          [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."],
-          [function() { return _.isEmpty($.trim(formObj.find(".experiment_name_original").val())) && !_.isEmpty($.trim(formObj.find(".inital_sample").val())) && !/^[\w/_-]+$/.test($.trim(formObj.find(".inital_sample").val())); }, "Please restrict sample names to alphanumeric characters, dashes, slashes and underscores."],
-        ];
-      // Various validations
-      var v_failed = false;
-      _.each(validations, function(validation, i) {
-        // console.log("Trying validation " + i + "" + validation[1]);
-        if(validation[0]()) {
-            show_validation_message(validation[1]);
-            v_failed = true;
-            return false;
-        }
-      });
-      if (v_failed) { e.preventDefault(); return; }
-      var experiment_name = $.trim(formObj.find(".experiment_name").val());
-      if(!ignore_experiment_name_regex && _.has(site_naming_conventions, "experiment.name.validation_regex")) {
-          let exp_nam_regex = new RegExp(_.get(site_naming_conventions, "experiment.name.validation_regex"));
-          if(!exp_nam_regex.test(experiment_name)) {
-              $("#exp_mdl_holder").find(".validation_message").html("The experiment name " + experiment_name + " does not match the naming convention for this site.");
-              $("#exp_mdl_holder").find(".ignore_button").removeClass("d-none").on("click", function(){ ignore_experiment_name_regex = true; $("#exp_mdl_holder").find(".validation_modal").modal("hide"); });
-              $("#exp_mdl_holder").find(".validation_modal").modal("show");
-              v_failed = true;
-              return false;
-          }
-      }
-      var original_experiment_name = $.trim(formObj.find(".experiment_name_original").val());
-      var updating_existing_experiment = (original_experiment_name == experiment_name);
-      var exp_params = {};
-      formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { exp_params[key] = val; }});
-      var registration_doc = {
-          "name" : experiment_name,
-          "instrument" : $.trim(formObj.find(".instrument").val()),
-          "description" : $.trim(formObj.find(".description").val()),
-          "start_time" : formObj.find('.start_time').datetimepicker('date').toJSON(),
-          "end_time" : formObj.find('.end_time').datetimepicker('date').toJSON(),
-          "leader_account" : $.trim(formObj.find(".leader_account").val()),
-          "contact_info" : $.trim(formObj.find(".pi_name").val()) + " (" + $.trim($(".pi_email").val()) + ")",
-          "posix_group" : $.trim(formObj.find(".posix_group").val()),
-          "params": exp_params
-      };
-      if(!updating_existing_experiment && !_.isEmpty($.trim(formObj.find(".inital_sample").val()))) {
-          registration_doc["initial_sample"] = $.trim(formObj.find(".inital_sample").val());
-      }
-
-      $.ajax({
-        type: "POST",
-        contentType: "application/json; charset=utf-8",
-        url: (updating_existing_experiment ? update_experiment_url : register_experiment_url) + "?experiment_name=" + encodeURIComponent(experiment_name),
-        data: JSON.stringify(registration_doc),
-        dataType: "json"
-      })
-      .done(function(data, textStatus, jqXHR) {
-        if(data.success) {
-            console.log("Successfully submitted experiment " + experiment_name);
-            $("#exp_mdl_holder").find(".edit_modal").modal("hide");
-            sessionStorage.setItem("ops_active_tab", "experiments");
-            sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
-            window.scrollToExperiment = true;
-            setTimeout(function(){ $(document).trigger("experiments", {"CRUD": "Create", value: { name: experiment_name }}) }, 3000);
-        } else {
-          show_validation_message("Server failure: " + data.errormsg);
-        }
-      })
-      .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
-    });
-   $("#exp_mdl_holder").append(rendered);
-   $("#exp_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#exp_mdl_holder").empty(); });
-   $("#exp_mdl_holder").find(".edit_modal").modal("show");
-  });
-};
-
-
-var put_instrument_in_standby = function() {
-    var instr = $(this).attr("data-instrument");
-    var station = $(this).attr("data-station");
-    console.log("Putting " + instr + "/" + station + " into standby/maintenance mode.");
-    $.ajax({
-        type: "POST",
-        contentType: "application/json; charset=utf-8",
-        url: instrument_standby_url,
-        data: JSON.stringify({"instrument": instr, "station": station}),
-        dataType: "json"
-    })
-    .done(function(data){
-        if(data.success) {
-            console.log("Successfully put "+ instr + "/" + station + " into standby/maintenance mode.");
-            location.reload();
-        } else {
-            alert("Server side exception switching experiment " + data.errormsg);
-        }
-    })
-    .fail( function(jqXHR, textStatus, errorThrown) { alert("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
-};
-
-var clone_experiment = function(src_experiment_name, mdl_holder, path_to_ws="", auto_scroll=true) {
-  console.log("Cloning experiment " + src_experiment_name);
-  $.ajax (path_to_ws + "../static/html/ms/expclone.html")
-  .done(function( tmpl ) {
-    Mustache.parse(tmpl);
-    var rendered = $(Mustache.render(tmpl, {src_experiment_name: src_experiment_name, name: src_experiment_name, cloning: true, clone_attrs: [{k: "Experimental Setup", v: "setup"}, {k: "Samples", v: "samples"}, {k: "Roles", v: "roles"}, {k: "Run Parameter Descriptions", v: "run_param_descriptions"}]}));
-    let show_validation_message = function(message) {
-        rendered.find(".validation_message").text(message).removeClass("d-none");
-    }
-    rendered.find(".start_time").datetimepicker({defaultDate: moment(), sideBySide: true });
-    rendered.find(".end_time").datetimepicker({defaultDate: moment().add(2, 'days'), sideBySide: true });
-    rendered.find(".clone_btn").on("click", function(e) {
-      e.preventDefault();
-      var formObj = rendered.find("form");
-      var validations = [
-          [function() { return $.trim(formObj.find(".experiment_name").val()) == ""; }, "Experiment name cannot be blank."],
-          [function() { return $.trim(formObj.find(".experiment_name").val()) == formObj.find(".src_experiment_name").val(); }, "Experiment name cannot be the same as the original."],
-          [function() { return $.trim(formObj.find(".start_time input").val()) == ""; }, "Please choose a valid start time."],
-          [function() { return $.trim(formObj.find(".end_time input").val()) == ""; }, "Please choose a valid end time."],
-          [function() { return formObj.find('.end_time').datetimepicker('date').isSameOrBefore(formObj.find('.start_time').datetimepicker('date'), 'minute') ; }, "The end time should be after the start time."]
-        ];
-      // Various validations
-      var v_failed = false;
-      _.each(validations, function(validation, i) {
-        // console.log("Trying validation " + i + "" + validation[1]);
-        if(validation[0]()) {
-            show_validation_message(validation[1]);
-            v_failed = true;
-            return false;
-        }
-      });
-      if (v_failed) { e.preventDefault(); return; }
-      var experiment_name = $.trim(formObj.find(".experiment_name").val());
-      var registration_doc = {
-          "name" : experiment_name,
-          "start_time" : formObj.find('.start_time').datetimepicker('date').toJSON(),
-          "end_time" : formObj.find('.end_time').datetimepicker('date').toJSON()
-      };
-      formObj.find(".clone_attr:checked").each(function(){ registration_doc[$(this).attr("name")] = true; });
-      console.log(registration_doc);
-
-      let clone_experiment_url = path_to_ws + "ws/clone_experiment";
-      $.ajax({
-        type: "POST",
-        contentType: "application/json; charset=utf-8",
-        url: clone_experiment_url + "?experiment_name=" + encodeURIComponent(experiment_name) + "&src_experiment_name=" + encodeURIComponent(src_experiment_name),
-        data: JSON.stringify(registration_doc),
-        dataType: "json"
-      })
-      .done(function(data, textStatus, jqXHR) {
-        if(data.success) {
-            console.log("Successfully cloned experiment " + experiment_name);
-            mdl_holder.find(".edit_modal").modal("hide");
-            if(auto_scroll) {
-                sessionStorage.setItem("ops_active_tab", "experiments");
-                sessionStorage.setItem("scroll_to_exp_id", _.replace(experiment_name, " ", "_"));
-            }
-            window.scrollToExperiment = true;
-            setTimeout(function(){ $(document).trigger("experiments", {"CRUD": "Create", value: { name: experiment_name }}) }, 3000);
-        } else {
-          show_validation_message("Server failure: " + data.errormsg);
-        }
-      })
-      .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server failure: " + _.get(jqXHR, "responseText", textStatus))})
-    });
-   mdl_holder.empty().append(rendered);
-   mdl_holder.find(".edit_modal").on("hidden.bs.modal", function(){ mdl_holder.empty(); });
-   mdl_holder.find(".edit_modal").modal("show");
-  });
-};
-
-var elog_timezone = "America/Los_Angeles";
-var elog_formatdate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).tz(elog_timezone).format("MMM/D/YYYY")}};
-var elog_formatdatetime = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).tz(elog_timezone).format("MMM/D/YYYY HH:mm:ss")}};
-if(sessionStorage.getItem("use_local_timezone") != null && sessionStorage.getItem("use_local_timezone")) {
-    console.log("Using local timezone from the browser");
-    elog_formatdate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY")}};
-    elog_formatdatetime = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).format("MMM/D/YYYY HH:mm:ss")}};
+const showToast = function(msg, timeout, toastcolor) {
+  const tstelem = document.querySelector("#glbl_toasts_go_here");
+  tstelem.innerHTML = Mustache.render(message_tmpl, {message: msg, timeout: timeout, colorclass: toastcolor});
+  const toast = new bootstrap.Toast(tstelem.querySelector(".toast"));
+  toast.show();
 }
 
 var success_message = function(msg, timeout=5000) {
-    new Noty( { text: msg, layout: "topRight", type: "success", timeout: timeout }).show();
+  showToast(msg, timeout, "text-bg-success");
 }
 
 var error_message = function(msg, timeout=5000) {
-    new Noty( { text: msg, layout: "topRight", type: "error", timeout: timeout }).show();
+  showToast(msg, timeout, "text-bg-danger");
+}
+
+var info_message = function(msg, timeout=5000) {
+  showToast(msg, timeout, "text-bg-info");
 }
 
 let delayFunction = function(fn, ms=500) {

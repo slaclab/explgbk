@@ -1,0 +1,2 @@
+db.getSiblingDB("lgbkprjs").samples.createIndex({prjid: 1, name: 1}, {unique: true})
+db.getSiblingDB("site").modal_params.drop();

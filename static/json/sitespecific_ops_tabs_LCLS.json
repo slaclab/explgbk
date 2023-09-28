@@ -1,7 +1,7 @@
 [
     {
-        "id": "schedule",
-        "label": "Schedule",
-        "data-url": "../static/html/tabs/ops_iframe.html"
+        "id": "overview",
+        "label": "LCLS Overview",
+        "data-lg-url": "../../static/html/ops/iframe/tab.js"
     }
 ]

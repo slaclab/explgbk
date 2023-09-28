@@ -1,0 +1,22 @@
+{
+  "name": "explgbk",
+  "version": "2.0.0",
+  "private": true,
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.4.2",
+    "@eonasdan/tempus-dominus": "^6.7.13",
+    "dayjs": "^1.11.10",
+    "bootstrap": "^5.3.2",
+    "jquery": "^3.7.1",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.43",
+    "mustache": "^4.2.0",
+    "plotly.js": "^2.26.1",
+    "@popperjs/core": "^2.11.8",
+    "sass": "^1.68.0",
+    "selectize": "0.12.6",
+    "socket.io-client": "4.7.2",
+    "summernote": "0.8.20"
+  }
+}

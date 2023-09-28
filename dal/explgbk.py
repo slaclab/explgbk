@@ -28,6 +28,8 @@ from dal.run_control import get_current_run, start_run, end_run, is_run_closed, 
 from dal.imagestores import parseImageStoreURL
 from dal.utils import escape_chars_for_mongo, reverse_escape_chars_for_mongo
 
+PROJECTS_DB="lgbkprjs"
+
 __author__ = 'mshankar@slac.stanford.edu'
 
 logger = logging.getLogger(__name__)
@@ -91,7 +93,7 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
     Registers a new experiment.
     In mongo, this mostly means creating the info object, the run number counter and various indices.
     """
-    if experiment_name in logbookclient.database_names():
+    if experiment_name in list(logbookclient.list_database_names()):
         return (False, "Experiment %s has already been registered" % experiment_name)
 
     expdb = logbookclient[experiment_name]
@@ -153,7 +155,7 @@ def register_new_experiment(experiment_name, incoming_info, create_auto_roles=Tr
 
     if "initial_sample" in incoming_info and incoming_info["initial_sample"]:
         try:
-            create_update_sample(experiment_name, incoming_info["initial_sample"], True, {
+            create_sample(experiment_name, {
                 "name": incoming_info["initial_sample"],
                 "description": "The initial sample created as part of experiment creation."
                 })
@@ -174,7 +176,7 @@ def update_existing_experiment(experiment_name, incoming_info):
     """
     Update an existing experiment
     """
-    if experiment_name not in logbookclient.database_names():
+    if experiment_name not in logbookclient.list_database_names():
         return (False, "Experiment %s does not exist" % experiment_name)
 
     expdb = logbookclient[experiment_name]
@@ -201,7 +203,7 @@ def clone_experiment(experiment_name, source_experiment_name, incoming_info, cop
     """
     src_exp_db = logbookclient[source_experiment_name]
 
-    if experiment_name in logbookclient.database_names():
+    if experiment_name in list(logbookclient.list_database_names()):
         return (False, "Experiment %s has already been registered" % experiment_name)
 
     expdb = logbookclient[experiment_name]
@@ -243,7 +245,7 @@ def rename_experiment(experiment_name, new_experiment_name):
     """
     Renames an experiment with a new name.
     """
-    if new_experiment_name in logbookclient.database_names():
+    if new_experiment_name in list(logbookclient.list_database_names()):
         return (False, "Experiment %s has already been registered" % new_experiment_name)
     if experiment_name in [x["name"] for x in get_currently_active_experiments() if "name" in x]:
         return (False, "Experiment %s is currently active" % experiment_name)
@@ -296,7 +298,7 @@ def delete_experiment(experiment_name):
     if not expdb["info"].find_one() or not "instrument" in expdb["info"].find_one():
         return (False, "Is %s an experiment?" % experiment_name)
 
-    http_attachments = expdb["elog"].find({"$or": [{"attachments.url": {"$regex": re.compile("^http://")}}, {"attachments.preview_url": {"$regex": re.compile("^http://")}}]}).count()
+    http_attachments = expdb["elog"].count_documents({"$or": [{"attachments.url": {"$regex": re.compile("^http://")}}, {"attachments.preview_url": {"$regex": re.compile("^http://")}}]})
     if http_attachments:
         return (False, "We have %s attachments in an external image store; please archive the experiment before deleting." % http_attachments)
 
@@ -310,7 +312,7 @@ def add_update_experiment_params(experiment_name, params):
     expdb = logbookclient[experiment_name]
     updated_params = { "params." + k : v for k, v in params.items()}
     logger.debug(updated_params)
-    expdb["info"].update({}, {"$set": updated_params})
+    expdb["info"].update_one({}, {"$set": updated_params})
     return True, ""
 
 def migrate_attachments_to_local_store(experiment_name):
@@ -1233,7 +1235,8 @@ def get_runtable_data(experiment_name, instrument, tableName, sampleName):
     tableDef = next(x for x in get_all_run_tables(experiment_name, instrument) if x['name'] == tableName and not x.get("is_template", False))
     sources = { "num": 1, "begin_time": 1, "end_time": 1 }
     sources.update({ x['source'] : 1 for x in tableDef['coldefs']})
-    if tableDef.get("table_type", None) == "generatedtable":
+    if tableDef.get("table_type", None) == "generatedtable" or tableDef.get("table_type", None) == "generatedscatter":
+        logger.debug("Getting run table data based on pattern matches '%s'", tableDef["patterns"])
         allsources = [ x["source"] for y in get_runtable_sources(experiment_name).values() for x in y ]
         ptrn = re.compile(tableDef["patterns"])
         sources.update({ x : 1 for x in allsources if ptrn.match(x.replace("params.", ""))})
@@ -1625,38 +1628,50 @@ def get_sample_for_experiment_by_name(experiment_name, sample_name):
         requested_sample["current"] = True
     return requested_sample
 
-def create_update_sample(experiment_name, sample_name, createp, info, automatically_create_associated_run=False):
+def create_sample(experiment_name, sampledetails, automatically_create_associated_run=False):
     """
-    Create or update a sample for an experiment.
+    Create a new sample for an experiment.
     """
     expdb = logbookclient[experiment_name]
-    if createp and expdb['samples'].find_one({"name": sample_name}):
+    if "name" not in sampledetails or "description" not in sampledetails:
+        return (False, "Please specify a sample name and description")
+    sample_name = sampledetails["name"]
+    if expdb['samples'].find_one({"name": sample_name}):
         return (False, "Sample %s already exists" % sample_name)
-    if not createp and not expdb['samples'].find_one({"_id": ObjectId(info["_id"])}):
-        return (False, "Sample %s does not exist" % sample_name)
-    if not createp:
-        sample_with_id = expdb['samples'].find_one({"_id": ObjectId(info["_id"])})
-        sample_with_name = expdb['samples'].find_one({"name": sample_name})
-        if sample_with_name and sample_with_id["_id"] != sample_with_name["_id"]:
-            return (False, "Cannot rename sample %s to one that already exists %s" % (sample_with_id["name"], sample_name))
-    validation, erromsg = validate_with_modal_params("samples", info)
+    validation, erromsg = validate_with_modal_params("samples", sampledetails)
     if not validation:
         return validation, erromsg
 
-    if createp:
-        expdb['samples'].insert_one(info)
-        if automatically_create_associated_run:
-            current_run = get_current_run(experiment_name)
-            if current_run and not is_run_closed(experiment_name, current_run["num"]):
-                return False, ("Cannot switch to and create a run if the current run %s is still open %s" % (current_run["num"], experiment_name))
-            make_sample_current(experiment_name, sample_name)
-            start_run(experiment_name, "DATA")
-            end_run(experiment_name)
-    else:
-        sample_id = info["_id"]
-        del info["_id"]
-        expdb['samples'].find_one_and_update({"_id": ObjectId(sample_id)}, {"$set": info})
+    expdb['samples'].insert_one(sampledetails)
+    if automatically_create_associated_run:
+        current_run = get_current_run(experiment_name)
+        if current_run and not is_run_closed(experiment_name, current_run["num"]):
+            return False, ("Cannot switch to and create a run if the current run %s is still open %s" % (current_run["num"], experiment_name))
+        make_sample_current(experiment_name, sample_name)
+        start_run(experiment_name, "DATA")
+        end_run(experiment_name)
+    return (True, "")
 
+def update_sample(experiment_name, sampleid, sampledetails):
+    """
+    Update an existing sample for an experiment.
+    """
+    expdb = logbookclient[experiment_name]
+    sampledetails["_id"] = ObjectId(sampleid)
+    existing_sample = expdb['samples'].find_one({"_id": sampledetails["_id"]})
+    if not existing_sample:
+        return (False, "Sample %s does not exist" % sampledetails["_id"])
+    if "name" not in sampledetails or "description" not in sampledetails:
+        return (False, "Please specify a sample name and description")    
+    sample_with_name = expdb['samples'].find_one({"name": sampledetails["name"]})
+    if sample_with_name and existing_sample["_id"] != sample_with_name["_id"]:
+        return (False, "Cannot rename sample %s to one that already exists %s" % (existing_sample["_id"], sample_with_name["_id"]))
+
+    validation, erromsg = validate_with_modal_params("samples", sampledetails)
+    if not validation:
+        return validation, erromsg
+
+    expdb['samples'].replace_one({"_id": existing_sample["_id"]}, sampledetails)
     return (True, "")
 
 def clone_sample(experiment_name, existing_sample_name, new_sample_name):
@@ -1725,17 +1740,17 @@ def delete_sample_for_experiment(experiment_name, sample_name):
 
 def get_modal_param_definitions(modal_type):
     """
-    Get the site specific modal param definitions from the site database for the specified modal type.
+    Get the site specific modal param definitions for the specified modal type.
     """
     sitedb = logbookclient["site"]
-    if "instrument" in g:
-        instrument = g.instrument
-        ins = sitedb["instruments"].find_one({ "_id": instrument })
-        if ins and "modal_params" in ins:
-            ins_mdl_prms = { x["_id"] : x for x in ins["modal_params"]}
-            if modal_type in ins_mdl_prms:
-                return ins_mdl_prms[modal_type]
-    return sitedb["modal_params"].find_one({"_id": modal_type})
+    modal_params_file = "static/json/{}/modals/{}.json".format(LOGBOOK_SITE, modal_type)
+    logger.info("Looking for modal definition in %s", modal_params_file)
+    param_defs = {}
+    if os.path.exists(modal_params_file):
+        with open(modal_params_file, "r") as f:
+            param_defs = json.load(f)
+
+    return param_defs
 
 def validate_with_modal_params(modal_type, business_obj):
     """
@@ -2042,3 +2057,77 @@ def import_users_from_URAWI(experiment_name, role_fq_name="LogBook/Writer"):
                     continue
                 add_collaborator_to_role(experiment_name, accuid, role_fq_name)
                 logger.debug("Done adding collaborator %s to experiment %s", accuid, experiment_name)
+
+def get_projects(user):
+    """
+    Get the projects for a user.
+    """
+    return [ x for x in logbookclient[PROJECTS_DB]["projects"].find({"players": "uid:" + user}).sort([("name", 1)]) ]
+
+def get_project_info(prjid):
+    """
+    Get the project info
+    """
+    return logbookclient[PROJECTS_DB]["projects"].find_one({"_id": ObjectId(prjid)})
+
+def create_project(prjinfo):
+    """
+    Create a new project
+    """
+    if "_id" in prjinfo:
+        raise Exception("_id present in project info. Did you mean to edit the project?")
+    prjid = logbookclient[PROJECTS_DB]["projects"].insert_one(prjinfo).inserted_id
+    return logbookclient[PROJECTS_DB]["projects"].find_one({"_id": ObjectId(prjid)})
+
+def update_project(prjid, prjinfo):
+    """
+    Update an existing project
+    """
+    if "_id" in prjinfo:
+        del prjinfo["_id"]
+    curr = logbookclient[PROJECTS_DB]["projects"].find_one({"_id": ObjectId(prjid)})
+    if not curr:
+        raise Exception("Cannot find project with _id " + prjid)
+    logbookclient[PROJECTS_DB]["projects"].update_one({"_id": ObjectId(prjid)}, {"$set": prjinfo})
+    return logbookclient[PROJECTS_DB]["projects"].find_one({"_id": ObjectId(prjid)})
+
+def add_session_to_project(prjid, sessiondetails):
+    return logbookclient[PROJECTS_DB]["projects"].update_one({"_id": ObjectId(prjid)}, {"$set": {"sessions." + sessiondetails["name"]: sessiondetails}})
+
+def get_project_samples(prjid):
+    """
+    Get the project samples
+    """
+    return list(logbookclient[PROJECTS_DB]["samples"].find({"prjid": ObjectId(prjid)}))
+
+def add_sample_to_project(prjid, sampledetails):
+    sampledetails["prjid"] = ObjectId(prjid)
+    sample_with_name = logbookclient[PROJECTS_DB]["samples"].find_one({"prjid": ObjectId(prjid), "name": sampledetails["name"]})
+    if sample_with_name:
+        return (False, "A sample with the name %s already exists" % (sample_with_name["name"]))
+
+    validation, erromsg = validate_with_modal_params("samples", sampledetails)
+    if not validation:
+        return validation, erromsg
+    logbookclient[PROJECTS_DB]["samples"].insert_one(sampledetails)
+    return True, ""
+
+def update_project_sample(prjid, sampleid, sampledetails):
+    sampledetails["_id"] = ObjectId(sampleid)
+    sampledetails["prjid"] = ObjectId(prjid)
+    validation, erromsg = validate_with_modal_params("samples", sampledetails)
+    if not validation:
+        return validation, erromsg
+    sample_with_name = logbookclient[PROJECTS_DB]["samples"].find_one({"prjid": ObjectId(prjid), "name": sampledetails["name"]})
+    existing_sample = logbookclient[PROJECTS_DB]["samples"].find_one({"_id": ObjectId(sampleid)})
+    if sample_with_name and existing_sample["_id"] != sample_with_name["_id"]:
+        return (False, "Cannot rename sample %s to one that already exists %s" % (existing_sample["_id"], sample_with_name["_id"]))
+    
+    logbookclient[PROJECTS_DB]["samples"].replace_one({"_id": sampledetails["_id"]}, sampledetails, upsert=True)
+    return True, ""
+
+def get_project_grids(prjid):
+    """
+    Get the project grids
+    """
+    return list(logbookclient[PROJECTS_DB]["grids"].find({"prjid": ObjectId(prjid)}))

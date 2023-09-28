@@ -4,70 +4,82 @@
   <title>Operator Dashboard</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="../static/lgbk.css">
-  <link rel=stylesheet type=text/css href="../js/bootstrap/css/bootstrap.min.css">
-  <link rel=stylesheet type=text/css href="../js/tempusdominus-bootstrap-4/build/css/tempusdominus-bootstrap-4.min.css">
-  <link rel=stylesheet type=text/css href="../js/@fortawesome/fontawesome-free/css/all.min.css">
-  <link rel=stylesheet type=text/css href="../js/noty/lib/noty.css">
+  <link rel="stylesheet" type="text/css" href="../../static/lgbk.css">
+  <link rel="stylesheet" type="text/css" href="../../js/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="../../js/@eonasdan/tempus-dominus/dist/css/tempus-dominus.min.css">
 
-  <script type="text/javascript" src="../js/jquery/jquery.min.js"></script>
-  <script type="text/javascript" src="../js/mustache/mustache.min.js"></script>
-  <script type="text/javascript" src="../js/lodash/lodash.min.js"></script>
-  <script type="text/javascript" src="../js/moment/min/moment-with-locales.min.js"></script>
-  <script type="text/javascript" src="../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
-  <script type="text/javascript" src="../js/noty/lib/noty.min.js"></script>
-  <script type="text/javascript" src="../js/bootstrap/js/bootstrap.min.js"></script>
-  <script type="text/javascript" src="../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
-  <script type="text/javascript" src="../js/tempusdominus-bootstrap-4/build/js/tempusdominus-bootstrap-4.min.js"></script>
-  <script type="text/javascript" src="../js/socket.io-client/dist/socket.io.js"></script>
-  <script type="text/javascript" src="../js/python/flask_socket_util/websocket_client.js"></script>
-  <script type="text/javascript" src="../static/lgbk.js"></script>
+  <script type="text/javascript" src="../../js/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
+  <script type="text/javascript" src="../../js/@popperjs/core/dist/umd/popper.min.js"></script>
+  <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
+  <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="../../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
+  <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/solid.min.js"></script>
+  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/brands.min.js"></script>
+  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/fontawesome.min.js"></script>
+  <script type="text/javascript" src="../../js/@eonasdan/tempus-dominus/dist/js/tempus-dominus.min.js"></script>
+  <script type="text/javascript" src="../../js/socket.io-client/dist/socket.io.js"></script>
+  <script type="text/javascript" src="../../js/python/flask_socket_util/websocket_client.js"></script>
+  <script type="text/javascript" src="../../static/lgbk.js"></script>
+  <script type="text/javascript" src="../../static/spgntr.js"></script>
+
+
+
 
   <script type="text/javascript">
     var tab_vars = {}; // All state for the tab; for example, search/sort/pagination state etc.
     var privileges = {{ privileges|safe }};
-    var active_experiments_url = "ws/activeexperiments";
-    var instruments_url   = "ws/instruments";
-    var instrument_station_list = "ws/instrument_station_list";
-    var experiments_url   = "ws/experiments?sortby=name";
-    var experiments_by_instrument = "ws/experiments?categorize=instrument&sortby=lastrunyear";
-    var switch_experiment_url = "ws/switch_experiment";
-    var instrument_standby_url = "ws/instrument_standby";
-	var register_experiment_url = "ws/register_new_experiment";
-    var update_experiment_url = "ws/experiment_edit_info";
-    var rename_experiment_url = "ws/rename_experiment";
-    var lock_unlock_experiment_url = "ws/lock_unlock_experiment";
-    var create_update_instrument = "ws/create_update_instrument";
-    var lookup_experiment_in_urawi = "ws/lookup_experiment_in_urawi";
     var logbook_site = "{{ logbook_site }}";
+    var active_experiments_url = "../ws/activeexperiments";
+    var instruments_url   = "../ws/instruments";
+    var instrument_station_list = "../ws/instrument_station_list";
+    var experiments_url   = "../ws/experiments?sortby=name";
+    var experiments_by_instrument = "../ws/experiments?categorize=instrument&sortby=lastrunyear";
+    var switch_experiment_url = "../ws/switch_experiment";
+    var instrument_standby_url = "../ws/instrument_standby";
+    var register_experiment_url = "../ws/register_new_experiment";
+    var update_experiment_url = "../ws/experiment_edit_info";
+    var rename_experiment_url = "../ws/rename_experiment";
+    var lock_unlock_experiment_url = "../ws/lock_unlock_experiment";
+    var create_update_instrument = "../ws/create_update_instrument";
+    let tabname = "{{tabname}}";
+    let pagepath = "{{pagepath}}";
   </script>
+
+<script type="module">
+  import "../../static/html/components/all.js";
+</script>
 
 </head>
 <body id="lgbk_body">
 
 <nav class="navbar navbar-expand-lg navbar-light" role="navigation" id="myNavRow">
   <div class="container-fluid">
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-      </button>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li class="nav-item d-none priv_switch"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/switch.html" href="#switch">Switch</a></li>
-        <li class="nav-item d-none priv_experiment_create"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/experiments.html" href="#experiments">Experiments</a></li>
-        <li class="nav-item d-none priv_instrument_create"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/instruments.html" href="#instruments">Instruments</a></li>
-        <li class="nav-item d-none priv_manage_groups"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/global_roles.html" href="#global_roles">Global Roles</a></li>
-        <li class="nav-item d-none priv_manage_groups"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/inst_roles.html" href="#inst_roles">Instrument Roles</a></li>
-        <li class="nav-item d-none priv_experiment_create"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/exp_summary.html" href="#summary">Summary</a></li>
-        <li class="nav-item sitespecific"><a class="nav-link" data-toggle="tab" data-url="../static/html/ops/data_movement.html" href="#data_mov">Data Movement</a></li>
+        <li class="nav-item d-none priv_switch"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/ops/switch/tab.js" role="tab" data-bs-target="#switch">Switch</a></li>
+        <li class="nav-item d-none priv_experiment_create"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/ops/exps/tab.js" role="tab" data-bs-target="#experiments">Experiments</a></li>
+        <li class="nav-item d-none priv_instrument_create"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/ops/ins/tab.js" role="tab" data-bs-target="#instruments">Instruments</a></li>
+        <li class="nav-item d-none priv_manage_groups"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/ops/roles/global/tab.js" role="tab" data-bs-target="#global_roles">Global Roles</a></li>
+        <li class="nav-item d-none priv_manage_groups"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/ops/roles/ins/tab.js" role="tab" data-bs-target="#inst_roles">Instrument Roles</a></li>
+        <li class="nav-item d-none priv_experiment_create"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/ops/summary/tab.js" role="tab" data-bs-target="#summary">Summary</a></li>
+        <li class="nav-item sitespecific"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/ops/mov/tab.js" role="tab" data-bs-target="#data_mov">Data Movement</a></li>
       </ul>
     </div>
     <div class="tab_title_bar">
         <span class="exp_title">Operator dashboard</span>
-        <span class="ops_user"><a href="logout"><span>{{ logged_in_user }}</span><i class="fas fa-sign-out-alt fa-lg"></i></a></span>
+        <span class="ops_user"><a href="logout"><span>{{ logged_in_user }}</span><i class="fa-solid fa-sign-out-alt fa-lg"></i></a></span>
         <span id="toolbar_for_tab"></span>
     </div>
   </div>
 </nav>
+
+<div id="glbl_modals_go_here"></div>
+<div id="glbl_toasts_go_here"></div>
 
 <div class="tab-content" id="myTabContainer">
   <div role="tabpanel" class="tab-pane fade d-none priv_switch" id="switch"></div>
@@ -79,63 +91,33 @@
   <div role="tabpanel" class="tab-pane fade sitespecific" id="data_mov"></div>
 </div>
 
-<script type="text/javascript">
-var showTab = function (e) {
-    var target = $(e.target).attr("href");
-    history.pushState(null, null, e.target.hash)
-    if ($(target).is(':empty')) {
-        console.log("Activated tab " + target + " is empty. Triggering load");
-        var template_url = $(e.target).attr("data-url");
-        $.ajax({
-            type: "GET",
-            url: template_url,
-            error: function(data){
-                alert("Error fetching template " + template_url + ".");
-            },
-            success: function(data){
-                console.log("Getting tab data and binding selectors");
-                $(target).html(data);
-                $("#toolbar_for_tab").empty();
-                $(target).find(".tabcontainer").trigger("lg.loaded.bs.tab", e);
-                $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
-            }
-        });
-    } else {
-        $("#toolbar_for_tab").empty();
-        $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
+<script type="module">
+  // Module specifier are resolved using the current module's URL as base. This is the "current" module; so all dynamic imports from now on will use this as their base.
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta/resolve
+
+  import { loadSiteSpecificTabs } from "../../static/html/ops/sitespecifictabs.js";
+  import { miscSetup } from "../../static/html/ops/miscsetup.js";
+  
+    async function tabload(taburl, target) {
+      const { tabshow } = await import(taburl);
+      tabshow(target);
     }
-}
 
-$(document).ready(function() {
-    _.each(privileges, function(v,k){if(v){$("#lgbk_body").find(".priv_"+k).removeClass("d-none");}})
-    WebSocketConnection.connect();
-    $.getJSON('../static/json/sitespecific_ops_tabs_' + logbook_site + ".json")
-    .done(function(tabs) {
-        {% raw %}
-        var ssnavtmpl = `{{#.}}<li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/.}}`;
-        var ssnavpnltmpl = `{{#.}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/.}}`;
-        {% endraw %}
-        Mustache.parse(ssnavtmpl); Mustache.parse(ssnavpnltmpl);
-        $("#myNavbar").find(".sitespecific").after(Mustache.render(ssnavtmpl, tabs));
-        $("#myTabContainer").find(".sitespecific").after(Mustache.render(ssnavpnltmpl, tabs));
-    }).always(function(){
-        $('a[data-toggle="tab"]').on('shown.bs.tab', showTab);
-        // Code for honoring the hash; for example URL#eLog gets you to the eLog
-        if(_.has(sessionStorage, 'ops_active_tab') ) {
-          $('ul.nav a[href="#' + sessionStorage['ops_active_tab'] + '"]').tab('show');
-          sessionStorage.removeItem("ops_active_tab");
-        } else if (window.location.hash) {
-          $('ul.nav a[href="' + window.location.hash + '"]').tab('show');
-        } else {
-        	$('.navbar-nav a:first').tab('show');
-        }
-    });
-});
 
+    document.addEventListener('DOMContentLoaded', () => { 
+      loadSiteSpecificTabs()
+      .then(() => {
+        lgbksetuptabs(tabload);
+
+          WebSocketConnection.connect();
+
+          miscSetup();
+      })
+    })
 </script>
 
 <div class="footer navbar-fixed-bottom">
-  <img alt="Brand" class="slac_logo" src="../static/SLAC_LogoSD.png"/>
+  <img alt="Brand" class="slac_logo" src="../../static/SLAC_LogoSD.png"/>
 </div>
 
 </body>

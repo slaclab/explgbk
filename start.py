@@ -5,9 +5,6 @@ import sys
 import json
 from kafka import KafkaConsumer, TopicPartition
 from threading import Thread
-import eventlet
-import requests
-import urllib3
 
 
 root = logging.getLogger()
@@ -22,10 +19,6 @@ ch.setFormatter(formatter)
 root.addHandler(ch)
 
 logger = logging.getLogger(__name__)
-
-# Turn off a RFC compliance warning; remove this once we get a SSL cert that works with requests.
-urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
-
 
 from context import app, security
 

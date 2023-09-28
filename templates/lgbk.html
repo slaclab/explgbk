@@ -6,83 +6,83 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" href="../../static/lgbk.css">
   <link rel="stylesheet" type="text/css" href="../../js/bootstrap/css/bootstrap.min.css">
-  <link rel="stylesheet" type="text/css" href="../../js/tempusdominus-bootstrap-4/build/css/tempusdominus-bootstrap-4.min.css">
-  <link rel="stylesheet" type="text/css" href="../../js/@fortawesome/fontawesome-free/css/all.min.css">
-  <link rel="stylesheet" type="text/css" href="../../js/noty/lib/noty.css">
-  <link rel="stylesheet" type="text/css" href="../../js/noty/lib/themes/mint.css">
-  <link rel="stylesheet" type="text/css" href="../../js/summernote/dist/summernote-bs4.css">
-  <link rel="stylesheet" type="text/css" href="../../js/selectize/dist/css/selectize.bootstrap3.css">
+  <link rel="stylesheet" type="text/css" href="../../js/@eonasdan/tempus-dominus/dist/css/tempus-dominus.min.css">
+  <link rel="stylesheet" type="text/css" href="../../js/summernote/dist/summernote-bs5.css">
+  <link rel="stylesheet" type="text/css" href="../../js/selectize/dist/css/selectize.default.css">
 
   <script type="text/javascript" src="../../js/jquery/jquery.min.js"></script>
   <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
+  <script type="text/javascript" src="../../js/@popperjs/core/dist/umd/popper.min.js"></script>
   <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
   <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="../../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
-  <script type="text/javascript" src="../../js/noty/lib/noty.min.js"></script>
   <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
-  <script type="text/javascript" src="../../js/tempusdominus-bootstrap-4/build/js/tempusdominus-bootstrap-4.min.js"></script>
+  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/regular.min.js"></script>
+  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/solid.min.js"></script>
+  <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/fontawesome.min.js"></script>
+  <script type="text/javascript" src="../../js/@eonasdan/tempus-dominus/dist/js/tempus-dominus.min.js"></script>
   <script type="text/javascript" src="../../js/socket.io-client/dist/socket.io.js"></script>
   <script type="text/javascript" src="../../js/python/flask_socket_util/websocket_client.js"></script>
-  <script type="text/javascript" src="../../js/summernote/dist/summernote-bs4.min.js"></script>
+  <script type="text/javascript" src="../../js/summernote/dist/summernote-bs5.min.js"></script>
   <script type="text/javascript" src="../../js/selectize/dist/js/standalone/selectize.min.js"></script>
 
   <script type="text/javascript" src="../../static/lgbk.js"></script>
   <script type="text/javascript" src="../../static/spgntr.js"></script>
 
   <script type="text/javascript">
-    var experiment_name = "{{ experiment_name }}";
-    var instrument_name  = "{{ instrument_name }}";
-    var logged_in_user  = "{{ logged_in_user }}";
-    var logbook_site = "{{ logbook_site }}";
-    var current_sample_at_DAQ = {{current_sample_name|json|safe}};
-    var sample_showing_in_UI = current_sample_at_DAQ;
-    var privileges = {{ privileges|safe }};
-    var auth_expiration_time = {{ auth_expiration_time }};
-    var is_locked = {{ is_locked }};
-    var current_run_url = "../{{experiment_name}}/ws/current_run";
-    var elog_emails = "../{{experiment_name}}/ws/elog_emails";
-    var elog_tags = "../{{experiment_name}}/ws/get_elog_tags";
-    var show_feedback= {{show_feedback}};
-    var feedback_survey_def = "../../static/json/feedback_{{logbook_site}}.json";
-    var instrument_standby_url = "../ws/instrument_standby";
+    const experiment_name = "{{ experiment_name }}";
+    const instrument_name  = "{{ instrument_name }}";
+    const logged_in_user  = "{{ logged_in_user }}";
+    const logbook_site = "{{ logbook_site }}";
+    const privileges = {{ privileges|safe }};
+    let auth_expiration_time = {{ auth_expiration_time }};
+    let current_sample_at_DAQ = {{current_sample_name|json|safe}};
+    let sample_showing_in_UI = current_sample_at_DAQ;
+    let is_locked = {{ is_locked }};
+    let tabname = "{{tabname}}";
+    let pagepath = "{{pagepath}}";
+  </script>
+  
+  <script type="module">
+    import "../../static/html/components/all.js";
   </script>
 
 </head>
 <body id="lgbk_body">
 
-<nav class="navbar navbar-expand-lg navbar-light" id="myNavRow">
+<nav class="navbar navbar-expand-lg navbar-light" role="navigation" id="myNavRow">
   <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-
+  
     <div class="collapse navbar-collapse" id="myNavbar">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/info.html" href="#info">Info</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/elog.html" href="#eLog">eLog</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/samples.html" href="#samples">Samples</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/runTables.html" href="#runTables">Run Tables</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/fileManager.html" href="#fileManager">File Manager</a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/shifts.html" href="#shifts">Shifts</a></li>
-        <li class="nav-item"><a class="nav-link d-none priv_feedback_read" data-toggle="tab" data-url="../../static/html/tabs/feedback.html" href="#feedback">Feedback</a></li>
-        <li class="nav-item sitespecific"><a class="nav-link" data-toggle="tab" data-url="../../static/html/tabs/collaborators.html" href="#collaborators">Collaborators</a></li>
+      <ul class="navbar-nav mr-auto" role="tablist">
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/tabs/lgbk/info/tab.js" role="tab" data-bs-target="#info">Info</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/tabs/lgbk/elog/tab.js" role="tab" data-bs-target="#eLog">eLog</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/tabs/lgbk/samples/tab.js" role="tab" data-bs-target="#samples">Samples</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/tabs/lgbk/rtbl/tab.js" role="tab" data-bs-target="#runTables">Run Tables</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/tabs/lgbk/fmgr/tab.js" role="tab" data-bs-target="#fileManager">File Manager</a></li>
+        <li class="nav-item"><a class="nav-link d-none" data-bs-toggle="tab" data-lg-url="../../static/html/tabs/lgbk/shifts.js" role="tab" data-bs-target="#shifts">Shifts</a></li>
+        <li class="nav-item sitespecific"><a class="nav-link" data-bs-toggle="tab" data-lg-url="../../static/html/tabs/lgbk/collab/tab.js" role="tab" data-bs-target="#collaborators">Collaborators</a></li>
       </ul>
-      <ul class="nav navbar-nav navbar-right">
-          <li class="session_items"><a href="../logout"><span class="logged_in_user_name">{{ logged_in_user }}</span><i class="fas fa-sign-out-alt fa-lg"></i></a></li>
-          <li class="pl-2"><a href="../experiments"><i class="fas fa-home fa-lg"></i>  Home</a></li>
-          <li class="pl-2"><span class="timezone" title="Current timezone is Pacific (America/Los_Angeles). Click to change timezone to the local timezone"><i class="fas fa-clock"></i></span></li>
-          <li class="pl-2"><span class="help" title="User documentation"><i class="fas fa-question fa-lg"></i></span></li>
+      <ul class="nav navbar-nav position-absolute top-0 end-0 py-2">
+          <li class="session_items"><a href="../logout"><span class="logged_in_user_name">{{ logged_in_user }}</span><i class="fa-solid fa-sign-out-alt fa-lg"></i></a></li>
+          <li class="px-2"><a href="../experiments"><i class="fa-solid fa-home fa-lg"></i>  Home</a></li>
+          <li class="px-2"><span class="timezone" title="Current timezone is Pacific (America/Los_Angeles). Click to change timezone to the local timezone"><i class="fa-solid fa-clock"></i></span></li>
+          <li class="px-2"><span class="help" title="User documentation"><i class="fa-solid fa-question fa-lg"></i></span></li>
       </ul>
     </div>
   </div>
 </nav>
-<div class="tab_title_bar">
+
+<div class="tab_title_bar lgbk_socketio">
     <span class="exp_title">Logbook for {{ experiment_name }}<span id="current_sample_lbl"></span></span>
     <span id="toolbar_for_tab"></span>
 </div>
 
 <div id="glbl_modals_go_here"></div>
+<div id="glbl_toasts_go_here"></div>
 <div class="tab-content" id="myTabContainer">
   <div role="tabpanel" class="tab-pane fade" id="info"></div>
   <div role="tabpanel" class="tab-pane fade" id="eLog"></div>
@@ -90,274 +90,39 @@
   <div role="tabpanel" class="tab-pane fade" id="runTables"></div>
   <div role="tabpanel" class="tab-pane fade" id="fileManager"></div>
   <div role="tabpanel" class="tab-pane fade" id="shifts"></div>
-  <div role="tabpanel" class="tab-pane fade d-none priv_feedback_read" id="feedback"></div>
   <div role="tabpanel" class="tab-pane fade sitespecific" id="collaborators"></div>
 </div>
 
-<script type="text/javascript">
-var showTab = function (e) {
-	var target = $(e.target).attr("href");
-    console.log("Showing tab " + target);
-    history.pushState(null, null, e.target.hash)
-	if ($(target).is(':empty') || $(target).find(".tabcontainer").hasClass("alwaysreload")) {
-		console.log("Activated tab " + target + " is empty or is always reloaded. Triggering load");
-		var template_url = $(e.target).attr("data-url");
-	    $.ajax({
-	      type: "GET",
-	      url: template_url,
-	      error: function(data){
-	        alert("Error fetching template " + template_url + ".");
-	      },
-	      success: function(data){
-	  		console.log("Getting tab data and binding selectors");
-	        $(target).empty().html(data);
-            $("#toolbar_for_tab").empty();
-	        $(target).find(".tabcontainer").trigger("lg.loaded.bs.tab", e);
-            $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
-	      }
-	    });
-	} else {
-        console.log("Activated non-empty tab " + target);
-        $("#toolbar_for_tab").empty();
-        $(target).find(".tabcontainer").trigger("lg.shown.bs.tab", e);
+<script type="module">
+    // Module specifier are resolved using the current module's URL as base. This is the "current" module; so all dynamic imports from now on will use this as their base.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta/resolve
+
+    import { loadSiteSpecificTabs } from "../../static/html/tabs/lgbk/sitespecifictabs.js";
+    import { miscSetup } from "../../static/html/tabs/lgbk/miscsetup.js";
+
+    if(_.includes([ "#info", "#eLog", "#samples", "#runTables", "#fileManager", "#feedback", "#collaborators", "#lcls_wf_defs", "#lcls_wf_jobs", "#summaries" ], location.hash)) {
+      document.querySelector("#lgbk_body").innerHTML = `<div class="my-4"><h4>Redirecting old style hash URL's <b>(${location.hash})</b> to new style path based URL's. You should be redirected automatically in a few seconds.</h4></div>`;
+      setTimeout(() => { window.location.replace("./" + location.hash.substring(1)); }, 2000);
     }
-};
-$(document).ready(function() {
-    setCurrentUISample();
-    WebSocketConnection.connect();
-    $(document).on('samples', function(event, sampleData) {
-        if(_.get(sampleData, "CRUD", "") == "Make_Current") {
-            current_sample_at_DAQ = _.get(sampleData, "value.name");
+    
+      async function tabload(taburl, target) {
+        const { tabshow } = await import(taburl);
+        tabshow(target);
+      }
+
+    
+      document.addEventListener('DOMContentLoaded', () => { 
+        loadSiteSpecificTabs()
+        .then(() => {
+            lgbksetuptabs(tabload);
+
+            WebSocketConnection.connect();
+
             setCurrentUISample();
-        }
-    });
-
-    _.each(privileges, function(v, k){
-        if(v) {
-            $("#myNavbar").find(".priv_"+k).removeClass("d-none");
-            $("#myTabContainer").find(".priv_"+k).removeClass("d-none");
-        }
-    })
-
-    $.getJSON('../../static/json/sitespecific_tabs_' + logbook_site + ".json")
-    .done(function(tabs) {
-        {% raw %}
-        var ssnavtmpl = `{{#.}}{{^dropdown}}<li class="nav-item"><a class="nav-link" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a></li>{{/dropdown}}
-        {{#dropdown}}<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{label}}<span class="caret"></span></a><div class="dropdown-menu">{{#submenu}}<a class="dropdown-item" data-toggle="tab" data-url="{{data-url}}" href="#{{id}}">{{label}}</a>{{/submenu}}</div></li>{{/dropdown}}{{/.}}`;
-        var ssnavpnltmpl = `{{#.}}{{^dropdown}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/dropdown}}
-        {{#dropdown}}{{#submenu}}<div role="tabpanel" class="tab-pane fade" id="{{id}}"></div>{{/submenu}}{{/dropdown}}{{/.}}`;
-        {% endraw %}
-        Mustache.parse(ssnavtmpl); Mustache.parse(ssnavpnltmpl);
-        $("#myNavbar").find(".sitespecific").before(Mustache.render(ssnavtmpl, tabs));
-        $("#myTabContainer").find(".sitespecific").before(Mustache.render(ssnavpnltmpl, tabs));
-    }).always(function(){
-        $('a[data-toggle="tab"]').on('shown.bs.tab', showTab);
-        // Bootstrap 4 bug; revist after each release...
-        $('#myNavbar a[data-toggle="tab"]').on('click', function(e) {
-            e.preventDefault();
-            $(this).tab('show');
-            var theThis = $(this);
-            $('#myNavbar a').removeClass('active');
-            theThis.addClass('active');
-        });
-        $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
-          if (!$(this).next().hasClass('show')) {
-            $(this).parents('.dropdown-menu').first().find('.show').removeClass("show");
-          }
-          var $subMenu = $(this).next(".dropdown-menu");
-          $subMenu.toggleClass('show');
-
-          $(this).parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function(e) {
-            $('.dropdown-submenu .show').removeClass("show");
-          });
-          return false;
-        });
-        // Code for honoring the hash; for example URL#eLog gets you to the eLog
-        var hash = window.location.hash;
-        if (hash) {
-          $('#myNavbar ul.navbar-nav a[href="' + hash + '"]').tab('show');
-        } else {
-        	$('#myNavbar ul.navbar-nav a:first').tab('show');
-        }
-
-        $("#lgbk_body span.help").on("click", function(){
-            let hsh = window.location.hash, hlpurl = "../help";
-            if(!_.isNil(hsh)) { hlpurl = hlpurl + hsh; }
-            window.open(hlpurl, name="_blank");
+            miscSetup();
         })
+      })
 
-        $("#lgbk_body span.timezone").on("click", function(){
-            if(sessionStorage.getItem("use_local_timezone") != null && sessionStorage.getItem("use_local_timezone")) {
-                sessionStorage.removeItem("use_local_timezone");
-            } else {
-                sessionStorage.setItem("use_local_timezone", true);
-            }
-            window.location.reload();
-        })
-    });
-
-    $.getJSON("../ws/activeexperiments")
-    .done(function(d1) {
-        let c_active = d1.value;
-        if(_.includes(_.map(c_active, "name"), experiment_name)) {
-            let expactinfo = _.find(c_active, ["name", experiment_name]);
-            console.log(expactinfo);
-            {% raw %}
-            let curr_active_tmpl = `<li title="This experiment is currently active on this instrument {{instrument}}/station {{station}}"><span class="currently_active"><span class="instrument">{{instrument}}</span>/<span class="station">{{station}}</span></span></li>`; Mustache.parse(curr_active_tmpl);
-            {% endraw %}
-            let rendered = $(Mustache.render(curr_active_tmpl, expactinfo));
-            $("#myNavbar").find(".session_items").before(rendered);
-        }
-
-        if(_.get(privileges, "switch", false) && _.get(privileges, "experiment_create", false)) {
-            if(_.includes(_.map(c_active, "name"), experiment_name)) {
-                {% raw %}
-                let stby_tmpl = `<span class="standby" data-instrument="{{ instrument }}" data-station="{{ station }}" title="End this experiment and put this instrument/station in standby mode."><i class="fas fa-power-off fa-lg"></i></span>`; Mustache.parse(stby_tmpl);
-                {% endraw %}
-                let expactinfo = _.find(c_active, ["name", experiment_name]), rendered = $(Mustache.render(stby_tmpl, expactinfo));
-                rendered.on("stby", put_instrument_in_standby);
-                rendered.on("click", function(){
-                    $.ajax('../../static/html/ms/generic_yes_no.html')
-                    .done(function(d0){
-                        {% raw %}
-                        let msg = `Please confirm that you want to put this instrument {{ instrument }}/station {{ station }} on standby`; Mustache.parse(msg);
-                        {% endraw %}
-                        let rdrd = $(Mustache.render(d0, {"title": "Please confirm", "message": Mustache.render(msg, expactinfo)}));
-                        rdrd.find(".yesbutton").on("click", function(){ rendered.trigger("stby") });
-                        $("#glbl_modals_go_here").empty().append(rdrd);
-                        $("#glbl_modals_go_here").find(".modal").modal("show");
-                    })
-                });
-
-                $("#myNavbar").find(".currently_active").append(rendered);
-            } else {
-                let rendered = $(`<li><button class="navbar_icon_btn switch" title="Make this experiment the current experiment on an instrument"><span class="btntext">Switch</span><i class="fas fa-exchange-alt fa-lg" aria-hidden="true"></i></button></li>`);
-                $("#myNavbar").find(".session_items").before(rendered);
-                rendered.on("click", function(){
-                    $.when($.ajax('../../static/html/ms/switch_within_experiment.html'), $.getJSON("../ws/instrument_station_list"), $.getJSON("../ws/activeexperiments"))
-                    .done(function(d0, d1, d2){
-                        let mdltmpl = d0[0], stations_by_ins = _.groupBy(d1[0].value, "instrument"), msobj = {experiment: experiment_name, instrument: instrument_name};
-                        if(_.get(stations_by_ins, instrument_name, []).length > 1) {
-                            msobj["stations"] = _.get(stations_by_ins, instrument_name);
-                            _.each(msobj["stations"], function(is){ is["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] = is["instrument"] && x["station"] == is["station"]}), "name", "") })
-                            console.log(msobj);
-                        } else {
-                            msobj["currently_used_by"] = _.get(_.find(d2[0].value, function(x){ return x["instrument"] == instrument_name && x["station"] == 0}), "name", "")
-                        }
-                        let rendered = $(Mustache.render(mdltmpl, msobj));
-                        rendered.data("selected_station", 0);
-                        let show_message = function(message){
-                            rendered.find(".message").text(message);
-                        }
-                        if(_.get(stations_by_ins, instrument_name, []).length > 1) {
-                            rendered.find("table").parent().removeClass("d-none");
-                            rendered.find("table").find("tr[data-station=0]").addClass("rowselect");
-                            rendered.find(".station").on("click", function(){
-                                $(this).closest("table").find(".rowselect").removeClass("rowselect");
-                                $(this).closest("tr").addClass("rowselect");
-                                rendered.data("selected_station", $(this).closest("tr").attr("data-station"));
-                            })
-                        }
-                        rendered.find(".activate_exp").on("click", function() {
-                            let station = rendered.data("selected_station"), station_data = {instrument: instrument_name, station: station, experiment_name: experiment_name };
-                            console.log("Activating " + experiment_name + " on instrument " + instrument_name + " station " + station);
-                            console.log(station_data);
-                            $.ajax({ type: "POST", contentType: "application/json; charset=utf-8", url: "../ws/switch_experiment", data: JSON.stringify(station_data), dataType: "json"})
-                            .done(function(data, textStatus, jqXHR) {
-                                console.log(data);
-                                if(data.success) {
-                                    show_message("Successfully activated " + experiment_name + " on instrument " + instrument_name + " station " + rendered.data("selected_station"));
-                                    setTimeout(function(){
-                                        $("#glbl_modals_go_here").find(".modal").modal("hide");
-                                        location.reload();
-                                    }, 1000);
-                                } else {
-                                    show_message("Server side exception switching experiment " + data.errormsg);
-                                }
-                            })
-                            .fail( function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); if(jqXHR.status == 403){ show_message("You don't seem to have permissions for this operation. Please contact the site administrators."); return;}; show_message("Server side exception switching experiment " + jqXHR.responseText); })
-                        })
-                        $("#glbl_modals_go_here").empty().append(rendered);
-                        $("#glbl_modals_go_here").find(".modal").modal("show");
-                    })
-                })
-            }
-            let clone_tmpl = `<li class="clone_tb"><span class="exp_clone" title="Clone this experiment"><i class="far fa-clone fa-lg"></i></span></li>`; Mustache.parse(clone_tmpl);
-            let clone_rendered = $(Mustache.render(clone_tmpl, {src_experiment_name: experiment_name}));
-            clone_rendered.find(".exp_clone").on("click", function(){
-                clone_experiment(experiment_name, $("#glbl_modals_go_here"), path_to_ws="../", false);
-            })
-            $("#myNavbar").find(".session_items").before(clone_rendered);
-        }
-    })
-
-    $.getJSON("ws/info")
-    .done(function(info) {
-        let zoom_meeting_url = _.get(info, "value.params.zoom_meeting_url", "");
-        let zoom_meeting_id = _.get(info, "value.params.zoom_meeting_id", "");
-        let zoom_meeting_pwd = _.get(info, "value.params.zoom_meeting_pwd", "");
-        let zoom_meeting_can_edit = _.get(privileges, "manage_groups", false);
-
-        let zmr = $(`<li class="pl-2"><span class="zoom" title="Zoom meeting for this experiment"><a href="#"><i class="fas fa-phone-alt fa-lg"></i> Zoom</a></span></li>`);
-        zmr.find("span").on("click", function(){
-            $.ajax("../../static/html/ms/zoom_meeting.html")
-            .done(function(tmpl) {
-                Mustache.parse(tmpl);
-                let rendered = $(Mustache.render(tmpl, { experiment_name: experiment_name, zoom_meeting_url: zoom_meeting_url, zoom_meeting_id: zoom_meeting_id, zoom_meeting_pwd: zoom_meeting_pwd, zoom_meeting_can_edit: zoom_meeting_can_edit }));
-                rendered.find(".zoom_edit").on("click", function(){
-                    if($(this).text() == "Save") {
-                        zoom_meeting_url = rendered.find(".zoom_meeting_details_edit").find("input.zoom_meeting_url").val();
-                        zoom_meeting_id = rendered.find(".zoom_meeting_details_edit").find("input.zoom_meeting_id").val();
-                        zoom_meeting_pwd = rendered.find(".zoom_meeting_details_edit").find("input.zoom_meeting_pwd").val();
-                        if(_.isEmpty(zoom_meeting_url) || _.isEmpty(zoom_meeting_id)) {
-                            error_message("Please enter a valid meeting URL and id.");
-                            return
-                        }
-                        $.post({url: "ws/add_update_experiment_params", data: JSON.stringify({"zoom_meeting_url": zoom_meeting_url, "zoom_meeting_id": zoom_meeting_id, "zoom_meeting_pwd": zoom_meeting_pwd}), contentType: "application/json; charset=utf-8", dataType: "json"})
-                        .done(function(data, textStatus, jqXHR) {
-                          if(data.success) {
-                              $("#glbl_modals_go_here").find(".modal").modal("hide");
-                          } else {
-                            error_message("Server side exception updating zoom meeting details " + data.errormsg);
-                          }
-                        })
-                        .fail( function(jqXHR, textStatus, errorThrown) { error_message("Server side HTTP updating zoom meeting details " + textStatus); })
-                    } else {
-                        rendered.find(".zoom_meeting_details").addClass("d-none");
-                        rendered.find(".zoom_meeting_details_edit").removeClass("d-none");
-                        rendered.find(".zoom_edit").text("Save");
-                    }
-                })
-                $("#glbl_modals_go_here").empty().append(rendered);
-                $("#glbl_modals_go_here").find(".modal").on("hidden.bs.modal", function(){ $("#glbl_modals_go_here").empty(); });
-                $("#glbl_modals_go_here").find(".modal").modal("show");
-              })
-          })
-        $("#myNavbar").find(".help").parent().before(zmr);
-    });
-
-    if(auth_expiration_time > 1000000000) {
-        var msToSessionTimeout = moment.unix(auth_expiration_time).diff(moment());
-        console.log("Session times out in " + msToSessionTimeout + "(ms)");
-        $(".session_items").attr("title", "Your session will expire at " + moment.unix(auth_expiration_time).format("dddd, MMMM Do YYYY, h:mm:ss a"));
-        var on_session_timeout = function() {
-            let lgt = function() { window.location.href="../logout" };
-            new Noty( { text: "Your session is about to or has already timed out. Please logout and log back in to continue your work.", layout: "topRight", type: "error", timeout: 20000 }).show();
-            setTimeout(lgt, 21000);
-        }
-        if(msToSessionTimeout > 30000) {
-            setTimeout(on_session_timeout, msToSessionTimeout - 30000);
-        } else {
-            on_session_timeout();
-        }
-    }
-
-    if(sessionStorage.getItem("use_local_timezone") != null && sessionStorage.getItem("use_local_timezone")) {
-        $("#lgbk_body span.timezone").attr("title", "Current timezone is the local browser timezone. Click to change timezone to Pacific (America/Los_Angeles)")
-    } else {
-        $("#lgbk_body span.timezone").attr("title", "Current timezone is Pacific (America/Los_Angeles). Click to change timezone to the local timezone");
-    }
-});
 
 </script>
 

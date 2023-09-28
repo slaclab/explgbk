@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+    <title>Project {{ name }} </title>
+
+    <link rel=stylesheet type=text/css href="../../../static/lgbk.css">
+    <link rel=stylesheet type=text/css href="../../../js/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../../../js/@eonasdan/tempus-dominus/dist/css/tempus-dominus.min.css">
+
+    <script type="text/javascript" src="../../../js/mustache/mustache.min.js"></script>
+    <script type="text/javascript" src="../../../js/lodash/lodash.min.js"></script>
+    <script type="text/javascript" src="../../../js/moment/min/moment-with-locales.min.js"></script>
+    <script type="text/javascript" src="../../../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>  
+    <script type="text/javascript" src="../../../js/@popperjs/core/dist/umd/popper.min.js"></script>
+    <script type="text/javascript" src="../../../js/dayjs/dayjs.min.js"></script>
+
+    <script type="text/javascript" src="../../../js/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="../../../js/@fortawesome/fontawesome-free/js/regular.min.js"></script>
+    <script type="text/javascript" src="../../../js/@fortawesome/fontawesome-free/js/solid.min.js"></script>
+    <script type="text/javascript" src="../../../js/@fortawesome/fontawesome-free/js/fontawesome.min.js"></script>
+    <script type="text/javascript" src="../../../js/@eonasdan/tempus-dominus/dist/js/tempus-dominus.min.js"></script>
+
+    <script type="text/javascript" src="../../../static/lgbk.js"></script>
+
+    <script type="text/javascript">
+      var logged_in_user  = "{{ logged_in_user }}";
+      var privileges = {{ privileges|safe }};
+      var logged_in_user_details = {{ logged_in_user_details|safe }}
+      let project = "{{ project_name }}";
+      let prjid = "{{project_id}}";
+      let tabname = "{{tabname}}";
+      let pagepath = "{{pagepath}}";
+    </script>
+    
+    <script type="module">
+      import "../../../static/html/components/all.js";
+    </script>
+
+
+</head>
+
+<body id="lgbk_body">
+
+<h4>Project {{ project_name }} </h4>
+
+<div id="glbl_modals_go_here"></div>
+<div id="glbl_toasts_go_here"></div>
+
+<nav class="navbar navbar-expand-lg navbar-light" role="navigation" id="myNavRow">
+  <div class="container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="navbar-nav nav-pills mr-auto" role="tablist">
+        <li class="nav-item" role="presentation">
+          <a class="nav-link default" data-bs-toggle="tab" data-bs-target="#sessions" data-lg-url="../../../static/html/tabs/project/sessions/tab.js" role="tab" aria-controls="home-tab-pane" aria-selected="false">Sessions</a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link default" data-bs-toggle="tab" data-bs-target="#sampprep" data-lg-url="../../../static/html/tabs/project/sampprep/tab.js" role="tab" aria-controls="home-tab-pane" aria-selected="false">Sample Preparation</a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" data-bs-toggle="tab" data-bs-target="#samples" data-lg-url="../../../static/html/tabs/project/samples/tab.js" role="tab" aria-controls="home-tab-pane" aria-selected="false">Samples</a>
+        </li>
+      </ul>
+      <ul class="nav navbar-nav position-absolute end-0 me-2">
+          <li id="toolbar_for_tab"></li>
+          <li class="session_items mx-2"><a href="logout"><span class="logged_in_user_name">{{ logged_in_user }}</span><i class="fa-solid fa-right-from-bracket"></i></a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="tab-content" id="myTabContainer">
+  <div role="tabpanel" class="tab-pane fade" id="sessions">
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="sampprep">
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="samples">
+  </div>
+</div>
+
+<div class="footer navbar-fixed-bottom">
+  <img alt="Brand" class="slac_logo" src="../../../static/SLAC_LogoSD.png"/>
+</div>
+
+<script type="module">
+// Module specifier are resolved using the current module's URL as base. This is the "current" module; so all dynamic imports from now on will use this as their base.
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta/resolve
+
+  async function tabload(taburl, target) {
+    const { tabshow } = await import(taburl);
+    tabshow(target);
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    lgbksetuptabs(tabload);
+  })
+  
+</script>
+
+</body>
+</html>

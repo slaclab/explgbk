@@ -39,7 +39,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_specific_shift, get_experiment_files, get_experiment_runs, get_all_run_tables, get_runtable_data, get_runtable_sources, \
     create_update_user_run_table_def, update_editable_param_for_run, get_instrument_station_list, update_existing_experiment, \
     create_update_instrument, get_experiment_shifts, get_shift_for_experiment_by_name, close_shift_for_experiment, \
-    create_update_shift, get_latest_shift, get_samples, create_update_sample, get_sample_for_experiment_by_name, \
+    create_update_shift, get_latest_shift, get_samples, create_sample, update_sample, get_sample_for_experiment_by_name, \
     make_sample_current, register_file_for_experiment, search_elog_for_text, delete_run_table, get_current_sample_name, \
     get_elogs_for_run_num, get_elogs_for_run_num_range, get_elogs_for_specified_id, get_collaborators, get_role_object, \
     add_collaborator_to_role, remove_collaborator_from_role, delete_elog_entry, modify_elog_entry, clone_experiment, rename_experiment, \
@@ -58,7 +58,10 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments, \
     get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station, \
     get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag, stop_current_sample, get_tag_to_run_numbers, \
-    get_tags_for_runs, clone_system_template_run_tables_into_experiment
+    get_tags_for_runs, clone_system_template_run_tables_into_experiment, get_projects, get_project_info, create_project, update_project, \
+    get_project_samples, add_session_to_project, add_sample_to_project, update_project_sample, \
+    get_project_grids
+
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
     get_specified_run_params_for_all_runs, is_run_closed, get_run_nums_matching_params, get_run_nums_matching_editable_regex, \
@@ -298,6 +301,15 @@ def categorize(explist, categorizers, sorter):
                 cur_dict = cur_dict[key]
 
     return ret
+
+
+@explgbk_blueprint.route("/lgbk/ws/empty", methods=["GET"])
+def svc_get_empty():
+    """
+    It makes it much easier in JS to build create/edit functionality by having a URL server side that returns an empty object.
+    """
+    return JSONEncoder().encode({"success": True, "value": {}})
+
 
 @explgbk_blueprint.route("/lgbk/ws/experiments", methods=["GET"])
 @context.security.authentication_required
@@ -967,9 +979,10 @@ def svc_instrument_standby():
     if not instrument:
         return jsonify({'success': False, 'errormsg': "No instrument given"})
 
-    station = info.get("station", None)
-    if not station:
+    if not "station" in info:
         return jsonify({'success': False, 'errormsg': "No station given."})
+
+    station = info.get("station", None)
 
     userid = context.security.get_current_user_id()
     previously_active_experiment = get_active_experiment_name_for_instrument_station(instrument, station)
@@ -1121,11 +1134,11 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
             parent_msg.attach(child_message)
             parent_msg = child_message
 
-        s = smtplib.SMTP("smtp.slac.stanford.edu")
-        mailstatus = s.sendmail(msg['From'], full_email_addresses, msg.as_string())
-        if mailstatus:
-            logger.warn(mailstatus)
-        s.quit()
+        with smtplib.SMTP(os.environ.get("EMAIL_SERVER_HOST", "smtp.slac.stanford.edu"), int(os.environ.get("EMAIL_SERVER_PORT", "22"))) as s:
+            mailstatus = s.sendmail(msg['From'], full_email_addresses, msg.as_string())
+            if mailstatus:
+                logger.warn(mailstatus)
+            s.quit()
     except Exception:
         logger.exception("Exception sending elog emails for experiment " + experiment_name)
 
@@ -1967,11 +1980,64 @@ def svc_get_latest_shift(experiment_name):
 
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples/", methods=["GET"])
 @context.security.authentication_required
 @experiment_exists
 @context.security.authorization_required("read")
 def svc_get_samples(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_samples(experiment_name)})
+
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples/", methods=["POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_create_sample(experiment_name):
+    """
+    Create a sample.
+    """
+    sampledetails = request.json
+    if not sampledetails.get("name") or not sampledetails["description"]:
+        return logAndAbort("A sample must have a name and a description")
+    if "_id" in sampledetails:
+        return logAndAbort("Cannot specify an id when creating a sample")
+
+    if 'create_associated_run' in sampledetails and sampledetails['create_associated_run']:
+        current_run = get_current_run(experiment_name)
+        if current_run and not is_run_closed(experiment_name, current_run["num"]):
+            return jsonify({'success': False, 'errormsg': ("Cannot switch to and create a run if the current run %s is still open %s" % (current_run["num"], experiment_name))})
+        del sampledetails['create_associated_run']
+        automatically_create_associated_run = True
+    else:
+        automatically_create_associated_run = False
+
+    (status, errormsg) = create_sample(experiment_name, sampledetails, automatically_create_associated_run)
+    if status:
+        sample_doc = get_sample_for_experiment_by_name(experiment_name, sampledetails["name"])
+        context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Create", "value": sample_doc })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples/<sampleid>", methods=["PUT"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("post")
+def svc_update_sample(experiment_name, sampleid):
+    """
+    Update the speficied sample.
+    """
+    sampledetails = request.json
+    if not sampledetails.get("name") or not sampledetails["description"]:
+        return logAndAbort("A sample must have a name and a description")
+
+    (status, errormsg) = update_sample(experiment_name, sampleid, sampledetails)
+    if status:
+        sample_doc = get_sample_for_experiment_by_name(experiment_name, sampledetails["name"])
+        context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Update", "value": sample_doc })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/samples/<sample_name>", methods=["GET"])
 @context.security.authentication_required
@@ -2000,44 +2066,6 @@ def svc_delete_sample(experiment_name, sample_name):
 @context.security.authorization_required("read")
 def svc_get_current_sample(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_current_sample_name(experiment_name)})
-
-@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/create_update_sample", methods=["POST"])
-@context.security.authentication_required
-@experiment_exists_and_unlocked
-@context.security.authorization_required("post")
-def svc_create_update_sample(experiment_name):
-    """
-    Create/update a sample.
-    If you pass in a _id, then this is an update.
-    """
-    sample_name = request.args.get("sample_name", None)
-    if not sample_name:
-        return logAndAbort("We need a sample_name as a parameter")
-    info = request.json
-    if not info:
-        return logAndAbort("Creating sample missing info document")
-
-    createp = "_id" not in info
-    necessary_keys = set(['name', 'description'])
-    missing_keys = necessary_keys - info.keys()
-    if missing_keys:
-        return logAndAbort("Create/update sample missing fields %s" % missing_keys)
-    if createp and 'create_associated_run' in info and info['create_associated_run']:
-        current_run = get_current_run(experiment_name)
-        if current_run and not is_run_closed(experiment_name, current_run["num"]):
-            return jsonify({'success': False, 'errormsg': ("Cannot switch to and create a run if the current run %s is still open %s" % (current_run["num"], experiment_name))})
-        del info['create_associated_run']
-        automatically_create_associated_run = True
-    else:
-        automatically_create_associated_run = False
-
-    (status, errormsg) = create_update_sample(experiment_name, sample_name, createp, info, automatically_create_associated_run)
-    if status:
-        sample_doc = get_sample_for_experiment_by_name(experiment_name, sample_name)
-        context.kafka_producer.send("samples", {"experiment_name" : experiment_name, "CRUD": "Create" if createp else "Update", "value": sample_doc })
-        return jsonify({'success': True})
-    else:
-        return jsonify({'success': False, 'errormsg': errormsg})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/clone_sample", methods=["GET", "POST"])
 @context.security.authentication_required
@@ -2435,7 +2463,7 @@ def svc_get_modal_param_definitions():
     if not modal_type:
         return logAndAbort("Please specify a modal_type")
     param_defs = get_modal_param_definitions(modal_type)
-    return JSONEncoder().encode({"success": True, "value": param_defs if param_defs else {}})
+    return JSONEncoder().encode({"success": True, "value": param_defs if param_defs else { "_id": modal_type, "params": [] }})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/get_modal_param_definitions", methods=["GET"])
 @context.security.authentication_required
@@ -2477,7 +2505,7 @@ def add_feedback_item(experiment_name):
 # Tableau integration items - we follow https://jira.slac.stanford.edu/browse/PSWA-61 as much as possible.
 @explgbk_blueprint.route("/lgbk/ws/poc_feedback/schema", methods=["GET"])
 def get_poc_feedback_schema():
-    feedback_defs_file = "static/json/feedback_{}.json".format(context.LOGBOOK_SITE)
+    feedback_defs_file = "static/json/{}/feedback.json".format(context.LOGBOOK_SITE)
     if not os.path.exists(feedback_defs_file):
         return JSONEncoder().encode({"status": "error", "message": "No schema definition found for this site {}".format(context.LOGBOOK_SITE)})
     with open(feedback_defs_file, "r") as f:
@@ -3002,3 +3030,103 @@ def svc_get_api_endpoints():
         if fn in api_endpoints_docs:
             sorted_api_endpoints.extend(api_endpoints_docs[fn])
     return JSONEncoder().encode(sorted_api_endpoints)
+
+@explgbk_blueprint.route("/lgbk/ws/projects", methods=["GET"])
+@context.security.authentication_required
+def svc_get_projects():
+    return JSONEncoder().encode({"success": True, "value": get_projects(context.security.get_current_user_id())})
+
+def user_in_project(wrapped_function):
+    """
+    Check if user is in a project
+    """
+    @wraps(wrapped_function)
+    def function_interceptor(*args, **kwargs):
+        project_id = kwargs.get('prjid', None)
+        if project_id:
+            projectinfo =  get_project_info(project_id)
+            if projectinfo:
+                if "uid:" + context.security.get_current_user_id() in projectinfo["players"]:
+                    g.projectinfo = projectinfo
+                    return wrapped_function(*args, **kwargs)
+        logger.error("User " + context.security.get_current_user_id() + " does not have permissions to view project " + project_id)
+        abort(404)
+        return None
+
+    return function_interceptor
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>", methods=["GET"])
+@user_in_project
+def svc_get_project_info(prjid):
+    projectinfo =  get_project_info(prjid)
+    return JSONEncoder().encode({"success": True, "value": projectinfo})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/", methods=["POST"])
+@context.security.authentication_required
+def svc_create_project():
+    prjinfo = request.json
+    userid = context.security.get_current_user_id()
+    prjinfo["players"] = [ "uid:" + userid ]
+    prjinfo["owner"] = userid
+    ret = create_project(prjinfo)
+    return JSONEncoder().encode({"success": True, "value": ret})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>", methods=["PUT"])
+@user_in_project
+def svc_update_project_info(prjid):
+    prjinfo = request.json
+    ret = update_project(prjid, prjinfo)
+    return JSONEncoder().encode({"success": True, "value": ret})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/sessions", methods=["GET"])
+@user_in_project
+def svc_get_project_sessions(prjid):
+    projectinfo =  get_project_info(prjid)
+    sessions = projectinfo.get("sessions", {})
+    experiments = { x["name"] : x for x in  get_experiments_for_user(context.security.get_current_user_id())}
+    for sessionname, sessiondetails in sessions.items():
+        if sessionname in experiments:
+            sessiondetails["expinfo"] = experiments[sessionname]
+    return JSONEncoder().encode({"success": True, "value": sessions})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/sessions/", methods=["PUT"])
+@user_in_project
+def svc_add_session_to_project(prjid):
+    sessiondetails = request.json
+    experiments = get_experiments_for_user(context.security.get_current_user_id())
+    if sessiondetails["name"] not in [ x["name"] for x in experiments ]:
+        return logAndAbort("Cannot find session " + sessiondetails["name"] + " in list of experiments for user")
+    add_session_to_project(prjid, sessiondetails)
+    return JSONEncoder().encode({"success": True})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/samples/", methods=["GET"])
+@context.security.authentication_required
+@user_in_project
+def svc_get_project_samples(prjid):
+    samples = get_project_samples(prjid)
+    return JSONEncoder().encode({"success": True, "value": samples})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/samples/", methods=["POST"])
+@user_in_project
+def svc_add_sample_to_project(prjid):
+    sampledetails = request.json
+    if not sampledetails.get("name") or not sampledetails["description"]:
+        return logAndAbort("A sample must have a name and a description")        
+    (status, errormsg) = add_sample_to_project(prjid, sampledetails)
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/samples/<sampleid>", methods=["PUT"])
+@user_in_project
+def svc_update_project_sample(prjid, sampleid):
+    sampledetails = request.json
+    if not sampledetails.get("name") or not sampledetails["description"]:
+        return logAndAbort("A sample must have a name and a description")  
+    (status, errormsg) = update_project_sample(prjid, sampleid, sampledetails)
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/grids", methods=["GET"])
+@user_in_project
+def svc_get_project_grids(prjid):
+    projectinfo =  get_project_info(prjid)
+    grids = get_project_grids(prjid)
+    return JSONEncoder().encode({"success": True, "value": grids})

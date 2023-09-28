@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+    <title>Select Project</title>
+
+    <link rel=stylesheet type=text/css href="../../static/lgbk.css">
+    <link rel=stylesheet type=text/css href="../../js/bootstrap/css/bootstrap.min.css">
+
+    <script type="text/javascript" src="../../js/mustache/mustache.min.js"></script>
+    <script type="text/javascript" src="../../js/@popperjs/core/dist/umd/popper.min.js"></script>
+    <script type="text/javascript" src="../../js/lodash/lodash.min.js"></script>
+    <script type="text/javascript" src="../../js/moment/min/moment-with-locales.min.js"></script>
+
+    <script type="text/javascript" src="../../js/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/solid.min.js"></script>
+    <script type="text/javascript" src="../../js/@fortawesome/fontawesome-free/js/fontawesome.min.js"></script>
+
+    <script type="text/javascript" src="../../static/lgbk.js"></script>
+
+    <script type="text/javascript">
+      var logged_in_user  = "{{ logged_in_user }}";
+      var privileges = {{ privileges|safe }};
+      var logged_in_user_details = {{ logged_in_user_details|safe }};
+      const pagepath = "{{pagepath}}";
+    </script>
+</head>
+
+<body id="lgbk_body">
+<div id="glbl_modals_go_here"></div>
+<div id="glbl_toasts_go_here"></div>
+  
+<div class="row px-2 py-2 text-center pagetitle"><h4 class="col">Projects for {{ logged_in_user }}</h4><span id="toolbar_for_tab" class="col-1 float-end">Toolbar</span></div>
+
+<div id="projectlist">
+</div>
+
+<div class="footer navbar-fixed-bottom">
+  <img alt="Brand" class="slac_logo" src="../../static/SLAC_LogoSD.png"/>
+</div>
+
+<script type="module">
+  import "../../static/html/components/all.js";
+</script>
+
+<script type="module">
+    async function tabload(taburl, target) {
+      const { tabshow } = await import(taburl);
+      tabshow(target);
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      tabload(lgbkabspath("/static/html/tabs/project/prjlist/tab.js"), document.querySelector("#projectlist"));
+    })    
+</script>
+  
+</body>
+</html>
+

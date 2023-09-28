@@ -1,0 +1,34 @@
+<div class="modal edit_modal fade" data-bs-backdrop="static" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+   <div class="modal-content">
+       <div class="modal-header">
+           <h4 class="modal-title w-100">Sample configuration</h4>
+           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+       </div>
+     <div class="modal-body">
+      <div class="text-danger d-none errormsg"></div>
+      <form novalidate>
+        <input type="hidden" class="d-none sample_id">
+        <div class="card mb-2">
+          <div class="card-body">        
+            <div class="row">
+              <div class="form-group col-4" data-name="name">
+                <label>Sample Name:</label>
+                <input type="text" class="form-control cp_value">
+              </div>
+              <div class="form-group col-8" data-name="description">
+                <label>Sample Description:</label>
+                <textarea class="form-control cp_value" rows="2"></textarea>
+              </div>
+            </div>      
+          </div>
+        </div>
+      </form>
+     </div>
+     <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <button class="btn btn-primary add_sample">Add</button>
+    </div>
+</div>
+</div>
+</div>

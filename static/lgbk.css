@@ -1,41 +1,16 @@
+@charset "UTF-8";
 .row.content {
   height: auto;
 }
+
 /* Main Primary color */
 /* Main Secondary color (1) */
 /* Main Secondary color (2) */
 /* Main Complement color */
-.highlight_mixin {
-  color: white;
-  background: #6685F4;
-  font-weight: bold;
-}
-.bold_text_mixin {
-  color: #6685F4;
-  font-weight: bold;
-}
-.font_family_choices_mixin {
-  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
-  font-size: 0.85rem;
-}
-.listview_icon_mixin {
-  opacity: 0.5;
-  padding-left: 0.1rem;
-  padding-right: 0.1rem;
-  font-size: 1rem;
-}
-.validation_warning {
-  color: #FFED81;
-  font-weight: bold;
-}
-.small_btn_mixin {
-  font-size: 0.5rem;
-  padding: 1px;
-  margin: 1px;
-}
 body.busy {
   cursor: progress;
 }
+
 #lgbk_body {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
   font-size: 0.85rem;
@@ -77,34 +52,43 @@ body.busy {
 #lgbk_body a {
   color: #1E48DF;
 }
+
 label {
   color: #6685F4;
 }
+
 .obj_name {
   color: #6685F4;
 }
+
 #myNavRow {
   background-color: #6685F4;
   margin-bottom: 0;
   border-radius: 0;
 }
+
 #myNavRow li a.active {
   background-color: #1E48DF;
   color: white;
 }
+
 #myNavRow li:hover a {
   background-color: #1E48DF;
   color: white;
 }
+
 #myNavRow li a {
   color: white;
 }
+
 #myNavRow .logged_in_user_name {
   padding-right: 0.25em;
 }
+
 #myNavRow li.session_items.session_timeout a {
   color: #FFED81;
 }
+
 #myNavRow .navbar_icon_btn {
   color: white;
   background: #6685F4;
@@ -116,6 +100,7 @@ label {
   margin-right: 0.5em;
   margin-left: 0.5em;
 }
+
 #myNavbar .currently_active {
   margin-right: 1em;
   margin-left: 1em;
@@ -129,9 +114,17 @@ label {
   padding-right: 0.25em;
   color: white;
 }
+
 #lgbk_footer {
   left: auto;
 }
+
+.pagetitle {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+}
+
 .slac_logo {
   height: 28px;
   margin-top: 6px;
@@ -139,6 +132,7 @@ label {
   padding-right: 2em;
   padding-bottom: 0.5em;
 }
+
 .tab_title_bar {
   margin: 0px;
   padding-top: 0.1em;
@@ -146,6 +140,7 @@ label {
   background-color: #6685F4;
   text-align: center;
 }
+
 .exp_title {
   font-size: 1.25em;
   text-align: center;
@@ -153,18 +148,22 @@ label {
   font-weight: bold;
   color: white;
 }
+
 #toolbar_for_tab {
   float: right;
   margin-right: 15px;
   margin-left: 10px;
 }
-#toolbar_for_tab .fa.pushedin {
+
+#toolbar_for_tab .pushedin {
   color: #FFCC57;
 }
+
 #toolbar_for_tab span {
   color: white;
   background: #6685F4;
 }
+
 .exp_info h1 {
   font-size: 1.1em;
   font-weight: bold;
@@ -172,18 +171,22 @@ label {
   border-bottom: thin solid #6685F4;
   text-align: left;
 }
+
 .exp_info .group .header {
   font-weight: bold;
   float: left;
 }
+
 .exp_info textarea {
   margin-left: 1%;
   width: 98%;
 }
+
 .exp_info input {
   margin-left: 1%;
   width: 98%;
 }
+
 .exp_info .exp_details {
   padding-left: 0.5em;
 }
@@ -194,9 +197,9 @@ label {
 .exp_info .exp_details span {
   text-align: left;
 }
+
 @media screen and (max-width: 767px) {
-  .dl-horizontal dt,
-  dd {
+  .dl-horizontal dt, dd {
     text-align: left;
     padding-left: 1px;
   }
@@ -206,6 +209,7 @@ label {
   color: white;
   padding-right: 1em;
 }
+
 #cryo_info_samples {
   margin-top: 1em;
   text-align: left;
@@ -224,13 +228,7 @@ label {
 #cryo_info_samples .sample_info .label {
   color: #6685F4;
 }
-.search_text_mixin {
-  padding: 0.25em;
-  border: thin solid #6685F4;
-  margin: 0.25em;
-  color: #6685F4;
-  font-size: 17px;
-}
+
 #searchtext {
   padding: 0.25em;
   border: thin solid #6685F4;
@@ -238,8 +236,15 @@ label {
   color: #6685F4;
   font-size: 17px;
 }
+
 .modal {
   text-align: left;
+}
+.modal .modal-header {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+  padding: 0.5rem;
 }
 .modal table tr th {
   color: white;
@@ -256,40 +261,59 @@ label {
 .modal table select {
   background-color: inherit;
 }
-.modal-title {
+.modal .nav button {
+  background-color: #6685F4;
   color: white;
-  background: #6685F4;
-  font-weight: bold;
-  padding-left: 1em;
-  padding-right: 1em;
-  padding-top: 0.25em;
-  padding-bottom: 0.25em;
 }
+.modal .nav button.active {
+  background-color: #1E48DF;
+  color: white;
+}
+.modal label {
+  color: #6685F4;
+  font-weight: bold;
+}
+.modal input, .modal select {
+  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+  font-size: 0.85rem;
+  background: inherit;
+}
+.modal .icon {
+  color: #1E48DF;
+}
+.modal input::file-selector-button {
+  padding: 0.25rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
+  font-size: 0.85rem;
+  background-color: #6685F4;
+  color: white;
+  border: none;
+}
+
 .custom_param_modal .childparam .cp_key {
   padding-left: 2rem;
 }
-.ops_list_icons {
-  padding-left: 0.1rem;
-  padding-right: 0.1rem;
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: #6685F4;
-}
+
 #switch_experiment_div th {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #switch_experiment_div .btn {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
-#expswitch_tab .modal .rowselect {
+
+#expswitch_choose_experiment .rowselect {
   color: #6685F4;
   font-weight: bold;
   background: #FFCC57;
 }
+
 #expswitch_tab .ops_switch_icons {
   white-space: nowrap;
 }
@@ -300,14 +324,17 @@ label {
   font-weight: bold;
   color: #6685F4;
 }
+
 #expswitch_tab .exp_switch_standby {
   color: #FFED81;
   font-weight: bold;
 }
+
 #expswitch_tab .expswitch_run_open {
   color: #FFED81;
   font-weight: bold;
 }
+
 #expswitch_choose_experiment table {
   overflow-y: scroll;
 }
@@ -317,12 +344,14 @@ label {
 #expswitch_choose_experiment table td a {
   color: #6685F4;
 }
+
 #switch_hist .histdiv {
   max-height: 20rem;
 }
 #switch_hist table {
   overflow-y: scroll;
 }
+
 #expswitch_choose_experiment .btn-group .btn {
   margin-top: 0.25em;
   margin-left: 0.5em;
@@ -331,6 +360,7 @@ label {
   background: #6685F4;
   font-weight: bold;
 }
+
 #switch_hist table tr th {
   color: white;
   background: #6685F4;
@@ -339,17 +369,21 @@ label {
 #switch_hist table td {
   padding: 0.25rem;
 }
+
 #register_edit_exp_tab .modal-content {
   padding: 0.5em;
 }
+
 #register_edit_exp_tab .panel-body {
   padding: 0.5em;
 }
+
 #register_edit_exp_tab .btn {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #exp_searchresults th {
   color: white;
   background: #6685F4;
@@ -359,6 +393,7 @@ label {
 #exp_searchresults th .fas {
   padding-left: 0.25em;
 }
+
 #register_edit_exp_tab .ops_exp_icons {
   white-space: nowrap;
 }
@@ -369,10 +404,12 @@ label {
   font-weight: bold;
   color: #6685F4;
 }
+
 #register_edit_exp_tab .clone_select_attrs td {
   text-align: left;
   padding-left: 2em;
 }
+
 #ops_instruments_tab .editinsbtn {
   padding-left: 0.1rem;
   padding-right: 0.1rem;
@@ -380,19 +417,12 @@ label {
   font-weight: bold;
   color: #6685F4;
 }
+
 #ops_instruments_tab .instrument_lbl {
   color: #6685F4;
   font-weight: bold;
 }
-.param_table_mixin tr th {
-  color: white;
-  background: #6685F4;
-  font-weight: bold;
-  padding-left: 2em;
-}
-.param_table_mixin .fas {
-  opacity: 0.5;
-}
+
 #ops_instruments_tab .modal .table tr th {
   color: white;
   background: #6685F4;
@@ -410,11 +440,13 @@ label {
   font-size: inherit;
   color: #1E48DF;
 }
+
 #ops_instruments_tab th {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #ops_reports_tab .chartrow {
   height: 80vw;
 }
@@ -429,10 +461,12 @@ label {
   font-size: 0.9rem;
   color: #1E48DF;
 }
+
 #ops_exp_searchtext {
   border: thin solid #6685F4;
   color: #6685F4;
 }
+
 #myNavRow .ops_user {
   margin-left: 1rem;
   float: right;
@@ -442,6 +476,7 @@ label {
   background: #6685F4;
   font-weight: bold;
 }
+
 #register_edit_exp_tab .modal .param_table tr th {
   color: white;
   background: #6685F4;
@@ -459,49 +494,60 @@ label {
   font-size: inherit;
   color: #1E48DF;
 }
+
 #experiments_container thead th {
   color: #1E48DF;
 }
+
 #experiments_container tbody td a {
   color: #1E48DF;
 }
+
 #experiments_container li a.year_pill {
   color: #6685F4;
   font-weight: bold;
 }
-.year_pill_active {
-  color: white;
-  background: #6685F4;
-  font-weight: bold;
-}
+
 #experiments_container li a.active {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #experiments_container li a:hover {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #panel_title {
   color: #6685F4;
   background: #6685F4;
   font-weight: bold;
 }
+
 #panel_btn {
   color: #6685F4;
   background: linear-gradient(#6685F4, #1E48DF);
   font-weight: bold;
 }
-#switch_in_exp_mdl .rowselect {
+
+#switch_in_exp_mdl .rowselect td {
   color: #6685F4;
   font-weight: bold;
   background: #FFCC57;
 }
+#switch_in_exp_mdl td {
+  padding: 0.25rem;
+}
 #switch_in_exp_mdl .message {
   font-size: 1.25em;
 }
+
+#myTabContainer .icon {
+  color: #1E48DF;
+}
+
 #myTabContainer .exp_tab_header {
   color: white;
   background: #6685F4;
@@ -512,12 +558,14 @@ label {
   position: sticky;
   top: 0;
 }
+
 #myTabContainer .listview-action {
   opacity: 0.5;
   padding-left: 0.1rem;
   padding-right: 0.1rem;
   font-size: 1rem;
 }
+
 #myTabContainer .param_action {
   opacity: 0.5;
   padding-left: 0.1rem;
@@ -526,11 +574,13 @@ label {
   font-size: inherit;
   color: #1E48DF;
 }
+
 #myTabContainer .modal .btn {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #info_tab .ques_tabs .sitespecific_iframe {
   width: 100vw;
   height: 100vw;
@@ -543,10 +593,12 @@ label {
   padding-left: 2em;
   padding-right: 2em;
 }
+
 #elog_tab div.edat {
   padding-top: 0.1em;
   padding-bottom: 0.1em;
 }
+
 #elog_tab div.followup_div {
   margin-left: 0.5em;
   width: 100%;
@@ -563,13 +615,16 @@ label {
 #elog_tab div.followup_div .custom-file-label {
   color: #6685F4;
 }
+
 #elog_tab .elog_main_content {
   text-align: left;
 }
+
 #elog_tab .elog_attachments_only {
   height: 100%;
   overflow-y: scroll;
 }
+
 #elog_tab .elog_hybrid_row {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
@@ -579,33 +634,41 @@ label {
   color: #6685F4;
   padding-left: 0.1rem;
 }
+
 #elog_tab .elog_deleted {
   text-decoration: line-through;
 }
+
 #elog_tab .elog_deleted_by {
   color: #FFED81;
   padding-left: 1.25em;
   text-align: left;
 }
+
 #elog_tab div.etop:nth-child(odd) {
   background: #efefef;
 }
+
 #elog_tab .elog_tag {
   padding-left: 0.25em;
   padding-right: 0.25em;
 }
+
 #elog_tab .elog_tag:not(:first-child) {
   border-left: thin solid #1E48DF;
 }
+
 #elog_tab .seloption {
   color: #6685F4;
 }
+
 #elog_tab .selectedoption {
   background: #6685F4;
   color: white;
   padding-left: 0.25em;
   padding-right: 0.25em;
 }
+
 #elog_tab #elog_attch_ovrly {
   position: fixed;
   top: 0;
@@ -630,6 +693,7 @@ label {
   padding-right: 0.5rem;
   opacity: 50%;
 }
+
 #elog_search_text {
   padding: 0.1em;
   margin: 0;
@@ -639,6 +703,7 @@ label {
   color: #6685F4;
   font-weight: bold;
 }
+
 #elog_select_by_tag {
   padding: 0.1em;
   padding-right: 0.25rem;
@@ -646,12 +711,14 @@ label {
   color: #6685F4;
   font-weight: bold;
 }
+
 #elog_tab .elog_run_param_category {
   background: #efefef;
 }
 #elog_tab .elog_run_param_category .expand_param {
   padding-right: 0.25em;
 }
+
 #elog_new_entry_modal {
   margin-left: 1em;
   text-align: left;
@@ -659,6 +726,7 @@ label {
 #elog_new_entry_modal .custom-file-label {
   color: #6685F4;
 }
+
 #elog_email_subscriptions {
   margin-left: 1em;
 }
@@ -677,69 +745,84 @@ label {
 #elog_email_subscriptions pre {
   background: lightgray;
 }
+
 #current_sample_lbl .fas {
   padding-right: 0.25em;
 }
+
 #current_sample_lbl {
   font-weight: lighter;
   font-size: small;
   font-style: italic;
   margin-left: 1em;
 }
+
 #current_sample_lbl.samples_different {
   color: #FFCC57;
 }
+
 .tooltip .tooltip-inner {
   background-color: #6685F4;
   border: solid thin thin solid #1E48DF;
   padding: 0.25em;
 }
+
 .tooltip .arrow::before {
   border-left-color: #6685F4;
   border: solid thin thin solid #1E48DF;
   padding: 0.25em;
 }
+
 #myTabContainer .expand_ctrl {
   font-size: 0.75em;
 }
+
 #myTabContainer .exp_icons_left {
   float: left;
   padding-right: 0.2em;
 }
+
 #myTabContainer .text_truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 #myTabContainer ul.nav-pills li a {
   color: #6685F4;
   font-weight: bold;
 }
+
 #myTabContainer ul.nav-pills a.active {
   color: #6685F4;
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #myTabContainer ul.nav-pills li a:hover {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #myTabContainer .sitespecific_iframe_parent {
   position: absolute;
   width: 100%;
   height: 100%;
 }
+
 #myTabContainer .sitespecific_iframe {
   width: 100%;
   height: 100%;
 }
+
 #elog_content {
   padding: 0px;
   margin: 0px;
   padding-top: 0px;
 }
+
 #elog_content .entry_actions {
   float: right;
   font-size: 0.9em;
@@ -750,12 +833,15 @@ label {
   padding-right: 0.15em;
   opacity: 0.5;
 }
+
 #elog_content .precontent {
   white-space: pre-line;
 }
+
 #elog_content .elog-chid .card {
   width: 100%;
 }
+
 #log_entry_body #toolbar_for_tab span {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
@@ -770,6 +856,7 @@ label {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
 }
+
 #elog_sgl_entry {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
   font-size: 0.85rem;
@@ -780,6 +867,7 @@ label {
 #elog_sgl_entry .card .elog_deleted {
   text-decoration: line-through;
 }
+
 #fmgr_tab {
   padding: 0;
 }
@@ -846,12 +934,14 @@ label {
 #fmgr_tab .exp_tab_header .row {
   margin: 0;
 }
+
 #rtbl_content table {
   width: 100%;
 }
 #rtbl_content table .rtblbooltick {
   color: #6685F4;
 }
+
 #rtbl_content .sticky-table {
   height: 80vh;
 }
@@ -860,6 +950,7 @@ label {
   position: sticky;
   top: 0;
 }
+
 #rtbl_content table thead tr th {
   overflow: hidden;
   white-space: nowrap;
@@ -868,14 +959,17 @@ label {
   opacity: 0.75;
   font-weight: normal;
 }
+
 #rtbl_content .tblhighlight {
   background-color: #1E48DF;
 }
+
 #rtbl_content .rbtl_col_hvr {
-  background-color: rgba(102, 133, 244, 0.2);
+  background-color: fade(#6685F4, 20%);
   border-left: solid #1E48DF 2px;
   border-right: solid #1E48DF 2px;
 }
+
 #rtbl_content .rtbldef_action {
   opacity: 0.5;
   padding-left: 0.1rem;
@@ -884,34 +978,41 @@ label {
   font-size: inherit;
   color: #1E48DF;
 }
+
 #rtbl_content td.rtbl_separator {
   background: #efefef;
   width: 0.25em;
 }
+
 #rtbl_content .rtbl_thumbnail {
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 5px;
   height: 100px;
 }
+
 #rtbl_content div.rtbl_editable_column {
   display: inline-block;
   width: 100%;
   height: 100%;
   padding: 3px;
 }
+
 #rtbl_content div.rtbl_editable_column:empty::before {
-  content: '\feff';
+  content: "﻿";
 }
+
 #shifts_tab .table th {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #shifts_tab .btnbar {
   margin-left: 0.5em;
   text-align: left;
 }
+
 #shifts_tab .shiftstbl tr.active_shift td {
   color: #6685F4;
   font-weight: bold;
@@ -919,20 +1020,24 @@ label {
   margin: 0.1em;
   padding: 0.1em;
 }
+
 #sample_content {
   padding: 1px;
   margin: 0px;
   padding-top: 0px;
 }
+
 #samples_tab .table th {
   color: white;
   background: #6685F4;
   font-weight: bold;
 }
+
 #samples_tab .btnbar {
   margin-left: 0.5em;
   text-align: left;
 }
+
 #samples_tab .samplestbl tr.active_sample td {
   color: #6685F4;
   font-weight: bold;
@@ -940,6 +1045,7 @@ label {
   margin: 0.1em;
   padding: 0.1em;
 }
+
 #samples_tab .modal table td {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
@@ -947,10 +1053,12 @@ label {
   color: #6685F4;
   font-weight: bold;
 }
-#sample_edit_modal input[type="checkbox"].cp_value {
+
+#sample_edit_modal input[type=checkbox].cp_value {
   padding-left: 2rem;
   width: auto;
 }
+
 #choose_sample td {
   padding: 0.5rem;
 }
@@ -961,6 +1069,7 @@ label {
   font-weight: bold;
   color: #6685F4;
 }
+
 .note-callout {
   border: thin #6685F4 solid;
   padding: 0.5em;
@@ -968,21 +1077,19 @@ label {
   color: #6685F4;
   font-style: italic;
 }
-.collab_msg {
-  padding-left: 1em;
-  padding-bottom: 0.25em;
-  text-align: left;
-}
+
 #collab_mdl_holder .msg {
   padding-left: 1em;
   padding-bottom: 0.25em;
   text-align: left;
 }
+
 #glbl_role_mdl_holder .msg {
   padding-left: 1em;
   padding-bottom: 0.25em;
   text-align: left;
 }
+
 #collab_tab .collabtbl thead tr th {
   text-align: center;
   color: white;
@@ -1015,6 +1122,7 @@ label {
 #collab_tab .collabtbl .collab-no-role {
   opacity: 0.5;
 }
+
 #collab_mdl_holder tbody .fas {
   padding-right: 0.75em;
 }
@@ -1025,6 +1133,7 @@ label {
 #collab_mdl_holder tbody td {
   padding: 0.25rem;
 }
+
 #logout h2 {
   background-color: #6685F4;
   color: white;
@@ -1033,6 +1142,7 @@ label {
   padding-left: 1em;
   text-align: center;
 }
+
 #feedback_tab .fd_section_hdr {
   color: #6685F4;
   font-weight: bold;
@@ -1076,7 +1186,7 @@ label {
 }
 #feedback_tab .fd_last_modified {
   margin-top: 2em;
-  font-size: : smaller;
+  font-size: smaller;
   font-style: italic;
 }
 #feedback_tab .fd_text_instructions {
@@ -1087,9 +1197,11 @@ label {
 #feedback_tab .survey_item {
   text-align: left;
 }
+
 #lcls_wf_defs_tab .wf_run_params {
   color: #1E48DF;
 }
+
 #lcls_wf_ctrls_tab .wfj_runnum {
   border-bottom: 0;
 }
@@ -1139,9 +1251,11 @@ label {
 #lcls_wf_ctrls_tab .wf_counters .blue {
   color: blue;
 }
+
 #global_roles_tab .role_check {
   color: #6685F4;
 }
+
 #inst_roles_tab .inshdr {
   margin: 0;
   padding-top: 0.25rem;
@@ -1159,6 +1273,7 @@ label {
   color: #6685F4;
   font-weight: bold;
 }
+
 #lgbk_help {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
   font-size: 0.85rem;
@@ -1196,3 +1311,83 @@ label {
 #lgbk_help .helptext ul {
   margin-bottom: 0;
 }
+
+#projectlist .card-header {
+  background-color: #6685F4;
+  color: white;
+}
+#projectlist .card-header .prjopen a {
+  color: #FFB305;
+}
+#projectlist .card {
+  width: 25rem;
+}
+
+#sampprep_tab #sampprep_content {
+  display: grid;
+  grid-gap: 2px;
+  grid-template-columns: [col1-start] 1fr [col2-start] 1fr [col3-start] 1fr [col3-end];
+  grid-template-rows: [row1-start] 25vh [row2-start] 75vh [row2-end];
+  background-color: #fff;
+  color: #444;
+}
+#sampprep_tab .box {
+  border: thin solid #6685F4;
+  border-radius: 5px;
+  padding: 20px;
+}
+#sampprep_tab .a {
+  grid-column: col1-start;
+  grid-row: row1-start/row2-end;
+}
+#sampprep_tab .b {
+  grid-column: col2-start;
+  grid-row: row1-start;
+}
+#sampprep_tab .c {
+  grid-column: col3-start;
+  grid-row: row1-start;
+}
+#sampprep_tab .d {
+  grid-column: col2-start/col3-end;
+  grid-row: row2-start;
+}
+#sampprep_tab #prjcomment .lbl {
+  color: #1E48DF;
+  font-weight: bold;
+  font-size: 0.75vw;
+  border-bottom: thin solid #6685F4;
+}
+#sampprep_tab #prjcomment textarea {
+  width: 100%;
+}
+#sampprep_tab .zebradiv {
+  text-align: start;
+}
+#sampprep_tab .zebradiv .row {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+#sampprep_tab .zebradiv .row:nth-child(odd) {
+  background: #efefef;
+}
+#sampprep_tab .zebradiv .lbl {
+  color: #1E48DF;
+}
+#sampprep_tab .griddetails .hdr {
+  color: white;
+  background: #6685F4;
+  font-weight: bold;
+}
+#sampprep_tab .griddetails .grid:nth-child(odd) {
+  background: #efefef;
+}
+#sampprep_tab .griddetails .gbsub {
+  color: white;
+  background: #8CA4F8;
+}
+#sampprep_tab .griddetails .gbsub .sblbl {
+  font-weight: bold;
+}
+
+/*# sourceMappingURL=lgbk.css.map */

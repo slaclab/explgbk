@@ -6,14 +6,18 @@ import datetime
 
 import context
 
-from flask import request, Blueprint, render_template, send_file, abort, make_response, jsonify, session
+from flask import request, Blueprint, render_template, send_file, abort, make_response, jsonify, session, Response, redirect
 
-from dal.explgbk import get_current_sample_name, get_experiment_info
+from dal.explgbk import get_current_sample_name, get_experiment_info, get_project_info
 from services.explgbk import experiment_exists
 
 pages_blueprint = Blueprint('pages_api', __name__)
 
 logger = logging.getLogger(__name__)
+
+def logAndAbort(error_msg, ret_status=500):
+    logger.error(error_msg)
+    return Response(error_msg, status=ret_status)
 
 @pages_blueprint.route("/")
 def index():
@@ -51,15 +55,17 @@ def send_js(path):
 def templates(experiment_name, path):
     return render_template(path, experiment_name=experiment_name)
 
-@pages_blueprint.route("/lgbk/ops", methods=["GET"])
+@pages_blueprint.route("/lgbk/ops/<tabname>", methods=["GET"])
 @context.security.authentication_required
 @context.security.authorization_required("ops_page")
-def operator_dashboard():
+def operator_dashboard(tabname):
     logged_in_user=context.security.get_current_user_id()
     privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "ops_page", "switch", "experiment_create", "experiment_edit", "experiment_delete", "instrument_create", "manage_groups"]}
     return render_template("ops.html",
         logbook_site=context.LOGBOOK_SITE,
         logged_in_user=logged_in_user,
+        tabname=tabname,
+        pagepath=request.path,
         privileges=json.dumps(privileges))
 
 
@@ -71,20 +77,39 @@ def choose_experiments():
     return render_template("experiments.html",
         logbook_site=context.LOGBOOK_SITE,
         logged_in_user=logged_in_user,
+        pagepath=request.path,
         logged_in_user_details=json.dumps(context.usergroups.get_userids_matching_pattern(logged_in_user)),
         privileges=json.dumps(privileges))
 
-@pages_blueprint.route("/lgbk/register_new_experiment", methods=["GET"])
+@pages_blueprint.route("/lgbk/projects/", methods=["GET"])
 @context.security.authentication_required
-@context.security.authorization_required("experiment_create")
-def register_new_experiment():
-    return render_template("register_new_experiment.html")
+def projects():
+    logged_in_user=context.security.get_current_user_id()
+    privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "read", "ops_page", "switch", "experiment_create", "experiment_edit"]}
+    return render_template("projects.html",
+        logbook_site=context.LOGBOOK_SITE,
+        logged_in_user=logged_in_user,
+        pagepath=request.path,
+        logged_in_user_details=json.dumps(context.usergroups.get_userids_matching_pattern(logged_in_user)),
+        privileges=json.dumps(privileges))
 
-@pages_blueprint.route("/lgbk/experiment_switch", methods=["GET"])
+@pages_blueprint.route("/lgbk/projects/<project_id>/<tabname>", methods=["GET"])
 @context.security.authentication_required
-@context.security.authorization_required("switch")
-def experiment_switch():
-    return render_template("experiment_switch.html")
+def project(project_id, tabname):
+    logged_in_user=context.security.get_current_user_id()
+    privileges = { x : context.security.check_privilege_for_experiment(x, None, None) for x in [ "read", "ops_page", "switch", "experiment_create", "experiment_edit"]}
+    project = get_project_info(project_id)
+    if "uid:" + logged_in_user not in project["players"]:
+        return logAndAbort("Permission denied", 403)
+    return render_template("project.html",
+        project_id=project_id,
+        project_name=project["name"],
+        pagepath=request.path,
+        tabname=tabname,
+        logbook_site=context.LOGBOOK_SITE,
+        logged_in_user=logged_in_user,
+        logged_in_user_details=json.dumps(context.usergroups.get_userids_matching_pattern(logged_in_user)),
+        privileges=json.dumps(privileges))
 
 @pages_blueprint.route("/lgbk/logout", methods=["GET"])
 @context.security.authentication_required
@@ -111,6 +136,7 @@ def lgbkhelp():
     return render_template("help.html",
         logbook_site=context.LOGBOOK_SITE,
         logged_in_user=logged_in_user,
+        pagepath=request.path,
         logged_in_user_details=json.dumps(context.usergroups.get_userids_matching_pattern(logged_in_user)),
         privileges=json.dumps(privileges))
 
@@ -123,7 +149,16 @@ def __parse_expiration_header__(request):
 @experiment_exists
 @context.security.authentication_required
 @context.security.authorization_required("read")
-def exp_elog(experiment_name):
+def exp_elog_legacy(experiment_name):
+    logger.info("Call to legacy page; send redirect to info page")
+    # The hash never comes to the server; it's entirely a client side thing.
+    return make_response(redirect("./info"))
+
+@pages_blueprint.route("/lgbk/<experiment_name>/<tabname>", methods=["GET"])
+@experiment_exists
+@context.security.authentication_required
+@context.security.authorization_required("read")
+def exp_elog(experiment_name, tabname):
     logged_in_user=context.security.get_current_user_id()
     exp_info = get_experiment_info(experiment_name)
     instrument_name = exp_info.get("instrument", None) if exp_info else None
@@ -131,13 +166,14 @@ def exp_elog(experiment_name):
     return render_template("lgbk.html",
         experiment_name=experiment_name,
         instrument_name=instrument_name,
+        tabname=tabname,
+        pagepath=request.path,
         is_locked=json.dumps(exp_info.get("is_locked", False)),
         logged_in_user=logged_in_user,
         privileges=json.dumps(privileges),
         current_sample_name=get_current_sample_name(experiment_name),
         auth_expiration_time=__parse_expiration_header__(request),
-        logbook_site=context.LOGBOOK_SITE,
-        show_feedback=json.dumps(os.path.exists(os.path.join("static", "json", "feedback_" + context.LOGBOOK_SITE + ".json")))
+        logbook_site=context.LOGBOOK_SITE
         )
 
 @pages_blueprint.route("/lgbk/<experiment_name>/elogs/<entry_id>", methods=["GET"])
@@ -151,7 +187,8 @@ def exp_elog_entry_only(experiment_name, entry_id):
     return render_template("elog_entry.html",
         experiment_name=experiment_name,
         instrument_name=instrument_name,
+        pagepath=request.path,
         entry_id=entry_id,
         logged_in_user=logged_in_user,
-        logbook_site=context.LOGBOOK_SITE
+        logbook_site=context.LOGBOOK_SITE,
     )

@@ -19,7 +19,6 @@
               <span class="label col-3">Analysis Queues:</span><span class="col-9">{{#info.params.analysis_queues}}{{.}}{{/info.params.analysis_queues}}{{^info.params.analysis_queues}}N/A{{/info.params.analysis_queues}}<span class="param_edit pl-2" data-param-name="params.analysis_queues" data-param-title="Edit the analysis queues" data-param-message="Enter a space separated list of SLURM queue names"><i class="fas fa-edit"></i></span></span>
             </div>
             {{#info.params.PNR}}<div class="row"><span class="label col-3">URAWI Proposal:</span><span class="col-9">{{.}}</span></div>{{/info.params.PNR}}
-            {{#info.params.DATA_PATH}}<div class="row"><span class="label col-3">Initial mount:</span><span class="col-9">{{.}}</span></div>{{/info.params.DATA_PATH}}
         </div>
     </div>
     <div class="col-3 text-justify infohelp">

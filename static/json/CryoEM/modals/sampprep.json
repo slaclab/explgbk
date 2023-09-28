@@ -1,0 +1,133 @@
+{
+    "_id": "sampprep",
+    "params": [
+      {
+        "label": "Sample",
+        "param_name": "sampleinfo.name",
+        "description": "The sample name, for example, Mayaro virus",
+        "required": false,
+        "param_type": "string",
+        "tab": "Sample"
+      },
+      {
+        "label": "Concentration",
+        "param_name": "sampleinfo.concentration",
+        "description": "For example, 5 x 1010 pfu",
+        "required": false,
+        "param_type": "string",
+        "tab": "Sample"
+      },
+      {
+        "label": "Particle size",
+        "param_name": "sampleinfo.particle_size",
+        "description": "For example, 60 - 70 nm",
+        "required": false,
+        "param_type": "string",
+        "tab": "Sample"
+      },
+      {
+        "label": "Molecular weight (kDa)",
+        "param_name": "sampleinfo.molecular_weight",
+        "required": false,
+        "param_type": "string",
+        "tab": "Sample"
+      },
+      {
+        "label": "Sample buffer",
+        "param_name": "sampleinfo.sample_buffer",
+        "description": "For example, NTE (120 mM NaCl; 20 mM Tris; 1 mMEDTA) ph7.4",
+        "required": false,
+        "param_type": "string",
+        "tab": "Sample"
+      },
+      {
+        "label": "Dilution buffer",
+        "param_name": "sampleinfo.dilution_buffer",
+        "required": false,
+        "param_type": "string",
+        "tab": "Sample"
+      },
+      {
+        "label": "Sample prep machine",
+        "param_name": "sampleinfo.sample_prep_machine",
+        "required": true,
+        "param_type": "enum",
+        "options": [
+          { "label": "Vitrobot", "value": "Vitrobot" },
+          { "label": "Leica EM GP2", "value": "Leica EM GP2" },
+          { "label": "Chemeleon Cryo-EM", "value": "Chemeleon Cryo-EM" },
+          { "label": "CryoSol Vitrojet", "value": "CryoSol Vitrojet" }
+        ],
+        "tab": "Sample"
+      },
+      {
+        "label": "Glow charge (mA)",
+        "param_name": "glowdischarge.glow_charge",
+        "required": false,
+        "param_type": "string",
+        "tab": "Glow"
+      },
+      {
+        "label": "Glow time (s)",
+        "param_name": "glowdischarge.glow_time",
+        "required": false,
+        "param_type": "string",
+        "tab": "Glow"
+      },
+      {
+        "label": "Glow gas",
+        "param_name": "glowdischarge.glow_gas",
+        "required": false,
+        "param_type": "string",
+        "tab": "Glow"
+      },
+      {
+        "label": "Temperature",
+        "param_name": "vitrobot.temperature",
+        "required": false,
+        "param_type": "string",
+        "tab": "Vitrobot",
+        "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot" } 
+      },
+      {
+        "label": "Humidity",
+        "param_name": "vitrobot.humidity",
+        "required": false,
+        "param_type": "string",
+        "tab": "Vitrobot",
+        "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot" } 
+      },
+      {
+        "label": "Filter Paper",
+        "param_name": "vitrobot.filter_paper",
+        "required": false,
+        "param_type": "string",
+        "tab": "Vitrobot",
+        "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot" } 
+      },
+      {
+        "label": "Temperature",
+        "param_name": "leicaemgp2.temperature",
+        "required": false,
+        "param_type": "string",
+        "tab": "Leica EM GP2",
+        "showwhen": { "sampleinfo.sample_prep_machine": "Leica EM GP2" } 
+      },
+      {
+        "label": "Humidity",
+        "param_name": "leicaemgp2.humidity",
+        "required": false,
+        "param_type": "string",
+        "tab": "Leica EM GP2",
+        "showwhen": { "sampleinfo.sample_prep_machine": "Leica EM GP2" } 
+      },
+      {
+        "label": "Filter Paper",
+        "param_name": "leicaemgp2.filter_paper",
+        "required": false,
+        "param_type": "string",
+        "tab": "Leica EM GP2",
+        "showwhen": { "sampleinfo.sample_prep_machine": "Leica EM GP2" } 
+      }
+    ]
+  }

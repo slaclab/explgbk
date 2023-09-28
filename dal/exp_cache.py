@@ -178,7 +178,7 @@ def get_experiments_for_user(uid):
     # Now for experiments for which the user is directly a collaborator
     for exp in list(logbookclient['explgbk_cache']["experiments"].find({"players": {"$in": groups}})):
         exp_for_uid[exp["_id"]] = exp
-    return exp_for_uid.values()
+    return list(exp_for_uid.values())
 
 def get_direct_experiments_for_user(uid):
     """
@@ -333,7 +333,7 @@ def __update_experiments_info():
     We update this using Kafka; but we also periodically do a full reload of this information
     """
     logger.info("Updating the experiment info cached in 'explgbk_cache'.")
-    database_names = sorted(list(logbookclient.database_names()), reverse=True)
+    database_names = sorted(list(logbookclient.list_database_names()), reverse=True)
     db_time_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
     logbookclient['explgbk_cache']['operations'].update_one({"name": "explgbk_cache_rebuild"}, {"$set": {"initiated": db_time_utc}})
     for experiment_name in database_names:
@@ -373,7 +373,7 @@ def update_single_experiment_info(experiment_name, crud="Update"):
         list(map(lambda x : post_players.update(x.get('players', [])), expdb["roles"].find({"name": {"$in": roles_with_post_privileges}}, {"_id": 0, "players": 1})))
         expinfo["post_players"] = list(post_players)
         if 'runs' in collnames:
-            run_count = expdb["runs"].count()
+            run_count = expdb["runs"].count_documents({})
             expinfo['run_count'] = run_count
             if run_count:
                 last_run =  expdb["runs"].find({}, { "num": 1, "begin_time": 1, "end_time": 1 } ).sort([("begin_time", -1)]).limit(1)[0]
@@ -457,7 +457,7 @@ def update_single_experiment_info(experiment_name, crud="Update"):
 
         expinfo.update(info)
         expinfo["_id"] = experiment_name
-        logbookclient['explgbk_cache']['experiments'].update({"_id": experiment_name}, expinfo, upsert=True)
+        logbookclient['explgbk_cache']['experiments'].replace_one({"_id": experiment_name}, expinfo, upsert=True)
 
         logger.info("Updated the experiment info cached in 'explgbk_cache' for experiment %s", experiment_name)
     else:

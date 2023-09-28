@@ -1,0 +1,81 @@
+<div id="rtbl_new_entry_modal" class="modal fade" data-bs-backdrop="static" role="dialog">
+ <div class="modal-dialog modal-lg">
+  <div class="modal-content">
+      <div class="modal-header">
+          <h4 class="modal-title w-100">Run table definition</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+    <div class="modal-body">
+     <form class="form-horizontal" role="form" id="rtbl_def_form">
+      <div class="text-danger d-none errormsg"></div>
+      <input type="hidden" class="form-control" id="rtbl_def_id"/>
+      <div class="row form-group">
+       <label  class="col-1 col-form-label" for="rtbl_def_name">Name</label>
+       <div class="col-3">
+        <input type="text" class="form-control" name="name" id="rtbl_def_name"/>
+       </div>
+       <label  class="col-1 col-form-label" for="rtbl_def_desc">Descrip-tion</label>
+       <div class="col-7">
+        <textarea class="form-control" name="name" id="rtbl_def_desc"></textarea>
+       </div>
+      </div>
+      <div class="row form-group">
+       <label  class="col-1 col-form-label" for="rtbl_def_table_type">Table Type</label>
+       <div class="col-3">
+        <select class="form-control" name="name" id="rtbl_def_table_type">
+          <option value="table">Table</option>
+          <option value="histogram">Histogram</option>
+          <option value="scatter">Scatter</option>
+          <option value="generatedtable">Generated table</option>
+          <option value="generatedscatter">Generated scatter</option>
+          <option value="groupbytable">Group by table</option>
+        </select>
+       </div>
+       <div class="form-group d-none col-4 ttype ttype_histogram" id="rtbl_hist_params">
+           <div class="row">
+               <label  class="col-6 col-form-label" for="rtbl_def_bin_size" title="Histogram bin size; leave blank to let plotly choose the bin size">Size of bins</label>
+               <div class="col-6">
+                <input type="text" class="form-control" name="bincount" id="rtbl_def_bin_size" value=""/>
+               </div>
+           </div>
+       </div>
+       <div class="col-4">
+           <div class="form-group row">
+               <label  class="col-6 col-form-label" for="rtbl_sort_index" title="Run tables are first sorted by the sort index and then by table name.">Sort Index</label>
+               <div class="col">
+                 <input type="text" class="form-control" name="sort_index" id="rtbl_sort_index" value="100"/>
+               </div>
+           </div>
+       </div>
+      </div>
+      <div class="row form-group d-none ttype ttype_generatedtable" id="rtbl_generated_params">
+          <label  class="col-1 col-form-label" title="Regex patterns for the attribute names">Patterns</label>
+          <div class="col">
+           <input type="text" class="form-control" name="patterns" id="rtbl_gentable_patterns"/>
+          </div>
+          <label  class="col-2 col-form-label" title="Show the values (if unchecked, indicates only if the parameter is present)">Show values</label>
+          <div class="col-1">
+           <input type="checkbox" class="form-check-input" name="showvalues" id="rtbl_gentable_showvalues" checked/>
+          </div>
+      </div>
+      <div class="row form-group d-none ttype ttype_generatedscatter" id="rtbl_generated_scatter_params">
+        <label  class="col-1 col-form-label" title="Regex patterns for the attribute names">Patterns</label>
+        <div class="col">
+         <input type="text" class="form-control" name="patterns" id="rtbl_gentable_scatter_patterns"/>
+        </div>
+    </div>
+    <div class="form-group">
+        <table class="table table-striped table-bordered ttype ttype_table ttype_histogram ttype_scatter ttype_groupbytable" id="rtbl_def_tbl">
+          <thead><tr><th>Label</th><th>Category</th><th>Source</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+     </form>
+    </div>
+   <div class="modal-footer">
+     <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+     <button type="button" class="btn btn-default" id="rtbl_def_post">Post</button>
+    </div>
+  </div>
+ </div>
+</div>

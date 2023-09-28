@@ -5,18 +5,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" type="text/css" href="../../../static/lgbk.css">
-  <link rel="stylesheet" type="text/css" href="../../../js/bootstrap/css/bootstrap.min.css">
-  <link rel="stylesheet" type="text/css" href="../../../js/@fortawesome/fontawesome-free/css/all.min.css">
-  <link rel="stylesheet" type="text/css" href="../../../js/noty/lib/noty.css">
+  <link rel=stylesheet type=text/css href="../../../js/bootstrap/css/bootstrap.min.css">
 
   <script type="text/javascript" src="../../../js/jquery/jquery.min.js"></script>
   <script type="text/javascript" src="../../../js/mustache/mustache.min.js"></script>
   <script type="text/javascript" src="../../../js/lodash/lodash.min.js"></script>
   <script type="text/javascript" src="../../../js/moment/min/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="../../../js/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
-  <script type="text/javascript" src="../../../js/noty/lib/noty.min.js"></script>
   <script type="text/javascript" src="../../../js/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script type="text/javascript" src="../../../js/@fortawesome/fontawesome-free/js/all.min.js"></script>
+  <script type="text/javascript" src="../../../js/@fortawesome/fontawesome-free/js/solid.min.js"></script>
+  <script type="text/javascript" src="../../../js/@fortawesome/fontawesome-free/js/fontawesome.min.js"></script>
 
   <script type="text/javascript" src="../../../static/lgbk.js"></script>
   <script type="text/javascript" src="../../../static/spgntr.js"></script>
@@ -26,118 +24,25 @@
     var entry_id = "{{ entry_id }}";
     var logged_in_user  = "{{ logged_in_user }}";
     var logbook_site = "{{ logbook_site }}";
+    const pagepath = "{{pagepath}}";
   </script>
 
 </head>
 <body id="log_entry_body">
 <div class="tab_title_bar">
     <span class="exp_title">Logbook entry for {{ experiment_name }}<span id="current_sample_lbl"></span></span>
-    <span id="toolbar_for_tab"><span title="Go back to the elog"><a href="../#eLog"><i class="fas fa-book fa-lg"></i></a></span><span title="Go to this particular entry in the elog"><i class="fas fa-sync fa-lg"></i></span></span>
+    <span id="toolbar_for_tab"><span id="toelog" title="Go back to the elog"><a href="../eLog"><i class="fa-solid fa-book fa-lg"></i></a></span><span class="syncelog" title="Go to this particular entry in the elog"><i class="fa-solid fa-sync fa-lg"></i></span></span>
 </div>
 <div class="container-fluid text-center" id="elog_sgl_entry">
 </div>
-<script type="text/javascript">
-  $(document).ready(function() {
-      let truncateMiddle = function(x) {
-          let strv = _.toString(x);
-          if (strv.length > 10) {
-              return strv.substr(0,5) + "..." +  strv.substr(strv.length-5);
-          }
-          return strv;
-      }
-
-      let processElogEntry = function(entry) {
-    	  let root = _.get(entry, "root", null), parent = _.get(entry, "parent", null), attachments = _.get(entry, "attachments", null);
-          if(attachments != null) {
-        	  entry["c_attach"] = true;
-        	  _.each(attachments, function(attachment) { attachment["entry_id"] = entry["_id"]; });
-          }
-          entry["run_num_str"] = truncateMiddle(entry["run_num"]);
-          // entry.expandFunction = expandFunction;
-          entry["elem_id"] = entry["_id"];
-          entry["r_time"] = (new Date(entry["relevance_time"])).getTime();
-          entry["emails_str"] = _.join(_.get(entry, "email_to", []), " ");
-      }
-
-      let attach_children = function(entries) {
-          let id2entry = _.keyBy(entries, "_id");
-          _.each(id2entry, function(entry, key){
-              let myid = entry["_id"], root = _.get(entry, "root", null), parent = _.get(entry, "parent", null);
-              if(parent != null && _.has(id2entry, parent)) {
-            	  let pey = id2entry[parent];
-           		  _.defaults(pey, {"c_children": []});
-           		  pey["c_children"] = _.union(pey["c_children"], [ entry["_id"] ]);
-              }
-              if(root != null && _.has(id2entry, root)) {
-            	  let rey = id2entry[root];
-           		  _.defaults(rey, {"c_desc": []});
-           		  rey["c_desc"] = _.union(rey["c_desc"], [ entry["_id"] ]);
-              }
-          });
-      }
-
-      let renderElogResponse = function(entries) {
-          {% raw %}
-          let elog_main_template = `<div class="edat row col-12" id="{{ elem_id }}">
-          <div class="row col-12">
-           <div class="card">
-            <div class="card-header text-left">
-               {{#title}}<div class="chid_title{{#deleted_by}}elog_deleted{{/deleted_by}}">{{title}}</div>{{/title}}
-               <div class="row">
-                 <div class="col-2">{{#FormatDate}}{{ relevance_time }}{{/FormatDate}}</div>
-                 <div class="col-1" title="{{run_num}}">{{ run_num_str }}</div>
-                 <div class="col-5 elog_main_cnt text_truncate {{#deleted_by}}elog_deleted{{/deleted_by}} ">{{#title}}{{title}}<div class="chid_content">{{{content}}}</div>{{/title}}{{^title}}<pre class="precontent">{{ content }}</pre>{{/title}}</div><div class="col-3 elog_main_cnt">{{#src_expname}}{{.}}{{#tagcount}}|{{/tagcount}}{{/src_expname}}{{#tags}}<span class="elog_tag">{{.}}</span>{{/tags}}</div>
-                 <div class="col-1">{{ author }}</div>
-               </div>
-             </div>
-            <div class="card-body">
-              <div class="elog_chid_body_content">{{#deleted_by}}<div class="row elog_deleted_by">Deleted by {{deleted_by}} - {{#FormatDate}}{{ deleted_time }}{{/FormatDate}}</div>{{/deleted_by}}
-              <div class="row">{{#attachments}}<div class="col-3"><a href="../ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=False" target="_blank" class="thumbnail"><img class="elog_img" src="../ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div>{{/attachments}}</div></div>
-            </div>
-            </div>
-           </div>
-           </div>`;
-          {% endraw %}
-          Mustache.parse(elog_main_template);
-          _.each(entries, function(entry){
-              entry.FormatDate = elog_formatdatetime;
-              let rendered = Mustache.render(elog_main_template, entry);
-              if(_.has(entry, "parent")) {
-                  if($("#"+entry["parent"]).length > 0) {
-                      $("#"+entry["parent"]).find(".elog_chid_body_content").first().append(rendered);
-                  } else {
-                      error_message("Missing parent id for elog " + entry["parent"]);
-                  }
-              } else {
-                  $("#elog_sgl_entry").append(rendered);
-              }
-          })
-      }
-
-      let processElogResponse = function(entries) {
-        _.each(entries, function(entry) { processElogEntry(entry); });
-        attach_children(entries);
-        let root_entry = _.find(entries, function(x){ return !_.has(x, "parent");})
-        if(!root_entry) { error_message("Cannot find root entry"); return;}
-        // Breadth first from root_entry
-        let bfls = [ root_entry ], ret = [], id2entry = _.keyBy(entries, "_id");;
-        while(bfls.length > 0) {
-            let n = bfls.shift();
-            ret.push(n);
-            _.each(_.get(n, "c_children", []), function(c) { bfls.push(id2entry[c]); })
-            console.log(bfls.length);
-        }
-        return ret;
-      };
-
-      $.getJSON({ url: "../ws/elog/" + entry_id + "/complete_elog_tree"}).done(function(data){
-          let entries = processElogResponse(data.value);
-          renderElogResponse(entries);
-          $("#toolbar_for_tab").find(".fa-sync").parent().on("click", function(){
-              sessionStorage.setItem("eLog_scrollTo", entries[0]["_id"]);
-              window.location.href = "../#eLog";
-          })
-      })
+<script type="module">
+    async function tabload(taburl) {
+        const { tabshow } = await import(taburl);
+        tabshow();
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        tabload("../../../static/html/tabs/lgbk/elogentry/tab.js");
     })
 </script>
 

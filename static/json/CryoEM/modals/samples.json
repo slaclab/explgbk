@@ -1,0 +1,264 @@
+{
+    "_id": "samples",
+    "params": [
+      {
+        "param_name": "imaging_method",
+        "required": true,
+        "param_type": "enum",
+        "options": [
+          "single-particle",
+          "tomography",
+          "FIB-SEMs",
+          "TEM Atlases",
+          "Chameleon",
+          "VitroJet",
+          "Vitrobot Mark 5",
+          "Light Microscopes",
+          "Other"
+        ],
+        "label": "Imaging Method",
+        "tab": "Imaging"
+      },
+      {
+        "param_name": "dependent_1",
+        "required": false,
+        "param_type": "string",
+        "label": "Dependent 1",
+        "tab": "Imaging",
+        "showwhen": { "imaging_method": "tomography" } 
+      },
+      {
+        "param_name": "imaging_software",
+        "required": true,
+        "param_type": "enum",
+        "options": [
+          "EPU",
+          "SerialEM",
+          "Tomo4"
+        ],
+        "label": "Imaging Software",
+        "tab": "Imaging"
+      },
+      {
+        "param_name": "imaging_format",
+        "required": true,
+        "param_type": "enum",
+        "options": [
+          ".tif",
+          ".mrc"
+        ],
+        "label": "File Format",
+        "tab": "Imaging"
+      },
+      {
+        "param_name": "superres",
+        "required": true,
+        "param_type": "enum",
+        "options": [
+          {
+            "label": "Yes",
+            "value": "1.0"
+          },
+          {
+            "label": "No",
+            "value": "0.0"
+          }
+        ],
+        "label": "Super Resolution",
+        "description": "Are the frames saved as super resolution? Note that K3 frames are always saved as super resolution so please choose yes.",
+        "tab": "Imaging"
+      },
+      {
+        "param_name": "apix",
+        "required": true,
+        "param_type": "float",
+        "label": "Angstrom per Pixel",
+        "description": "This should be the /pix at the physical pixel not at the super resolution pixel.",
+        "tab": "Imaging"
+      },
+      {
+        "param_name": "fmdose",
+        "required": true,
+        "param_type": "float",
+        "label": "Dose per Frame",
+        "description": "Dose given as e-/2/frame",
+        "tab": "Imaging"
+      },
+      {
+        "param_name": "total_dose",
+        "required": true,
+        "param_type": "float",
+        "label": "Total Dose",
+        "description": "Total dose for each micrograph. Note that for tomography this is total dose per tilt angle. Units are e-/2/micrograph.",
+        "tab": "Imaging"
+      },
+      {
+        "param_name": "frame_duration",
+        "required": true,
+        "param_type": "float",
+        "label": "Frame Duration (sec/frame)",
+        "description": "Time per frame given as sec/frame",
+        "tab": "Imaging"
+      },
+      {
+        "param_name": "exposure_time",
+        "required": true,
+        "param_type": "float",
+        "label": "Exposure Time (sec)",
+        "description": "Length of exposure per move given in seconds",
+        "tab": "Imaging"
+      },
+      {
+        "param_name": "phase_plate",
+        "required": true,
+        "param_type": "enum",
+        "options": [
+          "0",
+          "1"
+        ],
+        "label": "Phase Plate",
+        "description": "Are phase plates used for data collection?",
+        "tab": "Data"
+      },
+      {
+        "param_name": "particle_size",
+        "required": false,
+        "param_type": "float",
+        "label": "Particle Size",
+        "description": "Diameter of the particle, given in , which is used for the particle picking step of the automated processing pipeline.",
+        "tab": "Data"
+      },
+      {
+        "param_name": "objective_aperture/inserted",
+        "required": true,
+        "param_type": "bool",
+        "tab": "Data"
+      },
+      {
+        "param_name": "objective_aperture/size",
+        "required": false,
+        "param_type": "float",
+        "tab": "Data"
+      },
+      {
+        "param_name": "energy_filter/slit_size",
+        "required": false,
+        "param_type": "float",
+        "label": "Slit Size (eV)",
+        "description": "Slit width, given in eV, when using the energy filter.",
+        "tab": "Data"
+      },
+      {
+        "param_name": "preprocess/enable",
+        "required": true,
+        "param_type": "enum",
+        "options": [
+          {
+            "label": "Yes",
+            "value": "1.0"
+          },
+          {
+            "label": "No",
+            "value": "0.0"
+          }
+        ],
+        "label": "Enable automated preprocessing pipeline?",
+        "tab": "Analysis"
+      },
+      {
+        "param_name": "preprocess/align/motioncor2/throw",
+        "required": false,
+        "param_type": "enum",
+        "options": [
+          "0",
+          "1"
+        ],
+        "label": "Number of initial frames to discard?",
+        "description": "Number of frames to exclude from the beginning of the exposure, when doing option correction as part of the automated preprocessing pipeline.",
+        "tab": "Analysis"
+      },
+      {
+        "param_name": "preprocess/align/motioncor2/outstk",
+        "required": false,
+        "param_type": "enum",
+        "options": [
+          {
+            "label": "Yes",
+            "value": "1.0"
+          },
+          {
+            "label": "No",
+            "value": "0.0"
+          }
+        ],
+        "label": "Output aligned stack?",
+        "tab": "Analysis"
+      },
+      {
+        "param_name": "preprocess/align/motioncor2/patch",
+        "required": false,
+        "param_type": "string",
+        "label": "MotionCor2 Patch size",
+        "description": "Number of patches to use in x and y and percentage overlap. For example if you want 5 x 5 patches with an overlap of 20% the input would be: 5 5 20. Note that percentage overlap does not need to be used and the program can accept just the number of patches in x and y",
+        "tab": "Analysis"
+      },
+      {
+        "param_name": "preprocess/particle_pick/enable",
+        "required": false,
+        "param_type": "enum",
+        "options": [
+          {
+            "label": "Yes",
+            "value": "1.0"
+          },
+          {
+            "label": "No",
+            "value": "0.0"
+          }
+        ],
+        "label": "Enable particle picking?",
+        "tab": "Analysis"
+      },
+      {
+        "param_name": "tomdep_1",
+        "required": false,
+        "default": "Tomo_Default_1",
+        "param_type": "string",
+        "label": "Tom Dependent 1",
+        "tab": "Tomography",
+        "showwhen": { "imaging_method": "tomography" } 
+      },
+      {
+        "param_name": "tomdep_2",
+        "required": false,
+        "param_type": "string",
+        "label": "Tom Dependent 2",
+        "tab": "Tomography",
+        "showwhen": { "imaging_method": "tomography" } 
+      },
+      {
+        "param_name": "tomdep_3",
+        "required": false,
+        "param_type": "string",
+        "label": "Tom Dependent 3",
+        "tab": "Tomography",
+        "showwhen": { "imaging_method": "tomography" } 
+      },
+      {
+        "param_name": "tomdep_4",
+        "required": false,
+        "param_type": "string",
+        "label": "Tom Dependent 4",
+        "tab": "Tomography",
+        "showwhen": { "imaging_method": "tomography" } 
+      },
+      {
+        "param_name": "tomdep_5",
+        "required": false,
+        "param_type": "string",
+        "label": "Tom Dependent 5",
+        "tab": "Tomography",
+        "showwhen": { "imaging_method": "tomography" } 
+      }
+    ]
+  }

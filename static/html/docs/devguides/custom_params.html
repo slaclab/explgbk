@@ -58,10 +58,17 @@
                             <dt><code>param_name</code></dt><dd>Mandatory, the name of the parameter.</dd>
                             <dt><code>label</code></dt><dd>Optional, use this string as the label for the parameter.</dd>
                             <dt><code>required</code></dt><dd>Optional, if not specified, defaults to not required.</dd>
+                            <dt><code>default</code></dt><dd>Optional, if specified, the default value.</dd>
                             <dt><code>param_type</code></dt><dd>Optional - One of the following <code>bool</code>, <code>int</code>, <code>float</code>, <code>enum</code>, <code>string</code>. Defaults to string.</dd>
                             <dt><code>options</code></dt><dd>Optional; applies only to <code>enum</code>&quot;s. An array of string options for the enum; or an array of <code>{label: x, value: y}</code> pairs</dd>
-                            <dt><code>children</code></dt><dd>Optional; an array of parameter definitions that are dependent on this definition. Ideal usecase is where this parameter is a checkbox ( <code>bool</code> ); then when checked, the children parameters are expanded and displayed.</dd>
                             <dt><code>description</code></dt><dd>Optional; text that is shown as a tooltip</dd>
+                            <dt><code>tab</code></dt><dd>Optional; place this parameter in the specified tab</dd>
+                            <dt><code>showwhen</code></dt><dd>Optional; show this parameter when this condition is satisfied. If unspecified, show always.
+                                If specified, this is something that can be passed to <code>_.isMatch(obj["params"], showwhen)</code>.
+                                For example, <code>showwhen: { "imaging_method": "tomography" } </code>
+                                displays the parameter in the modal only when the <code>imaging_method</code> parameter is set to <code>tomography</code> and hidden otherwise.
+                                Ideally, to make for a better UI experience, the parameter definitions that depend on <code>imaging_method</code> are declared after the parameter declaration for <code>imaging_method</code>.
+                            </dd>
                         </dl>
                     </p>
                     <p>Here's an example of some custom params for the samples modal.
