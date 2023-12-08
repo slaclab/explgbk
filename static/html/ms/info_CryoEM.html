@@ -29,7 +29,7 @@
        $.when($.getJSON("ws/runs", {includeParams: false}), $.getJSON("ws/samples"))
        .done(function(d0, d1){
            let sample2runs = _.groupBy(d0[0].value, "sample"), sample2earlieststarttime = _.sortBy(_.map(sample2runs, function(v, k){return {"sample": k, "earliest_run": _.min(_.map(v, function(x){ return moment(x["begin_time"]).toDate()}))}}), "earliest_run"), samples = d1[0].value;
-           let sampletmpl = {{=<% %>=}}`<div class="sample_info"><div class="row"><span class="label col-2">Sample Name:</span><span class="col-4">{{name}}</span><span class="label col-2">Number of images:</span><span class="col-4">{{sampleruncount}}</span></div>
+           let sampletmpl = {{=<% %>=}}`<div class="sample_info"><div class="row"><span class="label col-2">Sample Name:</span><span class="col-4">{{name}}</span><span class="label col-2">Preprocessing runs completed:</span><span class="col-4">{{sampleruncount}}</span></div>
            <div class="row"><span class="label col-2">Sample Description:</span><span class="col-10">{{description}}</span></div>
            <div class="row"><span class="label col-2">Time Started:</span><span class="col-4">{{#FormatDate}}{{first_run}}{{/FormatDate}}</span><span class="label col-2">Time Ended:</span><span class="col-4">{{#FormatDate}}{{last_run}}{{/FormatDate}}</span></div></div>`;<%={{ }}=%>
            Mustache.parse(sampletmpl);
