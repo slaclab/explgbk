@@ -2865,7 +2865,11 @@ def svc_kill_workflow_job(experiment_name):
         client_cert_params["cert"] = (location["jid_client_cert"], location["jid_client_key"])
     if "jid_ca_cert" in location:
         client_cert_params["verify"] = location["jid_ca_cert"]
-    arp_token = context.generateArpToken(context.security.get_current_user_id(), experiment_name)
+    user_for_token = context.security.get_current_user_id()
+    if user_for_token != wf_job["user"]:
+        logger.warning("Only for the kill job, we generate the token as the user %s running the job %s instead of the logged in user %s", user_for_token, wf_job["user"], context.security.get_current_user_id())
+        user_for_token = wf_job["user"]
+    arp_token = context.generateArpToken(user_for_token, experiment_name)
     resp = requests.post(location["jid_prefix"] + "jid/ws/"+experiment_name+"/"+"kill_job", data=JSONEncoder().encode(wf_job), headers={"Content-Type": "application/json", "Authorization": "Bearer " + arp_token}, **client_cert_params)
     respdoc = resp.json()["value"]
     (status, errormsg, val) = update_wf_job(experiment_name, job_id, {"status": respdoc.get("status", wf_job["status"])})
