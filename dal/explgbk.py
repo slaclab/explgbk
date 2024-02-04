@@ -1230,7 +1230,7 @@ def get_runtable_data(experiment_name, instrument, tableName, sampleName):
     This is mostly a matter of constructing the appropriate mongo filters.
     If sampleName is specified, we restrict the returned data to runs associated with the sample. Otherwise, we return all runs.
     '''
-    tableDef = next(x for x in get_all_run_tables(experiment_name, instrument) if x['name'] == tableName)
+    tableDef = next(x for x in get_all_run_tables(experiment_name, instrument) if x['name'] == tableName and not x.get("is_template", False))
     sources = { "num": 1, "begin_time": 1, "end_time": 1 }
     sources.update({ x['source'] : 1 for x in tableDef['coldefs']})
     if tableDef.get("table_type", None) == "generatedtable":
