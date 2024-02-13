@@ -97,6 +97,12 @@
 
   import { loadSiteSpecificTabs } from "../../static/html/ops/sitespecifictabs.js";
   import { miscSetup } from "../../static/html/ops/miscsetup.js";
+
+  if(_.includes([ "#switch", "#experiments", "#instruments", "#global_roles", "#inst_roles", "#summary", "#data_mov" ], location.hash)) {
+      document.querySelector("#lgbk_body").innerHTML = `<div class="my-4"><h4>Redirecting old style hash URL's <b>(${location.hash})</b> to new style path based URL's. You should be redirected automatically in a few seconds.</h4></div>`;
+      setTimeout(() => { window.location.replace("./" + location.hash.substring(1)); }, 2000);
+  }
+
   
     async function tabload(taburl, target) {
       const { tabshow } = await import(taburl);

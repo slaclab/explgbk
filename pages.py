@@ -55,6 +55,13 @@ def send_js(path):
 def templates(experiment_name, path):
     return render_template(path, experiment_name=experiment_name)
 
+@pages_blueprint.route("/lgbk/ops", methods=["GET"])
+@context.security.authentication_required
+def operator_dashboard_default():
+    logger.info("Call to legacy page; send redirect to switch page")
+    return make_response(redirect("./ops/switch"))
+
+
 @pages_blueprint.route("/lgbk/ops/<tabname>", methods=["GET"])
 @context.security.authentication_required
 @context.security.authorization_required("ops_page")
