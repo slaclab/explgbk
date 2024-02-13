@@ -2,9 +2,9 @@ let survey_templates = {
     "section_header": `<div><div class="fd_section_hdr col-sm-9"><span>{{header}}<span></div></div>`,
     "plain-header": `<div class="fd_plain_hdr col-sm-9"><span class="col-sm-8">{{header}}<span></div>`,
     "readonly_text": `<div class="fd_item fd_readonly col-sm-9"><span class="col-sm-8">{{header}}</span><span data-attr-id="{{id}}" data-attr-text="true"></span></div>`,
-    "input": `<div class="fd_item fd_input col-sm-9"><span class="col-sm-8">{{{header}}}</span><input maxlength="3" size="3" data-attr-id="{{id}}"></div>`,
-    "checkbox": `<div class="fd_item fd_input col-sm-9"><span class="col-sm-8">{{{header}}}</span><input type="checkbox" data-attr-id="{{id}}"></div>`,
-    "selector": `<div class="fd_item fd_input col-sm-9"><span class="col-sm-8">{{{header}}}</span><select data-attr-id="{{id}}"><option val="1">1</option><option val="2" selected>2</option><option val="3">3</option><option val="4">4</option><option val="5">5</option></select></div>`,
+    "input": `<div class="fd_item fd_input col-sm-9"><span class="col-sm-8">{{{header}}}</span><input class="ms-2" maxlength="3" size="3" data-attr-id="{{id}}"></div>`,
+    "checkbox": `<div class="fd_item fd_input col-sm-9"><span class="col-sm-8">{{{header}}}</span><input class="ms-2" type="checkbox" data-attr-id="{{id}}"></div>`,
+    "selector": `<div class="fd_item fd_input col-sm-9"><span class="col-sm-8">{{{header}}}</span><select class="ms-2" data-attr-id="{{id}}"><option val="1">1</option><option val="2" selected>2</option><option val="3">3</option><option val="4">4</option><option val="5">5</option></select></div>`,
     "textarea": `<div class="fd_item col-sm-9"><span class="col-sm-8">{{{header}}}</span></div><div class="fd_item fd_notes col-sm-9"><textarea class="col-sm-8" rows="8" cols="80" data-attr-id="{{id}}"></textarea></div>`
 },
 notes_template = `<div class="fd_survey_notes d-none"><textarea rows="4" cols="60" data-attr-id="{{id}}-notes"></textarea></div>`,
