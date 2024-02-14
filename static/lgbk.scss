@@ -372,7 +372,7 @@ label {
         color: $navbarcolor;
         font-weight: bold;
     }
-    input, select {
+    input, select, textarea {
         @include font_family_choices_mixin;
         background: inherit;
     }
