@@ -131,4 +131,4 @@ def generateArpToken(userid, experiment_name, token_duration_in_mins=10):
         raise Exception("Please specify the ARP private key in the environment variable WFLOW_TRIG_ARP_PRIVATE_KEY")
     with open(os.environ["WFLOW_TRIG_ARP_PRIVATE_KEY"], "rb") as f:
         private_key = f.read()
-    return jwt.encode({"user": userid, "experiment_name": experiment_name, "expires": (datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(minutes=token_duration_in_mins)).timestamp()}, private_key, algorithm="RS256").decode('utf-8')
+    return jwt.encode({"user": userid, "experiment_name": experiment_name, "expires": (datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(minutes=token_duration_in_mins)).timestamp()}, private_key, algorithm="RS256")
