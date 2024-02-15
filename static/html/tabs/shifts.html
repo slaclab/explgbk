@@ -110,11 +110,12 @@ $("#shifts_tab").on("lg.loaded.bs.tab", function() {
   });
 });
 
-$("#shifts_tab").on("lg.shown.bs.tab", function() {
+let setupToolBar = function() {
     var tab_toolbar = `<span id="new_shift"><i class="fas fa-plus fa-lg"></i></span>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
     $("#new_shift").on("click", function(e){ $("#shifts_tab").data("edit_shift")({leader: logged_in_user})});
-});
+};
+setupToolBar();
 
 </script>
