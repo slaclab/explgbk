@@ -36,8 +36,8 @@ let anyValidationErrors = function(event) {
 export function col_defs_dialog(editTableName) {
     let run_tbl_def_tr = `<tr>
     <td><input name="label" class="nonblank form-control"/></td>
-    <td><select name="type" class="rtbl_def_category_select nonblank form-control"><option value="">&nbsp;</option></select></td>
-    <td><select name="source" class="rtbl_def_pvname_select nonblank form-control"><option value="">&nbsp;</option></select></td>
+    <td><select name="type" class="rtbl_def_category_select nonblank form-control form-select"><option value="">&nbsp;</option></select></td>
+    <td><select name="source" class="rtbl_def_pvname_select nonblank form-control form-select"><option value="">&nbsp;</option></select></td>
     <td>
         <div class="row p-0 m-0"><span class="rtbldef_action col-6"><i class="fa-solid fa-plus fa-lg" aria-hidden="true"></i></span>
         <span class="rtbldef_action col-6"><i class="fa-solid fa-trash fa-lg" aria-hidden="true"></i></span></div>
@@ -45,7 +45,7 @@ export function col_defs_dialog(editTableName) {
         <span class="rtbldef_action col-6"><i class="fa-solid fa-arrow-down fa-lg" aria-hidden="true"></i></span></div>
     </td></tr>`;
   let run_tbl_def_category_selector = `{{#.}}<option value="{{.}}">{{.}}</option>{{/.}}`;
-  let run_tbl_def_pvname_selector = `<select name="source" class='rtbl_def_pvname_select nonblank form-control'><option value=''></option>{{#.}}<option value="{{label}}" title="{{param_name}}">{{description}}</option>{{/.}}</select>`;
+  let run_tbl_def_pvname_selector = `<select name="source" class='rtbl_def_pvname_select nonblank form-control form-select'><option value=''></option>{{#.}}<option value="{{label}}" title="{{param_name}}">{{description}}</option>{{/.}}</select>`;
   Mustache.parse(run_tbl_def_tr);
   Mustache.parse(run_tbl_def_category_selector);
   Mustache.parse(run_tbl_def_pvname_selector);

@@ -374,7 +374,6 @@ label {
     }
     input, select, textarea {
         @include font_family_choices_mixin;
-        background: inherit;
     }
     .icon { 
         color: $navbarhover;

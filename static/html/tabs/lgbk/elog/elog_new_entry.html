@@ -23,7 +23,7 @@
                     <div class="input-group row">
                         <label class="col-1 col-form-label" for="elog_new_entry_email_dest" title="Email this log entry to folks specified in this list:">Email:</label>
                         <div class="col-6">
-                            <select class="form-control contacts email_select" id="elog_new_entry_email_select" name="log_emails_shown" placeholder="email1 email2@institution.edu"></select>
+                            <select class="form-control form-select contacts email_select" id="elog_new_entry_email_select" name="log_emails_shown" placeholder="email1 email2@institution.edu"></select>
                             <input class="d-none email_input" name="log_emails" id="elog_new_entry_email_dest" value="{{#entry.email_to}}{{.}} {{/entry.email_to}}"></input>
                         </div>
                         {{^entry}}
@@ -39,7 +39,7 @@
                         <label class="col-1 col-form-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
                         <span class="col-4">
                             <span class="input-group">
-                                <select class="form-control contacts tag_select" id="elog_new_entry_tag_select" name="log_tags_shown" placeholder="tag1 tag2" multiple></select>
+                                <select class="form-control form-select contacts tag_select" id="elog_new_entry_tag_select" name="log_tags_shown" placeholder="tag1 tag2" multiple></select>
                                 <input class="d-none tag_input" name="log_tags" id="elog_new_entry_tag_dest" value="{{#entry.tags}}{{.}} {{/entry.tags}}"></input>
                             </span>
                         </span>

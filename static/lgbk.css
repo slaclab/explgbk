@@ -276,7 +276,6 @@ label {
 .modal input, .modal select, .modal textarea {
   font-family: Optima, Helevetica, Lucida Grande, Lucida Sans, sans-serif;
   font-size: 0.85rem;
-  background: inherit;
 }
 .modal .icon {
   color: #1E48DF;
