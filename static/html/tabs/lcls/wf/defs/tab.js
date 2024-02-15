@@ -1,5 +1,5 @@
 let create_edit_wf_def = function(wf_id) {
-  $.when($.ajax("../../static/html/tabs/lcls/wf_def_edit.html"), $.getJSON('ws/workflow_definitions'), $.getJSON('ws/dm_locations'), $.getJSON('ws/workflow_triggers'))
+  $.when($.ajax("../../static/html/tabs/lcls/wf/defs/wf_def_edit.html"), $.getJSON('ws/workflow_definitions'), $.getJSON('ws/dm_locations'), $.getJSON('ws/workflow_triggers'))
   .done(function(d0, d1, d2, d3){
       let wf_def = ( _.isNil(wf_id) ? {} : _.find(d1[0].value, ["_id", wf_id])), lc = _.set(wf_def, "locations", _.map(_.filter(d2[0].value, "jid_prefix"), "name")), lt = _.set(wf_def, "triggers", d3[0].value), rendered = $(Mustache.render(d0[0], wf_def));
       rendered.find(".wf_def_trigger").on("change", function(){ if($(this).val() == "RUN_PARAM_IS_VALUE"){ rendered.find(".run_tbl_trigger_params").removeClass("d-none")} else { rendered.find(".run_tbl_trigger_params").addClass("d-none")}})
