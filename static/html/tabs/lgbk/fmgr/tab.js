@@ -173,7 +173,8 @@ $(window).scroll(function () {
         $("#fmgr_content").data("spgntr").pageDown();
     }
 });
-$("#fmgr_tab").on("lg.shown.bs.tab", function() {
+
+let setUpToolbar = function() {
     var tab_toolbar = `<span id="check_now_for_all_runs" title="Check the file system now for the presence of files for all runs."><i class="fas fa-sync fa-lg tlbr"></i></span>`;
     var toolbar_rendered = $(tab_toolbar);
     $("#toolbar_for_tab").append(toolbar_rendered);
@@ -183,7 +184,7 @@ $("#fmgr_tab").on("lg.shown.bs.tab", function() {
       $("#fmgr_content .checknow").each(function(){
         let btn = $(this), run_num = $(this).closest("[data-spgntr]").attr("data-spgntr"), run_files = $(this).closest("[data-spgntr]").data("run_files"), loc_name = $(this).closest("[data-loc-name]").attr("data-loc-name");
         btn.closest(".row").find("button").removeClass(["all_files", "some_files", "no_files"]);
-        $.getJSON("ws/check_and_move_run_files_to_location", data={run_num: run_num, location: loc_name, restore_missing_files: false, file_types_to_restore: file_types_to_restore})
+        $.getJSON("ws/check_and_move_run_files_to_location", {run_num: run_num, location: loc_name, restore_missing_files: false, file_types_to_restore: file_types_to_restore})
         .done(function(fcheck){
           run_files.files = [];
           _.each(_.get(fcheck, "value.run_files", []), function(fdoc){
@@ -197,7 +198,8 @@ $("#fmgr_tab").on("lg.shown.bs.tab", function() {
         }).fail( function(jqXHR, textStatus, errorThrown) { alert("Server side HTTP failure " + textStatus); })
       })
     });
-});
+};
+setUpToolbar();
 }
 
 export function tabshow(target) {
