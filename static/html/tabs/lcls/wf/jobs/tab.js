@@ -125,9 +125,10 @@ export function tabshow(target) {
     }
   });
 
-  $("#lcls_wf_ctrls_tab").on("lg.shown.bs.tab", function() {
+  let setUpToolbar = function() {
       var tab_toolbar = `<span id="wf_ctrls_run_range" title="Submit a job for multiple runs."><i class="fas fa-subway fa-lg"></i></span>`;
       var toolbar_rendered = $(tab_toolbar);
+      console.log("Yamaguchi");
       $("#toolbar_for_tab").append(toolbar_rendered);
       $("#wf_ctrls_run_range").on("click", function(){
         $.when($.ajax('../../static/html/ms/lcls_wf_job_runs.html'), $.getJSON('ws/workflow_definitions'))
@@ -156,6 +157,7 @@ export function tabshow(target) {
           $("#lcls_wf_ctrls_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#lcls_wf_ctrls_tab").find(".mdl_holder").empty(); });
         })
       });
-  });
+  };
 
+  setUpToolbar();
 }
