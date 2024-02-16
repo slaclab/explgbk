@@ -131,7 +131,7 @@ export function tabshow(target) {
       console.log("Yamaguchi");
       $("#toolbar_for_tab").append(toolbar_rendered);
       $("#wf_ctrls_run_range").on("click", function(){
-        $.when($.ajax('../../static/html/ms/lcls_wf_job_runs.html'), $.getJSON('ws/workflow_definitions'))
+        $.when($.ajax('../../static/html/tabs/lcls/wf/jobs/lcls_wf_job_runs.html'), $.getJSON('ws/workflow_definitions'))
         .done(function(d0, d1) {
           let mdltext = d0[0], wf_job_names = _.map(d1[0].value, "name"), mdl_rendered = $(Mustache.render(mdltext, {wf_job_names: wf_job_names}));
           $("#lcls_wf_ctrls_tab").find(".mdl_holder").empty().append(mdl_rendered);
