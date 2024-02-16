@@ -516,7 +516,7 @@ let attach_toolbar_btns = function() {
     if(logbook_site == "LCLS") {
       $("#elog_daq_ami_issue").removeClass("d-none");
       $("#elog_daq_ami_issue").on("click", function() {
-        $.post("../Computing/ws/new_elog_entry", data={"log_text": "AMI/DAQ issue in experiment " + experiment_name + " user " + logged_in_user, "log_tags": experiment_name + " AMI_DAQ_Issue"})
+        $.post("../Computing/ws/new_elog_entry", {"log_text": "AMI/DAQ issue in experiment " + experiment_name + " user " + logged_in_user, "log_tags": experiment_name + " AMI_DAQ_Issue"})
         .done(function(){success_message("Logged a AMI/DAQ issue", timeout=1000)})
       })
     }

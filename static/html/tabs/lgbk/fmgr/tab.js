@@ -42,7 +42,7 @@ var run_loc_click = function() {
     let file_types_to_restore = _.join($("#fmgr_tab .fmgr_types").find("[data-ftype]:checked").map(function(){ return $(this).attr("data-ftype"); }).toArray(), ",");
     if(_.isEmpty(file_types_to_restore)) { error_message("Please select at least one file type to restore"); return; }
     console.log("Clicked on " + run_num + " for location " + loc_name + " restore files " + restore_files + " types " + file_types_to_restore);
-    $.when($.getJSON("ws/check_and_move_run_files_to_location", data={run_num: run_num, location: loc_name, restore_missing_files: restore_files, file_types_to_restore: file_types_to_restore}), $.ajax("../../static/html/ms/filemgr_status.html"))
+    $.when($.getJSON("ws/check_and_move_run_files_to_location", {run_num: run_num, location: loc_name, restore_missing_files: restore_files, file_types_to_restore: file_types_to_restore}), $.ajax("../../static/html/ms/filemgr_status.html"))
     .done(function(d0, d1){
         if(d0[0].success) {
             _.each(d0[0].value["run_files"], function(f){ $(document).trigger('file_catalog',[{"value": f}]); })
@@ -51,7 +51,7 @@ var run_loc_click = function() {
             let total_files = d0[0].value["matching_files"].length, files_by_status = _.countBy(_.values(d0[0].value["dmstatus"]), _.identity), present_files = _.get(files_by_status, "present", 0),  pending_files = _.get(files_by_status, "pending", 0), restore_on = ((total_files - ( pending_files + present_files)) > 0);
             var rendered = $(Mustache.render(d1[0], {title: "Status of files for run " + run_num + " at " + loc_name, message: "Of the " + total_files + " <i>" + file_types_to_restore +  "</i> files in run " + run_num + "<ul><li>" + present_files + " are already present at " + loc_name + "</li><li>" + pending_files + " are in the data mover queues</li></ul>", restore_on: restore_on}));
             rendered.find(".restore_btn").on("click", function(){
-                $.getJSON("ws/check_and_move_run_files_to_location", data={run_num: run_num, location: loc_name, restore_missing_files: true, file_types_to_restore: file_types_to_restore})
+                $.getJSON("ws/check_and_move_run_files_to_location", {run_num: run_num, location: loc_name, restore_missing_files: true, file_types_to_restore: file_types_to_restore})
                 .done(function(){
                     console.log("Restore kicked off.");
                     $("#fmgr_tab").find(".mdl_holder").find(".modal").modal("hide");
