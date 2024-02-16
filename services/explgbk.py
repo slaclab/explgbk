@@ -1134,7 +1134,7 @@ def send_elog_as_email(experiment_name, elog_doc, email_to):
             parent_msg.attach(child_message)
             parent_msg = child_message
 
-        with smtplib.SMTP(os.environ.get("EMAIL_SERVER_HOST", "smtp.slac.stanford.edu"), int(os.environ.get("EMAIL_SERVER_PORT", "22"))) as s:
+        with smtplib.SMTP(os.environ.get("EMAIL_SERVER_HOST", "smtp.slac.stanford.edu"), int(os.environ.get("EMAIL_SERVER_PORT", "25"))) as s:
             mailstatus = s.sendmail(msg['From'], full_email_addresses, msg.as_string())
             if mailstatus:
                 logger.warn(mailstatus)
