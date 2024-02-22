@@ -506,11 +506,11 @@ let attach_toolbar_btns = function() {
             var email_subscription_modal = mdltxt[0], email_subscribers = emls[0].value, current_user_subscription = _.find(email_subscribers, ['subscriber', logged_in_user]);
             Mustache.parse(email_subscription_modal);
             var rendered = $(Mustache.render(email_subscription_modal, {experiment_name: experiment_name, logged_in_user: logged_in_user, current_user_subscription: current_user_subscription, email_subscribers: email_subscribers}));
-            $("#elog_content").prepend(rendered);
-            $('#elog_email_subscriptions').on('hidden.bs.modal', function () { $('#elog_email_subscriptions').remove(); });
+            $("#glbl_modals_go_here").empty().append(rendered);
+            $('#elog_email_subscriptions').on('hidden.bs.modal', function () { $("#glbl_modals_go_here").empty(); });
             $('#elog_email_subscriptions_subscribe').on("click", function(){ $.getJSON("ws/elog_email_subscribe").done(function(){$('#elog_email_subscriptions').find(".elog_email_subscription_msg").toggleClass("d-none")})});
             $('#elog_email_subscriptions_unsubscribe').on("click", function(){ $.getJSON("ws/elog_email_unsubscribe").done(function(){$('#elog_email_subscriptions').find(".elog_email_subscription_msg").toggleClass("d-none")})});
-            $("#elog_email_subscriptions").modal();
+            $("#elog_email_subscriptions").modal("show");
         })
     });
     if(logbook_site == "LCLS") {
