@@ -20,7 +20,7 @@
                         <label class="form-label" for="elog_new_entry_log_text">Text* <span class="elog_html px-2"><i class="fa-solid fa-table fa-lg" title="HTML log entry"></i><span></label>
                         <textarea class="form-control" rows="5" name="log_text" id="elog_new_entry_log_text">{{entry.content}}</textarea>
                     </div>
-                    <div class="input-group row">
+                    <div class="input-group row py-2">
                         <label class="col-1 col-form-label" for="elog_new_entry_email_dest" title="Email this log entry to folks specified in this list:">Email:</label>
                         <div class="col-6">
                             <select class="form-control form-select contacts email_select" id="elog_new_entry_email_select" name="log_emails_shown" placeholder="email1 email2@institution.edu"></select>
@@ -35,7 +35,7 @@
                         {{/parent_id}}
                         {{/entry}}
                     </div>
-                    <div class="row">
+                    <div class="row py-2">
                         <label class="col-1 col-form-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>
                         <span class="col-4">
                             <span class="input-group">
@@ -54,14 +54,14 @@
                     </div>
                     {{^entry}}
                     {{^parent_id}}
-                    <div class="input-group row">
+                    <div class="input-group row py-2">
                         {{#post_to_instrument_elogs}}
                         <label class="col-1" title="Cross post this entry to other elogs like the instrument elog">Cross-post:</label>
                         <div class="col-5">
                             <ul class="list-unstyled text-start">
                                 {{#instrument_elogs}}
-                                <li>
-                                    <label class="form-check-label">{{.}}</label><input class="form-check-input ml-1" type="checkbox" name="post_to_elog_{{.}}">
+                                <li class="form-check">
+                                    <label class="form-check-label pe-2">{{.}}</label><input class="form-check-input ml-1 border border-2" type="checkbox" name="post_to_elog_{{.}}">
                                 </li>
                                 {{/instrument_elogs}}
                             </ul>
@@ -70,11 +70,11 @@
                         <label class="col-1 pr-4" title="Check these if you are having issues that need to be looked into">Support:</label>
                         <div class="col-5">
                             <ul class="list-unstyled text-start">
-                                <li>
-                                    <label class="w-25 form-check-label" title="This will mark this entry as an ISSUE; this entry will be automatically propagated to various backend issue tracking systems.">Issue:</label><input class="form-check-input ml-1" type="checkbox" name="elog_support_issue">
+                                <li class="form-check">
+                                    <label class="w-25 form-check-label" title="This will mark this entry as an ISSUE; this entry will be automatically propagated to various backend issue tracking systems.">Issue:</label><input class="form-check-input ml-1 border border-2" type="checkbox" name="elog_support_issue">
                                 </li>
-                                <li>
-                                    <label class="w-25 form-check-label" title="This will mark this entry as a ROADBLOCK; this entry will be automatically propagated to various backend issue tracking systems. It will also alert personnel who are listening on Slack channels for ROADBLOCK messages.">Roadblock:</label><input class="form-check-input ml-1" type="checkbox" name="elog_support_roadblock">
+                                <li class="form-check">
+                                    <label class="w-25 form-check-label" title="This will mark this entry as a ROADBLOCK; this entry will be automatically propagated to various backend issue tracking systems. It will also alert personnel who are listening on Slack channels for ROADBLOCK messages.">Roadblock:</label><input class="form-check-input ml-1 border border-2" type="checkbox" name="elog_support_roadblock">
                                 </li>
                             </ul>
                         </div>
