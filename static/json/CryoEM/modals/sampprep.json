@@ -53,7 +53,7 @@
         "required": true,
         "param_type": "enum",
         "options": [
-          { "label": "Vitrobot", "value": "Vitrobot" },
+          { "label": "Vitrobot Mark 4", "value": "Vitrobot Mark 4" },
           { "label": "Leica EM GP2", "value": "Leica EM GP2" },
           { "label": "Chemeleon Cryo-EM", "value": "Chemeleon Cryo-EM" },
           { "label": "CryoSol Vitrojet", "value": "CryoSol Vitrojet" }
@@ -83,27 +83,27 @@
       },
       {
         "label": "Temperature",
-        "param_name": "vitrobot.temperature",
+        "param_name": "vitrobotmark4.temperature",
         "required": false,
         "param_type": "string",
-        "tab": "Vitrobot",
-        "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot" } 
+        "tab": "Vitrobot Mark 4",
+        "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot Mark 4" } 
       },
       {
         "label": "Humidity",
-        "param_name": "vitrobot.humidity",
+        "param_name": "vitrobotmark4.humidity",
         "required": false,
         "param_type": "string",
-        "tab": "Vitrobot",
-        "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot" } 
+        "tab": "Vitrobot Mark 4",
+        "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot Mark 4" } 
       },
       {
         "label": "Filter Paper",
-        "param_name": "vitrobot.filter_paper",
+        "param_name": "vitrobotmark4.filter_paper",
         "required": false,
         "param_type": "string",
-        "tab": "Vitrobot",
-        "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot" } 
+        "tab": "Vitrobot Mark 4",
+        "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot Mark 4" } 
       },
       {
         "label": "Temperature",
