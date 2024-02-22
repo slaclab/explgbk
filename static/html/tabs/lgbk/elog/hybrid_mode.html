@@ -1,0 +1,34 @@
+<div class="elog_hybrid_mode text-start">
+    {{#attachments}}
+    <div class="row elog_hybrid_row">
+        <div class="col-4">
+            {{#run}}
+            <div>
+                <span class="ps-2 pe-1"><strong>Run:</strong></span>
+                <span class="ps-2 pe-1">{{run.num}}</span>
+                <span class="tblr runsync" title="Go to this run in the logbook" data-runid="{{run._id}}"><i class="fa-solid fa-sync"></i></span>
+            </div>
+            <div>
+                <span class="ps-2 pe-1"><strong>Run start:</strong></span>
+                {{#FormatDate}}{{ run.begin_time }}{{/FormatDate}}
+            </div>
+            {{/run}}
+        </div>
+        <div class="col-4">
+            <div>
+                <span class="pe-2"><strong>Author:</strong></span>{{entry.author}}
+            </div>
+            <div>
+                <span class="pe-2"><strong>Posted:</strong></span>{{#FormatDate}}{{ entry.relevance_time }}{{/FormatDate}}<span class="tblr elogsync" title="Go to this entry in the logbook" data-elogid="{{entry._id}}"><i class="fa-solid fa-sync"></i></span>
+            </div>
+            <div>
+                <span class="pe-2"><strong>Name:</strong></span>{{name}}
+            </div>
+            <div><span class="pe-2"><strong>Type:</strong></span>{{type}}
+            </div>
+        </div>
+        <div class="col"><a href="elogs/{{entry._id}}" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry._id}}&attachment_id={{_id}}&prefer_preview=true"></img></a>
+        </div>
+    </div>
+    {{/attachments}}
+</div>

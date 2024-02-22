@@ -416,11 +416,9 @@
          var elog_params = {includeParams: false};
          if(sample_showing_in_UI != null && sample_showing_in_UI != "All Samples") { elog_params["sampleName"] = sample_showing_in_UI; }
          $("#elog_content").html('<div class="loading">Loading</div>');
-         $.when($.getJSON("ws/elog", elog_params), $.getJSON("ws/runs", elog_params))
-         .done(function(d0, d1){
-             let attachments_only_template = `<div class="elog_hybrid_mode">{{#attachments}}<div class="row elog_hybrid_row"><div class="col-2">{{#run}}<div class="row"><span class="pl-2 pr-1"><strong>Run:</strong></span>{{run.num}}<span class="tblr runsync" title="Go to this run in the logbook" data-runid="{{run._id}}"><i class="fa-solid fa-sync"></i></span></div><div class="row"><span class="pl-2 pr-1"><strong>Run start:</strong></span>{{#FormatDate}}{{ run.begin_time }}{{/FormatDate}}</div>{{/run}}</div>
-             <div class="col-2"><div class="row"><span class="pr-1"><strong>Author:</strong></span>{{entry.author}}</div><div class="row"><span class="pr-1"><strong>Posted:</strong></span>{{#FormatDate}}{{ entry.relevance_time }}{{/FormatDate}}<span class="tblr elogsync" title="Go to this entry in the logbook" data-elogid="{{entry._id}}"><i class="fa-solid fa-sync"></i></span></div><div class="row"><span class="pr-1"><strong>Name:</strong></span>{{name}}</div><div class="row"><span class="pr-1"><strong>Type:</strong></span>{{type}}</div></div>
-             <div class="col"><a href="elogs/{{entry._id}}" class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry._id}}&attachment_id={{_id}}&prefer_preview=true"></img></a></div></div>{{/attachments}}</div>`;
+         $.when($.getJSON("ws/elog", elog_params), $.getJSON("ws/runs", elog_params), $.ajax('../../static/html/tabs/lgbk/elog/hybrid_mode.html'))
+         .done(function(d0, d1, d3){
+             let attachments_only_template = d3[0];
              Mustache.parse(attachments_only_template);
              let entries = d0[0].value, runs = _.keyBy(d1[0].value, "num");
              let attachments_flat_list = [];
