@@ -82,6 +82,27 @@
         "tab": "Glow"
       },
       {
+        "label": "Grid Treatments Charge (mA)",
+        "param_name": "gridtreatments.glow_charge",
+        "required": false,
+        "param_type": "string",
+        "tab": "Grid Treatments"
+      },
+      {
+        "label": "Grid Treatments time (s)",
+        "param_name": "gridtreatments.glow_time",
+        "required": false,
+        "param_type": "string",
+        "tab": "Grid Treatments"
+      },
+      {
+        "label": "Grid Treatments gas",
+        "param_name": "gridtreatments.glow_gas",
+        "required": false,
+        "param_type": "string",
+        "tab": "Grid Treatments"
+      },      
+      {
         "label": "Temperature",
         "param_name": "vitrobotmark4.temperature",
         "required": false,

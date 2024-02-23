@@ -1455,7 +1455,7 @@ select {
     #sampprep_content {
         display: grid;
         grid-gap: 2px;
-        grid-template-columns: [col1-start] 1fr  [col2-start] 1fr  [col3-start] 1fr [col3-end];
+        grid-template-columns: [col1-start] 1fr  [col2-start] 1fr  [col3-start] 1fr [col4-start] 1fr [col4-end] ;
         grid-template-rows: [row1-start] 25vh [row2-start] 75vh [row2-end];
         background-color: #fff;
         color: #444;
@@ -1463,7 +1463,7 @@ select {
     .box {
         border: thin solid $navbarcolor;
         border-radius: 5px;
-        padding: 20px;
+        padding: 5px 20px;
     }
     .a {
         grid-column: col1-start;
@@ -1478,6 +1478,10 @@ select {
         grid-row: row1-start ;
     }
     .d {
+        grid-column: col4-start;
+        grid-row: row1-start ;
+    }
+    .e {
         grid-column: col2-start / col3-end;
         grid-row: row2-start ;
     }
@@ -1495,7 +1499,7 @@ select {
             padding-top: 0.25rem;
             padding-bottom: 0.25rem;    
         }
-        .row:nth-child(odd) {
+        .row:nth-child(even) {
             background: $tablezebra;
         }
         .lbl { 

@@ -2130,4 +2130,4 @@ def get_project_grids(prjid):
     """
     Get the project grids
     """
-    return list(logbookclient[PROJECTS_DB]["grids"].find({"prjid": ObjectId(prjid)}))
+    return list(logbookclient[PROJECTS_DB]["grids"].find({"prjid": ObjectId(prjid)}).sort([("box", 1), ("number", 1)]))

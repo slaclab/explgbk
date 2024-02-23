@@ -34,10 +34,10 @@ export function tabshow(target) {
         _.each(prjattrs, (at) => {
             let val = _.get(prjinfo, "params." +at["param_name"], "");
             let tempelem = document.createElement("div");
-            tempelem.innerHTML = `<div class="row"><span class="lbl col">${at.label}</span><span class="col-8">${val}</span></div>`;
+            tempelem.innerHTML = `<div class="row"><span class="lbl col">${at.label}</span><span class="col-6">${val}</span></div>`;
             tab2elem[at["tab"]].appendChild(tempelem.firstChild);
         })
-        let selectedmachine = _.get(prjinfo, "params.sampleinfo.sample_prep_machine", "Vitrobot");
+        let selectedmachine = _.get(prjinfo, "params.sampleinfo.sample_prep_machine", "Vitrobot Mark 4");
         document.querySelector("[data-lgbk-for-tab='"+ selectedmachine +"']").closest(".box").classList.remove("d-none");
         document.querySelector("#prjcomment textarea").innerHTML = _.get(prjinfo, "comments", "");
         document.querySelector("#prjcomment textarea").addEventListener("change", (ev) => {
@@ -64,14 +64,14 @@ export function tabshow(target) {
             _.each(gridsinbox, (gib) => {
                 let tempElem = document.createElement("div");
                 tempElem.innerHTML = `<div class="row grid">
-                    <span class="col-1">${_.get(gib, "number")}</span>
-                    <span class="col-1">${_.get(gib, "boxposition")}</span>
-                    <span class="col-1">${_.get(gib, "blottime")}</span>
-                    <span class="col-1">${_.get(gib, "blotforce")}</span>
-                    <span class="col-1">${_.get(gib, "blotwait")}</span>
-                    <span class="col-1">${_.get(gib, "blottotal")}</span>
-                    <span class="col-1">${_.get(gib, "draintime")}</span>
-                    <span class="col-3">${_.get(gib, "sample")}</span>
+                    <span class="col-1">${_.get(gib, "number", "")}</span>
+                    <span class="col-1">${_.get(gib, "boxposition", "")}</span>
+                    <span class="col-1">${_.get(gib, "blottime", "")}</span>
+                    <span class="col-1">${_.get(gib, "blotforce", "")}</span>
+                    <span class="col-1">${_.get(gib, "blotwait", "")}</span>
+                    <span class="col-1">${_.get(gib, "blottotal", "")}</span>
+                    <span class="col-1">${_.get(gib, "draintime", "")}</span>
+                    <span class="col-3">${_.get(gib, "sample", "")}</span>
                     <span class="col-2"></span>
                 </div>`;
                 griddetails.appendChild(tempElem.firstChild);    
