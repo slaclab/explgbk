@@ -1761,11 +1761,11 @@ def validate_with_modal_params(modal_type, business_obj):
     if not modal_defs:
         return True, ""
     for required_param in [ x["param_name"] for x in modal_defs["params"] if x.get("required", False) ]:
-        if required_param not in business_obj["params"]:
+        if required_param not in business_obj:
             logger.error("Missing params.%s in %s", required_param, business_obj)
             return False, "One of the required parameters {} was not specified".format(required_param)
     for num_param in [ x["param_name"] for x in modal_defs["params"] if x.get("param_type", "string") in ["int", "float"] ]:
-        if not isinstance(business_obj["params"].get(num_param, 0), int) and not isinstance(business_obj["params"].get(num_param, 0), float):
+        if not isinstance(business_obj.get(num_param, 0), int) and not isinstance(business_obj.get(num_param, 0), float):
             logger.error("params.%s is not an int/float in %s", num_param, business_obj)
             return False, "The parameter {} is not an number".format(num_param)
     return True, ""
@@ -2131,3 +2131,50 @@ def get_project_grids(prjid):
     Get the project grids
     """
     return list(logbookclient[PROJECTS_DB]["grids"].find({"prjid": ObjectId(prjid)}).sort([("box", 1), ("number", 1)]))
+
+def get_project_grid(prjid, gridid):
+    """
+    Get the specified gridid in the project.
+    """
+    return logbookclient[PROJECTS_DB]["grids"].find_one({"_id": ObjectId(gridid), "prjid": ObjectId(prjid)})
+
+def add_grid_to_project(prjid, griddetails):
+    """
+    Add a grid to the project
+    """
+    griddetails["prjid"] = ObjectId(prjid)
+    if "_id" in griddetails:
+        del griddetails["_id"]
+    grid_with_number = logbookclient[PROJECTS_DB]["samples"].find_one({"prjid": ObjectId(prjid), "number": griddetails["number"]})
+    if grid_with_number:
+        return (False, "A grid with the same grid number %s already exists in the project" % (griddetails["number"]))
+
+    validation, erromsg = validate_with_modal_params("sampprepgrid", griddetails)
+    if not validation:
+        return validation, erromsg
+    logbookclient[PROJECTS_DB]["grids"].insert_one(griddetails)
+    return True, ""
+
+def update_project_grid(prjid, gridid, griddetails):
+    """
+    Update a grid in the project
+    """
+    griddetails["_id"] = ObjectId(gridid)
+    griddetails["prjid"] = ObjectId(prjid)
+    validation, erromsg = validate_with_modal_params("sampprepgrid", griddetails)
+    if not validation:
+        return validation, erromsg
+    grid_with_number = logbookclient[PROJECTS_DB]["grids"].find_one({"prjid": ObjectId(prjid), "number": griddetails["number"]})
+    existing_grid = logbookclient[PROJECTS_DB]["grids"].find_one({"_id": ObjectId(gridid)})
+    if grid_with_number and existing_grid["_id"] != grid_with_number["_id"]:
+        return (False, "Cannot rename grid %s to one that already exists %s" % (existing_grid["_id"], grid_with_number["_id"]))
+    
+    logbookclient[PROJECTS_DB]["grids"].replace_one({"_id": griddetails["_id"]}, griddetails, upsert=True)
+    return True, ""
+
+def link_grid_to_experiment(prjid, gridid, experiment_name):
+    """
+    Link an existing experiment with a grid
+    """
+    logbookclient[PROJECTS_DB]["grids"].update_one({"_id": ObjectId(gridid), "prjid": ObjectId(prjid)}, {"$set": {"exp_name": experiment_name}})
+    return True, ""

@@ -1,6 +1,16 @@
 async function addeditproject(prjid) {
     const { modalshow } = await import(lgbkabspath("/static/html/tabs/project/prjlist/prjmdl.js"));
-    modalshow(prjid);
+    modalshow(prjid, () => { window.location.reload() });
+}
+
+async function addeditgrid(gridid) {
+    const { modalshow } = await import(lgbkabspath("/static/html/tabs/project/sampprep/gridmdl.js"));
+    modalshow(gridid, () => { window.location.reload() });
+}
+
+async function linksession(gridid) {
+    const { modalshow } = await import(lgbkabspath("/static/html/tabs/project/sampprep/linksession.js"));
+    modalshow(gridid, () => { window.location.reload() });
 }
 
 export function tabshow(target) {
@@ -64,6 +74,10 @@ export function tabshow(target) {
             _.each(gridsinbox, (gib) => {
                 let tempElem = document.createElement("div");
                 tempElem.innerHTML = `<div class="row grid">
+                    <span class="col-1">
+                        <span class="actnicn editgrid"><i class="fa-solid fa-edit fa-lg" title="Edit this grid"></i></span>
+                        <span class="actnicn incsess"><i class="fa-solid fa-square-plus fa-lg" title="Associate an existing session with this project"></i></span>
+                    </span>
                     <span class="col-1">${_.get(gib, "number", "")}</span>
                     <span class="col-1">${_.get(gib, "boxposition", "")}</span>
                     <span class="col-1">${_.get(gib, "blottime", "")}</span>
@@ -71,9 +85,15 @@ export function tabshow(target) {
                     <span class="col-1">${_.get(gib, "blotwait", "")}</span>
                     <span class="col-1">${_.get(gib, "blottotal", "")}</span>
                     <span class="col-1">${_.get(gib, "draintime", "")}</span>
-                    <span class="col-3">${_.get(gib, "sample", "")}</span>
-                    <span class="col-2"></span>
+                    <span class="col-2">${_.get(gib, "sample", "")}</span>
+                    <span class="col-2"><a href="../../${_.get(gib, "exp_name", "")}/info" target="_blank">${_.get(gib, "exp_name", "")}</a></span>
                 </div>`;
+                tempElem.querySelector(".editgrid").addEventListener("click", (ev) => { 
+                    addeditgrid(gib["_id"]);
+                })
+                tempElem.querySelector(".incsess").addEventListener("click", (ev) => { 
+                    linksession(gib["_id"]);
+                })
                 griddetails.appendChild(tempElem.firstChild);    
             })
             let tempElem = document.createElement("div");
@@ -87,12 +107,10 @@ export function tabshow(target) {
             </div>`;
             griddetails.appendChild(tempElem.firstChild);
         })
+        document.querySelector("#sampprep_tab .griddetails .newgrid").addEventListener("click", (ev) => { 
+            addeditgrid();
+        })    
     })
-    async function loadAndShowModal(modalurl) {
-        console.log("Loading modal using '" + modalurl + "'. This resolves to '" + import.meta.resolve(modalurl) + "'");
-        const { modalshow } = await import(modalurl);
-        modalshow(target, () => { tabshow(target) });
-    }
     document.querySelector("#toolbar_for_tab").innerHTML = `<span class="tlbricn home px-2"><i class="fa-solid fa-home fa-lg" title="Go to the projects page"></i></span><span class="tlbricn editsampprep px-2"><i class="fa-solid fa-edit fa-lg" title="Edit the sample preparation information"></i></span>`;
     document.querySelector("#toolbar_for_tab .editsampprep").addEventListener("click", (ev) => { 
         addeditproject(prjid);

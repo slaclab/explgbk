@@ -1,0 +1,25 @@
+<div class="modal edit_modal fade" data-bs-backdrop="static" role="dialog">
+  <div class="modal-dialog" role="document">
+   <div class="modal-content">
+       <div class="modal-header">
+           <h4 class="modal-title w-100">Add an existing session to this project</h4>
+           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+       </div>
+     <div class="modal-body">
+     <form novalidate>
+      <div class="text-danger d-none errormsg"></div>
+      <div class="input-group mb-3 row">
+        <label class="fw-bold col-7" for="gen_input">Please choose an existing session (experiment) to link to this grid:</label>
+        <datalist id="prj_available_sessions"></datalist>
+        <input type="text col-5" class="form-control session_name" list="prj_available_sessions">
+        <div class="invalid-feedback">Please select a valid session</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-primary add_session">Add</button>
+      </div>
+     </form>
+     </div>
+ </div>
+</div>
+</div>

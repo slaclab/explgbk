@@ -103,6 +103,12 @@ $bordercolor: $contrastcolor;
     color: $navbarcolor;
 }
 
+@mixin true_centering {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 body.busy {
     cursor: progress;
 }
@@ -1509,6 +1515,13 @@ select {
     .griddetails {
         .hdr {
             @include highlight_mixin;
+            .gridicns {
+                @include true_centering;
+                color: $navbartext;
+            }
+        }
+        .actnicn {
+            color: $navbarcolor;   
         }
         .grid:nth-child(odd) {
             background: $tablezebra;

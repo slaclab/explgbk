@@ -1,0 +1,93 @@
+{
+    "_id": "sampprepgrid",
+    "params": [
+      {
+        "label": "Grid Box",
+        "param_name": "box",
+        "description": "The grid box",
+        "required": true,
+        "param_type": "int",
+        "tab": "Grid Box"
+      },
+      {
+        "label": "Grid Container",
+        "param_name": "container",
+        "description": "The grid container",
+        "required": true,
+        "param_type": "int",
+        "tab": "Grid Box"
+      },
+      {
+        "label": "Grid Type",
+        "param_name": "gridtype",
+        "description": "The grid type",
+        "required": true,
+        "param_type": "string",
+        "tab": "Grid Box"
+      },
+      {
+        "label": "Grid Number",
+        "param_name": "number",
+        "description": "The grid number, typically sequential",
+        "required": true,
+        "param_type": "int",
+        "tab": "Grid Box"
+      },
+      {
+        "label": "Grid box position",
+        "param_name": "boxposition",
+        "description": "The grid box position",
+        "required": true,
+        "param_type": "int",
+        "tab": "Grid Box"
+      },
+      {
+        "label": "Blot time (s)",
+        "param_name": "blottime",
+        "description": "The grid blot time",
+        "required": false,
+        "param_type": "float",
+        "tab": "Blot"
+      },
+      {
+        "label": "Blot force",
+        "param_name": "blotforce",
+        "description": "The grid blot force",
+        "required": false,
+        "param_type": "float",
+        "tab": "Blot"
+      },
+      {
+        "label": "Blot wait (s)",
+        "param_name": "blotwait",
+        "description": "The grid blot wait time in seconds",
+        "required": false,
+        "param_type": "float",
+        "tab": "Blot"
+      },
+      {
+        "label": "Blot total",
+        "param_name": "blottotal",
+        "description": "The grid total",
+        "required": false,
+        "param_type": "float",
+        "tab": "Blot"
+      },
+      {
+        "label": "Drain time (s)",
+        "param_name": "draintime",
+        "description": "The drain time",
+        "required": false,
+        "param_type": "float",
+        "tab": "Drain"
+      },
+      {
+        "label": "Sample (2.5 \u00b5s )",
+        "param_name": "sample",
+        "description": "The sample description",
+        "required": false,
+        "param_type": "string",
+        "tab": "Sample"
+      }
+    ]
+  }

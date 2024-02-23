@@ -60,7 +60,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag, stop_current_sample, get_tag_to_run_numbers, \
     get_tags_for_runs, clone_system_template_run_tables_into_experiment, get_projects, get_project_info, create_project, update_project, \
     get_project_samples, add_session_to_project, add_sample_to_project, update_project_sample, \
-    get_project_grids
+    get_project_grids, get_project_grid, add_grid_to_project, update_project_grid, link_grid_to_experiment
 
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
@@ -3130,3 +3130,30 @@ def svc_get_project_grids(prjid):
     projectinfo =  get_project_info(prjid)
     grids = get_project_grids(prjid)
     return JSONEncoder().encode({"success": True, "value": grids})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/grids/<gridid>", methods=["GET"])
+@user_in_project
+def svc_get_project_grid(prjid, gridid):
+    grid = get_project_grid(prjid, gridid)
+    return JSONEncoder().encode({"success": True, "value": grid})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/grids/", methods=["POST"])
+@user_in_project
+def svc_add_grid_to_project(prjid):
+    griddetails = request.json
+    (status, errormsg) = add_grid_to_project(prjid, griddetails)
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/grids/<gridid>", methods=["PUT"])
+@user_in_project
+def svc_update_project_grid(prjid, gridid):
+    griddetails = request.json
+    (status, errormsg) = update_project_grid(prjid, gridid, griddetails)
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/grids/<gridid>/linksession", methods=["GET"])
+@user_in_project
+def svc_link_experiment_project_grid(prjid, gridid):
+    experiment_name = request.args["experiment_name"]
+    (status, errormsg) = link_grid_to_experiment(prjid, gridid, experiment_name)
+    return JSONEncoder().encode({"success": status, "errormsg": errormsg})

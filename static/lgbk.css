@@ -1382,6 +1382,15 @@ label {
   background: #6685F4;
   font-weight: bold;
 }
+#sampprep_tab .griddetails .hdr .gridicns {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+#sampprep_tab .griddetails .actnicn {
+  color: #6685F4;
+}
 #sampprep_tab .griddetails .grid:nth-child(odd) {
   background: #efefef;
 }
