@@ -246,7 +246,7 @@ let allotherlogicfb = function(trgt) {
       .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); alert("Server side exception getting data " + jqXHR.responseText)})
       .always(function(){ $("#lgbk_body").removeClass("busy"); })
 
-      if(_.get(privileges, "edit", false)) {
+      if(_.get(privileges, "post", false)) {
           $("#toolbar_for_tab").find(".tlbr").show();
           $("#make_system_rtbl").hide();
           if(_.get(tblDef, 'is_system_run_table', false)) {
