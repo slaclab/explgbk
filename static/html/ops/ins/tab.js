@@ -1,87 +1,78 @@
-var instmpl = `{{#value}}<tr>
-<td class="instrument_lbl" style="background:{{color}}; color:{{#color}}white{{/color}}{{^color}}black{{/color}}; " >{{ _id }}</td>
-<td>{{ description }}</td>
-<td>{{ params.num_stations}}</td>
-<td> <span class="editinsbtn"><i class="fas fa-edit fa-lg"></i></span></td>
-</tr>{{/value}}`;
-Mustache.parse(instmpl);
 
 
-var show_validation_message = function(message) {
-  $("#ins_mdl_holder").find(".validation_message").html(message);
-  $("#ins_mdl_holder").find(".validation_modal").modal("show");
+const errormsg = function(message) {
+  console.log(message);
+  let errelem = document.querySelector("#glbl_modals_go_here .modal .errormsg");
+  errelem.classList.remove("d-none");
+  errelem.innerHTML = message;
 }
-var editcreatefn = function(instr_obj) {
-$.ajax ("../../static/html/ms/insedit.html")
-.done(function(tmpl){
-  Mustache.parse(tmpl);
-  instr_obj.paramkvs = _.map(instr_obj['params'], function(value, key) { return { key: key, value: value };});
-  var rendered = $(Mustache.render(tmpl, instr_obj));
-  rendered.find(".fa-plus").parent().on("click", function(){ $(this).closest("tr").after($(this).closest("tr").clone(true).find("input").val("").end()); });
-  rendered.find(".fa-trash").parent().on("click", function(){ $(this).closest("tr").remove(); });
-  if(_.has(instr_obj, '_id')) { rendered.find(".register_btn").text("Update");}
-  rendered.find(".register_btn").on("click", function(e) {
-    e.preventDefault();
-    var formObj = $("#ins_mdl_holder").find("form");
-    var validations = [
-        [function() { return $.trim(formObj.find(".instrument_name").val()) == ""; }, "Instrument name cannot be blank."],
-        [function() { return $.trim(formObj.find(".description").val()) == ""; }, "Please enter a description for the instrument."],
-        [function() { return formObj.find("tbody tr").map(function() { return $(this).find("input.key").val() == "" ^ $(this).find("input.value").val() == ""; }).toArray().reduce(function(a, b) { return a + b; }, 0); }, "Every param that has a name must have a value and vice versa."]
-      ];
-    // Various validations
-    var v_failed = false;
-    _.each(validations, function(validation, i) {
-      console.log("Trying validation " + i + "" + validation[1]);
-      if(validation[0]()) {
-          show_validation_message(validation[1]);
-          v_failed = true;
-          return false;
-      }
-    });
-    if (v_failed) { e.preventDefault(); return; }
-    var instrument_name = $.trim(formObj.find(".instrument_name").val());
-    var original_instrument_name = $.trim(formObj.find(".instrument_name_original").val());
-    var ins_params = {};
-    formObj.find("tbody tr").map(function() {  var key = $(this).find("input.key").val(), val = $(this).find("input.value").val(); if(key != "" && val != "") { ins_params[key] = val; }});
 
-    var updating_existing_instrument = (original_instrument_name == instrument_name);
-    var registration_doc = {
-        "_id" : instrument_name,
-        "description" : $.trim(formObj.find(".description").val()),
-        "color": $.trim(formObj.find(".instrument_color").val()),
-        "params": ins_params
-    };
+const editcreatefn = function(theins, onCompletion) {
+  const modalUrl = lgbkabspath("/static/html/ops/ins/insedit.html");
+  const defsUrl = lgbkabspath("/lgbk/get_modal_param_definitions?modal_type=instrument");
 
-    $.ajax({
-      type: "POST",
-      contentType: "application/json; charset=utf-8",
-      url: create_update_instrument + "?instrument_name=" + encodeURIComponent(instrument_name) + "&create=" + (updating_existing_instrument ? false : true),
-      data: JSON.stringify(registration_doc),
-      dataType: "json"
+  Promise.all([fetch(modalUrl), fetch(defsUrl)])
+  .then((resps) => { return Promise.all([resps[0].text(), resps[1].json()])})
+  .then((vals) => {
+    let [ tmpl, mdlparamsresp ] = vals, mdlparams = mdlparamsresp["value"]["params"];
+    Mustache.parse(tmpl);
+    document.querySelector("#glbl_modals_go_here").innerHTML = Mustache.render(tmpl, theins);
+    const modalElem = document.querySelector("#glbl_modals_go_here .modal");
+    const formElem = modalElem.querySelector("form");        
+    const isEditing = _.has(theins, "_id");
+    if (isEditing) {
+      console.log("We are editing the instrument; turning off non-editable values");
+      modalElem.querySelectorAll("[data-lg-noedit]").forEach((elem) => { 
+        elem.readOnly = true; 
+        elem.disabled = true;
+      })
+      modalElem.querySelector(".aded_ins").innerText = "Update";
+    }
+
+
+    import(lgbkabspath("/static/html/mdls/common/mdlparams.js")).then((mod) => { 
+      const { LgbkCustomModalParams } = mod;
+      let mdlParamsJS = new LgbkCustomModalParams(mdlparams, errormsg);
+      console.log(mdlParamsJS);
+      mdlParamsJS.render(theins);
+
+      const myModal = new bootstrap.Modal(modalElem);
+      myModal.show();
+      
+      modalElem.querySelector(".aded_ins").addEventListener("click", (event) => {
+          event.preventDefault();
+          modalElem.querySelector(".errormsg").innerHTML = "";
+          let newins = {};
+          let name = modalElem.querySelector('[data-lg-attr="name"]').value;
+          if(_.isNil(name) || _.isEmpty(name)) {
+              errormsg("The sample name cannot be a blank string");
+              return;
+          }
+
+          let description = modalElem.querySelector('[data-lg-attr="description"]').value;
+          if(_.isNil(description) || _.isEmpty(description)) {
+              errormsg("Please enter a description");
+              return;
+          }
+
+          newins["_id"] = name;
+          newins["description"] = description;
+          newins["color"] = modalElem.querySelector('[data-lg-attr="color"]').value;
+
+          if(!mdlParamsJS.validate(newins)){
+              return;
+          }
+
+          mdlParamsJS.createOrUpdate(lgbkabspath("/lgbk/ws/instruments/"), isEditing ? newins["_id"] : null, newins, () => { myModal.hide(); onCompletion(); });
+      })
     })
-    .done(function(data, textStatus, jqXHR) {
-      if(data.success) {
-          console.log("Successfully processed instrument " + instrument_name);
-          $("#ins_mdl_holder").find(".edit_modal").modal("hide");
-          sessionStorage.setItem("ops_active_tab", "instruments");
-          window.location.reload(true);
-      } else {
-        show_validation_message("Server side: " + data.errormsg);
-      }
-    })
-    .fail( function(jqXHR, textStatus, errorThrown) { show_validation_message("Server side: " + _.get(jqXHR, "responseText", textStatus))})
-  });
-  $("#ins_mdl_holder").append(rendered);
-  $("#ins_mdl_holder").find(".edit_modal").on("hidden.bs.modal", function(){ $(".modal-body").html(""); $("#ins_mdl_holder").empty(); });
-  $("#ins_mdl_holder").find(".edit_modal").modal("show");
-});
+  })
 }
 
 
 export function tabshow(target) {
   const tabpanetmpl = `<div class="container-fluid text-center tabcontainer" id="ops_instruments_tab">
   <div class="row">
-      <div id="ins_mdl_holder"></div>
       <div class="table-responsive">
           <table class="table table-condensed table-striped table-bordered" id="instrumentstbl">
               <thead><tr><th>Name</th><th>Description</th><th>Number of Stations</th><th>Edit</th></tr></thead>
@@ -90,26 +81,33 @@ export function tabshow(target) {
       </div>
   </div>
   </div>`;
+  const instmpl = `{{#value}}<tr data-insname={{_id}}>
+    <td class="instrument_lbl" style="background:{{color}}; color:{{#color}}white{{/color}}{{^color}}black{{/color}}; " >{{ _id }}</td>
+    <td>{{ description }}</td>
+    <td>{{ params.num_stations}}</td>
+    <td> <span class="editinsbtn"><i class="fas fa-edit fa-lg"></i></span></td>
+  </tr>{{/value}}`;
+  Mustache.parse(instmpl);
+  
   let trgtname = target.getAttribute("data-bs-target"), trgt = document.querySelector(trgtname); 
   trgt.innerHTML=tabpanetmpl;
 
-  $("#ops_instruments_tab").data("editcreatefn", editcreatefn);
 
-  $.getJSON(instruments_url)
-  .done(function(instruments){
-    var rendered = $(Mustache.render(instmpl, instruments));
-    rendered.find(".editinsbtn").on("click", function(e){
-      e.preventDefault();
-      console.log("Editing instrument " + insname);
-      var insname = $(this).closest("tr").find("td").first().text();
-      var instr_obj = _.find(instruments.value, function(instr){ return instr._id == insname; });
-      editcreatefn(instr_obj);
-    });
-    $("#instrumentstbl tbody").append(rendered);
+  fetch("../ws/instruments")
+  .then((resp) => { return resp.json() })
+  .then((instruments) => {
+    document.querySelector("#instrumentstbl tbody").innerHTML = Mustache.render(instmpl, instruments);
+    document.querySelectorAll("#instrumentstbl tbody .editinsbtn").forEach((bt) => { 
+      bt.addEventListener("click", (e) => {
+        e.preventDefault();
+        const insname = e.target.closest("tr").getAttribute("data-insname");
+        console.log("Editing instrument " + insname);
+        const theins = _.find(instruments.value, function(instr){ return instr._id == insname; });
+        editcreatefn(theins, () => { window.location.reload()});  
+      })
+    })
   });
 
-  var tab_toolbar = `<span id="new_instrument" title="Add a new instrument"><i class="fas fa-plus fa-lg"></i></span>`;
-  var toolbar_rendered = $(tab_toolbar);
-  $("#toolbar_for_tab").append(toolbar_rendered);
-  $("#new_instrument").on("click", function(){ $("#ops_instruments_tab").data("editcreatefn")({})});
+  document.querySelector("#toolbar_for_tab").innerHTML = `<span id="new_instrument" title="Add a new instrument"><i class="fas fa-plus fa-lg"></i></span>`;
+  document.querySelector("#toolbar_for_tab #new_instrument").addEventListener("click", () => editcreatefn({}, () => { window.location.reload()}));
 }

@@ -92,7 +92,7 @@ const elog_timezone = "America/Los_Angeles";
 window.elog_formatdate = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).tz(elog_timezone).format("MMM/D/YYYY")}};
 window.elog_formatdatetime = function() { return function(dateLiteral, render) { var dateStr = render(dateLiteral); return dateStr == "" ? "" : moment(dateStr).tz(elog_timezone).format("MMM/D/YYYY HH:mm:ss")}};
 
-let message_tmpl = `  <div class="toast-container top-0 end-0 p-3">
+const toast_message_tmpl = `  <div class="toast-container top-0 end-0 p-3">
 <div class="toast align-items-center {{colorclass}} data-bs-autohide="{{timeout}}" border-0" role="warning" aria-live="assertive" aria-atomic="true">
 <div class="d-flex">
   <div class="toast-body">
@@ -100,11 +100,11 @@ let message_tmpl = `  <div class="toast-container top-0 end-0 p-3">
   </div>
   <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
 </div>
-</div></div>`; Mustache.parse(message_tmpl);
+</div></div>`; Mustache.parse(toast_message_tmpl);
 
 const showToast = function(msg, timeout, toastcolor) {
   const tstelem = document.querySelector("#glbl_toasts_go_here");
-  tstelem.innerHTML = Mustache.render(message_tmpl, {message: msg, timeout: timeout, colorclass: toastcolor});
+  tstelem.innerHTML = Mustache.render(toast_message_tmpl, {message: msg, timeout: timeout, colorclass: toastcolor});
   const toast = new bootstrap.Toast(tstelem.querySelector(".toast"));
   toast.show();
 }
@@ -121,6 +121,32 @@ var info_message = function(msg, timeout=5000) {
   showToast(msg, timeout, "text-bg-info");
 }
 
+const postPutJSON = function(serverURL, method, thedocument, onCompletion, errormsg) {
+  async function checkHTTPResponse(resp) {
+    if(!resp.ok) {
+      console.log("Call to ", serverURL, " failed");
+      let respdata = await resp.text(); 
+      return Promise.reject(new Error(resp.statusText + " --> " + respdata));
+    }
+    return resp.json();
+  }
+
+  function checkStatus(status) {
+    console.log(status); 
+    if(!_.get(status, "success", true)) {
+      return Promise.reject(new Error(_.get(status, "errormsg", "Server side error, please check the logs")));
+    }; 
+    onCompletion(); 
+    return true; 
+  }
+
+  fetch(serverURL, { method: method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(thedocument) })
+  .then(checkHTTPResponse)
+  .then(checkStatus)
+  .catch((errmsg) => { errormsg(errmsg) })
+}
+
+
 let delayFunction = function(fn, ms=500) {
     // Function to execute some other function after a delay; resetting each time this is called.
     // https://stackoverflow.com/questions/1909441/how-to-delay-the-keyup-handler-until-the-user-stops-typing
@@ -129,4 +155,22 @@ let delayFunction = function(fn, ms=500) {
         clearTimeout(timer)
         timer = setTimeout(fn.bind(this, ...args), ms || 0)
     }
+}
+
+// Extract all the keys from nested objects; keys can be used with _.get
+function deepKeys(x, prefix) {
+  let keys = [];
+  _.each(x, (v, k) => { 
+      if(!_.isPlainObject(v)) {
+          if(_.isUndefined(prefix)) {
+              keys.push(k); 
+              return; 
+          }
+          keys.push(prefix + "." + k);
+          return
+      }
+      _.each(deepKeys(v, k), (kk) => keys.push(kk));
+
+  })
+  return keys;
 }

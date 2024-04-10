@@ -1,4 +1,4 @@
-<div class="modal edit_modal fade" data-bs-backdrop="static" role="dialog">
+<div class="modal edit_modal fade" data-bs-backdrop="static" role="dialog" id="expregmdl">
   <div class="modal-dialog modal-lg" role="document">
    <div class="modal-content">
       <div class="modal-header">
@@ -9,75 +9,72 @@
          <form class="register_form">
           <input type="hidden" class="form-control experiment_name_original" value="{{ name }}">
           <div class="text-danger d-none errormsg"></div>
-          <div class="row">
-            <div class="form-group col-4" {{#name_tooltip}}title="{{name_tooltip}}"{{/name_tooltip}}>
-              <label for="experiment_name">Experiment Name:</label>
-              <input type="text" class="form-control experiment_name" value="{{ name }}" {{#name}}readonly{{/name}}{{^name}}{{#name_placeholder}}placeholder="{{name_placeholder}}"{{/name_placeholder}}{{/name}} >
+          <div class="d-flex flex-wrap">
+            <div class="form-group flex-fill">
+                <label>Experiment Name:</label>
+                <input type="text" class="form-control" value="{{ name }}" data-lg-attr="name" data-lg-noedit="true">
             </div>
-            <div class="form-group col-4">
-                <label for="instrument">Instrument:</label>
-                <select class="form-control form-select instrument"><option> </option>
-                  {{#instruments}}<option value="{{ _id }}">{{ _id }}</option>{{/instruments}}
+            <div class="form-group flex-fill d-none">
+                <label for="instrument">Experiment Type:</label>
+                <select class="form-control form-select type" data-lg-attr="type" data-lg-noedit="true">
+                    <option> </option>
+                    {{#types}}<option value="{{ _id }}">{{ _id }}</option>{{/types}}
                 </select>
             </div>
-            <div class="form-group col-4">
-                {{^disable_posix}}
-                <label for="posix_group">Posix Group:</label>
-                <input type="text" class="form-control posix_group" value="{{ posix_group }}">
-                {{/disable_posix}}
+            <div class="form-group flex-fill">
+                <label for="instrument">Instrument:</label>
+                <select class="form-control form-select instrument" data-lg-attr="instrument" data-lg-noedit="true">
+                    <option> </option>
+                    {{#instruments}}<option value="{{ _id }}">{{ _id }}</option>{{/instruments}}
+                </select>
             </div>
+            <div class="form-group flex-fill">
+                <label for="posix_group">Posix Group:</label>
+                <input type="text" class="form-control posix_group" value="{{ posix_group }}" data-lg-attr="posix_group">
+            </div>
+            <div class="form-group flex-fill">
+                <label for="start_time">Start Time:</label>
+                <div class='input-group date start_time' id="expreg_start_time_picker" data-td-target-input="nearest" data-td-target-toggle="nearest">
+                    <input type="text" class="form-control datetimepicker-input" data-td-target="#expreg_start_time_picker"/>
+                    <span class="input-group-text" data-td-target="#expreg_start_time_picker" data-td-toggle="datetimepicker"><i class="fa-solid fa-calendar"></i></span>
+                </div>
+            </div>
+            <div class="form-group flex-fill">
+                 <label for="end_time">End Time:</label>
+                 <div class='input-group date end_time' id="expreg_end_time_picker" data-td-target-input="nearest" data-td-target-toggle="nearest">
+                     <input type="text" class="form-control datetimepicker-input" data-td-target="#expreg_end_time_picker"/>
+                     <span class="input-group-text" data-td-target="#expreg_end_time_picker" data-td-toggle="datetimepicker"><i class="fa-solid fa-calendar"></i></span>
+                 </div>
+            </div>
+            <div class="form-group flex-fill" title="This UNIX account is added to the experiment with admin privileges; that is, this user can add/remove collaborators to the experiment">
+                <label for="leader_account">Leader UNIX Account:</label>
+                <input type="text" class="form-control leader_account" value="{{ leader_account }}" data-lg-attr="leader_account">
+            </div>
+            <div class="form-group flex-fill">
+             <label for="contact_info">PI's Name:</label>
+             <input type="text" class="form-control pi_name" value="{{ contact_info_name }}">
+            </div>
+            <div class="form-group flex-fill">
+             <label for="contact_info">PI's email:</label>
+             <input type="email" class="form-control pi_email" value="{{ contact_info_email }}">
+            </div>
+            <div class="form-group flex-fill d-none">
+                <label for="data_collection_software">Data Collection Software:</label>
+                <select class="form-control form-select" data-lg-attr="data_collection_software">
+                    <option> </option>
+                </select>
+            </div>            
           </div>
-          <div class="row">
-              <div class="form-group col-4">
-                   <label for="start_time">Start Time:</label>
-                   <div class='input-group date start_time' id="expreg_start_time_picker" data-td-target-input="nearest" data-td-target-toggle="nearest">
-                       <input type="text" class="form-control datetimepicker-input" data-td-target="#expreg_start_time_picker"/>
-                       <span class="input-group-text" data-td-target="#expreg_start_time_picker" data-td-toggle="datetimepicker"><i class="fa-solid fa-calendar"></i></span>
-                   </div>
-               </div>
-               <div class="form-group col-4">
-                    <label for="end_time">End Time:</label>
-                    <div class='input-group date end_time' id="expreg_end_time_picker" data-td-target-input="nearest" data-td-target-toggle="nearest">
-                        <input type="text" class="form-control datetimepicker-input" data-td-target="#expreg_end_time_picker"/>
-                        <span class="input-group-text" data-td-target="#expreg_end_time_picker" data-td-toggle="datetimepicker"><i class="fa-solid fa-calendar"></i></span>
-                    </div>
-               </div>
-               {{^name}}
-               <div class="form-group col-4" title="Enter the name of the initial sample; a run associated with the initial sample is also created automatically. The sample is created with a generic description and without any parameters.">
-                   <label for="initial_sample">Initial sample:</label>
-                   <input type="text" class="form-control inital_sample">
-               </div>
-               {{/name}}
-          </div>
-
-          <div class="row">
-              <div class="form-group col-4" title="This UNIX account is added to the experiment with admin privileges; that is, this user can add/remove collaborators to the experiment">
-                  <label for="leader_account">Leader UNIX Account:</label>
-                  <input type="text" class="form-control leader_account" value="{{ leader_account }}">
-              </div>
-              <div class="form-group col-4">
-               <label for="contact_info">PI's Name:</label>
-               <input type="text" class="form-control pi_name" value="{{ contact_info_name }}">
-              </div>
-              <div class="form-group col-4">
-               <label for="contact_info">PI's email:</label>
-               <input type="email" class="form-control pi_email" value="{{ contact_info_email }}">
-              </div>
-          </div>
-
-          <div class="row">
+          <div class="row mb-2">
               <div class="form-group col-12">
                <label for="description">Description:</label>
-               <textarea class="form-control description" rows="5">{{ description }}</textarea>
+               <textarea class="form-control description" rows="5" data-lg-attr="description">{{ description }}</textarea>
               </div>
           </div>
-          <div class="row my-2"><label title="Add any number of arbitrary key value pairs">Custom parameters</label></div>
-          {{#paramkvs}}<lgbk-custom-param class="row" name="{{key}}" value="{{value}}"></lgbk-custom-param>{{/paramkvs}}
-          <lgbk-custom-param class="row" name="" value=""></lgbk-custom-param>
          </form>
          <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button class="btn btn-primary panel_btn register_btn">Register</button>
+            <button type="button" class="btn btn-primary panel_btn register_btn">Register</button>
         </div>
    </div>
  </div>

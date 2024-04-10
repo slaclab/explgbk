@@ -32,7 +32,6 @@
     var privileges = {{ privileges|safe }};
     var logbook_site = "{{ logbook_site }}";
     var active_experiments_url = "../ws/activeexperiments";
-    var instruments_url   = "../ws/instruments";
     var instrument_station_list = "../ws/instrument_station_list";
     var experiments_url   = "../ws/experiments?sortby=name";
     var experiments_by_instrument = "../ws/experiments?categorize=instrument&sortby=lastrunyear";
@@ -42,7 +41,6 @@
     var update_experiment_url = "../ws/experiment_edit_info";
     var rename_experiment_url = "../ws/rename_experiment";
     var lock_unlock_experiment_url = "../ws/lock_unlock_experiment";
-    var create_update_instrument = "../ws/create_update_instrument";
     let tabname = "{{tabname}}";
     let pagepath = "{{pagepath}}";
   </script>

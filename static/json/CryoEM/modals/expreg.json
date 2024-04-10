@@ -1,0 +1,99 @@
+{
+    "_id": "expreg",
+    "params": [
+      {
+        "label": "SPA custom 1",
+        "param_name": "params.spacustom1",
+        "required": false,
+        "param_type": "string",
+        "tab": "More SPA details",
+        "showwhen": { "type": "SPA" } 
+      },
+      {
+        "label": "SPA custom 2",
+        "param_name": "params.spacustom2",
+        "required": false,
+        "param_type": "string",
+        "tab": "More SPA details",
+        "showwhen": { "type": "SPA" } 
+      },
+      {
+        "label": "SPA custom 3",
+        "param_name": "params.spacustom3",
+        "required": false,
+        "param_type": "string",
+        "tab": "More SPA details",
+        "showwhen": { "type": "SPA" } 
+      }
+    ],
+    "main": {
+        "name" : {
+          "placeholder" : "YYYYMMDD-CXNN",
+          "title" : "Use the start date of the experiment and the proposal number to form the experiment name, for example, if the experiment starts on Nov 27 2019 and has a proposal number S02, the experiment name will be 20191127-CS02",
+          "pattern" : "^\\d{8}-C\\w{3}$"
+        },
+        "type": {
+          "lg_display": true,
+          "lg_options": [
+            { "label": "Single Particle Analysis ( TEM )", "value": "SPA" },
+            { "label": "Grid Atlasing (TEM )", "value": "GA" },
+            { "label": "Tomography ( TEM )", "value": "TEM" },
+            { "label": "cryoET Grid Milling ( FIB-SEM )", "value": "FIB-SEM" },
+            { "label": "cryoEM Grid Vitrification", "value": "Vit" },
+            { "label": "Other", "value": "Other" }
+          ]
+        },
+        "instrument": {
+          "lg_dependent": {
+            "lg_dependson": "type",
+            "lg_options": {
+              "SPA": [
+                { "label": "TEM1", "value": "TEM1" },
+                { "label": "TEM2", "value": "TEM2" },
+                { "label": "TEM3", "value": "TEM3" },
+                { "label": "TEMAlpha", "value": "TEMAlpha" },
+                { "label": "TEMBeta", "value": "TEMBeta" },
+                { "label": "TEMGamma", "value": "TEMGamma" },
+                { "label": "TEMDelta", "value": "TEMDelta" },
+                { "label": "TEMGlacios", "value": "TEMGlacios" },
+                { "label": "TEMTundra", "value": "TEMTundra" }
+              ],
+              "FIB-SEM": [
+                { "label": "FIB-SEM1", "value": "FIB-SEM1" },
+                { "label": "FIB-SEM2", "value": "FIB-SEM2" },
+                { "label": "FIB-SEM3", "value": "FIB-SEM3" }
+              ],
+              "Vit": [
+                { "label": "Chameleon", "value": "Chameleon" },
+                { "label": "VitroJet", "value": "VitroJet" },
+                { "label": "VitroBot V", "value": "VitroBot" }
+              ]
+          }
+        }
+      },
+      "data_collection_software": {
+        "lg_display": true,
+        "lg_dependent": {
+          "lg_dependson": "type",
+          "lg_options": {
+            "SPA": [
+              { "label": "EPU", "value": "EPU" },
+              { "label": "SerialEM", "value": "SerialEM" },
+              { "label": "Tomo5", "value": "Tomo5" }
+            ],
+            "FIB-SEM": [
+              { "label": "xT (manual Milling)", "value": "xtmm" },
+              { "label": "Auto-TEM", "value": "atm" },
+              { "label": "Auto Slice-and-View (ASV)", "value": "ASV" },
+              { "label": "Cryo Lift-Out (CLO)", "value": "CLO" }
+            ],
+            "Vit": [
+              { "label": "Chameleon Software", "value": "chameleon" },
+              { "label": "VitroJet Software", "value": "VitroJet" },
+              { "label": "VitroBot V Software", "value": "VitroBot_V" }
+            ]
+          }
+        }
+      }
+    }
+}

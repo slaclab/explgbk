@@ -103,7 +103,7 @@
         "tab": "Grid Treatments"
       },      
       {
-        "label": "Temperature",
+        "label": "Temperature &deg;C",
         "param_name": "vitrobotmark4.temperature",
         "required": false,
         "param_type": "string",
@@ -111,7 +111,7 @@
         "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot Mark 4" } 
       },
       {
-        "label": "Humidity",
+        "label": "Humidity %",
         "param_name": "vitrobotmark4.humidity",
         "required": false,
         "param_type": "string",
@@ -127,7 +127,7 @@
         "showwhen": { "sampleinfo.sample_prep_machine": "Vitrobot Mark 4" } 
       },
       {
-        "label": "Temperature",
+        "label": "Temperature &deg;C",
         "param_name": "leicaemgp2.temperature",
         "required": false,
         "param_type": "string",
@@ -135,7 +135,7 @@
         "showwhen": { "sampleinfo.sample_prep_machine": "Leica EM GP2" } 
       },
       {
-        "label": "Humidity",
+        "label": "Humidity %",
         "param_name": "leicaemgp2.humidity",
         "required": false,
         "param_type": "string",

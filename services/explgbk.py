@@ -59,7 +59,6 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station, \
     get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag, stop_current_sample, get_tag_to_run_numbers, \
     get_tags_for_runs, clone_system_template_run_tables_into_experiment, get_projects, get_project_info, create_project, update_project, \
-    get_project_samples, add_session_to_project, add_sample_to_project, update_project_sample, \
     get_project_grids, get_project_grid, add_grid_to_project, update_project_grid, link_grid_to_experiment
 
 
@@ -566,23 +565,13 @@ def svc_getUserGroupsForAuthenticatedUser():
     return jsonify({'success': True, 'value': { "userid": userid, "groups": groups }})
 
 
-@explgbk_blueprint.route("/lgbk/ws/create_update_instrument", methods=["POST"])
+@explgbk_blueprint.route("/lgbk/ws/instruments/", methods=["POST"])
 @context.security.authentication_required
 @context.security.authorization_required("instrument_create")
-def svc_create_update_instrument():
+def svc_create_instrument():
     """
     Create a new instrument. Pass in the document..
     """
-    instrument_name = request.args.get("instrument_name", None)
-    if not instrument_name:
-        return logAndAbort("Creating instrument must pass instrument_name in query parameters")
-
-    create_str = request.args.get("create", None)
-    if not create_str:
-        return logAndAbort("Creating instrument must have a boolean create parameter indicating if the instrument is created or updated.")
-    createp = create_str.lower() in set(["yes", "true", "t", "1"])
-    logger.debug("Create update instrument is %s for %s", createp, create_str)
-
     info = request.json
     if not info:
         return logAndAbort("Creating instrument missing info document")
@@ -592,12 +581,42 @@ def svc_create_update_instrument():
     if missing_keys:
         return logAndAbort("Creating instrument missing keys %s" % missing_keys)
 
-    if createp and info["_id"] in set([x["_id"] for x in get_instruments()]):
+    if info["_id"] in set([x["_id"] for x in get_instruments()]):
         return logAndAbort("Instrument %s already exists" % info["_id"])
 
-    (status, errormsg) = create_update_instrument(instrument_name, createp, info)
+    (status, errormsg) = create_update_instrument(info["_id"], True, info)
     if status:
-        context.kafka_producer.send("instruments", {"instrument_name" : instrument_name, "CRUD": "Create" if createp else "Update", "value": info })
+        context.kafka_producer.send("instruments", {"instrument_name" : info["_id"], "CRUD": "Create", "value": info })
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+
+@explgbk_blueprint.route("/lgbk/ws/instruments/<insid>", methods=["PUT"])
+@context.security.authentication_required
+@context.security.authorization_required("instrument_create")
+def svc_update_instrument(insid):
+    """
+    Update an existing instrument. Pass in the document.
+    """
+    info = request.json
+    if not info:
+        return logAndAbort("Creating instrument missing info document")
+
+    necessary_keys = set(['_id', 'description'])
+    missing_keys = necessary_keys - info.keys()
+    if missing_keys:
+        return logAndAbort("Creating instrument missing keys %s" % missing_keys)
+    
+    if info["_id"] != insid:
+        return logAndAbort("Instrument names do not match")
+
+    if info["_id"] not in set([x["_id"] for x in get_instruments()]):
+        return logAndAbort("Instrument %s does not exist" % info["_id"])
+
+    (status, errormsg) = create_update_instrument(info["_id"], False, info)
+    if status:
+        context.kafka_producer.send("instruments", {"instrument_name" : info["_id"], "CRUD": "Update", "value": info })
         return jsonify({'success': True})
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
@@ -613,10 +632,14 @@ def svc_get_global_roles():
 @context.security.authentication_required
 @context.security.authorization_required("manage_groups")
 def svc_add_player_to_global_role():
-    role = request.form.get("role", None)
+    info = request.json
+    if not info:
+        return logAndAbort("Please specify parameters as a JSON document")
+
+    role = info.get("role", None)
     if not role:
         return logAndAbort("Please specify a role")
-    player = request.form.get("player", None)
+    player = info.get("player", None)
     if not player:
         return logAndAbort("Please specify a player")
 
@@ -626,10 +649,14 @@ def svc_add_player_to_global_role():
 @context.security.authentication_required
 @context.security.authorization_required("manage_groups")
 def svc_remove_player_from_global_role():
-    role = request.form.get("role", None)
+    info = request.json
+    if not info:
+        return logAndAbort("Please specify parameters as a JSON document")
+
+    role = info.get("role", None)
     if not role:
         return logAndAbort("Please specify a role")
-    player = request.form.get("player", None)
+    player = info.get("player", None)
     if not player:
         return logAndAbort("Please specify a player")
 
@@ -639,13 +666,17 @@ def svc_remove_player_from_global_role():
 @context.security.authentication_required
 @context.security.authorization_required("manage_groups")
 def svc_add_player_to_instrument_role():
-    instrument = request.form.get("instrument", None)
+    info = request.json
+    if not info:
+        return logAndAbort("Please specify parameters as a JSON document")
+
+    instrument = info.get("instrument", None)
     if not instrument:
         return logAndAbort("Please specify a instrument")
-    role = request.form.get("role", None)
+    role = info.get("role", None)
     if not role:
         return logAndAbort("Please specify a role")
-    player = request.form.get("player", None)
+    player = info.get("player", None)
     if not player:
         return logAndAbort("Please specify a player")
 
@@ -655,13 +686,17 @@ def svc_add_player_to_instrument_role():
 @context.security.authentication_required
 @context.security.authorization_required("manage_groups")
 def svc_remove_player_from_instrument_role():
-    instrument = request.form.get("instrument", None)
+    info = request.json
+    if not info:
+        return logAndAbort("Please specify parameters as a JSON document")
+
+    instrument = info.get("instrument", None)
     if not instrument:
         return logAndAbort("Please specify a instrument")
-    role = request.form.get("role", None)
+    role = info.get("role", None)
     if not role:
         return logAndAbort("Please specify a role")
-    player = request.form.get("player", None)
+    player = info.get("player", None)
     if not player:
         return logAndAbort("Please specify a player")
 
@@ -3133,52 +3168,6 @@ def svc_update_project_info(prjid):
     ret = update_project(prjid, prjinfo)
     return JSONEncoder().encode({"success": True, "value": ret})
 
-@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/sessions", methods=["GET"])
-@user_in_project
-def svc_get_project_sessions(prjid):
-    projectinfo =  get_project_info(prjid)
-    sessions = projectinfo.get("sessions", {})
-    experiments = { x["name"] : x for x in  get_experiments_for_user(context.security.get_current_user_id())}
-    for sessionname, sessiondetails in sessions.items():
-        if sessionname in experiments:
-            sessiondetails["expinfo"] = experiments[sessionname]
-    return JSONEncoder().encode({"success": True, "value": sessions})
-
-@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/sessions/", methods=["PUT"])
-@user_in_project
-def svc_add_session_to_project(prjid):
-    sessiondetails = request.json
-    experiments = get_experiments_for_user(context.security.get_current_user_id())
-    if sessiondetails["name"] not in [ x["name"] for x in experiments ]:
-        return logAndAbort("Cannot find session " + sessiondetails["name"] + " in list of experiments for user")
-    add_session_to_project(prjid, sessiondetails)
-    return JSONEncoder().encode({"success": True})
-
-@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/samples/", methods=["GET"])
-@context.security.authentication_required
-@user_in_project
-def svc_get_project_samples(prjid):
-    samples = get_project_samples(prjid)
-    return JSONEncoder().encode({"success": True, "value": samples})
-
-@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/samples/", methods=["POST"])
-@user_in_project
-def svc_add_sample_to_project(prjid):
-    sampledetails = request.json
-    if not sampledetails.get("name") or not sampledetails["description"]:
-        return logAndAbort("A sample must have a name and a description")        
-    (status, errormsg) = add_sample_to_project(prjid, sampledetails)
-    return JSONEncoder().encode({"success": status, "errormsg": errormsg})
-
-@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/samples/<sampleid>", methods=["PUT"])
-@user_in_project
-def svc_update_project_sample(prjid, sampleid):
-    sampledetails = request.json
-    if not sampledetails.get("name") or not sampledetails["description"]:
-        return logAndAbort("A sample must have a name and a description")  
-    (status, errormsg) = update_project_sample(prjid, sampleid, sampledetails)
-    return JSONEncoder().encode({"success": status, "errormsg": errormsg})
-
 @explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/grids", methods=["GET"])
 @user_in_project
 def svc_get_project_grids(prjid):
@@ -3212,3 +3201,14 @@ def svc_link_experiment_project_grid(prjid, gridid):
     experiment_name = request.args["experiment_name"]
     (status, errormsg) = link_grid_to_experiment(prjid, gridid, experiment_name)
     return JSONEncoder().encode({"success": status, "errormsg": errormsg})
+
+@explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/sessions", methods=["GET"])
+@user_in_project
+def svc_get_project_sessions(prjid):
+    projectinfo =  get_project_info(prjid)
+    sessions = projectinfo.get("sessions", {})
+    experiments = { x["name"] : x for x in  get_experiments_for_user(context.security.get_current_user_id())}
+    for sessionname, sessiondetails in sessions.items():
+        if sessionname in experiments:
+            sessiondetails["expinfo"] = experiments[sessionname]
+    return JSONEncoder().encode({"success": True, "value": sessions})

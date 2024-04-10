@@ -13,14 +13,21 @@ var exper_template = `{{#value}}<tr data-expid="{{_id}}">
 </tr>{{/value}}`;
 Mustache.parse(exper_template);
 
+let experiments;
+let instruments;
+let cur_sort_attr = "name";
+let cur_sort_desc = true;
+
+
 var display_experiments = function() {
-    var sorted_exps = _.sortBy($("#exp_summary_tab").data("experiments"), $("#exp_summary_tab").data("cur_sort_attr"));
-    if(!$("#exp_summary_tab").data("cur_sort_desc")) { sorted_exps = _.reverse(sorted_exps); }
+    console.log("Sorting on ", cur_sort_attr, cur_sort_desc);
+    var sorted_exps = _.sortBy(experiments, cur_sort_attr);
+    if(!cur_sort_desc) { sorted_exps = _.reverse(sorted_exps); }
     var expdata = { value: sorted_exps };
     expdata.FormatDate = elog_formatdate;
     expdata.FormatNum = function() { return function(numLiteral, render) { var num = render(numLiteral); return _.toNumber(num).toFixed(2)}};
     var rendered = Mustache.render(exper_template, expdata);
-    $("#exp_summary_tab tbody").html(rendered);
+    document.querySelector("#exp_summary_tab tbody").innerHTML = rendered;
 }
 
 
@@ -51,28 +58,34 @@ export function tabshow(target) {
     let trgtname = target.getAttribute("data-bs-target"), trgt = document.querySelector(trgtname); 
     trgt.innerHTML=tabpanetmpl;
 
-    $.when($.getJSON({ url: experiments_url }), $.getJSON({ url: instruments_url }))
-    .done(function(d0, d1) {
-      var experiments = d0[0].value, instruments = _.keyBy(d1[0].value, "_id");
-      $("#exp_summary_tab").data("experiments", experiments);
-      $("#exp_summary_tab").data("instruments", instruments);
-      $("#exp_summary_tab").data("cur_sort_attr", "name");
-      $("#exp_summary_tab").data("cur_sort_desc", true);
+    Promise.all([fetch("../ws/experiments?sortby=name"), fetch("../ws/instruments")])
+    .then((resps) => { return Promise.all([resps[0].json(), resps[1].json()])})
+    .then((vals) => {
+      let [ d0, d1 ] = vals;
+      experiments = d0.value;
+      instruments = _.keyBy(d1.value, "_id");
 
-      $("#exp_summary_tab th[data_attr]").on("click", function() {
-          var curr_attr = $("#exp_summary_tab").data("cur_sort_attr");
-          var sel_attr = $(this).attr("data_attr");
+      document.querySelectorAll("#exp_summary_tab th[data_attr]").forEach((elem) => { elem.addEventListener("click", function(ev) {
+          var curr_attr = cur_sort_attr;
+          var sel_attr = ev.target.getAttribute("data_attr");
+          console.log("Selected ", sel_attr);
           if(curr_attr == sel_attr) {
-              $("#exp_summary_tab").data("cur_sort_desc", !$("#exp_summary_tab").data("cur_sort_desc"));
-              $(this).closest("th").find(".sric").remove();
+              cur_sort_desc = !cur_sort_desc;
+              ev.target.closest("th").querySelector(".sric").remove();
           } else {
-              $("#exp_summary_tab").data("cur_sort_attr", sel_attr)
-              $("#exp_summary_tab").data("cur_sort_desc", true);
-              $(this).closest("thead").find(".sric").remove();
+              cur_sort_attr = sel_attr;
+              cur_sort_desc = true;
+              ev.target.closest("thead").querySelector(".sric").remove();
           }
-          $(this).closest("th").append($("#exp_summary_tab").data("cur_sort_desc") ? $('<i class="fas fa-sort-down sric"></i>') : $('<i class="fas fa-sort-up sric"></i>'))
+          let tempelem = document.createElement("div");
+          if(cur_sort_desc) {
+            tempelem.innerHTML = '<i class="fas fa-sort-down sric"></i>';
+          } else {
+            tempelem.innerHTML = '<i class="fas fa-sort-up sric"></i>';
+          }
+          ev.target.closest("th").appendChild(tempelem.firstChild);
           display_experiments();
-      });
+      })});
 
       display_experiments();
   })

@@ -1,0 +1,36 @@
+<div class="modal fade edit_modal" data-bs-backdrop="static" role="dialog">
+  <div class="modal-dialog" role="document">
+   <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title w-100">Instrument details {{#_id}}for {{_id}}{{/_id}}</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form class="register_form">
+          <input type="hidden" class="form-control instrument_name_original" value="{{ _id }}">
+          <div class="text-danger d-none errormsg"></div>
+          <div class="row">
+              <div class="form-group col-6">
+                <label for="instrument_name">Instrument Name:</label>
+                <input type="text" class="form-control" value="{{ _id }}" data-lg-attr="name" data-lg-noedit="true">
+              </div>
+              <div class="form-group col-6">
+                <label for="color">Color:</label>
+                <input type="color" class="form-control" value="{{ color }}" data-lg-attr="color">
+              </div>
+          </div>
+          <div class="row">
+            <div class="form-group col-12">
+              <label for="description">Description:</label>
+              <textarea class="form-control" rows="5" data-lg-attr="description">{{ description }}</textarea>
+            </div>
+          </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <button type="button" class="btn btn-primary panel_btn aded_ins">Create</button>
+    </div>
+ </div>
+</div>
+</div>

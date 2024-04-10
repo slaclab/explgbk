@@ -1751,6 +1751,13 @@ def get_modal_param_definitions(modal_type):
     if os.path.exists(modal_params_file):
         with open(modal_params_file, "r") as f:
             param_defs = json.load(f)
+        return param_defs
+
+    common_modal_params_file = "static/json/common/modals/{}.json".format(modal_type)
+    if os.path.exists(common_modal_params_file):
+        with open(common_modal_params_file, "r") as f:
+            param_defs = json.load(f)
+        return param_defs
 
     return param_defs
 
@@ -1762,12 +1769,19 @@ def validate_with_modal_params(modal_type, business_obj):
     modal_defs = get_modal_param_definitions(modal_type)
     if not modal_defs:
         return True, ""
+    def __get_nested_attr__(theobj, attrname):
+        nameparts = attrname.split(".")
+        for namepart in nameparts[:-1]:
+            theobj = theobj.get(namepart, {})
+        return theobj.get(nameparts[-1], None)
+
     for required_param in [ x["param_name"] for x in modal_defs["params"] if x.get("required", False) ]:
-        if required_param not in business_obj:
-            logger.error("Missing params.%s in %s", required_param, business_obj)
+        if not __get_nested_attr__(business_obj, required_param):
+            logger.error("Missing %s in %s", required_param, business_obj)
             return False, "One of the required parameters {} was not specified".format(required_param)
     for num_param in [ x["param_name"] for x in modal_defs["params"] if x.get("param_type", "string") in ["int", "float"] ]:
-        if not isinstance(business_obj.get(num_param, 0), int) and not isinstance(business_obj.get(num_param, 0), float):
+        thenumval = __get_nested_attr__(business_obj, num_param)
+        if not isinstance(thenumval, int) and not isinstance(thenumval, float):
             logger.error("params.%s is not an int/float in %s", num_param, business_obj)
             return False, "The parameter {} is not an number".format(num_param)
     return True, ""
@@ -2093,40 +2107,7 @@ def update_project(prjid, prjinfo):
     logbookclient[PROJECTS_DB]["projects"].update_one({"_id": ObjectId(prjid)}, {"$set": prjinfo})
     return logbookclient[PROJECTS_DB]["projects"].find_one({"_id": ObjectId(prjid)})
 
-def add_session_to_project(prjid, sessiondetails):
-    return logbookclient[PROJECTS_DB]["projects"].update_one({"_id": ObjectId(prjid)}, {"$set": {"sessions." + sessiondetails["name"]: sessiondetails}})
-
-def get_project_samples(prjid):
-    """
-    Get the project samples
-    """
-    return list(logbookclient[PROJECTS_DB]["samples"].find({"prjid": ObjectId(prjid)}))
-
-def add_sample_to_project(prjid, sampledetails):
-    sampledetails["prjid"] = ObjectId(prjid)
-    sample_with_name = logbookclient[PROJECTS_DB]["samples"].find_one({"prjid": ObjectId(prjid), "name": sampledetails["name"]})
-    if sample_with_name:
-        return (False, "A sample with the name %s already exists" % (sample_with_name["name"]))
-
-    validation, erromsg = validate_with_modal_params("samples", sampledetails)
-    if not validation:
-        return validation, erromsg
-    logbookclient[PROJECTS_DB]["samples"].insert_one(sampledetails)
-    return True, ""
-
-def update_project_sample(prjid, sampleid, sampledetails):
-    sampledetails["_id"] = ObjectId(sampleid)
-    sampledetails["prjid"] = ObjectId(prjid)
-    validation, erromsg = validate_with_modal_params("samples", sampledetails)
-    if not validation:
-        return validation, erromsg
-    sample_with_name = logbookclient[PROJECTS_DB]["samples"].find_one({"prjid": ObjectId(prjid), "name": sampledetails["name"]})
-    existing_sample = logbookclient[PROJECTS_DB]["samples"].find_one({"_id": ObjectId(sampleid)})
-    if sample_with_name and existing_sample["_id"] != sample_with_name["_id"]:
-        return (False, "Cannot rename sample %s to one that already exists %s" % (existing_sample["_id"], sample_with_name["_id"]))
-    
-    logbookclient[PROJECTS_DB]["samples"].replace_one({"_id": sampledetails["_id"]}, sampledetails, upsert=True)
-    return True, ""
+    get_project_samples, add_session_to_project, add_sample_to_project, update_project_sample, \
 
 def get_project_grids(prjid):
     """
@@ -2147,13 +2128,18 @@ def add_grid_to_project(prjid, griddetails):
     griddetails["prjid"] = ObjectId(prjid)
     if "_id" in griddetails:
         del griddetails["_id"]
-    grid_with_number = logbookclient[PROJECTS_DB]["samples"].find_one({"prjid": ObjectId(prjid), "number": griddetails["number"]})
-    if grid_with_number:
-        return (False, "A grid with the same grid number %s already exists in the project" % (griddetails["number"]))
-
     validation, erromsg = validate_with_modal_params("sampprepgrid", griddetails)
     if not validation:
         return validation, erromsg
+
+    grid_with_number = logbookclient[PROJECTS_DB]["grids"].find_one({"prjid": ObjectId(prjid), "number": griddetails["number"]})
+    if grid_with_number:
+        return (False, "A grid with the same grid number %s already exists in the project" % (griddetails["number"]))
+
+    remapped_grid = logbookclient[PROJECTS_DB]["grids"].find_one({"prjid": ObjectId(prjid), "box": griddetails["box"], "boxposition": griddetails["boxposition"]})
+    if remapped_grid:
+        return (False, "The grid box position %s in grid box %s is already mapped to grid number %s" % (griddetails["boxposition"], griddetails["box"], remapped_grid["number"]))
+
     logbookclient[PROJECTS_DB]["grids"].insert_one(griddetails)
     return True, ""
 
@@ -2166,10 +2152,16 @@ def update_project_grid(prjid, gridid, griddetails):
     validation, erromsg = validate_with_modal_params("sampprepgrid", griddetails)
     if not validation:
         return validation, erromsg
-    grid_with_number = logbookclient[PROJECTS_DB]["grids"].find_one({"prjid": ObjectId(prjid), "number": griddetails["number"]})
+
     existing_grid = logbookclient[PROJECTS_DB]["grids"].find_one({"_id": ObjectId(gridid)})
+
+    grid_with_number = logbookclient[PROJECTS_DB]["grids"].find_one({"prjid": ObjectId(prjid), "number": griddetails["number"]})
     if grid_with_number and existing_grid["_id"] != grid_with_number["_id"]:
         return (False, "Cannot rename grid %s to one that already exists %s" % (existing_grid["_id"], grid_with_number["_id"]))
+    
+    remapped_grid = logbookclient[PROJECTS_DB]["grids"].find_one({"prjid": ObjectId(prjid), "box": griddetails["box"], "boxposition": griddetails["boxposition"]})
+    if remapped_grid and existing_grid["_id"] != remapped_grid["_id"]:
+        return (False, "The grid box position %s in grid box %s is mapped to different grid number %s" % (griddetails["boxposition"], griddetails["box"], remapped_grid["number"]))
     
     logbookclient[PROJECTS_DB]["grids"].replace_one({"_id": griddetails["_id"]}, griddetails, upsert=True)
     return True, ""
@@ -2178,5 +2170,8 @@ def link_grid_to_experiment(prjid, gridid, experiment_name):
     """
     Link an existing experiment with a grid
     """
+    currently_mapped = logbookclient[PROJECTS_DB]["grids"].find_one({"exp_name": experiment_name})
+    if currently_mapped:
+        return (False, "The experiment %s is already mapped to a grid in an existing project %s" % (experiment_name, currently_mapped["prjid"]))
     logbookclient[PROJECTS_DB]["grids"].update_one({"_id": ObjectId(gridid), "prjid": ObjectId(prjid)}, {"$set": {"exp_name": experiment_name}})
     return True, ""

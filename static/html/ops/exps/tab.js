@@ -18,6 +18,8 @@ var exper_template = `{{#value}}<tr data-expid="{{_id}}">
 </tr>{{/value}}`;
 Mustache.parse(exper_template);
 
+let ins2colors = {};
+
 
 var rename_exp = function() {
   var src_experiment_name = $(this).closest("tr").find("td").first().find("a").text()
@@ -160,12 +162,12 @@ var render_current_exps = function(use_append) {
   let exps_to_display = _.difference(curr_exp_ids, displayed_experiment_ids);
   if(_.isEmpty(exps_to_display)) { return; }
   if(_.isEmpty(displayed_experiment_ids)) { use_append = true }
-  let exps_missing_info = _.difference(curr_exp_ids, _.keys(pg_id_to_details)), ins2colors = $("#register_edit_exp_tab").data("ins2colors");
+  let exps_missing_info = _.difference(curr_exp_ids, _.keys(pg_id_to_details));
   console.log("Getting details using POST for these experiments");
   console.log(exps_missing_info);
   $.post({url: "../../lgbk/ws/get_experiment_infos", data: JSON.stringify(exps_missing_info), contentType: "application/json; charset=utf-8", dataType: "json"})
   .done(function(d0){
-    _.each(d0.value, function(e){ pg_id_to_details[e["_id"]] = e; e["background"] = ins2colors[e["instrument"]]["bg"]; e["color"] = ins2colors[e["instrument"]]["fg"]; });
+    _.each(d0.value, function(e){ pg_id_to_details[e["_id"]] = e; e["background"] = _.get(ins2colors, e["instrument"]+".bg", "#eee"); e["color"] = _.get(ins2colors, e["instrument"]+".fg", "#000"); });
     let expdata = { value: _.reject(_.map(exps_to_display, (x) => { return pg_id_to_details[x] }), _.isNil) , privileges: privileges, FormatDate: elog_formatdate };
     var rendered = $(Mustache.render(exper_template, expdata));
     rendered.find(".ops_exp_icons .exp_edit").on("click", edit_exp_btn_action);
@@ -268,12 +270,13 @@ export function tabshow(target) {
   $(window).scroll(scroll_function);
   $("#register_edit_exp_tab").data("search_function", search_function); // Register the search function.
   
-  $.when($.getJSON({ url: "../ws/sorted_experiment_ids" }), $.getJSON({ url: instruments_url }))
+  $.when($.getJSON({ url: "../ws/sorted_experiment_ids" }), $.getJSON({ url: "../ws/instruments" }))
   .done(function(d0, d1) {
     let instruments = _.keyBy(d1[0].value, "_id");
     all_exp_ids = d0[0].value;
     curr_exp_ids = _.slice(all_exp_ids, 0, 100);
-    $("#register_edit_exp_tab").data("ins2colors", _.fromPairs(_.map(instruments, (ii) => { return [ ii["_id"], { "bg": _.get(ii, "color", "inherit"), "fg": _.has(ii, "color") ? "white" : "black" }]})));
+    ins2colors = _.fromPairs(_.map(instruments, (ii) => { return [ ii["_id"], { "bg": _.get(ii, "color", "inherit"), "fg": _.has(ii, "color") ? "white" : "black" }]}));
+    console.log(ins2colors);
     render_current_exps(true);
 
     if(sessionStorage.getItem("scroll_to_exp_id") != null) {

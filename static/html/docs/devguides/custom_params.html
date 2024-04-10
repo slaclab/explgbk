@@ -30,29 +30,11 @@
                     <p>The sample create/edit modal (and others as well ) support adding any number of name/value pairs to samples (and other documents).
                         While this enables great flexibility, we sometimes want to offer the user a site specific set of names as defaults.
                         In addition, a small amount of validation may also be useful.
-                        The experiment logbook adds support for this with the <code>modal_params</code> collection in the <code>site</code> database.
+                        See <code>get_modal_param_definitions</code> on how the modal params for a <code>modal_type</code> are resloved.
+                        See <code>static/html/mdls/common/mdlparams.js</code> for the implementation.
                     </p>
                     <p>
-                        For example, to add <code>imaging_method</code> as a default name in the <code>samples</code> modal, use something like so
-                            <pre>&gt; use site
-<samp>switched to db site</samp>
-&gt; db.modal_params.insertOne({"_id": "samples", "params": [{"param_name": "imaging_method"}]})
-<samp>{ "acknowledged" : true, "insertedId" : "samples" }</samp>
-                            </pre>
-                    </p>
-                    <p>The <code>modal_params</code> definition can also be defined at a instrument level. For example, to add this to the <code>DIA</code> instrument, use something like so
-                        <pre>&gt; use site
-&gt; db.getSiblingDB("site")["instruments"].updateOne({"_id": "DIA"},
-   { "$addToSet":
-      { "modal_params": {
-         "_id" : "samples",
-         "params" : [
-             {
-...
-                        </pre>
-                    </p>
-                    <p>
-                        The <code>modal_params</code> is a collection of documents with <code>_id</code> indicating the modal that the document applies to.
+                        Each modal param definition has a <code>_id</code> indicating the modal that the document applies to.
                         The <code>params</code> attribute contains an array of parameter definitions. Each definition has the following
                         <dl>
                             <dt><code>param_name</code></dt><dd>Mandatory, the name of the parameter.</dd>

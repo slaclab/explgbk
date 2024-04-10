@@ -8,6 +8,25 @@ async function addeditgrid(gridid) {
     modalshow(gridid, () => { window.location.reload() });
 }
 
+async function newsession(gridid) {
+    const { lgbk_create_edit_exp } = await import(lgbkabspath("/static/html/mdls/exp/reg.js"));
+    let theexp = { leader_account: logged_in_user, contact_info: _.get(logged_in_user_details, "gecos", logged_in_user) + "( " + logged_in_user + "@slac.stanford.edu )", start_time : moment(), end_time : moment().add(2, 'days')};
+    lgbk_create_edit_exp(theexp, (created_exp) => { 
+        console.log("Done with the create exp modal", created_exp); 
+        let addSessionURL = lgbkabspath("/lgbk/ws/projects/"+prjid+"/grids/" + gridid + "/linksession?experiment_name="+created_exp["name"]);
+        fetch(addSessionURL)
+        .then((resp) => { if(!resp.ok) { return Promise.reject(new Error("Server side error, please check the logs"))}  return resp.json()})
+        .then((status) => { 
+            console.log(status); 
+            if(!_.get(status, "success", true)) {
+                return Promise.reject(new Error(_.get(status, "errormsg", "Server side error, please check the logs")));
+            }; 
+            window.location.reload();
+        })
+        .catch((err) => { error_message(err) })
+    });
+}
+
 async function linksession(gridid) {
     const { modalshow } = await import(lgbkabspath("/static/html/tabs/project/sampprep/linksession.js"));
     modalshow(gridid, () => { window.location.reload() });
@@ -76,6 +95,7 @@ export function tabshow(target) {
                 tempElem.innerHTML = `<div class="row grid">
                     <span class="col-1">
                         <span class="actnicn editgrid"><i class="fa-solid fa-edit fa-lg" title="Edit this grid"></i></span>
+                        <span class="actnicn newsess"><i class="fa-solid fa-plus fa-lg" title="Create a new session and associate with this project"></i></span>
                         <span class="actnicn incsess"><i class="fa-solid fa-square-plus fa-lg" title="Associate an existing session with this project"></i></span>
                     </span>
                     <span class="col-1">${_.get(gib, "number", "")}</span>
@@ -90,6 +110,9 @@ export function tabshow(target) {
                 </div>`;
                 tempElem.querySelector(".editgrid").addEventListener("click", (ev) => { 
                     addeditgrid(gib["_id"]);
+                })
+                tempElem.querySelector(".newsess").addEventListener("click", (ev) => { 
+                    newsession(gib["_id"]);
                 })
                 tempElem.querySelector(".incsess").addEventListener("click", (ev) => { 
                     linksession(gib["_id"]);

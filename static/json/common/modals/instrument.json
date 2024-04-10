@@ -1,0 +1,29 @@
+{
+    "_id": "instrument",
+    "params": [
+        {
+            "label": "Number of stations",
+            "param_name": "params.num_stations",
+            "description": "The number of stations ( instances ) of this instrument. Experiments targeting this instrument can be assigned to any station on this instrument",
+            "required": true,
+            "param_type": "int",
+            "tab": "Instrument Details"
+        },
+        {
+            "label": "Operator account",
+            "param_name": "params.operator_uid",
+            "description": "The shared operator account for this instrument. When an experiment is switched into/out of a station belonging to this instrument, the operator is automatically added to/removed from the experiment collaborators. This permits the operator account to create runs, post elog etc",
+            "required": false,
+            "param_type": "string",
+            "tab": "Instrument Details"
+        },
+        {
+            "label": "Instrument elog",
+            "param_name": "params.elog",
+            "description": "The name of the instrument elog. Elog statments in experiments belonging to this instrument can be cross posted to the instrument elog. Instrument scientists are typically subscribed to the instrument elog",
+            "required": false,
+            "param_type": "string",
+            "tab": "Instrument Details"
+        }
+    ]
+}

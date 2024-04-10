@@ -1,0 +1,21 @@
+{
+    "_id": "expreg",
+    "params": [
+      {
+        "param_name": "params.PNR",
+        "description": "The URAWI proposal number; for example, L-12345",
+        "required": false,
+        "param_type": "string",
+        "label": "URAWI proposal number",
+        "tab": "DM"
+      },
+      {
+        "param_name": "params.dm_locations",
+        "description": "A space separated list of data management locations where data for this experiment may be made available, for example, SRCF_FFB S3DF",
+        "required": false,
+        "param_type": "string",
+        "label": "DM locations",
+        "tab": "DM"
+      }
+    ]
+}

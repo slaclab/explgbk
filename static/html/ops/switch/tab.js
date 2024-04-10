@@ -33,7 +33,7 @@ export function tabshow(target) {
     let trgtname = target.getAttribute("data-bs-target"), trgt = document.querySelector(trgtname); 
     trgt.innerHTML=tabpanetmpl;
 
-	$.when($.getJSON(active_experiments_url), $.getJSON(instrument_station_list), $.getJSON({ url: instruments_url }))
+	$.when($.getJSON(active_experiments_url), $.getJSON(instrument_station_list), $.getJSON({ url: "../ws/instruments" }))
 	.done(function(d1, d2, d3) {
 		var active_exps = d1[0], ins_st_list = d2[0], instruments = _.keyBy(d3[0].value, "_id");
 		var others = _.differenceWith(ins_st_list.value, active_exps.value, function(av, ov){ return av['instrument'] == ov['instrument'] && av['station'] == ov['station'] });

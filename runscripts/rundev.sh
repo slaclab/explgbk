@@ -30,7 +30,7 @@ export RELOAD=${RELOAD:-""}
 export WORKER_CONFIG=${WORKER_CONFIG:-""}
 
 # The exec assumes you are calling this from supervisord. If you call this from the command line; your bash shell is proabably gone and you need to log in.
-exec gunicorn start:app -b ${SERVER_IP_PORT} --worker-class eventlet ${WORKER_CONFIG} --no-sendfile ${RELOAD} \
+exec gunicorn start:app -b ${SERVER_IP_PORT} --worker-class eventlet ${WORKER_CONFIG} ${RELOAD} \
        --log-level=${LOG_LEVEL} --capture-output --enable-stdio-inheritance \
        --timeout 300 --graceful-timeout 1 \
        --access-logfile - --access-logformat "${ACCESS_LOG_FORMAT}"

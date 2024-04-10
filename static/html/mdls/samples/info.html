@@ -2,31 +2,17 @@
   <div class="modal-dialog modal-lg" role="document">
    <div class="modal-content">
      <div class="modal-header">
-         <h4 class="modal-title w-100">Sample details for {{name}}</h4>
+         <h4 class="modal-title w-100">Sample details</h4>
          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
      </div>
      <div class="modal-body">
      <form class="register_form">
-      <table class="table table-condensed table-striped table-bordered">
-        <thead><tr><th>Name</th><th>Value</th></thead>
-        <tbody>
-          {{#paramkvs}}
-          <tr {{#description}}title="{{description}}"{{/description}}><td class="text-start py-1 px-1"><span>{{{label}}}</span></td><td class="text-start">
-              {{#is_bool}}<span title="Clone sample" class="icon"><i class="fa-solid {{#is_checked}}fa-check{{/is_checked}}{{^is_checked}}fa-times{{/is_checked}} fa-lg"></i></span>{{/is_bool}}
-              {{^is_bool}}<span>{{current_val}}</span>{{/is_bool}}
-          </td></tr>
-          {{/paramkvs}}
-        </tbody>
-      </table>
-      <div class="form-group row p-2">
-         <label>Description:</label>
-         <textarea class="form-control sample_description" rows="5" readonly>{{ description }}</textarea>
-      </div>
-      <div class="modal-footer">
-          <button id="sample_create" class="btn btn-primary panel_btn" data-bs-dismiss="modal">Done</button>
-      </div>
      </form>
-     </div>
+     <div class="modal-footer">
+      <button type="button" class="btn btn-secondary copy-btn">Copy</button>
+      <button type="button" id="sample_create" class="btn btn-primary panel_btn" data-bs-dismiss="modal">Done</button>
+    </div>
+   </div>
  </div>
 </div>
 </div>

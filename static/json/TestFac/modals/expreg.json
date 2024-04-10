@@ -1,0 +1,21 @@
+{
+    "_id": "expreg",
+    "params": [
+      {
+        "param_name": "initial_sample",
+        "description": "The initial sample to be created",
+        "required": false,
+        "param_type": "string",
+        "label": "Initial sample",
+        "tab": "Sample"
+      },
+      {
+        "param_name": "params.PNR",
+        "description": "The URAWI proposal number; for example, L-12345",
+        "required": false,
+        "param_type": "string",
+        "label": "URAWI proposal number",
+        "tab": "DM"
+      }
+    ]
+}

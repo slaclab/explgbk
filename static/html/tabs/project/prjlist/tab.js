@@ -8,9 +8,9 @@ let tmpl = `<div class="container-fluid text-center">
 </div>`;
 Mustache.parse(tmpl);
 
-async function addeditproject() {
+async function addeditproject(onCompletion) {
   const { modalshow } = await import(lgbkabspath("/static/html/tabs/project/prjlist/prjmdl.js"));
-  modalshow();
+  modalshow(null, onCompletion);
 }  
 
 export function tabshow(target) {
@@ -25,5 +25,5 @@ export function tabshow(target) {
   })
 
   document.querySelector("#toolbar_for_tab").innerHTML = `<span class="addprj"><i class="fa-solid fa-plus fa-lg" title="Create a new project"></i></span>`;
-  document.querySelector("#toolbar_for_tab .addprj").addEventListener("click", () => { addeditproject(); });
+  document.querySelector("#toolbar_for_tab .addprj").addEventListener("click", () => { addeditproject(() =>{ tabshow(target) }); });
 }

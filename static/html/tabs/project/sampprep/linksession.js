@@ -24,9 +24,16 @@ export function modalshow(gridid, onCompletion) {
             }
             let addSessionURL = baseUrl + "/lgbk/ws/projects/"+prjid+"/grids/" + gridid + "/linksession?experiment_name="+selectedSession;
             fetch(addSessionURL)
-            .then((resp) => { if(!resp.ok) { errmsg("Server side error"); throw Error() }  return resp.json()})
-            .then((status) => { console.log(status); myModal.hide(); onCompletion(); })
+            .then((resp) => { if(!resp.ok) { return Promise.reject(new Error("Server side error, please check the logs"))}  return resp.json()})
+            .then((status) => { 
+                console.log(status); 
+                if(!_.get(status, "success", true)) {
+                    return Promise.reject(new Error(_.get(status, "errormsg", "Server side error, please check the logs")));
+                }; 
+                myModal.hide(); 
+                onCompletion(); 
+            })
+            .catch((err) => { errmsg(err) })            
         });
     })
-
 }

@@ -80,25 +80,21 @@ export class LgbkCustomModalParams {
         const modalElem = document.querySelector("#glbl_modals_go_here .modal");
         const formElem = modalElem.querySelector("form");
         let tab2elem = { "Misc": formElem };
-        if(this.mdltabs.length > 1 ) {
-            let tempelem = document.createElement("div");
-            let tabitems = this.mdltabs.map((tbnm) => { return `<li class="nav-item" role="presentation"><button class="nav-link" id="${tbnm}-${this.randid}" data-bs-toggle="tab" data-bs-target="#${tbnm}-${this.randid}-pane" type="button" role="tab">${this.mdltab2label[tbnm]}</button></li>` }).join("");
-            let tabpanes = this.mdltabs.map((tbnm) => { return `<div class="tab-pane fade" id="${tbnm}-${this.randid}-pane" role="tabpanel" tabindex="0"></div>`}).join("");
-            tempelem.innerHTML = `<ul class="nav nav-tabs" role="tablist" id="samp-${this.randid}">${tabitems}</ul><div class="tab-content">${tabpanes}</div>`;
-            formElem.append(...tempelem.childNodes);
-            this.mdltabs.forEach((tbnm) => { tab2elem[tbnm] = formElem.querySelector(`#${tbnm}-${this.randid}-pane`) })
-    
-            const firstTab = new bootstrap.Tab(formElem.querySelector(`#${this.mdltabs[0]}-${this.randid}`));
-            firstTab.show();
-        } else {
-            tab2elem["Custom"] = formElem;
-        }
+        let tempelem = document.createElement("div");
+        let tabitems = this.mdltabs.map((tbnm) => { return `<li class="nav-item" role="presentation"><button class="nav-link" id="${tbnm}-${this.randid}" data-bs-toggle="tab" data-bs-target="#${tbnm}-${this.randid}-pane" type="button" role="tab">${this.mdltab2label[tbnm]}</button></li>` }).join("");
+        let tabpanes = this.mdltabs.map((tbnm) => { return `<div class="tab-pane fade" id="${tbnm}-${this.randid}-pane" role="tabpanel" tabindex="0"></div>`}).join("");
+        tempelem.innerHTML = `<ul class="nav nav-tabs" role="tablist" id="samp-${this.randid}">${tabitems}</ul><div class="tab-content">${tabpanes}</div>`;
+        formElem.append(...tempelem.childNodes);
+        this.mdltabs.forEach((tbnm) => { tab2elem[tbnm] = formElem.querySelector(`#${tbnm}-${this.randid}-pane`) })
+
+        const firstTab = new bootstrap.Tab(formElem.querySelector(`#${this.mdltabs[0]}-${this.randid}`));
+        firstTab.show();
     
         _.each(this.mdlparams, (paramdef) => {
             mdltypes[paramdef["param_type"]](tab2elem[paramdef["tabid"]], paramdef, _.get(thedocument, paramdef["param_name"], _.get(paramdef, "default", "")));
         })
     
-        let customkeys = _.difference(_.keys(_.get(thedocument, "params", {})), _.map(this.mdlparams, "param_name"));
+        let customkeys = _.map(_.filter(_.difference(deepKeys(thedocument), _.map(this.mdlparams, "param_name")), (p) => _.startsWith(p, "params.")), (k) => _.replace(k, "params.", ""));
         console.log(customkeys);
         _.each(customkeys, (currkey) => { 
             let currval = _.get(thedocument, "params."+currkey);
@@ -115,7 +111,7 @@ export class LgbkCustomModalParams {
         }
         let showhidedependents = () => {
             let tabshowncount = _.fromPairs(_.map(this.mdltabs, (t) => { return [ t,  0 ] }));
-            if(this.mdltabs.length > 1 ) { tabshowncount["Custom"] = 1 } 
+            tabshowncount["Custom"] = 1;
             _.each(this.mdlparams, (dp) => {
                 if(_.has(dp, "showwhen")) {
                     if(isDeepMatch(thedocument, dp["showwhen"])) {
@@ -139,8 +135,9 @@ export class LgbkCustomModalParams {
             })
         }
         showhidedependents();
+        formElem.querySelectorAll("[data-lg-attr]").forEach((e) => e.addEventListener("change", (event) => { showhidedependents(); }));
     
-        formElem.addEventListener("change", function(ev){
+        formElem.addEventListener("change", (ev) => {
             let par = ev.target.closest("[data-lgp-name]");
             if(!_.isNil(par)) {
                 let pname = par.getAttribute("data-lgp-name");
@@ -155,6 +152,7 @@ export class LgbkCustomModalParams {
 
     validate(thenewdocument) {
         const modalElem = document.querySelector("#glbl_modals_go_here .modal");
+        const formElem = modalElem.querySelector("form");
         let validated = _.every(Array.from(modalElem.querySelectorAll('[data-lgp-name]')).map((elem) => {
             let attrname = elem.getAttribute("data-lgp-name"), paramdef = this.paramnm2def[attrname];
             if(_.isNil(paramdef)) return true;
@@ -164,7 +162,7 @@ export class LgbkCustomModalParams {
                     let label =_.get(paramdef, "label", paramdef["param_name"])
                     this.errormsg(`The attribute ${label} is a required attribute`);
                     if(this.mdltabs.length > 1 ) {
-                        const theTab = new bootstrap.Tab(formElem.querySelector(`#${paramdef['tab']}-${this.randid}`));
+                        const theTab = new bootstrap.Tab(formElem.querySelector(`#${paramdef['tabid']}-${this.randid}`));
                         theTab.show();
                     }
                     return false;
@@ -199,7 +197,7 @@ export class LgbkCustomModalParams {
         function checkStatus(status) {
             console.log(status); 
             if(!_.get(status, "success", true)) {
-                return Promise.reject(new Error(_.get(status, "this.errormsg", "Server side error, please check the logs")));
+                return Promise.reject(new Error(_.get(status, "errormsg", "Server side error, please check the logs")));
             }; 
             onCompletion(); 
             return true; 
@@ -220,5 +218,51 @@ export class LgbkCustomModalParams {
             .then(checkStatus)
             .catch((errmsg) => { this.errormsg(errmsg) })
         }
+    }
+
+    patchMainModal(mdldefs, theobj) {
+        if(_.has(mdldefs, "main")){
+            const modalElem = document.querySelector("#glbl_modals_go_here .modal");
+            const formElem = modalElem.querySelector("form");    
+            _.each(mdldefs["main"], (attrmods, attrname) => {
+              _.each(attrmods, (modval, attrmod) => {
+                if(attrmod.startsWith("lg_")) {
+                  if(attrmod === "lg_display") {
+                    formElem.querySelector("[data-lg-attr='" + attrname + "']").closest(".form-group").classList.remove("d-none");
+                  } else if(attrmod === "lg_options") {
+                    const selElem = formElem.querySelector("[data-lg-attr='" + attrname + "']");
+                    _.each(modval, (o) => {
+                      const opt = document.createElement("option");
+                      opt.value = o.value;
+                      opt.text = o.label;
+                      if(_.get(theobj, "type", "") === o.value) { opt.selected = true; }
+                      selElem.add(opt);
+                    })
+                  } else if(attrmod === "lg_dependent") {
+                    const driverElem = formElem.querySelector("[data-lg-attr='" + modval["lg_dependson"] + "']");
+                    driverElem.addEventListener("change", () => {
+                      let selectedType = driverElem.value;
+                      console.log("Dependent dropdown selection", selectedType);
+                      const selElem = formElem.querySelector("[data-lg-attr='" + attrname + "']");
+                      selElem.options.length = 0;
+                      selElem.add(document.createElement("option"));
+                      _.each(_.get(modval["lg_options"], selectedType, []), (o) => {
+                        console.log("Adding option ", o.value, " to the select as ", o.label);
+                        const opt = document.createElement("option");
+                        opt.value = o.value;
+                        opt.text = o.label;
+                        if(_.get(theobj, "instrument", "") === o.value) { opt.selected = true; }
+                        selElem.add(opt);
+                      })
+                    })
+                  } else {
+                    console.log("Not processing " + attrmod + ". This may be a typo?");
+                  }
+                } else {
+                  _.set(formElem.querySelector("[data-lg-attr='" + attrname + "']"), attrmod, modval);
+                }
+              })
+            })
+        }        
     }
 }
