@@ -1176,7 +1176,7 @@ def svc_post_new_elog_entry(experiment_name):
             raise Exception(f"Cannot override author with non-existent user {author}")
 
     optional_args = {}
-    parent = request.form.get("parent", None);
+    parent = request.form.get("parent", None)
     if parent:
         logger.debug("We are creating a followup entry for " + parent + " for experiment " + experiment_name)
         parent_entry = get_specific_elog_entry(experiment_name, parent)
@@ -1227,6 +1227,10 @@ def svc_post_new_elog_entry(experiment_name):
     if is_issue:
         logger.info("Issue detected in experiment %s", experiment_name)
         optional_args["tags"] = optional_args["tags"] + ["ISSUE"] if "tags" in optional_args else ["ISSUE"]
+    jira_ticket = request.form.get("jira_ticket", None)
+    if jira_ticket:
+        logger.info("Associated with an existing JIRA ticket %s", jira_ticket)
+        optional_args["jira_ticket"] = jira_ticket
     is_roadblock = request.form.get("elog_support_roadblock", None)
     if is_roadblock:
         logger.info("Roadblock detected in experiment %s", experiment_name)

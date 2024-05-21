@@ -792,7 +792,7 @@ def __upload_attachments_to_imagestore_and_return_urls(experiment_name, files):
     return attachments
 
 
-def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None, title=None, post_to_elogs=None):
+def post_new_log_entry(experiment_name, author, log_content, files, run_num=None, shift=None, root=None, parent=None, email_to=None, tags=None, title=None, post_to_elogs=None, jira_ticket=None):
     """
     Create a new log entry.
     """
@@ -824,6 +824,8 @@ def post_new_log_entry(experiment_name, author, log_content, files, run_num=None
         elog_doc["title"] = title
     if post_to_elogs:
         elog_doc["post_to_elogs"] = post_to_elogs
+    if jira_ticket:
+        elog_doc["jira_ticket"] = jira_ticket
 
     ins_id = expdb['elog'].insert_one(elog_doc).inserted_id
     entry = expdb['elog'].find_one({"_id": ins_id})
