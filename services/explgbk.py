@@ -2914,6 +2914,26 @@ def svc_kill_workflow_job(experiment_name):
     return JSONEncoder().encode({"success": status, "errormsg": errormsg, "value": val})
 
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/generate_arp_token", methods=["GET"])
+@context.security.authentication_required
+@context.security.authorization_required("post")
+def svc_workflow_generate_arp_token(experiment_name):
+    """
+    Generate a ARP bearer token that is valid for the specified time.
+    This is only available if this call ( the one to generate the token ) is made using a Kerberos endpoint.
+    Do not allow for other endpoints.
+    Please specify token lifetime using the token_lifetime parameter. This is in minutes.
+    The max token lifetime is for a shift; so 8*60 minutes = 480 minutes.
+    By default, we generate tokens that are valid for 1 minute
+    """
+    token_lifetime = int(request.args.get("token_lifetime", "1"))
+    if token_lifetime > 480:
+        return logAndAbort("Cannot generate tokens with lifetimes larger than 480 minutes")
+    if request.headers.get("X-Forwarded-Auth-Type", None) != "Kerberos":
+        return logAndAbort("Tokens are support only with the ws-kerb endpoint")
+    arp_token = context.generateArpToken(context.security.get_current_user_id(), experiment_name, token_lifetime)
+    return JSONEncoder().encode({"success": True, "value": arp_token})
+
 @explgbk_blueprint.route("/lgbk/naming_conventions", methods=["GET"])
 @context.security.authentication_required
 def svc_get_site_naming_conventions():
