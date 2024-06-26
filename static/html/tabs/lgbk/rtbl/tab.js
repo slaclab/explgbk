@@ -18,7 +18,7 @@ let attach_toolbar_btns = function() {
   <span id="clone_tmpl" title="Clone system template run tables to this experiment"><i class="fa-solid fa-redo-alt"></i></span>
   <span id="del_rtbl" title="Delete this run table"><i class="fa-solid fa-trash fa-lg tlbr"></i></span>
   <span id="export_rtbl" title="Export this run table as a CSV"><i class="fa-solid fa-download fa-lg tlbr"></i></span>
-  <span id="make_system_rtbl" title="Move this run table to the system run tables. These are visible to all experiments; the move will replace any system run table with the same name. This run table will be removed from this experiment."><i class="fa-brands fa-superpowers fa-lg tlbr"></i></span>
+  <span id="make_system_rtbl" title="Move this run table to the system run tables. These are visible to all experiments; the move will replace any system run table with the same name. This run table will be removed from this experiment."><i class="fa-solid fa-globe fa-lg tlbr"></i></span>
   `;
   var toolbar_rendered = $(tab_toolbar);
   if(!_.get(privileges, "ops_page", false)) { toolbar_rendered.find("#make_system_rtbl").remove(); }
