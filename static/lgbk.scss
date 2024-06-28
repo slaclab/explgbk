@@ -1322,6 +1322,11 @@ select {
   .wf_run_params {
     color: $navbarhover;
   }
+  .actnicn {
+    @include listview_icon_mixin;
+    opacity: 1.0;
+    color: $navbarhover; 
+  }
 }
 
 #lcls_wf_ctrls_tab {

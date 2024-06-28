@@ -81,7 +81,7 @@ export function tabshow(target) {
   trgt.innerHTML=tabpanetmpl;
 
 
-  var ws_defs_tmpl = `{{#value}}<tr data-id="{{_id}}"><td>{{name}}</td><td>{{executable}}</td><td>{{parameters}}</td><td>{{location}}</td><td>{{trigger}}{{#run_param_name}}<div class="wf_run_params">{{run_param_name}} == {{run_param_value}}{{/run_param_name}}</div></td><td>{{run_as_user}}</td><td><span title="Edit definition"><i class="fas fa-edit listview-action"></i></span><span title="Delete definition"><i class="fas fa-trash listview-action"></i></span></td></tr>{{/value}}`;
+  var ws_defs_tmpl = `{{#value}}<tr data-id="{{_id}}"><td>{{name}}</td><td>{{executable}}</td><td>{{parameters}}</td><td>{{location}}</td><td>{{trigger}}{{#run_param_name}}<div class="wf_run_params">{{run_param_name}} == {{run_param_value}}{{/run_param_name}}</div></td><td>{{run_as_user}}</td><td><span class="actnicn" title="Edit definition"><i class="fas fa-edit"></i></span><span  class="actnicn"  title="Delete definition"><i class="fas fa-trash"></i></span></td></tr>{{/value}}`;
   Mustache.parse(ws_defs_tmpl);
   $.getJSON('ws/workflow_definitions').done(function(d){
       let rendered = $(Mustache.render(ws_defs_tmpl, d));
