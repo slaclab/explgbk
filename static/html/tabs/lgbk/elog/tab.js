@@ -368,7 +368,7 @@
          $("#elog_content").html('<div class="loading">Loading</div>');
          $.getJSON("ws/elog", elog_params)
          .done(function(d0){
-             let attachments_only_template = `<div class="row elog_attachments_only">{{#attachments}}<div class="img-thumbnail img-fluid atch" data-entryid="{{entry_id}}" data-id="{{_id}}" data-rootid="{{root_id}}" {{#isimage}}data-isimage="true">{{/isimage}}<span class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></span></div>{{/attachments}}</div>`;
+             let attachments_only_template = `<div class="elog_attachments_only d-flex flex-wrap">{{#attachments}}<div class="img-thumbnail img-fluid atch" data-entryid="{{entry_id}}" data-id="{{_id}}" data-rootid="{{root_id}}" {{#isimage}}data-isimage="true">{{/isimage}}<span class="thumbnail"><img class="elog_img" src="ws/attachment?entry_id={{entry_id}}&attachment_id={{_id}}&prefer_preview=true"></img></span></div>{{/attachments}}</div>`;
              let entries = d0.value;
              Mustache.parse(attachments_only_template);
              let attachments_flat_list = [];
