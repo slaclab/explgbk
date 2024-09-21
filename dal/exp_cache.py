@@ -319,6 +319,26 @@ def get_experiments_proposal_mappings():
     """
     return list(logbookclient['explgbk_cache']["experiments"].find({}, {"name": 1, "params.PNR": 1, "instrument": 1}))
 
+
+def get_potentially_active_users(cutoff_date):
+    """
+    Returns the set of users in experiment whose end date is after the specified date.
+    """
+    ret = list(logbookclient['explgbk_cache']["experiments"].aggregate([
+        { "$match": { "end_time": {"$gte": cutoff_date } } }, 
+        { "$group": { "_id": 0, "players": { "$push": "$players" }}},
+        { "$project": { "_id": 0, "players": 1 } },
+        { "$project": {"allusers": { "$reduce": { "input": "$players", "initialValue": [], "in": { "$concatArrays" : ["$$value", "$$this"] } }}}},
+        { "$unwind": "$allusers"},
+        { "$project": { "userid": "$allusers" }},
+        { "$match": { "userid": {"$regex": "^uid:.*"}}},
+        { "$group": {"_id": "$userid"}},
+        { "$project": {"_id": 0, "userid": { "$replaceOne": { "input": "$_id", "find": "uid:", "replacement": "" } } }},
+        { "$sort": { "userid": 1}}
+    ]))
+    return [ x["userid"] for x in ret]
+
+
 def __load_experiment_names():
     """ We cache the list of experimemt names to speedup authz/other operations.
     This reloads the cached list of experiment names from the explgbk_cache

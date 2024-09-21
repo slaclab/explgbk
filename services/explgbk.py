@@ -73,7 +73,7 @@ from dal.exp_cache import get_experiments, get_experiments_for_user, does_experi
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
     get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex, get_experiments_proposal_mappings, \
     update_single_experiment_info, get_experiments_starting_in_time_frame, get_sorted_experiments_ids, get_cached_experiment_info, \
-    search_experiments_for_common_fields, get_direct_experiments_for_user
+    search_experiments_for_common_fields, get_direct_experiments_for_user, get_potentially_active_users
 
 from dal.imagestores import parseImageStoreURL
 
@@ -515,6 +515,26 @@ def svc_get_active_experiments():
     Get the list of currently active experiments at each instrument/station.
     """
     return JSONEncoder().encode({'success': True, 'value': get_currently_active_experiments()})
+
+
+@explgbk_blueprint.route("/lgbk/ws/potentiallyactiveusers", methods=["GET"])
+@context.security.authentication_required
+def svc_get_potentially_active_users():
+    """
+    Get the list of users in experiments whose end date is after the specified date.
+    The date is specified as the number of days as the query parameter cutoff_days.
+    We include experiments whose end time is greater than or equal to cutoff_days before today.
+    If a date is not specified, we use 3 years before now as a cutoff
+    Return a list of users ( without the uid: in the prefix )
+    """
+    cutoff_days_str = request.args.get("cutoff_days", None)
+    if not cutoff_days_str:
+        cutoff_date = datetime.utcnow() - timedelta(days=365*3)
+    else:
+        cutoff_date = datetime.utcnow() - timedelta(days=int(cutoff_days_str))
+    logger.info("Getting users from experiments after %s", cutoff_date)
+
+    return JSONEncoder().encode({'success': True, 'value': get_potentially_active_users(cutoff_date)})
 
 @explgbk_blueprint.route("/lgbk/ws/activeexperiment_for_instrument_station", methods=["GET"])
 def svc_get_active_experiment_for_instrument_station():
