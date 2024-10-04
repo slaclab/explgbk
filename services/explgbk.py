@@ -370,6 +370,7 @@ def svc_get_experiment_infos():
     """
     exp_ids = request.json
     ret = [ get_cached_experiment_info(exp_id) for exp_id in exp_ids ]
+    ret = [ x for x in ret if x ]
     for exp in ret:
         if "all_param_names" in exp:
             del exp["all_param_names"]
