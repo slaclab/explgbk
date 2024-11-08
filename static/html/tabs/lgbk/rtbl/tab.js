@@ -201,11 +201,12 @@ let allotherlogicfb = function(trgt) {
                     _.each(_.tail(_.tail(coldefs)), function(coldef, idx) {
                       var dtx = xaxisdata.slice();
                       var dty = _.map(runData.value, function(rd){return _.get(rd, coldef["source"])});
+                      let customData = runData.value;
                       let sd = array_std(dty), mean = array_mean(dty), mult = 3.0;
                       let isYOutlier = function(v, idx) { return (dty[idx] >= mean + (mult * sd)) | (dty[idx] <= mean - (mult * sd)); };
                       let isOutlier = function(v) { return (v >= mean + (mult * sd)) | (v <= mean - (mult * sd)); };
                       if(hide_outliers) {dtx = _.reject(dtx, isYOutlier); dty = _.reject(dty, isOutlier);}
-                      traces.push({x: dtx, y: dty, type: "scatter", mode: "markers", showlegend: true, name: coldef["label"]});
+                      traces.push({x: dtx, y: dty, type: "scatter", mode: "markers", showlegend: true, name: coldef["label"], customdata: customData, hovertemplate: "%{x} %{y}<br><b>Run number:</b> %{customdata.num}"});
                     });
                   }
                   layout = { title: { text: clkRTblName }, xaxis: { title: { text: _.head(_.tail(coldefs))["label"], xref: "paper" }}};
@@ -217,6 +218,7 @@ let allotherlogicfb = function(trgt) {
                   { name: 'Hide show outliers', icon: faicons["solid/compact-disc"], click: function() { hide_outliers = !hide_outliers; console.log("Outliers: " + hide_outliers); gen_traces(); Plotly.react(plotlyDivName, traces, layout, plotConfig); }}
                 ]};
                 if(plotlyExists) { Plotly.react(plotlyDivName, traces, layout, plotConfig); } else { Plotly.newPlot(plotlyDivName, traces, layout, plotConfig); plotlyExists = true; }
+                document.getElementById(plotlyDivName).on('plotly_hover', function(data){ console.log(data) });
                 return;
         })
       }
