@@ -1239,6 +1239,13 @@ def svc_post_new_elog_entry(experiment_name):
         optional_args["email_to"] = log_emails.split()
         logger.debug("Sending emails to %s", ", ".join(optional_args["email_to"]))
 
+    # The grubber users a followup entry when posting text from an executed command ( typically a bunch of EPICS vars )
+    # We don't want to send an email in this case
+    skip_email = False
+    is_command_followup = request.form.get("command_followup", None)
+    if is_command_followup:
+        skip_email = True
+
     log_tags_str = request.form.get("log_tags", None)
     if log_tags_str:
         tags = log_tags_str.split()
@@ -1293,7 +1300,7 @@ def svc_post_new_elog_entry(experiment_name):
     if not email_to and "root" in inserted_doc:
         email_to = get_specific_elog_entry(experiment_name, inserted_doc["root"]).get("email_to", [])
     email_to.extend(get_elog_email_subscriptions_emails(experiment_name))
-    if email_to:
+    if email_to and not skip_email:
         logger.debug("Sending emails for new elog entry in experiment %s to %s", experiment_name, ",".join(email_to))
         send_elog_as_email(experiment_name, inserted_doc, email_to)
 
