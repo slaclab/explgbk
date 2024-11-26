@@ -60,7 +60,8 @@ export function new_entry_click(e, entry, parent_id) {
     e.preventDefault();
     $.when($.ajax('../../static/html/tabs/lgbk/elog/elog_new_entry.html'), $.getJSON("ws/current_run"), $.getJSON("ws/get_instrument_elogs"))
     .done(function(modal_txt, cur_run, inselgsresp){
-        var current_run_num =_.get(cur_run[0], "value.num", ""), ins_elogs = inselgsresp[0].value, mdl = $(Mustache.render(modal_txt[0], { entry: entry, parent_id: parent_id, current_run_num: current_run_num, post_to_instrument_elogs: (ins_elogs.length > 0), instrument_elogs: ins_elogs }));
+        let current_run_num = _.has(entry, "_id") ?  _.get(entry, "run_num") : _.get(cur_run[0], "value.num", ""), ins_elogs = inselgsresp[0].value;
+        let mdl = $(Mustache.render(modal_txt[0], { entry: entry, parent_id: parent_id, current_run_num: current_run_num, post_to_instrument_elogs: (ins_elogs.length > 0), instrument_elogs: ins_elogs }));
         mdl.find("#elog_new_entry_file_upload").on("change", function(){ let fsel = $(this)[0].files.length; $(this).closest(".custom-file").find(".custom-file-label").text(fsel + " file" + (fsel==1 ? "" : "s") + " selected")})
         $("#elog_content").prepend(mdl);
         email_selector($("#elog_content"));
@@ -105,6 +106,6 @@ export function followup_function(e) {
  export function edit_elog_entry(e) {
     if(check_session_timeout()) return;
     var entry = $(this).closest(".edat").data("entry");
-    return new_entry_click(e, entry, null);
+    return new_entry_click(e, entry, _.get(entry, "parent", null));
  }
 

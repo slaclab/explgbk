@@ -26,14 +26,12 @@
                             <select class="form-control form-select contacts email_select" id="elog_new_entry_email_select" name="log_emails_shown" placeholder="email1 email2@institution.edu"></select>
                             <input class="d-none email_input" name="log_emails" id="elog_new_entry_email_dest" value="{{#entry.email_to}}{{.}} {{/entry.email_to}}"></input>
                         </div>
-                        {{^entry}}
                         {{^parent_id}}
                         <label  class="col-1 col-form-label" for="elog_new_entry_run_num" title="Specify an optional run number">Run:</label>
                         <div class="col-3">
                             <input type="text" class="form-control" name="run_num" id="elog_new_entry_run_num" value="{{current_run_num}}"/>
                         </div>
                         {{/parent_id}}
-                        {{/entry}}
                     </div>
                     <div class="row py-2">
                         <label class="col-1 col-form-label" for="elog_new_entry_tags" title="Enter any number of space separated tags.">Tags:</label>

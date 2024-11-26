@@ -1331,7 +1331,7 @@ def svc_modify_elog_entry(experiment_name):
     log_tags_str = request.form.get("log_tags", None)
     tags = log_tags_str.split() if log_tags_str else []
     title = request.form.get("log_title", None)
-    run_num_str = request.form.get("log_run_num", None)
+    run_num_str = request.form.get("run_num", None)
     if run_num_str:
         try:
             run_num = int(run_num_str)
