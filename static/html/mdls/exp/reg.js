@@ -22,7 +22,7 @@ let form2doc = function(formElem, startDate, endDate) {
   registration_doc["start_time"] = startDate.viewDate.toJSON();
   registration_doc["end_time"] = endDate.viewDate.toJSON();
 
-  formElem.querySelectorAll("lgbk-custom-param").forEach((lcp) => { lcp.mergeinto(registration_doc["params"]) });
+  formElem.querySelectorAll("lgbk-custom-param").forEach((lcp) => { lcp.mergeinto(registration_doc, "params") });
   return registration_doc;
 }
 

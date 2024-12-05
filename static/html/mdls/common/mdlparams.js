@@ -181,7 +181,7 @@ export class LgbkCustomModalParams {
             return false;
         }
     
-        _.each(Array.from(modalElem.querySelectorAll('lgbk-custom-param')).map((elem) => { return elem.mergeinto(thenewdocument["params"])}));
+        _.each(Array.from(modalElem.querySelectorAll('lgbk-custom-param')).map((elem) => { return elem.mergeinto(thenewdocument, "params")}));
         return true;
     }
 

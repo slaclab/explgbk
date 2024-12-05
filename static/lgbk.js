@@ -162,14 +162,10 @@ function deepKeys(x, prefix) {
   let keys = [];
   _.each(x, (v, k) => { 
       if(!_.isPlainObject(v)) {
-          if(_.isUndefined(prefix)) {
-              keys.push(k); 
-              return; 
-          }
-          keys.push(prefix + "." + k);
-          return
+        keys.push(_.isUndefined(prefix) ? k : prefix + "." + k);
+        return;
       }
-      _.each(deepKeys(v, k), (kk) => keys.push(kk));
+      _.each(deepKeys(v, _.isUndefined(prefix) ? k : prefix + "." + k), (kk) => keys.push(kk));
 
   })
   return keys;

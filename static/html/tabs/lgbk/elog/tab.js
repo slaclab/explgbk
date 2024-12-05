@@ -92,18 +92,18 @@
             if(_.isEmpty(instrument_elogs)) { alert("All related elogs seem to have this entry"); return; }
             var rendered = renderMSTemplate(choose_tmpl, { title: "Cross-post this entry to these related elogs", submit_label: "Post", choices: instrument_elogs });
             rendered.find(".c_f_o_m_submit").on("click", function(){
-                var post_to_elogs = $("#elog_tab").find(".mdl_holder").find(".modal").find("input:checked").map(function() { return $(this).attr("name"); }).toArray();
+                var post_to_elogs = $("#glbl_modals_go_here").find(".modal").find("input:checked").map(function() { return $(this).attr("name"); }).toArray();
                 console.log(post_to_elogs);
-                $("#elog_tab").find(".mdl_holder").find(".modal").modal("hide");
+                $("#glbl_modals_go_here").find(".modal").modal("hide");
                 if(!_.isEmpty(post_to_elogs)) {
                     $.getJSON({url: "ws/cross_post_elogs", data: {_id: entry["_id"], post_to_elogs: _.join(post_to_elogs, ",") }})
                     .done(function(){})
                     .fail(function(jqXHR, textStatus, errorThrown) { console.log(errorThrown); error_message("Server side exception cross posting elog entry " + jqXHR.responseText); })
                 }
             })
-            $("#elog_tab").find(".mdl_holder").append(rendered);
-            $("#elog_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#elog_tab").find(".mdl_holder").empty(); });
-            $("#elog_tab").find(".mdl_holder").find(".modal").modal();
+            $("#glbl_modals_go_here").append(rendered);
+            $("#glbl_modals_go_here").find(".modal").on("hidden.bs.modal", function(){ $("#glbl_modals_go_here").empty(); });
+            $("#glbl_modals_go_here").find(".modal").modal("show");
         })
     }
    
@@ -194,11 +194,11 @@
                                 })
                                 .fail(function(jqXHR, textStatus, errorThrown) { error_message("Server side exception changing sample for run " + jqXHR.responseText); })
                             }
-                            $("#elog_tab").find(".mdl_holder").find(".modal").modal("hide");
+                            $("#glbl_modals_go_here").find(".modal").modal("hide");
                         })
-                        $("#elog_tab").find(".mdl_holder").append(csrndrd);
-                        $("#elog_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#elog_tab").find(".mdl_holder").empty(); });
-                        $("#elog_tab").find(".mdl_holder").find(".modal").modal();
+                        $("#glbl_modals_go_here").append(csrndrd);
+                        $("#glbl_modals_go_here").find(".modal").on("hidden.bs.modal", function(){ $("#glbl_modals_go_here").empty(); });
+                        $("#glbl_modals_go_here").find(".modal").modal("show");
                     })
                 })
                 clicked_elem.closest(".edat").append(rendered);
@@ -397,7 +397,7 @@
                  return;
                }
                Mustache.parse(attchovrlytmpl); let rendered = $(Mustache.render(attchovrlytmpl, { attchid: attchid, entryid: entryid }))
-               $("#elog_tab").find(".mdl_holder").after(rendered);
+               $("#elog_tab").prepend(rendered);
                $(document).on("keyup", function(e) { if (e.keyCode == 27) { $("#elog_attch_ovrly").remove() } });
                rendered.find(".close").on("click", function(){ $("#elog_attch_ovrly").remove(); })
                rendered.find(".gotoentry").on("click", function(){ $("#elog_attch_ovrly").remove(); sessionStorage.setItem("eLog_scrollTo", rootid); window.location.reload(true);
@@ -573,7 +573,7 @@ let attach_websocket = function(trgt) {
 }
 
 export function tabshow(target) {
-    const tabpanetmpl = `<div class="container-fluid text-center tabcontainer lgbk_socketio" id="elog_tab"><div class="mdl_holder"></div><div class="container-fluid text-center" id="elog_content"></div></div>`;
+    const tabpanetmpl = `<div class="container-fluid text-center tabcontainer lgbk_socketio" id="elog_tab"><div class="container-fluid text-center" id="elog_content"></div></div>`;
     let trgtname = target.getAttribute("data-bs-target"), trgt = document.querySelector(trgtname); 
     trgt.innerHTML=tabpanetmpl;
     $("#elog_tab").data("entries", id2entry);

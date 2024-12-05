@@ -102,13 +102,13 @@ export class LgbkCustomParam extends HTMLElement {
     return true;
   }
 
-  mergeinto = (obj) => { 
+  mergeinto = (obj, paramsattrname) => { 
     let newname = _.trim(this.querySelector(".cp_key").value);
     let newvalue = _.trim(this.querySelector(".cp_value").value);
     let nameEmpty = _.isNil(newname) || newname === "";
     let valEmpty = _.isNil(newvalue) || newvalue === "";
     if(!nameEmpty && !valEmpty) {
-      obj[newname] = newvalue;
+      _.set(paramsattrname + "." + newname, newvalue)
     }
   }
 }
