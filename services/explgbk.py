@@ -1355,7 +1355,7 @@ def svc_post_new_elog_entry(experiment_name):
             if not author.endswith("opr") and author not in email_to:
                 logger.info("Adding the author %s as an email recipient of xpost elog entries", author)
                 email_to.append(author)
-            if email_to:
+            if email_to and not skip_email:
                 logger.debug("Sending emails for cross posted elog entry in experiment %s to %s", post_to_elog, ",".join(email_to))
                 send_elog_as_email(post_to_elog, rel_ins_doc, email_to)
 
