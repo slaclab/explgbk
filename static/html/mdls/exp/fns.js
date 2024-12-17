@@ -3,8 +3,8 @@ export function getURAWIRegistration(modalElem, startDate, endDate, event) {
     console.log("Checking to see if experiment " + urexpname + " is registered in URAWI");
     let exp_params = new URLSearchParams();
     exp_params.append("experiment_name", urexpname);
-    modalElem.querySelectorAll("lgbk-custom-param").forEach((lcp) => {  let key = lcp.name, val = lcp.value; if(key != "" && val != "") { exp_params.set(key, val); }  })
-  
+    const PNR = modalElem.querySelector("[data-lgp-name='params_PNR'] .cp_value").value;
+    if(!_.isNil(PNR)) exp_params.append("PNR", PNR);
   
     fetch(lgbkabspath("/lgbk/ws/lookup_experiment_in_urawi?"+exp_params.toString()), {cache: "no-store"})
     .then(function (resp) { return resp.json() })
