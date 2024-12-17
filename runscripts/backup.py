@@ -123,7 +123,7 @@ if __name__ == "__main__":
     logger.info("Gathering the list of databases")
     database_names = sorted(list(logbookclient.list_database_names()))
     for database_name in database_names:
-        if database_name in [ "admin", "config", "local" ]:
+        if database_name in [ "config", "local" ]:
             logger.info("Not backing up system database %s", database_name)
             continue
         backup_database(args, database_name)
