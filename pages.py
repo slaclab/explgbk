@@ -121,10 +121,7 @@ def project(project_id, tabname):
 @pages_blueprint.route("/lgbk/logout", methods=["GET"])
 @context.security.authentication_required
 def logout():
-    resp = make_response(render_template("logout.html"))
-    session.clear()
-    resp.set_cookie('webauth_at', ' ', expires=datetime.datetime.fromtimestamp(0))
-    return resp
+    return make_response(redirect("https://vouch.slac.stanford.edu/logout?returnTo=" + urllib.parse.quote("https://pswww.slac.stanford.edu")))    
 
 @pages_blueprint.route("/lgbk/docs/<path:path>", methods=["GET"])
 @context.security.authentication_required
