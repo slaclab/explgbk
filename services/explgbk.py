@@ -1811,7 +1811,7 @@ def svc_runtable_export_as_csv(experiment_name):
     if not tableName:
         return logAndAbort("Please specify the table name to export.")
     sampleName = request.args.get("sampleName", None)
-    tbldefs = [x for x in filter(lambda x : x["name"] == tableName, get_all_run_tables(experiment_name, g.instrument))]
+    tbldefs = [x for x in filter(lambda x : x["name"] == tableName and not x.get("is_template", False), get_all_run_tables(experiment_name, g.instrument))]
     if len(tbldefs) != 1:
         return logAndAbort("Cannot find the definition for table " + tableName)
     coltups = [ ("Run Number", "num") ] # List of tuples of label and attr name
