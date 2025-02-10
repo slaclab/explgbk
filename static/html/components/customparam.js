@@ -108,7 +108,7 @@ export class LgbkCustomParam extends HTMLElement {
     let nameEmpty = _.isNil(newname) || newname === "";
     let valEmpty = _.isNil(newvalue) || newvalue === "";
     if(!nameEmpty && !valEmpty) {
-      _.set(paramsattrname + "." + newname, newvalue)
+      _.set(obj, paramsattrname + "." + newname, newvalue)
     }
   }
 }
