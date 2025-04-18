@@ -1,8 +1,15 @@
-let wf_job_tmpl = `<div class="row jobrow" data-jobid="{{_id}}"><span class="col-1"></span><span class="col-2">{{def.name}}</span><span class="col-1">{{status}}</span><span class="col-1">{{tool_id}}</span>
-<span class="col-2"><span class="listview-action wact kill-job" title="Kill a running job" {{^running}}disabled{{/running}}><i class="fas fa-skull-crossbones"></i></span><span class="listview-action wact view-log" title="View the log file"><i class="fas fa-align-justify"></i></span><span class="listview-action wact view-details" title="View job details"><i class="fas fa-info-circle"></i></span><span class="listview-action wact delete-job" title="Delete this job entry" {{#running}}disabled{{/running}}><i class="fas fa-trash"></i></span></span><span class="col-5 wf_counters"><ul>{{#counters}}<li><span class="wf_counter_key">{{{key}}}</span>:<span class="wf_counter_value">{{{value}}}</span></li>{{/counters}}</ul></span></div>`,
-wf_run_tmpl = `<div class="runrow" data-spgntr="{{num}}"><div class="row runhdr"><span class="col-1">{{num}}</span><span class="col-2"><select><option value=""> </option>{{#wf_defs}}<option value="{{.}}">{{.}}</option>{{/wf_defs}}</select></span></div>
+let wf_job_tmpl = `<div class="row jobrow" data-jobid="{{_id}}"><span class="col-1"></span><span class="col-1">{{def.name}}</span><span class="col-1">{{status}}</span><span class="col-1">{{tool_id}}</span><span class="col-2">{{#FormatDateTime}}{{submit_time}}{{/FormatDateTime}}</span>
+<span class="col-1">
+  <span class="listview-action wact kill-job" title="Kill a running job" {{^running}}disabled{{/running}}><i class="fas fa-skull-crossbones"></i></span>
+  <span class="listview-action wact view-log" title="View the log file"><i class="fas fa-align-justify"></i></span>
+  <span class="listview-action wact view-details" title="View job details"><i class="fas fa-info-circle"></i></span>
+  <span class="listview-action wact delete-job" title="Delete this job entry" {{#running}}disabled{{/running}}><i class="fas fa-trash"></i></span>
+</span><span class="col wf_counters"><ul>{{#counters}}<li><span class="wf_counter_key">{{{key}}}</span>:<span class="wf_counter_value">{{{value}}}</span></li>{{/counters}}</ul></span></div>`,
+wf_run_tmpl = `<div class="runrow" data-spgntr="{{num}}"><div class="row runhdr"><span class="col-1">{{num}}</span><span class="col-1"><select><option value=""> </option>{{#wf_defs}}<option value="{{.}}">{{.}}</option>{{/wf_defs}}</select></span></div>
 <div class="jobsdiv">{{#jobs}}`+wf_job_tmpl+`{{/jobs}}</div></div>`;
 Mustache.parse(wf_job_tmpl);Mustache.parse(wf_run_tmpl);
+let wflow_jobs = {};
+
 
 let kick_off_job = function() {
   let jobname = $(this).val(), run_num = $(this).closest(".runrow").attr("data-spgntr");
@@ -19,11 +26,11 @@ let kick_off_job = function() {
   .fail( function(jqXHR, textStatus, errorThrown) { error_message("Server side HTTP failure triggering job " + textStatus); })
 }
 
-let show_content_modal = function(title, content_url) {
+let show_content_modal = function(title, content_url, other_info="") {
   $.when($.ajax("../../static/html/ms/generic_msg.html"), $.ajax(content_url))
   .done(function(d0, d1) {
     if(d1[0].success) {
-        let rendered = $(Mustache.render(d0[0], { title: title, message: "<pre>" + d1[0].value + "</pre>" }));
+        let rendered = $(Mustache.render(d0[0], { title: title, message: other_info + "<pre>" + d1[0].value + "</pre>" }));
         $("#lcls_wf_ctrls_tab").find(".mdl_holder").empty().append(rendered);
         $("#lcls_wf_ctrls_tab").find(".mdl_holder").find(".modal").on("hidden.bs.modal", function(){ $("#lcls_wf_ctrls_tab").find(".mdl_holder").empty(); });
         $("#lcls_wf_ctrls_tab").find(".mdl_holder").find(".modal").modal("show");
@@ -40,7 +47,9 @@ let kill_job = function() {
 }
 let view_log = function() {
   let jobid = $(this).closest(".jobrow").attr("data-jobid");
-  show_content_modal("Log file for " + jobid, "ws/workflow/" + jobid + "/job_log_file");
+  let wfjobdoc = _.get(wflow_jobs, jobid, {});
+  let log_file_location = _.get(wfjobdoc, "log_file_path", "").replace("%J", _.get(wfjobdoc, "tool_id", ""));
+  show_content_modal("Log file for " + jobid, "ws/workflow/" + jobid + "/job_log_file", `<div class="border-bottom pb-2"><span class="fw-bold">Log file location:</span> ${log_file_location} </div>`);
 }
 let view_details = function() {
   let jobid = $(this).closest(".jobrow").attr("data-jobid");
@@ -56,11 +65,13 @@ let job_attach_actions_fn = function(rendered) {
   rendered.find(".delete-job").not("[disabled]").on("click", delete_job);
 }
 let job_render_fn = function(){
+  this.FormatDateTime = elog_formatdatetime;
   let rendered = $(Mustache.render(wf_job_tmpl, this));
   job_attach_actions_fn(rendered);
   return rendered;
 };
 let run_render_fn = function(){
+  this.FormatDateTime = elog_formatdatetime;
   let rendered = $(Mustache.render(wf_run_tmpl, this));
   rendered.find(".runhdr select").on("change", kick_off_job);
   job_attach_actions_fn(rendered);
@@ -72,7 +83,7 @@ export function tabshow(target) {
   const tabpanetmpl = `<div class="container-fluid text-center tabcontainer alwaysreload lgbk_socketio" id="lcls_wf_ctrls_tab">
     <div class="mdl_holder"></div>
     <div class="container-fluid text-center" id="wf_ctrls_content">
-      <div class="row ctrls_hdr"><span class="col-1">Run</span><span class="col-2">Job</span><span class="col-1">Status</span><span class="col-1">Job ID</span><span class="col-2">Actions</span><span class="col-5">Report</span></div>
+      <div class="row ctrls_hdr"><span class="col-1">Run</span><span class="col-1">Job</span><span class="col-1">Status</span><span class="col-1">Job ID</span><span class="col-2">Submit Time</span><span class="col-1">Actions</span><span class="col">Report</span></div>
       <div class="ctrls_content spgntr_append"></div>
     </div>
   </div>`;
@@ -92,6 +103,7 @@ export function tabshow(target) {
       let jobs = d0[0].value, runs = d1[0].value, wf_defs = _.map(d2[0].value, "name");
       _.each(jobs, function(x){ x.running = _.includes(["RUNNING", "SUBMITTED"], _.get(x, "status", ""))})
       let jobsbyrun = _.groupBy(jobs, function(x){ return x["run_num"]});
+      _.each(jobs, (job) => { wflow_jobs[job["_id"]] = job })
       _.each(runs, function(r){ r.jobs = _.get(jobsbyrun, r['num'], []); r.wf_defs = wf_defs; r.render = run_render_fn; });
       $("#wf_ctrls_content").data("spgntr").addObjects(runs);
 
@@ -114,6 +126,7 @@ export function tabshow(target) {
       $("#wf_ctrls_content").find("[data-jobid="+wfjobid+"]").remove();
     } else {
       wfjobdoc["value"].running = _.includes(["RUNNING", "SUBMITTED"], _.get(wfjobdoc["value"], "status", ""));
+      wflow_jobs[wfjobid] = wfjobdoc["value"];
       let rendered = $(Mustache.render(wf_job_tmpl, wfjobdoc["value"])); job_attach_actions_fn(rendered);
       if($("#wf_ctrls_content").find("[data-jobid="+wfjobid+"]").length <= 0) {
         console.log("WF jobs add new entry "); console.log(wfjobdoc);
