@@ -1047,7 +1047,7 @@ def svc_instrument_standby():
     if status:
         context.kafka_producer.send("instrument_standby", {"value": {
             "instrument": instrument,
-            "startion": station,
+            "station": station,
             "userid": userid
         }})
 
