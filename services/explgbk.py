@@ -1552,9 +1552,7 @@ def svc_get_files(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_experiment_files(experiment_name, sample_name=request.args.get("sampleName", None))})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/file_counts_by_extension", methods=["GET"])
-@context.security.authentication_required
 @experiment_exists
-@context.security.authorization_required("read")
 def svc_exp_file_counts_by_extension(experiment_name):
     return JSONEncoder().encode({"success": True, "value": get_exp_file_counts_by_extension(experiment_name)})
 
