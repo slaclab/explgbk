@@ -1161,6 +1161,17 @@ def get_experiment_files_for_live_mode_at_location(experiment_name, location):
 
     return ret
 
+def get_exp_file_counts_by_extension(experiment_name):
+    """
+    Return the file counts based on file type that we know about.
+    """
+    expdb = logbookclient[experiment_name]
+    return [ x for x in expdb.file_catalog.aggregate([
+        { "$project": { "extension": { "$first": { "$reverseArray": { "$split": [ "$path", "."] }}}}},
+        { "$group": { "_id": "$extension", "count": { "$sum": 1 } }},
+        { "$project": { "_id": 0, "extension": "$_id", "count": "$count" }}
+    ])]
+
 def get_experiment_runs(experiment_name, include_run_params=False, sample_name=None):
     '''
     Get the runs for the given experiment.
