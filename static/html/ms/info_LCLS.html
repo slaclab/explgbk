@@ -65,10 +65,16 @@ $("#info_tab").on("info_loaded", function(ev, info){
 
     if(_.has(info, "params.PNR") && !_.isEqual(_.get(info, "params.PNR"), "N/A")) {
         $("#info_tab").find(".ques_embed").prepend($("<h1 class='pt-2'>Questionnaire</h1>"));
-        let run_period = _.get(info, "params.run_period", "run"+experiment_name.slice(experiment_name.length - 2))
-        $.getJSON("../../../questionnaire_slac/ws/questionnaire/urawidata/" + run_period + "/" + _.get(info, "params.PNR"))
+        let run_period = "run"+_.get(info, "params.run_period", experiment_name.slice(experiment_name.length - 2));
+        let questionnaire_prefix = "../../../questionnaire_slac";
+        if(_.has(info, "instrument_info.params.questionnaire_prefix")) {
+          questionnaire_prefix = _.get(info, "instrument_info.params.questionnaire_prefix");
+          console.log("Questionnaire prefix override", questionnaire_prefix);
+        }
+        $.getJSON(questionnaire_prefix + "/ws/questionnaire/urawidata/" + run_period + "/" + _.get(info, "params.PNR"))
         .done(function(ques_data){
-            $("#info_tab").find(".ques_tabs").first().append('<iframe class="sitespecific_iframe" src=../../../questionnaire_slac/proposal_questionnaire/' + run_period + '/' + _.get(info, "params.PNR") + '/?hideHeader=true></iframe>');
+            let questionnaire_url = questionnaire_prefix + "/proposal_questionnaire/" + run_period + "/" + _.get(info, "params.PNR") + "/?hideHeader=true";
+            $("#info_tab").find(".ques_tabs").first().append('<iframe class="sitespecific_iframe" src="' + questionnaire_url + '"></iframe>');
             $(document).on("resize_embedded_iframe", function(ev, newh){
                 console.log("Changing embedded IFrame's height to " + newh);
                 $("#info_tab").find(".sitespecific_iframe").height(newh);
