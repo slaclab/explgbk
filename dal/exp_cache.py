@@ -305,6 +305,13 @@ def search_experiments_for_common_fields(search_term, sort_criteria):
         ]}, {"_id": 1, "name": 1}).sort(sort_criteria))
     return matching_entries
 
+def get_recently_updated_experiments(offset_secs):
+    """
+    Return a list of experiment names which have run.last_run.begin_time gte specified offset
+    """
+    offset_time = datetime.datetime.now() - datetime.timedelta(seconds=offset_secs)
+    return [ x["name"] for x in list(logbookclient['explgbk_cache']['experiments'].find({"last_run.begin_time": { "$gte": offset_time }}, {"name": 1})) ]
+
 def get_all_param_names_matching_regex(rgx):
     """
     Get all param names in all experiments matching the incoming regex.

@@ -72,7 +72,7 @@ from dal.exp_cache import get_experiments, get_experiments_for_user, does_experi
     text_search_for_experiments, get_experiment_stats, get_experiment_daily_data_breakdown, \
     get_experiments_with_post_privileges, get_cached_experiment_names, get_all_param_names_matching_regex, get_experiments_proposal_mappings, \
     update_single_experiment_info, get_experiments_starting_in_time_frame, get_sorted_experiments_ids, get_cached_experiment_info, \
-    search_experiments_for_common_fields, get_direct_experiments_for_user, get_potentially_active_users
+    search_experiments_for_common_fields, get_direct_experiments_for_user, get_potentially_active_users, get_recently_updated_experiments
 
 from dal.imagestores import parseImageStoreURL
 
@@ -473,6 +473,18 @@ def svc_get_cached_experiment_names():
     Mainly meant for debugging.
     """
     return jsonify({'success': True, 'value': get_cached_experiment_names()})
+
+
+@explgbk_blueprint.route("/lgbk/ws/experiment_names_updated_within", methods=["GET"])
+def svc_get_recently_updated_experiments():
+    """
+    Get a list of the experiments which have had updates within the specified time
+    What constitutes as updated is for now restricted to the experiment's run.begin_times.
+    This may be enhanced in the future to include elog/workflow_jobs etc.
+    :param: Specify the time offset as offset_seconds
+    """
+    offset_secs = int(request.args.get("offset_secs", str(8*60*60))) # Defaults to a shift
+    return jsonify({'success': True, 'value': get_recently_updated_experiments(offset_secs)})
 
 @explgbk_blueprint.route("/lgbk/ws/instruments", methods=["GET"])
 @context.security.authentication_required
