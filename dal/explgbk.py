@@ -416,6 +416,12 @@ def get_currently_active_experiments():
                 curr_run = get_current_run(exp_info['name'])
                 if curr_run:
                     exp_info['current_run'] = { x : curr_run[x] for x in ['num', 'begin_time', 'end_time'] if x in curr_run and curr_run[x] }
+                cached_exp_info = logbookclient['explgbk_cache']['experiments'].find_one({"_id": exp_info['name']})
+                if cached_exp_info:
+                    if "last_run" in cached_exp_info:
+                        exp_info["last_run"] = cached_exp_info["last_run"]
+                    if "first_run" in cached_exp_info:
+                        exp_info["first_run"] = cached_exp_info["first_run"]
             ret.append(exp_info)
 
     return ret
