@@ -24,7 +24,7 @@ from flask import g
 
 from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, \
     MAX_ATTACHMENT_SIZE, URAWI_URL, LOGBOOK_SITE
-from dal.run_control import get_current_run, start_run, end_run, is_run_closed, get_run_doc_for_run_num
+from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 from dal.imagestores import parseImageStoreURL
 from dal.utils import escape_chars_for_mongo, reverse_escape_chars_for_mongo
 
@@ -1187,10 +1187,10 @@ def get_experiment_runs(experiment_name, include_run_params=False, sample_name=N
     expdb = logbookclient[experiment_name]
     run_params_projection = { "params": False } if not include_run_params else { "some_non_existent_field": False }
     if not sample_name or sample_name == "All Samples":
-        return [run for run in expdb['runs'].find(projection=run_params_projection).sort([("num", -1)])]
+        run_docs = [run for run in expdb['runs'].find(projection=run_params_projection).sort([("num", -1)])]
     else:
         # We start at samples for performance reasons;
-        return [x for x in expdb.samples.aggregate([
+        run_docs =  [x for x in expdb.samples.aggregate([
             { "$match": { "name": sample_name }},
             { "$lookup": { "from": "runs", "localField": "_id", "foreignField": "sample", "as": "run"}},
             { "$unwind": "$run" }, # lookup generates an array field, we convert to a list of docs with a single field instead.
@@ -1198,6 +1198,10 @@ def get_experiment_runs(experiment_name, include_run_params=False, sample_name=N
             { "$project": run_params_projection },
             { "$sort": { "num": -1 }}
         ])]
+    for run_doc in run_docs:
+        if "sample" in run_doc:
+            run_doc["sample"] = expdb['samples'].find_one({"_id": run_doc["sample"]})
+    return run_docs
 
 def get_experiment_run_document(experiment_name, rnum):
     '''
@@ -1205,9 +1209,9 @@ def get_experiment_run_document(experiment_name, rnum):
     '''
     expdb = logbookclient[experiment_name]
     run_doc = expdb['runs'].find_one({"num": rnum})
+    if "sample" in run_doc:
+        run_doc["sample"] = expdb['samples'].find_one({"_id": run_doc["sample"]})        
     return run_doc
-
-
 
 def get_all_run_tables(experiment_name, instrument):
     '''
