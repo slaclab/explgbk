@@ -1,11 +1,11 @@
-let exper_template = `{{#value}}<tr>
+let exper_template = `{{#value}}{{^is_standby}}<tr>
 <td> <a target="_blank" href="{{_id}}/info">{{ name }}</a> </td>
 <td class="d-none exp_actions"></td>
 <td> {{#FormatDate}}{{first_run.begin_time }}{{/FormatDate}} </td>
 <td> {{#FormatDate}}{{last_run.begin_time}}{{/FormatDate}} </td>
 <td> {{ contact_info }} </td>
 <td> {{ description }} </td>
-</tr>{{/value}}`;
+</tr>{{/is_standby}}{{/value}}`;
 let instrument_tab_template = `<li class="nav-item"><a class="nav-link instrument_tab" data-bs-toggle="tab" data-bs-target="#{{escaped_instr}}" role="tab" aria-controls="home-tab-pane" aria-selected="false">{{ instrument }}</a></li>`;
 let instrument_tab_content_template = `<div role="tabpanel" class="tab-pane fade in" id="{{escaped_instr}}">
 <div class="tabbable"><ul class="nav nav-pills" role="tablist"></ul></div>
