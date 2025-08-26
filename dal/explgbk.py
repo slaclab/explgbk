@@ -2042,6 +2042,34 @@ def update_wf_job(experiment_name, job_id, wf_updates):
     expdb["workflow_jobs"].update_one({"_id": ObjectId(job_id)}, {"$set": wf_updates })
     return True, "", get_workflow_job_doc(experiment_name, job_id)
 
+def questionnaire_cache_refresh(experiment_name):
+    """
+    The questionnaire caches URAWI and UPS proposal info.
+    This call forces a cache refresh ( perhaps based on something from the UI )
+    """
+    if not QUESTIONNAIRE_URL:
+        return 
+    if not experiment_name:
+        return 
+    expdb = logbookclient[experiment_name]
+    expinfo = expdb['info'].find_one()
+    if not expinfo:
+        return
+    questionnaire_proposal_id = expinfo.get("params", {}).get("PNR", None)
+    if not questionnaire_proposal_id:
+        logger.warning("We need a PNR in the experiment info for a cache refresh")
+        return
+    additionalAuthToken = os.environ.get("QUESTIONNAIRE_AUTH", None)
+    if not additionalAuthToken:
+        raise Exception("Please specify the auth token for the questionnaire")
+    prts = additionalAuthToken.split("=")
+    cresp = requests.get(f"{QUESTIONNAIRE_URL}/refresh_cache", params={"proposal_id": questionnaire_proposal_id}, auth=HTTPBasicAuth(prts[0], prts[1]))
+    try:
+        cresp.raise_for_status()
+    except:
+        logger.exception("Exception refreshing questionnaire cache")
+    logger.info("Refreshed the questionnaire cache for %s", questionnaire_proposal_id)
+
 def get_ques_proposal_details(experiment_name, run_period=None, proposal_id=None):
     """
     Get proposal details for the experiment from the questionnaire.

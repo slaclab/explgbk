@@ -59,7 +59,8 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station, \
     get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag, stop_current_sample, get_tag_to_run_numbers, \
     get_tags_for_runs, clone_system_template_run_tables_into_experiment, get_projects, get_project_info, create_project, update_project, \
-    get_project_grids, get_project_grid, add_grid_to_project, update_project_grid, link_grid_to_experiment, get_exp_file_counts_by_extension
+    get_project_grids, get_project_grid, add_grid_to_project, update_project_grid, link_grid_to_experiment, get_exp_file_counts_by_extension, \
+    questionnaire_cache_refresh
 
 
 from dal.run_control import start_run, get_current_run, end_run, add_run_params, get_run_doc_for_run_num, get_sample_for_run, \
@@ -2528,6 +2529,7 @@ def sync_collaborators_with_user_portal(experiment_name):
 @context.security.authentication_required
 @context.security.authorization_required("manage_groups")
 def svc_sync_collaborators_with_user_portal(experiment_name):
+    questionnaire_cache_refresh(experiment_name)
     sync_collaborators_with_user_portal(experiment_name)
     return JSONEncoder().encode({"success": True})
 
