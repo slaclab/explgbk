@@ -2091,7 +2091,7 @@ def import_users_from_URAWI(experiment_name, role_fq_name="LogBook/Writer"):
     existing_collaborators = get_collaborators_list_for_experiment(experiment_name)
     logger.debug(existing_collaborators)
     ques_doc = get_ques_proposal_details(experiment_name)
-    if ques_doc and ques_doc.get("status", "error") == "success":
+    if ques_doc:
         for coll in ques_doc.get("URAWI", {}).get("collaborators", []):
             for acc in coll.get("account", []):
                 if "unixGroup" not in acc or acc.get("unixGroup", "") == "xs":
@@ -2102,7 +2102,7 @@ def import_users_from_URAWI(experiment_name, role_fq_name="LogBook/Writer"):
                     logger.debug("Collaborator %s is already in the system", accuid)
                     continue
                 add_collaborator_to_role(experiment_name, accuid, role_fq_name)
-                logger.debug("Done adding collaborator %s to experiment %s", accuid, experiment_name)
+                logger.info("Done adding collaborator %s to experiment %s", accuid, experiment_name)
 
 def get_projects(user):
     """
