@@ -55,7 +55,7 @@ from dal.explgbk import LgbkException, get_experiment_info, save_new_experiment_
     get_experiment_run_document, get_experiment_files_for_run_for_live_mode, get_switch_history, delete_experiment, migrate_attachments_to_local_store, \
     get_complete_elog_tree_for_specified_id, get_site_file_types, add_player_to_instrument_role, remove_player_from_instrument_role, \
     delete_wf_definition, get_elog_entries_by_regex, get_run_param_descriptions, add_update_run_param_descriptions, change_sample_for_run, \
-    add_update_experiment_params, get_URAWI_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments, \
+    add_update_experiment_params, get_ques_proposal_details, import_users_from_URAWI, get_poc_feedback_document, get_poc_feedback_experiments, \
     get_experiment_files_for_run_for_live_mode_at_location, get_active_experiment_name_for_instrument_station, \
     get_experiment_files_for_live_mode_at_location, get_run_numbers_with_tag, stop_current_sample, get_tag_to_run_numbers, \
     get_tags_for_runs, clone_system_template_run_tables_into_experiment, get_projects, get_project_info, create_project, update_project, \
@@ -722,8 +722,9 @@ def svc_lookup_experiment_in_URAWI():
     """
     experiment_name = request.args.get("experiment_name", None)
     proposal_id = request.args.get("PNR", None)
-    urawi_doc = get_URAWI_details(experiment_name, proposal_id)
-    if urawi_doc and urawi_doc.get("status", "error") == "success":
+    run_period = request.args.get("run_period", None)
+    urawi_doc = get_ques_proposal_details(experiment_name, run_period, proposal_id)
+    if urawi_doc:
         return jsonify({'success': True, "value": urawi_doc})
     return jsonify({'success': False})
 

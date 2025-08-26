@@ -13,6 +13,7 @@ import shutil
 import math
 
 import requests
+from requests.auth import HTTPBasicAuth
 import tempfile
 import subprocess
 
@@ -23,7 +24,7 @@ from bson import ObjectId
 from flask import g
 
 from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, \
-    MAX_ATTACHMENT_SIZE, URAWI_URL, LOGBOOK_SITE
+    MAX_ATTACHMENT_SIZE, QUESTIONNAIRE_URL, LOGBOOK_SITE
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 from dal.imagestores import parseImageStoreURL
 from dal.utils import escape_chars_for_mongo, reverse_escape_chars_for_mongo
@@ -2041,38 +2042,45 @@ def update_wf_job(experiment_name, job_id, wf_updates):
     expdb["workflow_jobs"].update_one({"_id": ObjectId(job_id)}, {"$set": wf_updates })
     return True, "", get_workflow_job_doc(experiment_name, job_id)
 
-def get_URAWI_details(experiment_name, proposal_id=None):
+def get_ques_proposal_details(experiment_name, run_period=None, proposal_id=None):
     """
-    Get details for the experiment from URAWI.
+    Get proposal details for the experiment from the questionnaire.
     """
-    if URAWI_URL and experiment_name:
-        URAWI_proposal_id = proposal_id
+    if QUESTIONNAIRE_URL and experiment_name:
+        questionnaire_run_period = run_period
+        questionnaire_proposal_id = proposal_id
         try:
             # Check to see if we have an info object with a PNR
             expdb = logbookclient[experiment_name]
             expinfo = expdb['info'].find_one()
             if expinfo:
-                URAWI_proposal_id = expinfo.get("params", {}).get("PNR", None)
-            if not URAWI_proposal_id:
+                questionnaire_proposal_id = expinfo.get("params", {}).get("PNR", None)
+                questionnaire_run_period = expinfo.get("params", {}).get("run_period", questionnaire_run_period)
+            if not questionnaire_proposal_id:
                 # For LCLS and TestFac, we compose the experiment name by prefixing the instrument and appending the run period.
                 if LOGBOOK_SITE in ["LCLS", "TestFac"]:
-                    URAWI_proposal_id = experiment_name[3:-2].upper()
+                    questionnaire_proposal_id = experiment_name[3:-2].upper()
                 else:
-                    URAWI_proposal_id = experiment_name
-            logger.info("Getting URAWI data for proposal %s using %s", URAWI_proposal_id, URAWI_URL)
-            params={ "proposalNo" : URAWI_proposal_id }
-            additionalAuthToken = os.environ.get("PSDM_AUTHTOKEN", None)
-            if additionalAuthToken:
-                prts = additionalAuthToken.split("=")
-                params[prts[0]] = prts[1]
-            urawi_doc = requests.get(URAWI_URL, params, verify=False).json()
+                    questionnaire_proposal_id = experiment_name
+            if not questionnaire_run_period:
+                questionnaire_run_period = experiment_name[-2:]
+
+            proposal_url = f"{QUESTIONNAIRE_URL}/run{questionnaire_run_period}/{questionnaire_proposal_id}/entire"
+            logger.info("Getting questionnaire data for proposal using %s", proposal_url)
+            additionalAuthToken = os.environ.get("QUESTIONNAIRE_AUTH", None)
+            if not additionalAuthToken:
+                raise Exception("Please specify the auth token for the questionnaire")
+            prts = additionalAuthToken.split("=")
+            resp = requests.get(proposal_url, auth=HTTPBasicAuth(prts[0], prts[1]), verify=False)
+            resp.raise_for_status()
+            ques_doc = resp.json()
             if LOGBOOK_SITE in ["LCLS", "TestFac"]:
-                if urawi_doc.get("instrument") == "CRIXS":
-                    logger.debug("Mapping one off instrument for LCLS/UED for proposal %s", URAWI_proposal_id)
-                    urawi_doc["instrument"] = "RIX"
-            return urawi_doc
+                if ques_doc.get("instrument") == "CRIXS":
+                    logger.debug("Mapping one off instrument for LCLS/UED for proposal %s", questionnaire_proposal_id)
+                    ques_doc["instrument"] = "RIX"
+            return ques_doc
         except Exception as e:
-            logger.exception("Exception fetching data from URAWI using URL %s for %s", URAWI_URL, URAWI_proposal_id)
+            logger.exception("Exception fetching data from URAWI using URL %s for %s", QUESTIONNAIRE_URL, questionnaire_proposal_id)
             return None
     return None
 
@@ -2082,9 +2090,9 @@ def import_users_from_URAWI(experiment_name, role_fq_name="LogBook/Writer"):
     """
     existing_collaborators = get_collaborators_list_for_experiment(experiment_name)
     logger.debug(existing_collaborators)
-    urawi_doc = get_URAWI_details(experiment_name)
-    if urawi_doc and urawi_doc.get("status", "error") == "success":
-        for coll in urawi_doc.get("collaborators", []):
+    ques_doc = get_ques_proposal_details(experiment_name)
+    if ques_doc and ques_doc.get("status", "error") == "success":
+        for coll in ques_doc.get("URAWI", {}).get("collaborators", []):
             for acc in coll.get("account", []):
                 if "unixGroup" not in acc or acc.get("unixGroup", "") == "xs":
                     logger.debug("Skipping adding probable experiment related account %s", acc)

@@ -5,12 +5,16 @@ export function getURAWIRegistration(modalElem, startDate, endDate, event) {
     exp_params.append("experiment_name", urexpname);
     const PNR = modalElem.querySelector("[data-lgp-name='params_PNR'] .cp_value").value;
     if(!_.isNil(PNR)) exp_params.append("PNR", PNR);
+    const rp_prm = modalElem.querySelector("lgbk-custom-param[name='run_period'] .cp_value");
+    if(!_.isNil(rp_prm)) {
+      exp_params.append("run_period", rp_prm.value);
+    }
   
     fetch(lgbkabspath("/lgbk/ws/lookup_experiment_in_urawi?"+exp_params.toString()), {cache: "no-store"})
     .then(function (resp) { return resp.json() })
     .then(function (expdataresp) {
       if(expdataresp.success) {
-        let expdata = expdataresp.value;
+        let expdata = _.get(expdataresp.value, "URAWI", {});
         console.log(expdata);
         modalElem.querySelector(".description").value = expdata['proposalTitle'];
         modalElem.querySelector(".pi_name").value = _.get(expdata, 'spokesPerson.firstName') + " " + _.get(expdata,'spokesPerson.lastName');
