@@ -922,6 +922,51 @@ def svc_lock_unlock_experiment():
     else:
         return jsonify({'success': False, 'errormsg': errormsg})
 
+
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/update_schedule", methods=["POST"])
+@context.security.authentication_required
+@experiment_exists_and_unlocked
+@context.security.authorization_required("experiment_edit")
+def svc_update_experiment_schedule(experiment_name):
+    """
+    Changes the start and end dates for an experiment
+    """
+    new_start_time = request.args.get("start_time", None)
+    if not new_start_time:
+        return logAndAbort("Please specify the new start time as a start_time query parameter")
+    new_end_time = request.args.get("end_time", None)
+    if not new_end_time:
+        return logAndAbort("Please specify the new start time as a end_time query parameter")
+    start_time = datetime.strptime(new_start_time, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
+    end_time = datetime.strptime(new_end_time, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=pytz.UTC)
+
+    if start_time >= end_time:
+        return logAndAbort("Please specify a end time that is after the start time")
+
+    if (end_time - start_time).total_seconds() < 3600:
+        return logAndAbort("We do not allow experiments with durations less than an hour")
+
+    info = get_experiment_info(experiment_name)
+    
+    tz = pytz.timezone('America/Los_Angeles')
+    logger.info("About to change the schedule for %s from %s to %s currently this is %s to %s", 
+        experiment_name,
+        start_time.astimezone(tz).strftime('%b/%d/%Y %H:%M:%S'),
+        end_time.astimezone(tz).strftime('%b/%d/%Y %H:%M:%S'),
+        info["start_time"].strftime('%b/%d/%Y %H:%M:%S'),
+        info["end_time"].strftime('%b/%d/%Y %H:%M:%S')
+    )
+
+    info["start_time"] = start_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    info["end_time"] = end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    (status, errormsg) = update_existing_experiment(experiment_name, info)
+    if status:
+        context.kafka_producer.send("experiments", {"experiment_name" : experiment_name, "CRUD": "Update", "value": info})
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'errormsg': errormsg})
+
+
 @explgbk_blueprint.route("/lgbk/ws/reload_experiment_cache", methods=["GET"])
 @context.security.authentication_required
 @context.security.authorization_required("edit")
