@@ -2050,11 +2050,17 @@ def questionnaire_cache_refresh(experiment_name):
     if not QUESTIONNAIRE_URL:
         return 
     if not experiment_name:
-        return 
+        return
     expdb = logbookclient[experiment_name]
     expinfo = expdb['info'].find_one()
     if not expinfo:
         return
+    thequesurl = QUESTIONNAIRE_URL
+    instrument = expinfo["instrument"]
+    insinfo = logbookclient["site"]["instruments"].find_one({"_id": instrument})
+    if insinfo.get("params", {}).get("questionnaire_ws_url", None):
+        thequesurl = insinfo["params"]["questionnaire_ws_url"]
+        logger.debug("Overriding questionnaure ws_url from instrument %s", thequesurl)
     questionnaire_proposal_id = expinfo.get("params", {}).get("PNR", None)
     if not questionnaire_proposal_id:
         logger.warning("We need a PNR in the experiment info for a cache refresh")
@@ -2063,7 +2069,7 @@ def questionnaire_cache_refresh(experiment_name):
     if not additionalAuthToken:
         raise Exception("Please specify the auth token for the questionnaire")
     prts = additionalAuthToken.split("=")
-    cresp = requests.get(f"{QUESTIONNAIRE_URL}/refresh_cache", params={"proposal_id": questionnaire_proposal_id}, auth=HTTPBasicAuth(prts[0], prts[1]))
+    cresp = requests.get(f"{thequesurl}/refresh_cache", params={"proposal_id": questionnaire_proposal_id}, auth=HTTPBasicAuth(prts[0], prts[1]))
     try:
         cresp.raise_for_status()
     except:
@@ -2077,6 +2083,7 @@ def get_ques_proposal_details(experiment_name, run_period=None, proposal_id=None
     if QUESTIONNAIRE_URL and experiment_name:
         questionnaire_run_period = run_period
         questionnaire_proposal_id = proposal_id
+        thequesurl = QUESTIONNAIRE_URL
         try:
             # Check to see if we have an info object with a PNR
             expdb = logbookclient[experiment_name]
@@ -2084,6 +2091,11 @@ def get_ques_proposal_details(experiment_name, run_period=None, proposal_id=None
             if expinfo:
                 questionnaire_proposal_id = expinfo.get("params", {}).get("PNR", None)
                 questionnaire_run_period = expinfo.get("params", {}).get("run_period", questionnaire_run_period)
+                instrument = expinfo["instrument"]
+                insinfo = logbookclient["site"]["instruments"].find_one({"_id": instrument})
+                if insinfo.get("params", {}).get("questionnaire_ws_url", None):
+                    thequesurl = insinfo["params"]["questionnaire_ws_url"]
+                    logger.debug("Overriding questionnaure ws_url from instrument %s", thequesurl)
             if not questionnaire_proposal_id:
                 # For LCLS and TestFac, we compose the experiment name by prefixing the instrument and appending the run period.
                 if LOGBOOK_SITE in ["LCLS", "TestFac"]:
@@ -2093,7 +2105,7 @@ def get_ques_proposal_details(experiment_name, run_period=None, proposal_id=None
             if not questionnaire_run_period:
                 questionnaire_run_period = experiment_name[-2:]
 
-            proposal_url = f"{QUESTIONNAIRE_URL}/run{questionnaire_run_period}/{questionnaire_proposal_id}/entire"
+            proposal_url = f"{thequesurl}/run{questionnaire_run_period}/{questionnaire_proposal_id}/entire"
             logger.info("Getting questionnaire data for proposal using %s", proposal_url)
             additionalAuthToken = os.environ.get("QUESTIONNAIRE_AUTH", None)
             if not additionalAuthToken:
@@ -2108,7 +2120,7 @@ def get_ques_proposal_details(experiment_name, run_period=None, proposal_id=None
                     ques_doc["instrument"] = "RIX"
             return ques_doc
         except Exception as e:
-            logger.exception("Exception fetching data from URAWI using URL %s for %s", QUESTIONNAIRE_URL, questionnaire_proposal_id)
+            logger.exception("Exception fetching data from URAWI using URL %s for %s", thequesurl, questionnaire_proposal_id)
             return None
     return None
 
