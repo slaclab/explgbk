@@ -2096,6 +2096,17 @@ def get_ques_proposal_details(experiment_name, run_period=None, proposal_id=None
                 if insinfo.get("params", {}).get("questionnaire_ws_url", None):
                     thequesurl = insinfo["params"]["questionnaire_ws_url"]
                     logger.debug("Overriding questionnaure ws_url from instrument %s", thequesurl)
+            else:
+                # See if we can determine the instrument based on the first 3 chars of the experiment name
+                if LOGBOOK_SITE in ["LCLS", "TestFac"]:
+                    instrument = experiment_name[0:3]
+                    insinfo = logbookclient["site"]["instruments"].find_one({"_id": instrument})
+                    if not insinfo:
+                        insinfo = logbookclient["site"]["instruments"].find_one({"_id": instrument.upper()})
+                    if insinfo and insinfo.get("params", {}).get("questionnaire_ws_url", None):
+                        thequesurl = insinfo["params"]["questionnaire_ws_url"]
+                        logger.debug("Overriding questionnaure ws_url from instrument %s", thequesurl)
+
             if not questionnaire_proposal_id:
                 # For LCLS and TestFac, we compose the experiment name by prefixing the instrument and appending the run period.
                 if LOGBOOK_SITE in ["LCLS", "TestFac"]:
