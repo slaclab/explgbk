@@ -725,7 +725,7 @@ def svc_lookup_experiment_in_URAWI():
     proposal_id = request.args.get("PNR", None)
     run_period = request.args.get("run_period", None)
     urawi_doc = get_ques_proposal_details(experiment_name, run_period, proposal_id)
-    if urawi_doc:
+    if urawi_doc and urawi_doc.get("URAWI", {}) and urawi_doc["URAWI"].get("proposalNo", None):
         return jsonify({'success': True, "value": urawi_doc})
     return jsonify({'success': False})
 
