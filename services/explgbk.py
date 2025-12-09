@@ -2572,7 +2572,7 @@ def sync_collaborators_with_user_portal(experiment_name):
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/sync_collaborators_with_user_portal", methods=["GET"])
 @experiment_exists
 @context.security.authentication_required
-@context.security.authorization_required("manage_groups")
+@context.security.authorization_required("edit")
 def svc_sync_collaborators_with_user_portal(experiment_name):
     questionnaire_cache_refresh(experiment_name)
     sync_collaborators_with_user_portal(experiment_name)

@@ -47,16 +47,18 @@ var refreshFunction = function() {
 }
 
 let toolbar_functions = function() {
-    if (!_.get(privileges, "manage_groups", false)) { console.log("User is not an admin; skipping actions."); return; }
-    var tab_toolbar = `<span id="collab_add_user" title="Add a user to the experiment as a collaborator"><i class="fas fa-user fa-lg"></i></span>
+    const manage_groups = _.get(privileges, "manage_groups", false);
+    var tab_toolbar = `{{#manage_groups}}
+    <span id="collab_add_user" title="Add a user to the experiment as a collaborator"><i class="fas fa-user fa-lg"></i></span>
     <span id="collab_add_group" title="Add a user group"><i class="fas fa-users fa-lg"></i></span>
+    {{/manage_groups}}
     <span id="collab_sync_user_portal" title="Import collaborators from the user portal"><i class="fas fa-sync fa-lg"></i></span>
     `;
     var uid_search_results = `{{#value}}<tr data-uid="{{ uid }}"><td>{{ uid }}</td><td>{{ gecos }}</td><td><input class="collab_select" type="checkbox"></td></tr>{{/value}}`;
     var group_search_results = `{{#value}}<tr data-uid="{{ . }}"><td>{{ . }}</td><td>N/A</td><td><input class="collab_select" type="checkbox"></td></tr>{{/value}}`;
     Mustache.parse(uid_search_results);
     Mustache.parse(group_search_results);
-    var toolbar_rendered = $(tab_toolbar);
+    var toolbar_rendered = $(Mustache.render(tab_toolbar, {manage_groups: manage_groups}));
     $("#toolbar_for_tab").append(toolbar_rendered);
     var search_and_add = function(search_url, param_name, ms_template, uid_prefix) {
         $.ajax('../../static/html/ms/collab_search_and_add.html')
