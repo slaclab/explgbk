@@ -88,7 +88,7 @@ let setupZoom = function() {
                 let modalElem = document.querySelector("#glbl_modals_go_here .modal");
                 const myModal = new bootstrap.Modal(modalElem);
                 let error_message = (msg) => { modalElem.querySelector(".errormsg").innerHTML = msg; modalElem.querySelector(".errormsg").classList.remove("d-none"); }
-                modalElem.querySelector(".zoom_edit").addEventListener("click", (event) => {
+                modalElem.querySelector(".zoom_edit")?.addEventListener("click", (event) => {
                     if(event.target.innerText == "Save") {
                         zoom_meeting_url = modalElem.querySelector(".zoom_meeting_details_edit input.zoom_meeting_url").value;
                         zoom_meeting_id = modalElem.querySelector(".zoom_meeting_details_edit input.zoom_meeting_id").value;
