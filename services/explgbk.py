@@ -2533,6 +2533,36 @@ def svc_remove_collaborator(experiment_name):
 
     return JSONEncoder().encode({"success": True, "message": "Removed collaborator"})
 
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/sync_posix_group", methods=["GET"])
+@experiment_exists
+@context.security.authentication_required
+@context.security.authorization_required("manage_groups")
+def svc_sync_posix_group(experiment_name):
+    """
+    Sync the posix group membership with the collaborators in the logbook.
+    Use in case something ( for example, coact ) has added more folks to the posix group and we need to clean up.
+    All we do here is publish a Kafka message and the role mgr takes care of thre rest
+    """
+    exp_collabs = set()
+    for collab in get_collaborators_list_for_experiment(experiment_name):
+        if not collab.startswith("uid:"):
+            continue
+        collab = collab.replace("uid:", "")
+        if len(collab) == 6 and collab.endswith("opr"):
+            continue
+        exp_collabs.add(collab)
+    posix_group_members = set(context.usergroups.get_group_members(experiment_name))
+
+    logger.debug(exp_collabs)
+    logger.debug(posix_group_members)
+
+    collabs_to_add_to_posix_group = exp_collabs - posix_group_members
+    collabs_to_remove_from_posix_group = posix_group_members - exp_collabs
+    role_obj = {}
+    role_obj.update({'collaborators_added': [x for x in collabs_to_add_to_posix_group], 'collaborators_removed': [x for x in collabs_to_remove_from_posix_group], 'requestor': context.security.get_current_user_id() })
+    logger.info(role_obj)
+    context.kafka_producer.send("roles", {"experiment_name" : experiment_name, "instrument": get_experiment_info(experiment_name)["instrument"], "CRUD": "Update", "value": role_obj })
+    return JSONEncoder().encode({"success": True, "value": role_obj})
 
 @explgbk_blueprint.route("/lgbk/ws/get_matching_uids", methods=["GET"])
 @context.security.authentication_required
