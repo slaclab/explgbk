@@ -15,7 +15,7 @@ else
    echo "Did not find external deployment specific configuration - ${EXTERNAL_CONFIG_FILE}"
 fi
 
-export ACCESS_LOG_FORMAT='%(h)s %(l)s %({REMOTE_USER}i)s %(t)s "%(r)s" "%(q)s" %(s)s %(b)s %(D)s'
+export ACCESS_LOG_FORMAT='%(h)s %(l)s %({REMOTE-USER}i)s %(t)s "%(r)s" "%(q)s" %(s)s %(b)s %(D)s'
 
 # Of course, please change this port to the appropriate port in the 8000-1000 range.
 # Also change start:app to your_service:app (this should make it easier to identify your service amongst the pile of gunicorns)
