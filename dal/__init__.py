@@ -1,1 +1,1 @@
-__author__ = 'mshankar@slac.stanford.edu'
+__author__ = "mshankar@slac.stanford.edu"
