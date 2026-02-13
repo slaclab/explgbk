@@ -223,7 +223,7 @@ def register_new_experiment(
             )
             make_sample_current(experiment_name, incoming_info["initial_sample"])
             start_run(experiment_name, "DATA")
-        except:
+        except Exception:
             logger.exception(
                 "Exception creating an initial sample. Please create the sample manually."
             )
@@ -236,7 +236,7 @@ def register_new_experiment(
         clone_system_template_run_tables_into_experiment(
             experiment_name, info["instrument"]
         )
-    except:
+    except Exception:
         logger.exception("Exception creating copies of template system run tables")
 
     return (True, "")
@@ -336,7 +336,7 @@ def clone_experiment(
         clone_system_template_run_tables_into_experiment(
             experiment_name, info["instrument"]
         )
-    except:
+    except Exception:
         logger.exception("Exception creating copies of template system run tables")
 
     return (True, "")
@@ -480,7 +480,7 @@ def migrate_attachments_to_local_store(experiment_name):
                 )
                 logger.debug("Migrated %s to mongo as %s", aurl, murl)
                 return murl
-            except:
+            except Exception:
                 logger.exception("Exception migrating attachment %s", aurl)
                 return None
 
@@ -1103,7 +1103,7 @@ def get_elog_entries_by_regex(experiment_name, regx):
             pass
 
         return list(sorted(matching_entries.values(), key=lambda x: x["insert_time"]))
-    except:
+    except Exception:
         logger.exception(
             "Exception matching regex %s for experiment %s", regx, experiment_name
         )
@@ -1385,7 +1385,7 @@ def post_related_elog_entry(related_experiment, src_experiment, src_elog_entry_i
                 logger.debug("Copied %s to mongo as %s", aurl, murl)
                 attch[attr] = murl
                 return murl
-            except:
+            except Exception:
                 logger.exception("Exception copying attachment %s", aurl)
                 return None
 
@@ -3202,7 +3202,7 @@ def questionnaire_cache_refresh(experiment_name):
     )
     try:
         cresp.raise_for_status()
-    except:
+    except Exception:
         logger.exception("Exception refreshing questionnaire cache")
     logger.info("Refreshed the questionnaire cache for %s", questionnaire_proposal_id)
 

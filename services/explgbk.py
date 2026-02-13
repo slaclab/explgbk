@@ -1061,7 +1061,7 @@ def svc_register_new_experiment():
 
     try:
         import_users_from_URAWI(experiment_name)
-    except:
+    except Exception:
         logger.exception("Exception importing users from URAWI")
 
     if status:
@@ -2934,7 +2934,7 @@ def svc_start_run(experiment_name):
         )
         try:
             run_doc = __end_run_and_publish_message__(experiment_name)
-        except:
+        except Exception:
             logger.exception(
                 "Exception closing previous unclosed run for experiment %s",
                 experiment_name,
@@ -2977,7 +2977,7 @@ def __end_run_and_publish_message__(experiment_name, user_specified_end_time=Non
         run_doc["duration"] = (
             run_doc["end_time"] - run_doc["begin_time"]
         ).total_seconds()
-    except:
+    except Exception:
         logger.exception(
             "Exception computing duration for run %s for experiment %s",
             run_doc["num"],
@@ -3679,7 +3679,7 @@ def svc_get_posix_group_members(experiment_name):
                 "value": context.usergroups.get_group_members(experiment_name),
             }
         )
-    except:
+    except Exception:
         logger.exception("Exception getting posix members for %s", experiment_name)
         return JSONEncoder().encode({"success": True, "value": []})
 
