@@ -54,7 +54,7 @@ def test_executable_exists(commands):
             commands, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         return True
-    except:
+    except Exception:
         logger.exception(
             "Exception when checking to see if command exists %s", commands
         )
@@ -130,7 +130,7 @@ def backup_database(args, database_name):
             logger.debug(mdp.stdout)
             logger.debug(mdp.stderr)
 
-    except:
+    except Exception:
         logger.exception("Exception dumping database to %s", archive_file_name)
         sys.exit(-1)
 

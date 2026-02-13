@@ -135,9 +135,9 @@ def init_app(app):
             for exp in exps:
                 try:
                     update_single_experiment_info(exp)
-                except:
+                except Exception:
                     logger.exception("Exception in periodic updater updating %s", exp)
-        except:
+        except Exception:
             logger.exception("Exception in periodic updater")
 
     def __non_immediate_periodic(scheduler, interval, action, actionargs=()):
