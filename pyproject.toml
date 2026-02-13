@@ -1,0 +1,34 @@
+[project]
+name = "explgbk"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pymongo==4.5.0",
+    "kafka-python==2.0.2",
+    "gunicorn==21.2.0",
+    "eventlet==0.36.1",
+    "Flask==2.3.3",
+    "Flask-SocketIO==5.3.6",
+    "requests==2.31.0",
+    "cachetools==5.3.1",
+    "pytz==2023.3.post1",
+    "python-dateutil==2.8.2",
+    "pyjwt[crypto]==2.8.0",
+    "seaweed==0.0.1",
+    "flask-authnz",
+    "flask-socket-util",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.1",
+]
+
+[tool.uv.sources]
+flask-authnz = { git = "https://github.com/slaclab/flask_authnz", rev = "046fb9c46835be47f9387e878efd2b898a6d4025" }
+flask-socket-util = { git = "https://github.com/slaclab/flask_socket_util", rev = "ad42186e1fb6d5406dffbc459e200bc490e5af91" }
+
+[tool.ruff]
+exclude = ["modules"]
