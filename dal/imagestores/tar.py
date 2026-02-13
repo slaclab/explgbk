@@ -1,7 +1,6 @@
 from dal.imagestores.imagestore import ImageStore
 import os
 import logging
-import requests
 import tarfile
 import io
 

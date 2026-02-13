@@ -22,7 +22,6 @@ from pymongo import ASCENDING, DESCENDING, ReadPreference
 from bson import ObjectId
 
 # This (g) should be the only import from Flask; we use this as a thread local context variable.
-from flask import g
 
 from context import (
     logbookclient,
@@ -36,7 +35,7 @@ from context import (
 )
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 from dal.imagestores import parseImageStoreURL
-from dal.utils import escape_chars_for_mongo, reverse_escape_chars_for_mongo
+from dal.utils import reverse_escape_chars_for_mongo
 
 PROJECTS_DB = "lgbkprjs"
 
@@ -416,7 +415,7 @@ def delete_experiment(experiment_name):
         return (False, "Experiment %s is currently active" % experiment_name)
 
     expdb = logbookclient[experiment_name]
-    if not expdb["info"].find_one() or not "instrument" in expdb["info"].find_one():
+    if not expdb["info"].find_one() or "instrument" not in expdb["info"].find_one():
         return (False, "Is %s an experiment?" % experiment_name)
 
     http_attachments = expdb["elog"].count_documents(
@@ -741,7 +740,7 @@ def remove_player_from_global_role(player, role):
 def add_player_to_instrument_role(instrument, player, role):
     sitedb = logbookclient["site"]
     ins = sitedb["instruments"].find_one({"_id": instrument})
-    if not "roles" in ins:
+    if "roles" not in ins:
         sitedb["instruments"].update_one(
             {"_id": instrument},
             {
@@ -771,7 +770,7 @@ def add_player_to_instrument_role(instrument, player, role):
 def remove_player_from_instrument_role(instrument, player, role):
     sitedb = logbookclient["site"]
     ins = sitedb["instruments"].find_one({"_id": instrument})
-    if not "roles" in ins:
+    if "roles" not in ins:
         return sitedb["instruments"].find_one({"_id": instrument})
 
     rl = [
@@ -3284,7 +3283,7 @@ def get_ques_proposal_details(experiment_name, run_period=None, proposal_id=None
                     )
                     ques_doc["instrument"] = "RIX"
             return ques_doc
-        except Exception as e:
+        except Exception:
             logger.exception(
                 "Exception fetching data from URAWI using URL %s for %s",
                 thequesurl,
