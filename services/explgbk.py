@@ -19,14 +19,12 @@ import abc
 import requests
 import context
 from functools import wraps
-from collections import OrderedDict
 from datetime import datetime, timedelta
 import types
 import hashlib
 import urllib
 import base64
 import pytz
-import jwt
 
 import smtplib
 from email.message import EmailMessage
@@ -35,7 +33,6 @@ from flask import (
     Blueprint,
     jsonify,
     request,
-    url_for,
     Response,
     stream_with_context,
     send_file,
@@ -108,7 +105,6 @@ from dal.explgbk import (
     elog_email_subscribe,
     elog_email_unsubscribe,
     get_elog_email_subscriptions_emails,
-    get_poc_feedback_changes,
     add_poc_feedback_item,
     clone_run_table_definition,
     replace_system_run_table_definition,
@@ -193,7 +189,6 @@ from dal.run_control import (
 from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
 from dal.exp_cache import (
-    get_experiments,
     get_experiments_for_user,
     does_experiment_exist,
     reload_cache as reload_experiment_cache,
@@ -1561,7 +1556,7 @@ def svc_instrument_standby():
     if not instrument:
         return jsonify({"success": False, "errormsg": "No instrument given"})
 
-    if not "station" in info:
+    if "station" not in info:
         return jsonify({"success": False, "errormsg": "No station given."})
 
     station = info.get("station", None)
@@ -3532,7 +3527,7 @@ def svc_file_available_at_location(experiment_name):
     location = request.args.get("location", None)
     if not location:
         return logAndAbort("Please specify the location.")
-    if not location in [x["name"] for x in get_dm_locations(experiment_name)]:
+    if location not in [x["name"] for x in get_dm_locations(experiment_name)]:
         return logAndAbort("Please specify a valid location")
     file_path = request.args.get("file_path", None)
     if not file_path:
@@ -3565,7 +3560,7 @@ def svc_check_and_move_run_files_to_location(experiment_name):
     location = request.args.get("location", None)
     if not location:
         return logAndAbort("Please specify the location.")
-    if not location in [x["name"] for x in get_dm_locations(experiment_name)]:
+    if location not in [x["name"] for x in get_dm_locations(experiment_name)]:
         return logAndAbort("Please specify a valid location")
     run_num = request.args.get("run_num", None)
     if not run_num:
@@ -3619,7 +3614,7 @@ def svc_check_and_move_run_files_to_location(experiment_name):
             if (
                 status == "present"
                 and file_info
-                and not location in file_info.get("locations", {}).keys()
+                and location not in file_info.get("locations", {}).keys()
             ):
                 logger.debug("I think %s is not there but it is already there", mfile)
                 file_available_at_location(experiment_name, run_num, mfile, location)

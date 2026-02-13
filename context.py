@@ -10,7 +10,6 @@ from pymongo import MongoClient, ReadPreference
 from flask_authnz import FlaskAuthnz, MongoDBRoles, UserGroups
 
 from kafka import KafkaProducer
-from kafka.errors import KafkaError
 
 from dal.utils import JSONEncoder
 import jwt

@@ -2,14 +2,11 @@
 Run control business logic.
 """
 
-import json
 import datetime
 import logging
-import re
 
-import requests
 
-from pymongo import ASCENDING, DESCENDING, ReturnDocument, ReadPreference
+from pymongo import DESCENDING, ReturnDocument, ReadPreference
 from bson import ObjectId
 
 from context import logbookclient

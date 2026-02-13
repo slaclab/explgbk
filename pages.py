@@ -2,7 +2,6 @@ import os
 import json
 import logging
 import pkg_resources
-import datetime
 import urllib.parse
 
 import context
@@ -15,7 +14,6 @@ from flask import (
     abort,
     make_response,
     jsonify,
-    session,
     Response,
     redirect,
 )

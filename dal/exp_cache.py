@@ -1,25 +1,20 @@
 import os
 import json
-import time
 import datetime
 import pytz
 import dateutil.relativedelta
 import logging
 import re
 
-import requests
 import threading
 import sched
 
-from pymongo import ASCENDING, DESCENDING, ReadPreference
-from bson import ObjectId
+from pymongo import DESCENDING
 
 from kafka import KafkaConsumer
-from kafka.errors import KafkaError
 
 from context import (
     logbookclient,
-    instrument_scientists_run_table_defintions,
     usergroups,
     kafka_producer,
     local_kafka_events,
@@ -52,7 +47,7 @@ class PeriodicUpdates:
         with self.lock:
             try:
                 self.experiment_names.add(experiment_name)
-            except Exception as e:
+            except Exception:
                 logger.exception(
                     "Exception adding %s to periodic updater", experiment_name
                 )
@@ -897,7 +892,7 @@ def update_single_experiment_info(experiment_name, crud="Update"):
                         {"$set": {"dataDailyBreakdown": dataDailyBreakdown}},
                         upsert=True,
                     )
-        except Exception as e:
+        except Exception:
             logger.exception("Exception computing the file parameters")
 
         poc_feedback_changes = get_poc_feedback_changes(experiment_name)
@@ -986,7 +981,7 @@ def __establish_local_kafka_consumers__():
                         "Kafka/local message in non-immediate topics without an experiment name %s",
                         message_type,
                     )
-        except Exception as e:
+        except Exception:
             logger.exception("Exception processing Kafka/local message.")
 
     def worker():
@@ -1024,7 +1019,7 @@ def __establish_kafka_consumers():
                         reload_named_caches(info["named_cache"])
 
                 __load_experiment_names()
-            except Exception as e:
+            except Exception:
                 logger.exception("Exception processing Kafka message.")
 
     # Create thread for kafka consumer

@@ -15,10 +15,9 @@ import glob
 import argparse
 import subprocess
 import datetime
-import shutil
 import pathlib
 
-from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo import MongoClient
 
 DATETIME_FILE_NAME_FORMAT = "%Y_%m_%d_%H_%M_%S"
 

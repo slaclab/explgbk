@@ -1,10 +1,8 @@
-from flask import Flask, current_app
+from flask import Flask
 import logging
 import os
 import sys
 import json
-from kafka import KafkaConsumer, TopicPartition
-from threading import Thread
 
 
 root = logging.getLogger()
