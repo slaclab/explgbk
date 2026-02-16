@@ -1309,7 +1309,7 @@ def modify_elog_entry(
         if title:
             modification["$set"]["title"] = title
         if not hist_entry.get("run_num", None) == run_num:
-            if run_num == None:
+            if run_num is None:
                 modification["$unset"] = {"run_num": 1}
             else:
                 modification["$set"]["run_num"] = run_num
@@ -1768,7 +1768,7 @@ def get_experiment_files_for_live_mode_at_location(experiment_name, location):
             "run_num": x["num"],
             "begin_time": x["begin_time"],
             "end_time": x.get("end_time", None),
-            "is_closed": "end_time" in x and x["end_time"] != None,
+            "is_closed": "end_time" in x and x["end_time"] is not None,
             "files": [],
         }
         for f in x["files"]:
