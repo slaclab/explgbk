@@ -1,8 +1,14 @@
-from flask import Flask
+import json
 import logging
 import os
 import sys
-import json
+
+import dal.exp_cache
+from context import security
+from flask import Flask
+from flask_socket_util import socket_service
+from pages import pages_blueprint
+from services.explgbk import explgbk_blueprint
 
 
 root = logging.getLogger()
@@ -17,15 +23,6 @@ ch.setFormatter(formatter)
 root.addHandler(ch)
 
 logger = logging.getLogger(__name__)
-
-from context import security
-
-from pages import pages_blueprint
-
-from services.explgbk import explgbk_blueprint
-from flask_socket_util import socket_service
-
-import dal.exp_cache
 
 __author__ = "mshankar@slac.stanford.edu"
 
