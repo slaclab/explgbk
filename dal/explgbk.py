@@ -3362,13 +3362,6 @@ def update_project(prjid, prjinfo):
     )
     return logbookclient[PROJECTS_DB]["projects"].find_one({"_id": ObjectId(prjid)})
 
-    (
-        get_project_samples,
-        add_session_to_project,
-        add_sample_to_project,
-        update_project_sample,
-    )
-
 
 def get_project_grids(prjid):
     """

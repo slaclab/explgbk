@@ -2469,7 +2469,7 @@ def svc_get_files_for_run(experiment_name, run_num):
     try:
         rnum = int(run_num)
     except ValueError:
-        rnum = run_num_str  # Cryo uses strings for run numbers.
+        rnum = run_num  # Cryo uses strings for run numbers.
     return JSONEncoder().encode(
         {"success": True, "value": get_experiment_files_for_run(experiment_name, rnum)}
     )
@@ -2486,7 +2486,7 @@ def svc_get_files_for_run_for_live_mode(experiment_name, run_num):
     try:
         rnum = int(run_num)
     except ValueError:
-        rnum = run_num_str  # Cryo uses strings for run numbers.
+        rnum = run_num  # Cryo uses strings for run numbers.
     return JSONEncoder().encode(
         {
             "success": True,
@@ -2509,7 +2509,7 @@ def svc_get_files_for_run_for_live_mode_at_location(experiment_name, run_num):
     try:
         rnum = int(run_num)
     except ValueError:
-        rnum = run_num_str  # Cryo uses strings for run numbers.
+        rnum = run_num  # Cryo uses strings for run numbers.
     location = request.args.get("location", None)
     if not location:
         return logAndAbort(
