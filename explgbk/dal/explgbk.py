@@ -23,7 +23,7 @@ from bson import ObjectId
 
 # This (g) should be the only import from Flask; we use this as a thread local context variable.
 
-from context import (
+from explgbk.context import (
     logbookclient,
     instrument_scientists_run_table_defintions,
     security,
@@ -33,9 +33,9 @@ from context import (
     QUESTIONNAIRE_URL,
     LOGBOOK_SITE,
 )
-from dal.run_control import get_current_run, start_run, end_run, is_run_closed
-from dal.imagestores import parseImageStoreURL
-from dal.utils import reverse_escape_chars_for_mongo
+from explgbk.dal.run_control import get_current_run, start_run, end_run, is_run_closed
+from explgbk.dal.imagestores import parseImageStoreURL
+from explgbk.dal.utils import reverse_escape_chars_for_mongo
 
 PROJECTS_DB = "lgbkprjs"
 

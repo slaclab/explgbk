@@ -13,14 +13,14 @@ from pymongo import DESCENDING
 
 from kafka import KafkaConsumer
 
-from context import (
+from explgbk.context import (
     logbookclient,
     usergroups,
     kafka_producer,
     local_kafka_events,
     reload_named_caches,
 )
-from dal.explgbk import (
+from explgbk.dal.explgbk import (
     get_experiments_for_instrument,
     get_poc_feedback_changes,
     get_poc_feedback_document,
