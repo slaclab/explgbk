@@ -83,7 +83,7 @@ def start_run(
     if params:
         run_doc["params"] = params
 
-    result = expdb["runs"].insert_one(run_doc)
+    expdb["runs"].insert_one(run_doc)
     return expdb["runs"].find_one({"num": next_run_num})
 
 

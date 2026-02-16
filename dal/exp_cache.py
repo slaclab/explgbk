@@ -229,7 +229,6 @@ def get_experiments_for_user(uid):
     Get a list of experiments for which the user has read access.
     """
     sitedb = logbookclient["site"]
-    cachedb = logbookclient["explgbk_cache"]
     groups = usergroups.get_user_posix_groups(uid)
     groups.append("uid:" + uid)
     # See if the user has any global read privileges

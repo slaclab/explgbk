@@ -4903,7 +4903,7 @@ def svc_update_project_info(prjid):
 @explgbk_blueprint.route("/lgbk/ws/projects/<prjid>/grids", methods=["GET"])
 @user_in_project
 def svc_get_project_grids(prjid):
-    projectinfo = get_project_info(prjid)
+    get_project_info(prjid)
     grids = get_project_grids(prjid)
     return JSONEncoder().encode({"success": True, "value": grids})
 
