@@ -252,7 +252,6 @@ def update_existing_experiment(experiment_name, incoming_info):
     expdb = logbookclient[experiment_name]
     info = {}
     info.update(incoming_info)
-    info_id = experiment_name.replace(" ", "_")
     info["name"] = experiment_name
     info["start_time"] = datetime.datetime.strptime(
         info["start_time"], "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -1334,7 +1333,6 @@ def post_related_elog_entry(related_experiment, src_experiment, src_elog_entry_i
     When we copy, we maintain the source experiment and source elog entry id to make it easier to tie children to the parent.
     """
     expdb = logbookclient[related_experiment]
-    src_expdb = logbookclient[src_experiment]
     src_elog_entry = get_specific_elog_entry(src_experiment, src_elog_entry_id)
     if (
         "root" not in src_elog_entry
@@ -2740,7 +2738,6 @@ def get_modal_param_definitions(modal_type):
     """
     Get the site specific modal param definitions for the specified modal type.
     """
-    sitedb = logbookclient["site"]
     modal_params_file = "static/json/{}/modals/{}.json".format(LOGBOOK_SITE, modal_type)
     logger.info("Looking for modal definition in %s", modal_params_file)
     param_defs = {}
