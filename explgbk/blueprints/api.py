@@ -17,7 +17,7 @@ import re
 import abc
 
 import requests
-import context
+from explgbk import context
 from functools import wraps
 from datetime import datetime, timedelta
 import types
@@ -43,7 +43,7 @@ from flask import (
     current_app,
 )
 
-from dal.explgbk import (
+from explgbk.dal.explgbk import (
     LgbkException,
     get_experiment_info,
     save_new_experiment_setup,
@@ -172,7 +172,7 @@ from dal.explgbk import (
 )
 
 
-from dal.run_control import (
+from explgbk.dal.run_control import (
     start_run,
     get_current_run,
     end_run,
@@ -186,9 +186,9 @@ from dal.run_control import (
     map_param_editable_to_run_nums,
 )
 
-from dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
+from explgbk.dal.utils import JSONEncoder, escape_chars_for_mongo, replaceInfNan
 
-from dal.exp_cache import (
+from explgbk.dal.exp_cache import (
     get_experiments_for_user,
     does_experiment_exist,
     reload_cache as reload_experiment_cache,
@@ -209,7 +209,7 @@ from dal.exp_cache import (
     get_recently_updated_experiments,
 )
 
-from dal.imagestores import parseImageStoreURL
+from explgbk.dal.imagestores import parseImageStoreURL
 
 __author__ = "mshankar@slac.stanford.edu"
 

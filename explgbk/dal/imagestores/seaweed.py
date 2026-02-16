@@ -1,4 +1,4 @@
-from dal.imagestores.imagestore import ImageStore
+from explgbk.dal.imagestores.imagestore import ImageStore
 
 import logging
 import io

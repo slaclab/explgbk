@@ -1,4 +1,4 @@
-from dal.imagestores.imagestore import ImageStore
+from explgbk.dal.imagestores.imagestore import ImageStore
 import os
 import logging
 import tarfile
@@ -6,7 +6,7 @@ import io
 
 from bson import ObjectId
 
-from context import logbookclient, LOGBOOK_SITE
+from explgbk.context import logbookclient, LOGBOOK_SITE
 
 logger = logging.getLogger(__name__)
 

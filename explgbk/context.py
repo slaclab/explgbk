@@ -11,7 +11,7 @@ from flask_authnz import FlaskAuthnz, MongoDBRoles, UserGroups
 
 from kafka import KafkaProducer
 
-from dal.utils import JSONEncoder
+from explgbk.dal.utils import JSONEncoder
 import jwt
 
 logger = logging.getLogger(__name__)
