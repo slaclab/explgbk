@@ -18,7 +18,7 @@ root.addHandler(ch)
 
 logger = logging.getLogger(__name__)
 
-from context import app, security
+from context import security
 
 from pages import pages_blueprint
 
