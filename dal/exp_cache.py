@@ -794,15 +794,18 @@ def update_single_experiment_info(experiment_name, crud="Update"):
                 )
                 if f_file and l_file:
                     attrs = ["years", "months", "days", "hours", "minutes"]
-                    human_readable_diff = lambda delta: [
-                        "%d %s"
-                        % (
-                            getattr(delta, attr),
-                            getattr(delta, attr) > 1 and attr or attr[:-1],
-                        )
-                        for attr in attrs
-                        if getattr(delta, attr)
-                    ]
+
+                    def human_readable_diff(delta):
+                        return [
+                            "%d %s"
+                            % (
+                                getattr(delta, attr),
+                                getattr(delta, attr) > 1 and attr or attr[:-1],
+                            )
+                            for attr in attrs
+                            if getattr(delta, attr)
+                        ]
+
                     expinfo["file_timestamps"] = {
                         "first_file_ts": f_file,
                         "last_file_ts": l_file,
