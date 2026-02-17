@@ -1,9 +1,12 @@
 [project]
 name = "explgbk"
 version = "0.1.0"
-description = "Add your description here"
+description = "LCLS, Cryo and UED data management logbook"
 readme = "README.md"
 requires-python = ">=3.10"
+authors = [
+    {name = "SLAC", email = "mshankar@slac.stanford.edu"}
+]
 dependencies = [
     "pymongo==4.5.0",
     "kafka-python==2.0.2",
@@ -20,6 +23,13 @@ dependencies = [
     "flask-authnz",
     "flask-socket-util",
 ]
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["explgbk"]
 
 [dependency-groups]
 dev = [

@@ -9,8 +9,8 @@ import logging
 from pymongo import DESCENDING, ReturnDocument, ReadPreference
 from bson import ObjectId
 
-from context import logbookclient
-from dal.utils import escape_chars_for_mongo
+from explgbk.context import logbookclient
+from explgbk.dal.utils import escape_chars_for_mongo
 
 __author__ = "mshankar@slac.stanford.edu"
 

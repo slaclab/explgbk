@@ -3,12 +3,12 @@ import logging
 import os
 import sys
 
-import dal.exp_cache
-from context import security
+from explgbk.dal import exp_cache
+from explgbk.context import security
 from flask import Flask
 from flask_socket_util import socket_service
-from pages import pages_blueprint
-from services.explgbk import explgbk_blueprint
+from explgbk.blueprints.pages import pages_blueprint
+from explgbk.blueprints.api import explgbk_blueprint
 
 
 root = logging.getLogger()
@@ -58,7 +58,7 @@ socket_service.init_app(
     ],
 )
 
-dal.exp_cache.init_app(app)
+exp_cache.init_app(app)
 
 logger.info("Server initialization complete")
 

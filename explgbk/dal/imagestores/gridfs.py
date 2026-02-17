@@ -1,11 +1,11 @@
-from dal.imagestores.imagestore import ImageStore
+from explgbk.dal.imagestores.imagestore import ImageStore
 import logging
 import re
 
 from bson import ObjectId
 from gridfs import GridFS
 
-from context import logbookclient
+from explgbk.context import logbookclient
 
 logger = logging.getLogger(__name__)
 

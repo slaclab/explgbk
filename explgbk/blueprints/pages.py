@@ -4,7 +4,7 @@ import logging
 import pkg_resources
 import urllib.parse
 
-import context
+from explgbk import context
 
 from flask import (
     request,
@@ -18,8 +18,12 @@ from flask import (
     redirect,
 )
 
-from dal.explgbk import get_current_sample_name, get_experiment_info, get_project_info
-from services.explgbk import experiment_exists
+from explgbk.dal.explgbk import (
+    get_current_sample_name,
+    get_experiment_info,
+    get_project_info,
+)
+from explgbk.blueprints.api import experiment_exists
 
 pages_blueprint = Blueprint("pages_api", __name__)
 
