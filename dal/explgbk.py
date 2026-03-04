@@ -2143,6 +2143,10 @@ def import_users_from_URAWI(experiment_name, role_fq_name="LogBook/Writer"):
     logger.debug(existing_collaborators)
     ques_doc = get_ques_proposal_details(experiment_name)
     if ques_doc:
+        if ques_doc.get("URAWI", {}).get("approved", "no").lower() != "yes":
+            logger.warning("Proposal is not approved in URAWI. Skipping importing collaborators.")
+            return
+        logger.info("The BTR for experiment %s has been approved. Importing collaborators from URAWI.", experiment_name)
         for coll in ques_doc.get("URAWI", {}).get("collaborators", []):
             for acc in coll.get("account", []):
                 if "unixGroup" not in acc or acc.get("unixGroup", "") == "xs":
