@@ -347,7 +347,7 @@ def svc_get_experiments():
 
 @explgbk_blueprint.route("/lgbk/ws/sorted_experiment_ids", methods=["GET"])
 @context.security.authentication_required
-@context.security.authorization_required("experiment_create")
+@context.security.authorization_required("read")
 def svc_get_sorted_experiments_ids():
     """
     Get just the experiment ids ( normalized names ) sorted by the specified criteria.
