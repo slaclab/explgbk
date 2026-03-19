@@ -80,6 +80,8 @@ services:
           action: rebuild
     # TODO: remove once coverage is done locally
     volumes:
+      - ./backend/app:/app/backend/app
+      - ./backend/scripts:/app/backend/scripts
       - ./backend/htmlcov:/app/backend/htmlcov
       - ./backend/tests:/app/backend/tests
     environment:
