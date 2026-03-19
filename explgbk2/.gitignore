@@ -1,0 +1,9 @@
+.vscode/*
+!.vscode/extensions.json
+node_modules/
+# Un-ignore frontend/src/lib/ which is excluded by parent repo's Python venv gitignore
+!frontend/src/lib/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
