@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import logging
 
 from pymongo import AsyncMongoClient
@@ -21,9 +22,11 @@ wait_seconds = 1
 )
 async def init() -> None:
     try:
-        client = AsyncMongoClient(settings.MONGODB_URI)
+        client = AsyncMongoClient(settings.MONGODB_URI.unicode_string())
         await client.admin.command("ping")
-        client.close()
+        close_result = client.close()
+        if inspect.isawaitable(close_result):
+            await close_result
     except Exception as e:
         logger.error(e)
         raise e

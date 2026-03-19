@@ -1,12 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { createUser } from "./utils/privateApi"
-import {
-  randomEmail,
-  randomItemDescription,
-  randomItemTitle,
-  randomPassword,
-} from "./utils/random"
-import { logInUser } from "./utils/user"
+import { randomItemDescription, randomItemTitle } from "./utils/random"
 
 test("Items page is accessible and shows correct title", async ({ page }) => {
   await page.goto("/items")
@@ -20,17 +13,7 @@ test("Add Item button is visible", async ({ page }) => {
 })
 
 test.describe("Items management", () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
-  let email: string
-  const password = randomPassword()
-
-  test.beforeAll(async () => {
-    email = randomEmail()
-    await createUser({ email, password })
-  })
-
   test.beforeEach(async ({ page }) => {
-    await logInUser(page, email, password)
     await page.goto("/items")
   })
 
@@ -112,21 +95,5 @@ test.describe("Items management", () => {
       ).toBeVisible()
       await expect(page.getByText(itemTitle)).not.toBeVisible()
     })
-  })
-})
-
-test.describe("Items empty state", () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
-
-  test("Shows empty state message when no items exist", async ({ page }) => {
-    const email = randomEmail()
-    const password = randomPassword()
-    await createUser({ email, password })
-    await logInUser(page, email, password)
-
-    await page.goto("/items")
-
-    await expect(page.getByText("You don't have any items yet")).toBeVisible()
-    await expect(page.getByText("Add a new item to get started")).toBeVisible()
   })
 })

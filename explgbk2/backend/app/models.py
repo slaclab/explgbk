@@ -19,19 +19,17 @@ class UserBase(BaseModel):
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
-    password: str = Field(min_length=8, max_length=128)
-
-
-class UserRegister(BaseModel):
-    email: EmailStr = Field(max_length=255)
-    password: str = Field(min_length=8, max_length=128)
-    full_name: str | None = Field(default=None, max_length=255)
+    pass
 
 
 # Properties to receive via API on update, all are optional
 class UserUpdate(UserBase):
-    email: EmailStr | None = Field(default=None, max_length=255)
-    password: str | None = Field(default=None, min_length=8, max_length=128)
+    email: EmailStr | None = Field(  # pyrefly: ignore[bad-override]
+        default=None, max_length=255
+    )
+    is_active: bool | None = None  # pyrefly: ignore[bad-override]
+    is_superuser: bool | None = None  # pyrefly: ignore[bad-override]
+    full_name: str | None = Field(default=None, max_length=255)
 
 
 class UserUpdateMe(BaseModel):
@@ -39,15 +37,9 @@ class UserUpdateMe(BaseModel):
     email: EmailStr | None = Field(default=None, max_length=255)
 
 
-class UpdatePassword(BaseModel):
-    current_password: str = Field(min_length=8, max_length=128)
-    new_password: str = Field(min_length=8, max_length=128)
-
-
 # Database model, database collection inferred from Settings.name
 class User(Document, UserBase):
     email: Annotated[EmailStr, Indexed(unique=True)] = Field(max_length=255)
-    hashed_password: str
     created_at: datetime | None = Field(default_factory=get_datetime_utc)
 
     class Settings:
@@ -80,7 +72,9 @@ class ItemCreate(ItemBase):
 
 # Properties to receive on item update
 class ItemUpdate(ItemBase):
-    title: str | None = Field(default=None, min_length=1, max_length=255)
+    title: str | None = Field(  # pyrefly: ignore[bad-override]
+        default=None, min_length=1, max_length=255
+    )
 
 
 # Database model, database collection inferred from Settings.name
@@ -120,8 +114,3 @@ class Token(BaseModel):
 # Contents of JWT token
 class TokenPayload(BaseModel):
     sub: str | None = None
-
-
-class NewPassword(BaseModel):
-    token: str
-    new_password: str = Field(min_length=8, max_length=128)

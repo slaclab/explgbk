@@ -12,17 +12,34 @@ from app.core import security
 from app.core.config import settings
 from app.models import TokenPayload, User
 
+# auto_error=False so unauthenticated requests fall through to the fallback below
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/login/access-token"
+    tokenUrl=f"{settings.API_V1_STR}/login/access-token",
+    auto_error=False,
 )
 
-TokenDep = Annotated[str, Depends(reusable_oauth2)]
+TokenDep = Annotated[str | None, Depends(reusable_oauth2)]
 
 
 async def get_current_user(token: TokenDep) -> User:
+    # No token — return the first superuser as a temporary default until
+    # Dex IDP integration is complete.
+    if token is None:
+        user = await User.find_one(User.is_superuser == True)  # noqa: E712
+        if user:
+            return user
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
+    # Token present — accept without signature verification (blindly trust;
+    # signature validation will be added when Dex IDP is integrated).
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token,
+            options={"verify_signature": False},
+            algorithms=[security.ALGORITHM],
         )
         token_data = TokenPayload(**payload)
     except (InvalidTokenError, ValidationError):

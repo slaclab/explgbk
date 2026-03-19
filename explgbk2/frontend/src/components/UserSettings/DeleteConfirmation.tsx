@@ -14,7 +14,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { LoadingButton } from "@/components/ui/loading-button"
-import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
@@ -22,13 +21,12 @@ const DeleteConfirmation = () => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { handleSubmit } = useForm()
-  const { logout } = useAuth()
 
   const mutation = useMutation({
     mutationFn: () => UsersService.deleteUserMe(),
     onSuccess: () => {
       showSuccessToast("Your account has been successfully deleted")
-      logout()
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {

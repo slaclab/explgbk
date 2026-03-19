@@ -17,7 +17,6 @@ async def init_db() -> None:
     if not user:
         user_in = UserCreate(
             email=settings.FIRST_SUPERUSER,
-            password=settings.FIRST_SUPERUSER_PASSWORD,
             is_superuser=True,
         )
         await crud.create_user(user_create=user_in)

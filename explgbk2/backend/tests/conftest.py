@@ -26,12 +26,10 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest.fixture(scope="module")
-async def superuser_token_headers(client: AsyncClient) -> dict[str, str]:
-    return await get_superuser_token_headers(client)
+async def superuser_token_headers() -> dict[str, str]:
+    return await get_superuser_token_headers()
 
 
 @pytest.fixture(scope="module")
-async def normal_user_token_headers(client: AsyncClient) -> dict[str, str]:
-    return await authentication_token_from_email(
-        client=client, email=settings.EMAIL_TEST_USER
-    )
+async def normal_user_token_headers() -> dict[str, str]:
+    return await authentication_token_from_email(email=settings.EMAIL_TEST_USER)

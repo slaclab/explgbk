@@ -1,49 +1,32 @@
-from httpx import AsyncClient
-
 from app import crud
-from app.core.config import settings
-from app.models import User, UserCreate, UserUpdate
-from tests.utils.utils import random_email, random_lower_string
+from app.core import security
+from app.models import User, UserCreate
+from tests.utils.utils import random_email
 
 
-async def user_authentication_headers(
-    *, client: AsyncClient, email: str, password: str
-) -> dict[str, str]:
-    data = {"username": email, "password": password}
-
-    r = await client.post(f"{settings.API_V1_STR}/login/access-token", data=data)
-    response = r.json()
-    auth_token = response["access_token"]
-    headers = {"Authorization": f"Bearer {auth_token}"}
-    return headers
+async def user_authentication_headers(*, email: str) -> dict[str, str]:
+    user = await crud.get_user_by_email(email=email)
+    if not user:
+        raise ValueError(f"User {email} not found")
+    token = security.create_access_token(str(user.id))
+    return {"Authorization": f"Bearer {token}"}
 
 
 async def create_random_user() -> User:
     email = random_email()
-    password = random_lower_string()
-    user_in = UserCreate(email=email, password=password)
+    user_in = UserCreate(email=email)
     return await crud.create_user(user_create=user_in)
 
 
-async def authentication_token_from_email(
-    *, client: AsyncClient, email: str
-) -> dict[str, str]:
+async def authentication_token_from_email(*, email: str) -> dict[str, str]:
     """
     Return a valid token for the user with given email.
 
     If the user doesn't exist it is created first.
     """
-    password = random_lower_string()
     user = await crud.get_user_by_email(email=email)
     if not user:
-        user_in_create = UserCreate(email=email, password=password)
+        user_in_create = UserCreate(email=email)
         await crud.create_user(user_create=user_in_create)
-    else:
-        user_in_update = UserUpdate(password=password)
-        if not user.id:
-            raise Exception("User id not set")
-        await crud.update_user(db_user=user, user_in=user_in_update)
 
-    return await user_authentication_headers(
-        client=client, email=email, password=password
-    )
+    return await user_authentication_headers(email=email)
