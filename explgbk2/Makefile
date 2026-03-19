@@ -3,9 +3,6 @@
 test: test-backend test-frontend
 
 up:
-	docker compose up -d --wait
-
-up-build:
 	docker compose up -d --wait --build
 
 test: test-backend test-frontend
@@ -13,7 +10,9 @@ test: test-backend test-frontend
 test-backend:
 	cd backend && uv run pytest tests/ --cov=app --cov-report=term --cov-report=html
 
-test-frontend: up-build
+
+test-frontend:
+	docker compose up -d --wait --build backend frontend
 	docker compose run --rm playwright bunx playwright test --reporter=line
 
 prek:

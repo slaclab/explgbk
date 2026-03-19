@@ -34,18 +34,6 @@ To check the logs of a specific service, add the name of the service, e.g.:
 docker compose logs backend
 ```
 
-## Mailcatcher
-
-Mailcatcher is a simple SMTP server that catches all emails sent by the backend during local development. Instead of sending real emails, they are captured and displayed in a web interface.
-
-This is useful for:
-
-* Testing email functionality during development
-* Verifying email content and formatting
-* Debugging email-related functionality without sending real emails
-
-The backend is automatically configured to use Mailcatcher when running with Docker Compose locally (SMTP on port 1025). All captured emails can be viewed at <http://localhost:1080>.
-
 ## Local Development
 
 The Docker Compose files are configured so that each of the services is available in a different port in `localhost`.
@@ -200,8 +188,6 @@ Mongo Express: <http://localhost:8080>
 
 Traefik UI: <http://localhost:8090>
 
-MailCatcher: <http://localhost:1080>
-
 ### Development URLs with `localhost.tiangolo.com` Configured
 
 Development URLs, for local development.
@@ -217,5 +203,3 @@ Automatic Alternative Docs (ReDoc): <http://api.localhost.tiangolo.com/redoc>
 Mongo Express: <http://localhost.tiangolo.com:8080>
 
 Traefik UI: <http://localhost.tiangolo.com:8090>
-
-MailCatcher: <http://localhost.tiangolo.com:1080>

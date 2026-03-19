@@ -22,7 +22,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
       - run: docker compose down -v --remove-orphans
-      - run: docker compose up -d db mailcatcher
+      - run: docker compose up -d db
       - name: Migrate DB
         run: uv run bash scripts/prestart.sh
         working-directory: backend

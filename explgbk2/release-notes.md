@@ -177,7 +177,6 @@
 
 ### Docs
 
-* 📝 Add Mailcatcher setup instructions for local email testing. PR [#2038](https://github.com/fastapi/full-stack-fastapi-template/pull/2038) by [@alejsdev](https://github.com/alejsdev).
 * 📝 Update `README` to include link for Vite. PR [#2037](https://github.com/fastapi/full-stack-fastapi-template/pull/2037) by [@alejsdev](https://github.com/alejsdev).
 * 📝 Fix outdated workflow badge. PR [#2028](https://github.com/fastapi/full-stack-fastapi-template/pull/2028) by [@AymanAlSuleihi](https://github.com/AymanAlSuleihi).
 * 📝 Update docs. PR [#2036](https://github.com/fastapi/full-stack-fastapi-template/pull/2036) by [@alejsdev](https://github.com/alejsdev).
@@ -345,7 +344,6 @@
 * 📝 Update Frontend README.md. PR [#1462](https://github.com/fastapi/full-stack-fastapi-template/pull/1462) by [@getmarkus](https://github.com/getmarkus).
 * 📝 Update `frontend/README.md` to also remove Playwright when removing Frontend. PR [#1452](https://github.com/fastapi/full-stack-fastapi-template/pull/1452) by [@youben11](https://github.com/youben11).
 * 📝 Update `deployment.md`, instructions to install GitHub Runner in non-root VMs. PR [#1412](https://github.com/fastapi/full-stack-fastapi-template/pull/1412) by [@tiangolo](https://github.com/tiangolo).
-* 📝 Add MailCatcher to `development.md`. PR [#1387](https://github.com/fastapi/full-stack-fastapi-template/pull/1387) by [@tobiase](https://github.com/tobiase).
 
 ### Internal
 
@@ -360,7 +358,7 @@
 * 🔧 Add .auth playwright folder to `.gitignore`. PR [#1383](https://github.com/fastapi/full-stack-fastapi-template/pull/1383) by [@justin-p](https://github.com/justin-p).
 * ⬆️ Bump rollup from 4.6.1 to 4.22.5 in /frontend. PR [#1379](https://github.com/fastapi/full-stack-fastapi-template/pull/1379) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * ⬆ Bump astral-sh/setup-uv from 2 to 3. PR [#1364](https://github.com/fastapi/full-stack-fastapi-template/pull/1364) by [@dependabot[bot]](https://github.com/apps/dependabot).
-*  👷 Update pre-commit end-of-file-fixer hook to exclude email-templates. PR [#1296](https://github.com/fastapi/full-stack-fastapi-template/pull/1296) by [@goabonga](https://github.com/goabonga).
+* 👷 Update pre-commit end-of-file-fixer hook to exclude email-templates. PR [#1296](https://github.com/fastapi/full-stack-fastapi-template/pull/1296) by [@goabonga](https://github.com/goabonga).
 * ⬆ Bump tiangolo/issue-manager from 0.5.0 to 0.5.1. PR [#1332](https://github.com/fastapi/full-stack-fastapi-template/pull/1332) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * 🔧 Run task by the same Python environment used to run Copier. PR [#1157](https://github.com/fastapi/full-stack-fastapi-template/pull/1157) by [@waketzheng](https://github.com/waketzheng).
 * 👷 Tweak generate client to error out if there are errors. PR [#1377](https://github.com/fastapi/full-stack-fastapi-template/pull/1377) by [@tiangolo](https://github.com/tiangolo).
@@ -434,7 +432,6 @@
 Lots of new things! 🎁
 
 * E2E tests with Playwright.
-* Mailcatcher configuration, to develop and test email handling.
 * Pagination.
 * UUIDs for database keys.
 * New user sign up.
@@ -450,7 +447,6 @@ Lots of new things! 🎁
 * ✨ Add Sign Up and make `OPEN_USER_REGISTRATION=True` by default. PR [#1265](https://github.com/tiangolo/full-stack-fastapi-template/pull/1265) by [@alejsdev](https://github.com/alejsdev).
 * ✨ Add Login e2e tests. PR [#1264](https://github.com/tiangolo/full-stack-fastapi-template/pull/1264) by [@alejsdev](https://github.com/alejsdev).
 * ✨ Add initial setup for frontend / end-to-end tests with Playwright. PR [#1261](https://github.com/tiangolo/full-stack-fastapi-template/pull/1261) by [@alejsdev](https://github.com/alejsdev).
-* ✨ Add mailcatcher configuration. PR [#1244](https://github.com/tiangolo/full-stack-fastapi-template/pull/1244) by [@patrick91](https://github.com/patrick91).
 * ✨ Introduce pagination in items. PR [#1239](https://github.com/tiangolo/full-stack-fastapi-template/pull/1239) by [@patrick91](https://github.com/patrick91).
 * 🗃️ Add max_length validation for database models and input data. PR [#1233](https://github.com/tiangolo/full-stack-fastapi-template/pull/1233) by [@estebanx64](https://github.com/estebanx64).
 * ✨ Add TanStack React Query devtools in dev build. PR [#1217](https://github.com/tiangolo/full-stack-fastapi-template/pull/1217) by [@tomerb](https://github.com/tomerb).
@@ -691,16 +687,16 @@ Test cov > 90% ✅
 * ♻️ Refactor frontend Docker build setup, use plain NodeJS, use custom Nginx config, fix build for old Vue. PR [#555](https://github.com/tiangolo/full-stack-fastapi-template/pull/555) by [@tiangolo](https://github.com/tiangolo).
 * ♻️ Refactor project generation, discard cookiecutter, use plain git/clone/fork. PR [#553](https://github.com/tiangolo/full-stack-fastapi-template/pull/553) by [@tiangolo](https://github.com/tiangolo).
 * Refactor backend:
-    * Simplify configs for tools and format to better support editor integration.
-    * Add mypy configurations and plugins.
-    * Add types to all the codebase.
-    * Update types for SQLAlchemy models with plugin.
-    * Update and refactor CRUD utils.
-    * Refactor DB sessions to use dependencies with `yield`.
-    * Refactor dependencies, security, CRUD, models, schemas, etc. To simplify code and improve autocompletion.
-    * Change from PyJWT to Python-JOSE as it supports additional use cases.
-    * Fix JWT tokens using user email/ID as the subject in `sub`.
-    * PR [#158](https://github.com/tiangolo/full-stack-fastapi-template/pull/158).
+  * Simplify configs for tools and format to better support editor integration.
+  * Add mypy configurations and plugins.
+  * Add types to all the codebase.
+  * Update types for SQLAlchemy models with plugin.
+  * Update and refactor CRUD utils.
+  * Refactor DB sessions to use dependencies with `yield`.
+  * Refactor dependencies, security, CRUD, models, schemas, etc. To simplify code and improve autocompletion.
+  * Change from PyJWT to Python-JOSE as it supports additional use cases.
+  * Fix JWT tokens using user email/ID as the subject in `sub`.
+  * PR [#158](https://github.com/tiangolo/full-stack-fastapi-template/pull/158).
 * Simplify `docker-compose.*.yml` files, refactor deployment to reduce config files. PR [#153](https://github.com/tiangolo/full-stack-fastapi-template/pull/153).
 * Simplify env var files, merge to a single `.env` file. PR [#151](https://github.com/tiangolo/full-stack-fastapi-template/pull/151).
 
@@ -808,21 +804,21 @@ Test cov > 90% ✅
 ## 0.3.0
 
 * PR <a href="https://github.com/tiangolo/full-stack-fastapi-template/pull/14" target="_blank">#14</a>:
-    * Update CRUD utils to use types better.
-    * Simplify Pydantic model names, from `UserInCreate` to `UserCreate`, etc.
-    * Upgrade packages.
-    * Add new generic "Items" models, crud utils, endpoints, and tests. To facilitate re-using them to create new functionality. As they are simple and generic (not like Users), it's easier to copy-paste and adapt them to each use case.
-    * Update endpoints/*path operations* to simplify code and use new utilities, prefix and tags in `include_router`.
-    * Update testing utils.
-    * Update linting rules, relax vulture to reduce false positives.
-    * Update migrations to include new Items.
-    * Update project README.md with tips about how to start with backend.
+  * Update CRUD utils to use types better.
+  * Simplify Pydantic model names, from `UserInCreate` to `UserCreate`, etc.
+  * Upgrade packages.
+  * Add new generic "Items" models, crud utils, endpoints, and tests. To facilitate re-using them to create new functionality. As they are simple and generic (not like Users), it's easier to copy-paste and adapt them to each use case.
+  * Update endpoints/*path operations* to simplify code and use new utilities, prefix and tags in `include_router`.
+  * Update testing utils.
+  * Update linting rules, relax vulture to reduce false positives.
+  * Update migrations to include new Items.
+  * Update project README.md with tips about how to start with backend.
 
 * Upgrade Python to 3.7 as Celery is now compatible too. PR <a href="https://github.com/tiangolo/full-stack-fastapi-template/pull/10" target="_blank">#10</a> by <a href="https://github.com/ebreton" target="_blank">@ebreton</a>.
 
 ## 0.2.2
 
-* Fix frontend hijacking /docs in development. Using latest https://github.com/tiangolo/node-frontend with custom Nginx configs in frontend. <a href="https://github.com/tiangolo/full-stack-fastapi-template/pull/6" target="_blank">PR #6</a>.
+* Fix frontend hijacking /docs in development. Using latest <https://github.com/tiangolo/node-frontend> with custom Nginx configs in frontend. <a href="https://github.com/tiangolo/full-stack-fastapi-template/pull/6" target="_blank">PR #6</a>.
 
 ## 0.2.1
 
@@ -854,4 +850,4 @@ Several bug fixes since initial publication, including:
 
 * Order of path operations for users.
 * Frontend sending login data in the correct format.
-* Add https://localhost variants to CORS.
+* Add <https://localhost> variants to CORS.
