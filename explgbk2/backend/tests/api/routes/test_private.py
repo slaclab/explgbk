@@ -1,12 +1,12 @@
-from fastapi.testclient import TestClient
-from sqlmodel import Session, select
+from beanie import PydanticObjectId
+from httpx import AsyncClient
 
 from app.core.config import settings
 from app.models import User
 
 
-def test_create_user(client: TestClient, db: Session) -> None:
-    r = client.post(
+async def test_create_user(client: AsyncClient) -> None:
+    r = await client.post(
         f"{settings.API_V1_STR}/private/users/",
         json={
             "email": "pollo@listo.com",
@@ -19,7 +19,7 @@ def test_create_user(client: TestClient, db: Session) -> None:
 
     data = r.json()
 
-    user = db.exec(select(User).where(User.id == data["id"])).first()
+    user = await User.get(PydanticObjectId(data["id"]))
 
     assert user
     assert user.email == "pollo@listo.com"

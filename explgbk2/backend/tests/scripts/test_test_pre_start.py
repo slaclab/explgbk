@@ -1,27 +1,24 @@
-from unittest.mock import MagicMock, patch
-
-from sqlmodel import select
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.tests_pre_start import init, logger
 
 
-def test_init_successful_connection() -> None:
-    engine_mock = MagicMock()
-
-    session_mock = MagicMock()
-    session_mock.__enter__.return_value = session_mock
-
-    select1 = select(1)
+async def test_init_successful_connection() -> None:
+    admin_mock = MagicMock()
 
     with (
-        patch("app.tests_pre_start.Session", return_value=session_mock),
-        patch("app.tests_pre_start.select", return_value=select1),
+        patch("app.tests_pre_start.AsyncMongoClient") as client_cls,
         patch.object(logger, "info"),
         patch.object(logger, "error"),
         patch.object(logger, "warn"),
     ):
+        client = MagicMock()
+        client.admin = admin_mock
+        admin_mock.command = AsyncMock(return_value={"ok": 1})
+        client_cls.return_value = client
+
         try:
-            init(engine_mock)
+            await init()
             connection_successful = True
         except Exception:
             connection_successful = False
@@ -30,4 +27,4 @@ def test_init_successful_connection() -> None:
             "The database connection should be successful and not raise an exception."
         )
 
-        session_mock.exec.assert_called_once_with(select1)
+        admin_mock.command.assert_called_once_with("ping")

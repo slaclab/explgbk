@@ -1,9 +1,8 @@
-import uuid
 from datetime import datetime, timezone
+from typing import Annotated
 
-from pydantic import EmailStr
-from sqlalchemy import DateTime
-from sqlmodel import Field, Relationship, SQLModel
+from beanie import Document, Indexed, PydanticObjectId
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 def get_datetime_utc() -> datetime:
@@ -11,8 +10,8 @@ def get_datetime_utc() -> datetime:
 
 
 # Shared properties
-class UserBase(SQLModel):
-    email: EmailStr = Field(unique=True, index=True, max_length=255)
+class UserBase(BaseModel):
+    email: EmailStr = Field(max_length=255)
     is_active: bool = True
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
@@ -23,7 +22,7 @@ class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=128)
 
 
-class UserRegister(SQLModel):
+class UserRegister(BaseModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=128)
     full_name: str | None = Field(default=None, max_length=255)
@@ -31,44 +30,45 @@ class UserRegister(SQLModel):
 
 # Properties to receive via API on update, all are optional
 class UserUpdate(UserBase):
-    email: EmailStr | None = Field(default=None, max_length=255)  # type: ignore
+    email: EmailStr | None = Field(default=None, max_length=255)
     password: str | None = Field(default=None, min_length=8, max_length=128)
 
 
-class UserUpdateMe(SQLModel):
+class UserUpdateMe(BaseModel):
     full_name: str | None = Field(default=None, max_length=255)
     email: EmailStr | None = Field(default=None, max_length=255)
 
 
-class UpdatePassword(SQLModel):
+class UpdatePassword(BaseModel):
     current_password: str = Field(min_length=8, max_length=128)
     new_password: str = Field(min_length=8, max_length=128)
 
 
-# Database model, database table inferred from class name
-class User(UserBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+# Database model, database collection inferred from Settings.name
+class User(Document, UserBase):
+    email: Annotated[EmailStr, Indexed(unique=True)] = Field(max_length=255)
     hashed_password: str
-    created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
-    )
-    items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
+    created_at: datetime | None = Field(default_factory=get_datetime_utc)
+
+    class Settings:
+        name = "users"
 
 
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
-    id: uuid.UUID
+    model_config = ConfigDict(from_attributes=True)
+
+    id: PydanticObjectId
     created_at: datetime | None = None
 
 
-class UsersPublic(SQLModel):
+class UsersPublic(BaseModel):
     data: list[UserPublic]
     count: int
 
 
 # Shared properties
-class ItemBase(SQLModel):
+class ItemBase(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
 
@@ -80,50 +80,48 @@ class ItemCreate(ItemBase):
 
 # Properties to receive on item update
 class ItemUpdate(ItemBase):
-    title: str | None = Field(default=None, min_length=1, max_length=255)  # type: ignore
+    title: str | None = Field(default=None, min_length=1, max_length=255)
 
 
-# Database model, database table inferred from class name
-class Item(ItemBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
-    )
-    owner_id: uuid.UUID = Field(
-        foreign_key="user.id", nullable=False, ondelete="CASCADE"
-    )
-    owner: User | None = Relationship(back_populates="items")
+# Database model, database collection inferred from Settings.name
+class Item(Document, ItemBase):
+    created_at: datetime | None = Field(default_factory=get_datetime_utc)
+    owner_id: PydanticObjectId
+
+    class Settings:
+        name = "items"
 
 
 # Properties to return via API, id is always required
 class ItemPublic(ItemBase):
-    id: uuid.UUID
-    owner_id: uuid.UUID
+    model_config = ConfigDict(from_attributes=True)
+
+    id: PydanticObjectId
+    owner_id: PydanticObjectId
     created_at: datetime | None = None
 
 
-class ItemsPublic(SQLModel):
+class ItemsPublic(BaseModel):
     data: list[ItemPublic]
     count: int
 
 
 # Generic message
-class Message(SQLModel):
+class Message(BaseModel):
     message: str
 
 
 # JSON payload containing access token
-class Token(SQLModel):
+class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
 
 # Contents of JWT token
-class TokenPayload(SQLModel):
+class TokenPayload(BaseModel):
     sub: str | None = None
 
 
-class NewPassword(SQLModel):
+class NewPassword(BaseModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)

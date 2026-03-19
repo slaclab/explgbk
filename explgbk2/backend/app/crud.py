@@ -1,40 +1,31 @@
-import uuid
-from typing import Any
-
-from sqlmodel import Session, select
+from beanie import PydanticObjectId
 
 from app.core.security import get_password_hash, verify_password
 from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
 
 
-def create_user(*, session: Session, user_create: UserCreate) -> User:
-    db_obj = User.model_validate(
-        user_create, update={"hashed_password": get_password_hash(user_create.password)}
+async def create_user(*, user_create: UserCreate) -> User:
+    db_obj = User(
+        **user_create.model_dump(exclude={"password"}),
+        hashed_password=get_password_hash(user_create.password),
     )
-    session.add(db_obj)
-    session.commit()
-    session.refresh(db_obj)
+    await db_obj.insert()
     return db_obj
 
 
-def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
+async def update_user(*, db_user: User, user_in: UserUpdate) -> User:
     user_data = user_in.model_dump(exclude_unset=True)
-    extra_data = {}
-    if "password" in user_data:
-        password = user_data["password"]
-        hashed_password = get_password_hash(password)
-        extra_data["hashed_password"] = hashed_password
-    db_user.sqlmodel_update(user_data, update=extra_data)
-    session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+    password = user_data.pop("password", None)
+
+    if password:
+        user_data["hashed_password"] = get_password_hash(password)
+
+    await db_user.set(user_data)
     return db_user
 
 
-def get_user_by_email(*, session: Session, email: str) -> User | None:
-    statement = select(User).where(User.email == email)
-    session_user = session.exec(statement).first()
-    return session_user
+async def get_user_by_email(*, email: str) -> User | None:
+    return await User.find_one(User.email == email)
 
 
 # Dummy hash to use for timing attack prevention when user is not found
@@ -42,8 +33,8 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
 DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$MjQyZWE1MzBjYjJlZTI0Yw$YTU4NGM5ZTZmYjE2NzZlZjY0ZWY3ZGRkY2U2OWFjNjk"
 
 
-def authenticate(*, session: Session, email: str, password: str) -> User | None:
-    db_user = get_user_by_email(session=session, email=email)
+async def authenticate(*, email: str, password: str) -> User | None:
+    db_user = await get_user_by_email(email=email)
     if not db_user:
         # Prevent timing attacks by running password verification even when user doesn't exist
         # This ensures the response time is similar whether or not the email exists
@@ -54,15 +45,11 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
         return None
     if updated_password_hash:
         db_user.hashed_password = updated_password_hash
-        session.add(db_user)
-        session.commit()
-        session.refresh(db_user)
+        await db_user.save()
     return db_user
 
 
-def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -> Item:
-    db_item = Item.model_validate(item_in, update={"owner_id": owner_id})
-    session.add(db_item)
-    session.commit()
-    session.refresh(db_item)
+async def create_item(*, item_in: ItemCreate, owner_id: PydanticObjectId) -> Item:
+    db_item = Item(**item_in.model_dump(), owner_id=owner_id)
+    await db_item.insert()
     return db_item

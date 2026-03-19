@@ -45,15 +45,15 @@ services:
       - traefik-public
       - default
 
-  db:
+  mongodb:
     restart: "no"
     ports:
-      - "5432:5432"
+      - "27018:27017"
 
-  adminer:
+  mongo-express:
     restart: "no"
     ports:
-      - "8080:8080"
+      - "8080:8081"
 
   backend:
     restart: "no"
@@ -81,6 +81,7 @@ services:
     # TODO: remove once coverage is done locally
     volumes:
       - ./backend/htmlcov:/app/backend/htmlcov
+      - ./backend/tests:/app/backend/tests
     environment:
       SMTP_HOST: "mailcatcher"
       SMTP_PORT: "1025"
