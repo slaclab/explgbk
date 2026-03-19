@@ -1,19 +1,17 @@
-.PHONY: test test-backend test-frontend test-backend-build test-frontend-build up up-build up-test-frontend generate-client
+.PHONY: test test-backend test-frontend up generate-client prek lint
 
-test: test-backend test-frontend
+test: test-frontend test-backend
 
 up:
 	docker compose up -d --wait --build
-
-test: test-backend test-frontend
 
 test-backend:
 	cd backend && uv run pytest tests/ --cov=app --cov-report=term --cov-report=html
 
 
 test-frontend:
-	docker compose up -d --wait --build backend frontend
-	docker compose run --rm playwright bunx playwright test --reporter=line
+	docker compose up -d --wait backend
+	cd frontend && bunx playwright test
 
 prek:
 	uv run prek install
