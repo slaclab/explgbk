@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 COPY ./backend/scripts /app/backend/scripts
 
-COPY ./backend/pyproject.toml ./backend/alembic.ini /app/backend/
+COPY ./backend/pyproject.toml /app/backend/
 
 COPY ./backend/app /app/backend/app
 
