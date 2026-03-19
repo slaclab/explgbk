@@ -9,12 +9,15 @@ from context import logbookclient
 
 logger = logging.getLogger(__name__)
 
+
 class GridFSIS(ImageStore):
-    def store_file_and_return_url(self, experiment_name, filename, mimetype, filecontents):
+    def store_file_and_return_url(
+        self, experiment_name, filename, mimetype, filecontents
+    ):
         expdb = logbookclient[experiment_name]
         fs = GridFS(expdb)
         fid = fs.put(filecontents)
-        return "mongo://"+str(fid)
+        return "mongo://" + str(fid)
 
     def return_url_contents(self, experiment_name, remote_url):
         mtch = re.match("mongo://([\w]*)/(.*)", remote_url)
