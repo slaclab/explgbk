@@ -2,6 +2,8 @@ from collections.abc import AsyncGenerator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from pydantic import MongoDsn
+from testcontainers.mongodb import MongoDbContainer
 
 from app.core.config import settings
 from app.core.db import init_db, reset_db
@@ -12,9 +14,11 @@ from tests.utils.utils import get_superuser_token_headers
 
 @pytest.fixture(scope="session", autouse=True)
 async def db() -> AsyncGenerator[None, None]:
-    await init_db()
-    yield
-    await reset_db()
+    with MongoDbContainer("mongo:7.0") as mongo:
+        settings.MONGODB_URI = MongoDsn(mongo.get_connection_url())
+        await init_db()
+        yield
+        await reset_db()
 
 
 @pytest.fixture(scope="module")
