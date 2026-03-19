@@ -1,4 +1,4 @@
-# FastAPI Project - Backend
+# Experimental Logbook - Backend
 
 ## Requirements
 
