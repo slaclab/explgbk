@@ -2,10 +2,10 @@ import { Link } from "@tanstack/react-router"
 
 import { useTheme } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
-import icon from "/assets/images/fastapi-icon.svg"
-import iconLight from "/assets/images/fastapi-icon-light.svg"
-import logo from "/assets/images/fastapi-logo.svg"
-import logoLight from "/assets/images/fastapi-logo-light.svg"
+import logo from "/assets/images/slac-logo.svg"
+import logoLight from "/assets/images/slac-logo-light.svg"
+import icon from "/assets/images/slac-xray.svg"
+import iconLight from "/assets/images/slac-xray-light.svg"
 
 interface LogoProps {
   variant?: "full" | "icon" | "responsive"
@@ -29,7 +29,7 @@ export function Logo({
       <>
         <img
           src={fullLogo}
-          alt="FastAPI"
+          alt="SLAC"
           className={cn(
             "h-6 w-auto group-data-[collapsible=icon]:hidden",
             className,
@@ -37,7 +37,7 @@ export function Logo({
         />
         <img
           src={iconLogo}
-          alt="FastAPI"
+          alt="SLAC"
           className={cn(
             "size-5 hidden group-data-[collapsible=icon]:block",
             className,
@@ -47,7 +47,7 @@ export function Logo({
     ) : (
       <img
         src={variant === "full" ? fullLogo : iconLogo}
-        alt="FastAPI"
+        alt="SLAC"
         className={cn(variant === "full" ? "h-6 w-auto" : "size-5", className)}
       />
     )
