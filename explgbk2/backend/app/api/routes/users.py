@@ -5,15 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app import crud
 from app.api.deps import CurrentUser, get_current_active_superuser
-from app.models import (
-    Item,
-    Message,
-    User,
-    UserPublic,
-    UsersPublic,
-    UserUpdate,
-    UserUpdateMe,
-)
+from app.models.common import Message
+from app.models.item import Item
+from app.models.user import User, UserPublic, UsersPublic, UserUpdate, UserUpdateMe
 
 router = APIRouter(prefix="/users", tags=["users"])
 

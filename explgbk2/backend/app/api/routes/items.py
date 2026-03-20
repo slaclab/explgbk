@@ -4,7 +4,8 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import CurrentUser
-from app.models import Item, ItemCreate, ItemPublic, ItemsPublic, ItemUpdate, Message
+from app.models.common import Message
+from app.models.item import Item, ItemCreate, ItemPublic, ItemsPublic, ItemUpdate
 
 router = APIRouter(prefix="/items", tags=["items"])
 

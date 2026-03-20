@@ -3,7 +3,7 @@ from httpx import AsyncClient
 
 from app import crud
 from app.core.config import settings
-from app.models import User, UserCreate
+from app.models.user import User, UserCreate
 from tests.utils.user import create_random_user, user_authentication_headers
 from tests.utils.utils import random_email
 

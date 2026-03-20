@@ -1,6 +1,7 @@
 from beanie import PydanticObjectId
 
-from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
+from app.models.item import Item, ItemCreate
+from app.models.user import User, UserCreate, UserUpdate
 
 
 async def create_user(*, user_create: UserCreate) -> User:
