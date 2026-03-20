@@ -1,3 +1,28 @@
+/*
+ * SLAC Brand Colors
+ * https://www-internal.slac.stanford.edu/communications/brand/color-palette
+ *
+ * Light mode:
+ *   --primary, --ring, --sidebar-primary, --sidebar-ring: Cardinal Red (#8C1515)
+ *   --accent, --sidebar-accent:                           Fog Grey (#DAD7CB)
+ *   --chart-1: Poppy Orange        (#E98300)
+ *   --chart-2: Lagunita Blue       (#007C92)
+ *   --chart-3: Palo Alto Green     (#175E54)
+ *   --chart-4: Illuminating Yellow (#FEDD5C)
+ *   --chart-5: Spirited Dark Orange (#E04F39)
+ *
+ * Dark mode:
+ *   --background, --card, --popover, --sidebar: Stanford Black (#2E2D29 / #3a3935)
+ *   --foreground and text surfaces:             Fog Grey (#DAD7CB)
+ *   --primary, --ring, --sidebar-primary, --sidebar-ring: Digital Red (#B1040E)
+ *   --accent, --sidebar-accent:                           Cool Grey (#53565A)
+ *   --chart-1: Sky Blue            (#4298B5)
+ *   --chart-2: Palo Verde Green    (#279989)
+ *   --chart-3: Illuminating Yellow (#FEDD5C)
+ *   --chart-4: Lavender            (#765E99)
+ *   --chart-5: Poppy Orange        (#E98300)
+ */
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -49,65 +74,65 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.5982 0.10687 182.4689);
+  --primary: #b1040e;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --accent: #dad7cb;
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --ring: #b1040e;
+  --chart-1: #e98300;
+  --chart-2: #007c92;
+  --chart-3: #175e54;
+  --chart-4: #fedd5c;
+  --chart-5: #e04f39;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.5982 0.10687 182.4689);
+  --sidebar-primary: #b1040e;
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent: #dad7cb;
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: #b1040e;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.65 0.10687 182.4689);
-  --primary-foreground: oklch(0.985 0 0);
+  --background: #25282b;
+  --foreground: #dad7cb;
+  --card: #25282b;
+  --card-foreground: #dad7cb;
+  --popover: #25282b;
+  --popover-foreground: #dad7cb;
+  --primary: #b1040e;
+  --primary-foreground: #dad7cb;
   --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
+  --secondary-foreground: #dad7cb;
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent: #53565a;
+  --accent-foreground: #dad7cb;
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.65 0.10687 182.4689);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --ring: #b1040e;
+  --chart-1: #4298b5;
+  --chart-2: #279989;
+  --chart-3: #fedd5c;
+  --chart-4: #765e99;
+  --chart-5: #e98300;
+  --sidebar: #53565a;
+  --sidebar-foreground: #dad7cb;
+  --sidebar-primary: #b1040e;
+  --sidebar-primary-foreground: #dad7cb;
+  --sidebar-accent: #53565a;
+  --sidebar-accent-foreground: #dad7cb;
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: #b1040e;
 }
 
 @layer base {
