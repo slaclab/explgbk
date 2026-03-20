@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import { Suspense } from "react"
 
-import { type UserPublic, UsersService } from "@/client"
+import { type UserPublic, type UsersPublic, UsersService } from "@/client"
 import { columns, type UserTableData } from "@/components/Admin/columns"
 import { DataTable } from "@/components/Common/DataTable"
 import PendingUsers from "@/components/Pending/PendingUsers"
@@ -10,7 +10,11 @@ import useAuth from "@/hooks/useAuth"
 
 function getUsersQueryOptions() {
   return {
-    queryFn: () => UsersService.readUsers({ skip: 0, limit: 100 }),
+    queryFn: () =>
+      UsersService.usersReadUsers({
+        query: { skip: 0, limit: 100 },
+        throwOnError: true,
+      }).then((r) => r.data as UsersPublic),
     queryKey: ["users"],
   }
 }
@@ -18,8 +22,8 @@ function getUsersQueryOptions() {
 export const Route = createFileRoute("/_layout/admin")({
   component: Admin,
   beforeLoad: async () => {
-    const user = await UsersService.readUserMe()
-    if (!user.is_superuser) {
+    const result = await UsersService.usersReadUserMe({ throwOnError: true })
+    if (!(result.data as UserPublic).is_superuser) {
       throw redirect({
         to: "/",
       })

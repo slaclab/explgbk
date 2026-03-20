@@ -59,7 +59,11 @@ const EditItem = ({ item, onSuccess }: EditItemProps) => {
 
   const mutation = useMutation({
     mutationFn: (data: FormData) =>
-      ItemsService.updateItem({ id: item.id, requestBody: data }),
+      ItemsService.itemsUpdateItem({
+        path: { id: item.id },
+        body: data,
+        throwOnError: true,
+      }),
     onSuccess: () => {
       showSuccessToast("Item updated successfully")
       setIsOpen(false)

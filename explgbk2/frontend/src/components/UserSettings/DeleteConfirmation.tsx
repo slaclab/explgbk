@@ -23,7 +23,7 @@ const DeleteConfirmation = () => {
   const { handleSubmit } = useForm()
 
   const mutation = useMutation({
-    mutationFn: () => UsersService.deleteUserMe(),
+    mutationFn: () => UsersService.usersDeleteUserMe({ throwOnError: true }),
     onSuccess: () => {
       showSuccessToast("Your account has been successfully deleted")
       queryClient.invalidateQueries({ queryKey: ["currentUser"] })
