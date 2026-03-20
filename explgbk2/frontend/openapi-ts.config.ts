@@ -19,5 +19,6 @@ export default defineConfig({
       type: "json",
     },
     "@tanstack/react-query",
+    "zod",
   ],
 })

@@ -9,6 +9,7 @@ import {
   usersReadUsersQueryKey,
   usersUpdateUserMutation,
 } from "@/client/@tanstack/react-query.gen"
+import { zUserUpdate } from "@/client/zod.gen"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -34,14 +35,14 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
-const formSchema = z.object({
-  email: z.email({ message: "Invalid email address" }),
-  full_name: z.string().optional(),
+type FormData = z.infer<typeof formSchema>
+
+const formSchema = zUserUpdate.extend({
+  email: z.email().max(255),
+  full_name: z.string().max(255).optional(),
   is_superuser: z.boolean().optional(),
   is_active: z.boolean().optional(),
 })
-
-type FormData = z.infer<typeof formSchema>
 
 interface EditUserProps {
   user: UserPublic

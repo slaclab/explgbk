@@ -9,6 +9,7 @@ import {
   itemsReadItemsQueryKey,
   itemsUpdateItemMutation,
 } from "@/client/@tanstack/react-query.gen"
+import { zItemCreate } from "@/client/zod.gen"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -33,9 +34,9 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
-const formSchema = z.object({
-  title: z.string().min(1, { message: "Title is required" }),
-  description: z.string().optional(),
+const formSchema = zItemCreate.extend({
+  title: z.string().min(1, { error: "Title is required" }).max(255),
+  description: z.string().max(255).optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
