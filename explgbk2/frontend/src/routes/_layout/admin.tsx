@@ -1,23 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import { Suspense } from "react"
-
-import { type UserPublic, type UsersPublic, UsersService } from "@/client"
+import { type UserPublic, UsersService } from "@/client"
+import { usersReadUsersOptions } from "@/client/@tanstack/react-query.gen"
 import { columns, type UserTableData } from "@/components/Admin/columns"
 import { DataTable } from "@/components/Common/DataTable"
 import PendingUsers from "@/components/Pending/PendingUsers"
 import useAuth from "@/hooks/useAuth"
-
-function getUsersQueryOptions() {
-  return {
-    queryFn: () =>
-      UsersService.usersReadUsers({
-        query: { skip: 0, limit: 100 },
-        throwOnError: true,
-      }).then((r) => r.data as UsersPublic),
-    queryKey: ["users"],
-  }
-}
 
 export const Route = createFileRoute("/_layout/admin")({
   component: Admin,
@@ -40,7 +29,9 @@ export const Route = createFileRoute("/_layout/admin")({
 
 function UsersTableContent() {
   const { user: currentUser } = useAuth()
-  const { data: users } = useSuspenseQuery(getUsersQueryOptions())
+  const { data: users } = useSuspenseQuery(
+    usersReadUsersOptions({ query: { skip: 0, limit: 100 } }),
+  )
 
   const tableData: UserTableData[] = users.data.map((user: UserPublic) => ({
     ...user,

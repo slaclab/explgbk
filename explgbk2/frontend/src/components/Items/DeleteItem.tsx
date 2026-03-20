@@ -3,7 +3,7 @@ import { Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 
-import { ItemsService } from "@/client"
+import { itemsDeleteItemMutation } from "@/client/@tanstack/react-query.gen"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -30,12 +30,8 @@ const DeleteItem = ({ id, onSuccess }: DeleteItemProps) => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { handleSubmit } = useForm()
 
-  const deleteItem = async (id: string) => {
-    await ItemsService.itemsDeleteItem({ path: { id: id }, throwOnError: true })
-  }
-
   const mutation = useMutation({
-    mutationFn: deleteItem,
+    ...itemsDeleteItemMutation(),
     onSuccess: () => {
       showSuccessToast("The item was deleted successfully")
       setIsOpen(false)
@@ -48,7 +44,7 @@ const DeleteItem = ({ id, onSuccess }: DeleteItemProps) => {
   })
 
   const onSubmit = async () => {
-    mutation.mutate(id)
+    mutation.mutate({ path: { id } })
   }
 
   return (

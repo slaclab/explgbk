@@ -4,8 +4,11 @@ import { Pencil } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
-import { type UserPublic, UsersService } from "@/client"
+import type { UserPublic } from "@/client"
+import {
+  usersReadUsersQueryKey,
+  usersUpdateUserMutation,
+} from "@/client/@tanstack/react-query.gen"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -63,12 +66,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      UsersService.usersUpdateUser({
-        path: { user_id: user.id },
-        body: data,
-        throwOnError: true,
-      }),
+    ...usersUpdateUserMutation(),
     onSuccess: () => {
       showSuccessToast("User updated successfully")
       setIsOpen(false)
@@ -76,12 +74,12 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: usersReadUsersQueryKey() })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate(data)
+    mutation.mutate({ path: { user_id: user.id }, body: data })
   }
 
   return (

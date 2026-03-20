@@ -18,5 +18,6 @@ export default defineConfig({
       name: "@hey-api/schemas",
       type: "json",
     },
+    "@tanstack/react-query",
   ],
 })

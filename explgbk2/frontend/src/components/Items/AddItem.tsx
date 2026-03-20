@@ -5,7 +5,10 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type ItemCreate, ItemsService } from "@/client"
+import {
+  itemsCreateItemMutation,
+  itemsReadItemsQueryKey,
+} from "@/client/@tanstack/react-query.gen"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -53,8 +56,7 @@ const AddItem = () => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: ItemCreate) =>
-      ItemsService.itemsCreateItem({ body: data, throwOnError: true }),
+    ...itemsCreateItemMutation(),
     onSuccess: () => {
       showSuccessToast("Item created successfully")
       form.reset()
@@ -62,12 +64,12 @@ const AddItem = () => {
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["items"] })
+      queryClient.invalidateQueries({ queryKey: itemsReadItemsQueryKey() })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate(data)
+    mutation.mutate({ body: data })
   }
 
   return (

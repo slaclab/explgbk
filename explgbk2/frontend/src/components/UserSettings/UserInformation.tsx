@@ -3,8 +3,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
-import { UsersService, type UserUpdateMe } from "@/client"
+import type { UserUpdateMe } from "@/client"
+import { usersUpdateUserMeMutation } from "@/client/@tanstack/react-query.gen"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -49,8 +49,7 @@ const UserInformation = () => {
   }
 
   const mutation = useMutation({
-    mutationFn: (data: UserUpdateMe) =>
-      UsersService.usersUpdateUserMe({ body: data, throwOnError: true }),
+    ...usersUpdateUserMeMutation(),
     onSuccess: () => {
       showSuccessToast("User updated successfully")
       toggleEditMode()
@@ -72,7 +71,7 @@ const UserInformation = () => {
       updateData.email = data.email
     }
 
-    mutation.mutate(updateData)
+    mutation.mutate({ body: updateData })
   }
 
   const onCancel = () => {

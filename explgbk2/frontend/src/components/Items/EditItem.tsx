@@ -4,8 +4,11 @@ import { Pencil } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
-import { type ItemPublic, ItemsService } from "@/client"
+import type { ItemPublic } from "@/client"
+import {
+  itemsReadItemsQueryKey,
+  itemsUpdateItemMutation,
+} from "@/client/@tanstack/react-query.gen"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -58,12 +61,7 @@ const EditItem = ({ item, onSuccess }: EditItemProps) => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      ItemsService.itemsUpdateItem({
-        path: { id: item.id },
-        body: data,
-        throwOnError: true,
-      }),
+    ...itemsUpdateItemMutation(),
     onSuccess: () => {
       showSuccessToast("Item updated successfully")
       setIsOpen(false)
@@ -71,12 +69,12 @@ const EditItem = ({ item, onSuccess }: EditItemProps) => {
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["items"] })
+      queryClient.invalidateQueries({ queryKey: itemsReadItemsQueryKey() })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate(data)
+    mutation.mutate({ path: { id: item.id }, body: data })
   }
 
   return (
