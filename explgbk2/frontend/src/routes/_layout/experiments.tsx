@@ -1,14 +1,17 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import {
+  type SortingState,
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
 import { Loader2, Search } from "lucide-react"
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useInView } from "react-intersection-observer"
 
-import { ExperimentsService } from "@/client"
+import { type ExperimentsReadExperimentsData, ExperimentsService } from "@/client"
 import { columns } from "@/components/Experiments/columns"
 import PendingExperiments from "@/components/Pending/PendingExperiments"
 import {
@@ -34,44 +37,63 @@ export const Route = createFileRoute("/_layout/experiments")({
 })
 
 function ExperimentsTable() {
-  const sentinelRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "name", desc: false },
+  ])
+
+  const sortBy = sorting[0]?.id as
+    NonNullable<ExperimentsReadExperimentsData["query"]>["sort_by"]
+  const sortDesc = sorting[0]?.desc ?? false
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =
     useInfiniteQuery({
-      queryKey: ["experiments"],
+      queryKey: ["experiments", sortBy, sortDesc],
       queryFn: ({ pageParam = 0 }) =>
         ExperimentsService.experimentsReadExperiments({
-          query: { skip: pageParam * PAGE_SIZE, limit: PAGE_SIZE },
+          query: {
+            skip: pageParam * PAGE_SIZE,
+            limit: PAGE_SIZE,
+            sort_by: sortBy,
+            sort_desc: sortDesc,
+          },
         }),
       initialPageParam: 0,
       getNextPageParam: (lastPage, allPages) => {
         const loaded = allPages.length * PAGE_SIZE
-        return loaded < (lastPage.data?.count ?? 0) ? allPages.length : undefined
+        return loaded < (lastPage.data?.count ?? 0)
+          ? allPages.length
+          : undefined
       },
     })
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current
-    if (!sentinel) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage()
-        }
-      },
-      { threshold: 0.1 },
-    )
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+  const { ref: sentinelRef, inView } = useInView({ threshold: 0.1 })
 
-  const experiments = data?.pages.flatMap((page) => page.data?.data ?? []) ?? []
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  useEffect(() => {
+    scrollContainerRef.current?.scrollTo({ top: 0 })
+  }, [sorting])
+
+  const experiments = useMemo(
+    () => data?.pages.flatMap((page) => page.data?.data ?? []) ?? [],
+    [data],
+  )
   const totalCount = data?.pages[0]?.data?.count ?? 0
 
   const table = useReactTable({
     data: experiments,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    manualSorting: true,
+    enableSortingRemoval: false,
+    onSortingChange: setSorting,
+    state: { sorting },
   })
 
   if (isPending) return <PendingExperiments />
@@ -83,7 +105,9 @@ function ExperimentsTable() {
           <Search className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-semibold">No experiments found</h3>
-        <p className="text-muted-foreground">No experiments are available yet</p>
+        <p className="text-muted-foreground">
+          No experiments are available yet
+        </p>
       </div>
     )
   }
@@ -93,7 +117,7 @@ function ExperimentsTable() {
       <div className="text-sm text-muted-foreground">
         Showing {experiments.length} of {totalCount} experiments
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto rounded-md border">
+      <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto rounded-md border">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from beanie.odm.operators.find.comparison import In
 from fastapi import APIRouter
@@ -53,22 +53,39 @@ async def read_experiment_names(current_user: CurrentUser) -> list[str]:
     return [r.name for r in results]
 
 
+ExperimentSortField = Literal[
+    "name",
+    "instrument",
+    "leader_account",
+    "run_count",
+    "start_time",
+    "created_at",
+]
+
+
 @router.get("/", response_model=ExperimentsPublic)
 async def read_experiments(
-    current_user: CurrentUser, skip: int = 0, limit: int = 100
+    current_user: CurrentUser,
+    skip: int = 0,
+    limit: int = 100,
+    sort_by: ExperimentSortField = "name",
+    sort_desc: bool = False,
 ) -> ExperimentsPublic:
     """
     Retrieve experiments. Superusers see all; others see only experiments
     where they are listed as a player.
     """
+    sort_key = f"-{sort_by}" if sort_desc else f"+{sort_by}"
     if current_user.is_superuser:
         count = await Experiment.count()
-        experiments = await Experiment.find_all().skip(skip).limit(limit).to_list()
+        experiments = (
+            await Experiment.find_all().sort(sort_key).skip(skip).limit(limit).to_list()
+        )
     else:
         user_key = f"uid:{current_user.email}"
         query = Experiment.find(In(Experiment.players, [user_key]))
         count = await query.count()
-        experiments = await query.skip(skip).limit(limit).to_list()
+        experiments = await query.sort(sort_key).skip(skip).limit(limit).to_list()
 
     return ExperimentsPublic(
         data=[

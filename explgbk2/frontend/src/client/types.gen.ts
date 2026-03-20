@@ -654,6 +654,14 @@ export type ExperimentsReadExperimentsData = {
          * Limit
          */
         limit?: number;
+        /**
+         * Sort By
+         */
+        sort_by?: 'name' | 'instrument' | 'leader_account' | 'run_count' | 'start_time' | 'created_at';
+        /**
+         * Sort Desc
+         */
+        sort_desc?: boolean;
     };
     url: '/api/v1/experiments/';
 };

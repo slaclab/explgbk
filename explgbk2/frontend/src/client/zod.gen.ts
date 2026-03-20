@@ -322,7 +322,16 @@ export const zExperimentsReadExperimentsData = z.object({
     path: z.never().optional(),
     query: z.object({
         skip: z.int().optional().default(0),
-        limit: z.int().optional().default(100)
+        limit: z.int().optional().default(100),
+        sort_by: z.enum([
+            'name',
+            'instrument',
+            'leader_account',
+            'run_count',
+            'start_time',
+            'created_at'
+        ]).optional(),
+        sort_desc: z.boolean().optional().default(false)
     }).optional()
 });
 
