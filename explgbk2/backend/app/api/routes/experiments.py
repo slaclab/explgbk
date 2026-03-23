@@ -70,20 +70,21 @@ async def read_experiments(
     limit: int = 100,
     sort_by: ExperimentSortField = "name",
     sort_desc: bool = False,
+    instrument: str | None = None,
 ) -> ExperimentsPublic:
     """
     Retrieve experiments. Superusers see all; others see only experiments
     where they are listed as a player.
     """
     sort_key = f"-{sort_by}" if sort_desc else f"+{sort_by}"
+    instrument_filter = (Experiment.instrument == instrument,) if instrument else ()
     if current_user.is_superuser:
-        count = await Experiment.count()
-        experiments = (
-            await Experiment.find_all().sort(sort_key).skip(skip).limit(limit).to_list()
-        )
+        query = Experiment.find(*instrument_filter)
+        count = await query.count()
+        experiments = await query.sort(sort_key).skip(skip).limit(limit).to_list()
     else:
         user_key = f"uid:{current_user.email}"
-        query = Experiment.find(In(Experiment.players, [user_key]))
+        query = Experiment.find(In(Experiment.players, [user_key]), *instrument_filter)
         count = await query.count()
         experiments = await query.sort(sort_key).skip(skip).limit(limit).to_list()
 
