@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ExperimentsCreateExperimentData, ExperimentsCreateExperimentResponses, ExperimentsDeleteExperimentData, ExperimentsDeleteExperimentErrors, ExperimentsDeleteExperimentResponses, ExperimentsReadExperimentData, ExperimentsReadExperimentErrors, ExperimentsReadExperimentNamesData, ExperimentsReadExperimentNamesResponses, ExperimentsReadExperimentResponses, ExperimentsReadExperimentsData, ExperimentsReadExperimentsErrors, ExperimentsReadExperimentsResponses, ExperimentsUpdateExperimentData, ExperimentsUpdateExperimentErrors, ExperimentsUpdateExperimentResponses, ItemsCreateItemData, ItemsCreateItemErrors, ItemsCreateItemResponses, ItemsDeleteItemData, ItemsDeleteItemErrors, ItemsDeleteItemResponses, ItemsReadItemData, ItemsReadItemErrors, ItemsReadItemResponses, ItemsReadItemsData, ItemsReadItemsErrors, ItemsReadItemsResponses, ItemsUpdateItemData, ItemsUpdateItemErrors, ItemsUpdateItemResponses, UsersDeleteUserData, UsersDeleteUserErrors, UsersDeleteUserMeData, UsersDeleteUserMeResponses, UsersDeleteUserResponses, UsersReadUserByIdData, UsersReadUserByIdErrors, UsersReadUserByIdResponses, UsersReadUserMeData, UsersReadUserMeResponses, UsersReadUsersData, UsersReadUsersErrors, UsersReadUsersResponses, UsersUpdateUserData, UsersUpdateUserErrors, UsersUpdateUserMeData, UsersUpdateUserMeErrors, UsersUpdateUserMeResponses, UsersUpdateUserResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
+import type { ExperimentsCreateExperimentData, ExperimentsCreateExperimentResponses, ExperimentsDeleteExperimentData, ExperimentsDeleteExperimentErrors, ExperimentsDeleteExperimentResponses, ExperimentsReadExperimentData, ExperimentsReadExperimentErrors, ExperimentsReadExperimentNamesData, ExperimentsReadExperimentNamesResponses, ExperimentsReadExperimentResponses, ExperimentsReadExperimentsData, ExperimentsReadExperimentsErrors, ExperimentsReadExperimentsResponses, ExperimentsUpdateExperimentData, ExperimentsUpdateExperimentErrors, ExperimentsUpdateExperimentResponses, InstrumentsReadInstrumentsData, InstrumentsReadInstrumentsResponses, ItemsCreateItemData, ItemsCreateItemErrors, ItemsCreateItemResponses, ItemsDeleteItemData, ItemsDeleteItemErrors, ItemsDeleteItemResponses, ItemsReadItemData, ItemsReadItemErrors, ItemsReadItemResponses, ItemsReadItemsData, ItemsReadItemsErrors, ItemsReadItemsResponses, ItemsUpdateItemData, ItemsUpdateItemErrors, ItemsUpdateItemResponses, UsersDeleteUserData, UsersDeleteUserErrors, UsersDeleteUserMeData, UsersDeleteUserMeResponses, UsersDeleteUserResponses, UsersReadUserByIdData, UsersReadUserByIdErrors, UsersReadUserByIdResponses, UsersReadUserMeData, UsersReadUserMeResponses, UsersReadUsersData, UsersReadUsersErrors, UsersReadUsersResponses, UsersUpdateUserData, UsersUpdateUserErrors, UsersUpdateUserMeData, UsersUpdateUserMeErrors, UsersUpdateUserMeResponses, UsersUpdateUserResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -301,6 +301,23 @@ export class ExperimentsService {
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/experiments/{id}',
+            ...options
+        });
+    }
+}
+
+export class InstrumentsService {
+    /**
+     * Read Instruments
+     *
+     * Return each distinct non-null instrument together with the number of
+     * experiments the current user can access under that instrument.
+     */
+    public static instrumentsReadInstruments<ThrowOnError extends boolean = false>(options?: Options<InstrumentsReadInstrumentsData, ThrowOnError>) {
+        return (options?.client ?? client).get<InstrumentsReadInstrumentsResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/instruments/',
             ...options
         });
     }

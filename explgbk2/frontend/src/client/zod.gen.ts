@@ -3,6 +3,14 @@
 import * as z from 'zod';
 
 /**
+ * InstrumentSummary
+ */
+export const zInstrumentSummary = z.object({
+    instrument: z.string(),
+    experiment_count: z.int()
+});
+
+/**
  * ItemCreate
  */
 export const zItemCreate = z.object({
@@ -331,7 +339,8 @@ export const zExperimentsReadExperimentsData = z.object({
             'start_time',
             'created_at'
         ]).optional(),
-        sort_desc: z.boolean().optional().default(false)
+        sort_desc: z.boolean().optional().default(false),
+        instrument: z.string().nullish()
     }).optional()
 });
 
@@ -389,3 +398,16 @@ export const zExperimentsUpdateExperimentData = z.object({
  * Successful Response
  */
 export const zExperimentsUpdateExperimentResponse = zExperimentPublic;
+
+export const zInstrumentsReadInstrumentsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Instruments-Read Instruments
+ *
+ * Successful Response
+ */
+export const zInstrumentsReadInstrumentsResponse = z.array(zInstrumentSummary);

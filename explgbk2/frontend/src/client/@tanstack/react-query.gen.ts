@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { ExperimentsService, ItemsService, type Options, UsersService, UtilsService } from '../sdk.gen';
-import type { ExperimentsCreateExperimentData, ExperimentsCreateExperimentResponse, ExperimentsDeleteExperimentData, ExperimentsDeleteExperimentError, ExperimentsDeleteExperimentResponse, ExperimentsReadExperimentData, ExperimentsReadExperimentError, ExperimentsReadExperimentNamesData, ExperimentsReadExperimentNamesResponse, ExperimentsReadExperimentResponse, ExperimentsReadExperimentsData, ExperimentsReadExperimentsError, ExperimentsReadExperimentsResponse, ExperimentsUpdateExperimentData, ExperimentsUpdateExperimentError, ExperimentsUpdateExperimentResponse, ItemsCreateItemData, ItemsCreateItemError, ItemsCreateItemResponse, ItemsDeleteItemData, ItemsDeleteItemError, ItemsDeleteItemResponse, ItemsReadItemData, ItemsReadItemError, ItemsReadItemResponse, ItemsReadItemsData, ItemsReadItemsError, ItemsReadItemsResponse, ItemsUpdateItemData, ItemsUpdateItemError, ItemsUpdateItemResponse, UsersDeleteUserData, UsersDeleteUserError, UsersDeleteUserMeData, UsersDeleteUserMeResponse, UsersDeleteUserResponse, UsersReadUserByIdData, UsersReadUserByIdError, UsersReadUserByIdResponse, UsersReadUserMeData, UsersReadUserMeResponse, UsersReadUsersData, UsersReadUsersError, UsersReadUsersResponse, UsersUpdateUserData, UsersUpdateUserError, UsersUpdateUserMeData, UsersUpdateUserMeError, UsersUpdateUserMeResponse, UsersUpdateUserResponse, UtilsHealthCheckData, UtilsHealthCheckResponse } from '../types.gen';
+import { ExperimentsService, InstrumentsService, ItemsService, type Options, UsersService, UtilsService } from '../sdk.gen';
+import type { ExperimentsCreateExperimentData, ExperimentsCreateExperimentResponse, ExperimentsDeleteExperimentData, ExperimentsDeleteExperimentError, ExperimentsDeleteExperimentResponse, ExperimentsReadExperimentData, ExperimentsReadExperimentError, ExperimentsReadExperimentNamesData, ExperimentsReadExperimentNamesResponse, ExperimentsReadExperimentResponse, ExperimentsReadExperimentsData, ExperimentsReadExperimentsError, ExperimentsReadExperimentsResponse, ExperimentsUpdateExperimentData, ExperimentsUpdateExperimentError, ExperimentsUpdateExperimentResponse, InstrumentsReadInstrumentsData, InstrumentsReadInstrumentsResponse, ItemsCreateItemData, ItemsCreateItemError, ItemsCreateItemResponse, ItemsDeleteItemData, ItemsDeleteItemError, ItemsDeleteItemResponse, ItemsReadItemData, ItemsReadItemError, ItemsReadItemResponse, ItemsReadItemsData, ItemsReadItemsError, ItemsReadItemsResponse, ItemsUpdateItemData, ItemsUpdateItemError, ItemsUpdateItemResponse, UsersDeleteUserData, UsersDeleteUserError, UsersDeleteUserMeData, UsersDeleteUserMeResponse, UsersDeleteUserResponse, UsersReadUserByIdData, UsersReadUserByIdError, UsersReadUserByIdResponse, UsersReadUserMeData, UsersReadUserMeResponse, UsersReadUsersData, UsersReadUsersError, UsersReadUsersResponse, UsersUpdateUserData, UsersUpdateUserError, UsersUpdateUserMeData, UsersUpdateUserMeError, UsersUpdateUserMeResponse, UsersUpdateUserResponse, UtilsHealthCheckData, UtilsHealthCheckResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -408,3 +408,24 @@ export const experimentsUpdateExperimentMutation = (options?: Partial<Options<Ex
     };
     return mutationOptions;
 };
+
+export const instrumentsReadInstrumentsQueryKey = (options?: Options<InstrumentsReadInstrumentsData>) => createQueryKey('instrumentsReadInstruments', options);
+
+/**
+ * Read Instruments
+ *
+ * Return each distinct non-null instrument together with the number of
+ * experiments the current user can access under that instrument.
+ */
+export const instrumentsReadInstrumentsOptions = (options?: Options<InstrumentsReadInstrumentsData>) => queryOptions<InstrumentsReadInstrumentsResponse, AxiosError<DefaultError>, InstrumentsReadInstrumentsResponse, ReturnType<typeof instrumentsReadInstrumentsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await InstrumentsService.instrumentsReadInstruments({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: instrumentsReadInstrumentsQueryKey(options)
+});

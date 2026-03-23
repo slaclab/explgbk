@@ -201,6 +201,25 @@ export const HTTPValidationErrorSchema = {
     title: 'HTTPValidationError'
 } as const;
 
+export const InstrumentSummarySchema = {
+    properties: {
+        instrument: {
+            type: 'string',
+            title: 'Instrument'
+        },
+        experiment_count: {
+            type: 'integer',
+            title: 'Experiment Count'
+        }
+    },
+    type: 'object',
+    required: [
+        'instrument',
+        'experiment_count'
+    ],
+    title: 'InstrumentSummary'
+} as const;
+
 export const ItemCreateSchema = {
     properties: {
         title: {

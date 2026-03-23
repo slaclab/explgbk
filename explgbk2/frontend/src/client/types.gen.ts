@@ -98,6 +98,20 @@ export type HttpValidationError = {
 };
 
 /**
+ * InstrumentSummary
+ */
+export type InstrumentSummary = {
+    /**
+     * Instrument
+     */
+    instrument: string;
+    /**
+     * Experiment Count
+     */
+    experiment_count: number;
+};
+
+/**
  * ItemCreate
  */
 export type ItemCreate = {
@@ -662,6 +676,10 @@ export type ExperimentsReadExperimentsData = {
          * Sort Desc
          */
         sort_desc?: boolean;
+        /**
+         * Instrument
+         */
+        instrument?: string | null;
     };
     url: '/api/v1/experiments/';
 };
@@ -789,3 +807,21 @@ export type ExperimentsUpdateExperimentResponses = {
 };
 
 export type ExperimentsUpdateExperimentResponse = ExperimentsUpdateExperimentResponses[keyof ExperimentsUpdateExperimentResponses];
+
+export type InstrumentsReadInstrumentsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/instruments/';
+};
+
+export type InstrumentsReadInstrumentsResponses = {
+    /**
+     * Response Instruments-Read Instruments
+     *
+     * Successful Response
+     */
+    200: Array<InstrumentSummary>;
+};
+
+export type InstrumentsReadInstrumentsResponse = InstrumentsReadInstrumentsResponses[keyof InstrumentsReadInstrumentsResponses];
