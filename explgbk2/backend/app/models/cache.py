@@ -47,3 +47,8 @@ class ExperimentPublic(ExperimentBase):
 class ExperimentsPublic(BaseModel):
     data: list[ExperimentPublic]
     count: int
+
+
+class InstrumentSummary(BaseModel):
+    instrument: str
+    experiment_count: int
