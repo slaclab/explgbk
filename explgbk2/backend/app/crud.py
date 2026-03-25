@@ -1,6 +1,3 @@
-from beanie import PydanticObjectId
-
-from app.models.item import Item, ItemCreate
 from app.models.user import User, UserCreate, UserUpdate
 
 
@@ -18,9 +15,3 @@ async def update_user(*, db_user: User, user_in: UserUpdate) -> User:
 
 async def get_user_by_email(*, email: str) -> User | None:
     return await User.find_one(User.email == email)
-
-
-async def create_item(*, item_in: ItemCreate, owner_id: PydanticObjectId) -> Item:
-    db_item = Item(**item_in.model_dump(), owner_id=owner_id)
-    await db_item.insert()
-    return db_item

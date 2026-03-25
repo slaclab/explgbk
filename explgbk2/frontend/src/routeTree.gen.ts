@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
-import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutExperimentsRouteImport } from './routes/_layout/experiments'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutExperimentsIndexRouteImport } from './routes/_layout/experiments/index'
@@ -30,11 +29,6 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutItemsRoute = LayoutItemsRouteImport.update({
-  id: '/items',
-  path: '/items',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutExperimentsRoute = LayoutExperimentsRouteImport.update({
@@ -63,14 +57,12 @@ export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/admin': typeof LayoutAdminRoute
   '/experiments': typeof LayoutExperimentsRouteWithChildren
-  '/items': typeof LayoutItemsRoute
   '/settings': typeof LayoutSettingsRoute
   '/experiments/$instrument': typeof LayoutExperimentsInstrumentRoute
   '/experiments/': typeof LayoutExperimentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/admin': typeof LayoutAdminRoute
-  '/items': typeof LayoutItemsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
   '/experiments/$instrument': typeof LayoutExperimentsInstrumentRoute
@@ -81,7 +73,6 @@ export interface FileRoutesById {
   '/_layout': typeof LayoutRouteWithChildren
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/experiments': typeof LayoutExperimentsRouteWithChildren
-  '/_layout/items': typeof LayoutItemsRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/experiments/$instrument': typeof LayoutExperimentsInstrumentRoute
@@ -93,24 +84,16 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/experiments'
-    | '/items'
     | '/settings'
     | '/experiments/$instrument'
     | '/experiments/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/admin'
-    | '/items'
-    | '/settings'
-    | '/'
-    | '/experiments/$instrument'
-    | '/experiments'
+  to: '/admin' | '/settings' | '/' | '/experiments/$instrument' | '/experiments'
   id:
     | '__root__'
     | '/_layout'
     | '/_layout/admin'
     | '/_layout/experiments'
-    | '/_layout/items'
     | '/_layout/settings'
     | '/_layout/'
     | '/_layout/experiments/$instrument'
@@ -142,13 +125,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof LayoutSettingsRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/items': {
-      id: '/_layout/items'
-      path: '/items'
-      fullPath: '/items'
-      preLoaderRoute: typeof LayoutItemsRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/experiments': {
@@ -198,7 +174,6 @@ const LayoutExperimentsRouteWithChildren =
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutExperimentsRoute: typeof LayoutExperimentsRouteWithChildren
-  LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
@@ -206,7 +181,6 @@ interface LayoutRouteChildren {
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutExperimentsRoute: LayoutExperimentsRouteWithChildren,
-  LayoutItemsRoute: LayoutItemsRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }

@@ -3,7 +3,6 @@ from pymongo import AsyncMongoClient
 
 from app.core.config import LGBK_CACHE_DB, settings
 from app.models.cache import Experiment
-from app.models.item import Item
 from app.models.user import User, UserCreate
 
 _mongo_client: AsyncMongoClient | None = None
@@ -21,7 +20,7 @@ async def init_db() -> None:
     _mongo_client = AsyncMongoClient(str(settings.MONGODB_URI))
     # App models in the main app DB
     await init_beanie(
-        database=_mongo_client[settings.MONGODB_DB], document_models=[User, Item]
+        database=_mongo_client[settings.MONGODB_DB], document_models=[User]
     )
     # Experiment cache in explgbk_cache DB
     await init_beanie(
@@ -38,6 +37,5 @@ async def init_db() -> None:
 
 
 async def reset_db() -> None:
-    await Item.delete_all()
     await User.delete_all()
     await Experiment.delete_all()

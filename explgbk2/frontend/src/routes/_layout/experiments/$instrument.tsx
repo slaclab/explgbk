@@ -6,8 +6,8 @@ import {
   experimentsReadExperimentsQueryKey,
   instrumentsReadInstrumentsOptions,
 } from "@/client/@tanstack/react-query.gen"
-import { zExperimentsReadExperimentsData } from "@/client/zod.gen"
 import { ExperimentsService } from "@/client/sdk.gen"
+import { zExperimentsReadExperimentsData } from "@/client/zod.gen"
 import { InstrumentExperiments } from "@/components/Experiments/ExperimentsTable"
 
 const PAGE_SIZE = 25
