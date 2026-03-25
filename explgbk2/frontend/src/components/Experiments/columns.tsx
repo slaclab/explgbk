@@ -95,3 +95,8 @@ export const columns: ColumnDef<ExperimentPublic>[] = [
     ),
   },
 ]
+
+/** Columns for the instrument-scoped table (no instrument column — redundant). */
+export const experimentColumns: ColumnDef<ExperimentPublic>[] = columns.filter(
+  (col) => (col as { accessorKey?: string }).accessorKey !== "instrument",
+)
