@@ -1,4 +1,6 @@
-import { Slot, Slottable } from "@radix-ui/react-slot"
+import { Slot as SlotPrimitive } from "radix-ui"
+
+const Slottable = SlotPrimitive.Slottable
 import { cva, type VariantProps } from "class-variance-authority"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -51,7 +53,7 @@ function LoadingButton({
   asChild = false,
   ...props
 }: ButtonProps) {
-  const Comp = asChild ? Slot : "button"
+  const Comp = asChild ? SlotPrimitive.Slot : "button"
   return (
     <Comp
       className={cn(buttonVariants({ variant, size, className }))}
