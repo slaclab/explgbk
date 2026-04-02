@@ -3,8 +3,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
-import { UsersService, type UserUpdateMe } from "@/client"
+import type { UserUpdateMe } from "@/client"
+import { usersUpdateUserMeMutation } from "@/client/@tanstack/react-query.gen"
+import { zUserUpdateMe } from "@/client/zod.gen"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -21,12 +22,12 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
-const formSchema = z.object({
-  full_name: z.string().max(30).optional(),
-  email: z.email({ message: "Invalid email address" }),
-})
-
 type FormData = z.infer<typeof formSchema>
+
+const formSchema = zUserUpdateMe.extend({
+  full_name: z.string().max(255).optional(),
+  email: z.email().max(255),
+})
 
 const UserInformation = () => {
   const queryClient = useQueryClient()
@@ -49,8 +50,7 @@ const UserInformation = () => {
   }
 
   const mutation = useMutation({
-    mutationFn: (data: UserUpdateMe) =>
-      UsersService.updateUserMe({ requestBody: data }),
+    ...usersUpdateUserMeMutation(),
     onSuccess: () => {
       showSuccessToast("User updated successfully")
       toggleEditMode()
@@ -72,7 +72,7 @@ const UserInformation = () => {
       updateData.email = data.email
     }
 
-    mutation.mutate(updateData)
+    mutation.mutate({ body: updateData })
   }
 
   const onCancel = () => {

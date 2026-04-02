@@ -4,8 +4,12 @@ import { Pencil } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
-import { type UserPublic, UsersService } from "@/client"
+import type { UserPublic } from "@/client"
+import {
+  usersReadUsersQueryKey,
+  usersUpdateUserMutation,
+} from "@/client/@tanstack/react-query.gen"
+import { zUserUpdate } from "@/client/zod.gen"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -31,14 +35,14 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
-const formSchema = z.object({
-  email: z.email({ message: "Invalid email address" }),
-  full_name: z.string().optional(),
+type FormData = z.infer<typeof formSchema>
+
+const formSchema = zUserUpdate.extend({
+  email: z.email().max(255),
+  full_name: z.string().max(255).optional(),
   is_superuser: z.boolean().optional(),
   is_active: z.boolean().optional(),
 })
-
-type FormData = z.infer<typeof formSchema>
 
 interface EditUserProps {
   user: UserPublic
@@ -63,8 +67,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      UsersService.updateUser({ userId: user.id, requestBody: data }),
+    ...usersUpdateUserMutation(),
     onSuccess: () => {
       showSuccessToast("User updated successfully")
       setIsOpen(false)
@@ -72,12 +75,12 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: usersReadUsersQueryKey() })
     },
   })
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate(data)
+    mutation.mutate({ path: { user_id: user.id }, body: data })
   }
 
   return (

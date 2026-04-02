@@ -3,7 +3,7 @@ import { Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 
-import { UsersService } from "@/client"
+import { usersDeleteUserMutation } from "@/client/@tanstack/react-query.gen"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -30,12 +30,8 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { handleSubmit } = useForm()
 
-  const deleteUser = async (id: string) => {
-    await UsersService.deleteUser({ userId: id })
-  }
-
   const mutation = useMutation({
-    mutationFn: deleteUser,
+    ...usersDeleteUserMutation(),
     onSuccess: () => {
       showSuccessToast("The user was deleted successfully")
       setIsOpen(false)
@@ -48,7 +44,7 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
   })
 
   const onSubmit = async () => {
-    mutation.mutate(id)
+    mutation.mutate({ path: { user_id: id } })
   }
 
   return (
