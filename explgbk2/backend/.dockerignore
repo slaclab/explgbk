@@ -1,0 +1,7 @@
+# Python
+__pycache__
+app.egg-info
+*.pyc
+.coverage
+htmlcov
+.venv

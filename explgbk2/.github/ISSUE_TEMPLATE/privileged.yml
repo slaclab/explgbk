@@ -1,0 +1,22 @@
+name: Privileged
+description: You are a repository maintainer or were asked directly to create an issue here. If not, check the other options. 👇
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in this project! 🚀
+
+        If you are not a repository maintainer and were not asked directly to create an issue here, please start the conversation in a [Question in GitHub Discussions](https://github.com/your-org/explgbk/discussions/categories/questions) instead.
+  - type: checkboxes
+    id: privileged
+    attributes:
+      label: Privileged issue
+      description: Confirm that you are allowed to create an issue here.
+      options:
+        - label: I'm a repository maintainer or I was asked directly to create an issue here.
+          required: true
+  - type: textarea
+    id: content
+    attributes:
+      label: Issue Content
+      description: Add the content of the issue here.
