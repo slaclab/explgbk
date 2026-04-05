@@ -78,3 +78,8 @@ show_contexts = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
+log_cli = true
+log_cli_level = "INFO"
+markers = [
+    "integration: requires running docker compose stack (kafka + mongodb)",
+]

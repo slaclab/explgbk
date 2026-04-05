@@ -12,7 +12,7 @@ from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 async def db() -> AsyncGenerator[None, None]:
     with MongoDbContainer("mongo:7.0") as mongo:
         settings.MONGODB_URI = MongoDsn(mongo.get_connection_url())
@@ -22,7 +22,7 @@ async def db() -> AsyncGenerator[None, None]:
 
 
 @pytest.fixture(scope="module")
-async def client() -> AsyncGenerator[AsyncClient, None]:
+async def client(db: None) -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as c:
