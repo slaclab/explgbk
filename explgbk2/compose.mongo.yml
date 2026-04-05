@@ -1,0 +1,99 @@
+# MongoDB sharded cluster: configRs (1 node) + 2 shards (2 members each) + mongos router.
+# Included by compose.yml via the `include` directive.
+
+x-mongo-shard: &mongo-shard
+  image: mongo:7.0
+  restart: always
+  healthcheck:
+    test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27018/test --quiet"]
+    interval: 5s
+    retries: 12
+    start_period: 30s
+    timeout: 10s
+
+services:
+
+  # Config server replica set (CSRS) — stores cluster metadata.
+  # One node is sufficient for dev; production uses 3.
+  mongo-config:
+    image: mongo:7.0
+    restart: always
+    command: ["--configsvr", "--replSet", "configRs", "--bind_ip_all"]
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27019/test --quiet"]
+      interval: 5s
+      retries: 12
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - mongo-config-data:/data/db
+
+  # Shard 1 — two-member replica set (rs1).
+  mongo-rs1-0:
+    <<: *mongo-shard
+    command: ["--shardsvr", "--replSet", "rs1", "--bind_ip_all"]
+    volumes:
+      - mongo-rs1-0-data:/data/db
+
+  mongo-rs1-1:
+    <<: *mongo-shard
+    command: ["--shardsvr", "--replSet", "rs1", "--bind_ip_all"]
+    volumes:
+      - mongo-rs1-1-data:/data/db
+
+  # Shard 2 — two-member replica set (rs2).
+  mongo-rs2-0:
+    <<: *mongo-shard
+    command: ["--shardsvr", "--replSet", "rs2", "--bind_ip_all"]
+    volumes:
+      - mongo-rs2-0-data:/data/db
+
+  mongo-rs2-1:
+    <<: *mongo-shard
+    command: ["--shardsvr", "--replSet", "rs2", "--bind_ip_all"]
+    volumes:
+      - mongo-rs2-1-data:/data/db
+
+  # mongos router — all clients connect here.
+  mongos:
+    image: mongo:7.0
+    restart: always
+    command: ["mongos", "--configdb", "configRs/mongo-config:27019", "--bind_ip_all"]
+    depends_on:
+      mongo-config:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"]
+      interval: 5s
+      retries: 24
+      start_period: 60s
+      timeout: 10s
+
+  # One-shot: initialises all replica sets, adds shards, and restores dumps.
+  # Does NOT depend on mongos being healthy — the script polls mongos internally
+  # so that configRs can be bootstrapped before mongos first connects to it.
+  mongo-shard-init:
+    image: mongo:7.0
+    restart: "no"
+    depends_on:
+      mongo-config:
+        condition: service_healthy
+      mongo-rs1-0:
+        condition: service_healthy
+      mongo-rs1-1:
+        condition: service_healthy
+      mongo-rs2-0:
+        condition: service_healthy
+      mongo-rs2-1:
+        condition: service_healthy
+    volumes:
+      - ./dumps:/dumps:ro
+      - ./scripts/mongo-shard-init.sh:/scripts/mongo-shard-init.sh:ro
+    entrypoint: ["/bin/bash", "/scripts/mongo-shard-init.sh"]
+
+volumes:
+  mongo-config-data:
+  mongo-rs1-0-data:
+  mongo-rs1-1-data:
+  mongo-rs2-0-data:
+  mongo-rs2-1-data:
