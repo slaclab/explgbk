@@ -1,0 +1,24 @@
+{
+  "connector.class": "io.debezium.connector.mongodb.MongoDbConnector",
+  "mongodb.connection.string": "mongodb://mongos:27017/",
+  "topic.prefix": "elog-v1-cdc",
+
+  "snapshot.mode": "initial",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "false",
+  "database.exclude.list": "app",
+  "collection.exclude.list": ".*\\.fs\\.files,.*\\.fs\\.chunks,explgbk_cache\\..*",
+
+  "topic.creation.enable": "true",
+  "topic.creation.default.replication.factor": "1",
+  "topic.creation.default.partitions": "1",
+  "topic.creation.default.retention.ms": "-1",
+
+  "transforms": "route",
+  "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+  "transforms.route.regex": ".*",
+  "transforms.route.replacement": "elog-v1-cdc-raw",
+
+  "errors.log.enable": "true",
+  "errors.log.include.messages": "true"
+}

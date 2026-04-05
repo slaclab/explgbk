@@ -131,8 +131,82 @@ services:
 
       # Enable redirection for HTTP and HTTPS
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
+
+  kafka:
+    image: apache/kafka:3.8.1
+    restart: always
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk" # Fixed cluster ID — must not change between restarts
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
+
+  # Debezium runs as a Kafka Connect worker with the MongoDB connector built in
+  debezium-connect:
+    image: quay.io/debezium/connect:3.0
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo-shard-init:
+        condition: service_completed_successfully
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: debezium-connect-group
+      CONFIG_STORAGE_TOPIC: _debezium-configs
+      OFFSET_STORAGE_TOPIC: _debezium-offsets
+      STATUS_STORAGE_TOPIC: _debezium-status
+      CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      STATUS_STORAGE_REPLICATION_FACTOR: "1"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+  # One-shot: registers (or updates) the MongoDB connector config via the idempotent
+  # PUT /connectors/{name}/config endpoint — creates on first run, no-ops thereafter.
+  debezium-connector-init:
+    image: curlimages/curl:latest
+    restart: "no"
+    depends_on:
+      debezium-connect:
+        condition: service_healthy
+    volumes:
+      - ./config/debezium:/config/debezium:ro
+    entrypoint:
+      - curl
+      - -sf
+      - -X
+      - PUT
+      - http://debezium-connect:8083/connectors/mongodb-elog-connector/config
+      - -H
+      - "Content-Type: application/json"
+      - -d
+      - "@/config/debezium/mongodb-connector.json"
+
 volumes:
-  app-db-data:
+  kafka-data:
 
 networks:
   traefik-public:
