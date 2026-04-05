@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     SENTRY_DSN: HttpUrl | None = None
     MONGODB_URI: MongoDsn = MongoDsn("mongodb://localhost:27018")
     MONGODB_DB: str = "app"
+    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9094"
+    CDC_TOPIC: str = "elog-v1-cdc-raw"
 
     EMAIL_TEST_USER: EmailStr = "test@example.com"
     FIRST_SUPERUSER: EmailStr
