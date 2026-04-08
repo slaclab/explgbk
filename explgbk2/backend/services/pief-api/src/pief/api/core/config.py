@@ -21,9 +21,6 @@ def parse_cors(v: Any) -> list[str] | str:
     raise ValueError(v)
 
 
-LGBK_CACHE_DB = "explgbk_cache"
-
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         # Use top level .env file (one level above ./backend/)
