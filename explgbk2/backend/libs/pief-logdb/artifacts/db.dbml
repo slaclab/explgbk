@@ -1,0 +1,194 @@
+// DBML schema for pief-logdb
+// Auto-generated from backend/libs/pief-logdb/artifacts/db.sql via backend/libs/pief-logdb/scripts/dbml/sql_to_dbml.ts
+// DO NOT EDIT MANUALLY — run `make schema` to regenerate.
+
+Table "entries" {
+  "id" UUID [not null]
+  "legacy_id" VARCHAR
+  "created_at" TIMESTAMP [not null]
+  "occurred_at" TIMESTAMP
+  "title" VARCHAR [not null]
+  "content" TEXT [not null]
+  "content_type" VARCHAR [not null]
+  "author_id" UUID [not null]
+  "version" INTEGER [not null]
+  "retracted_by" UUID
+  "retracted_time" TIMESTAMP
+  "root_id" UUID
+  "run_id" UUID
+  "shift_id" UUID
+
+  Indexes {
+    id [pk]
+    legacy_id [name: "ix_entries_legacy_id"]
+  }
+}
+
+Table "instruments" {
+  "id" UUID [not null]
+  "legacy_id" VARCHAR
+  "meta" JSONB [not null]
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
+
+  Indexes {
+    id [pk]
+    legacy_id [name: "ix_instruments_legacy_id"]
+  }
+}
+
+Table "logbooks" {
+  "id" UUID [not null]
+  "type" VARCHAR [not null]
+  "name" VARCHAR [not null]
+  "description" TEXT
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
+
+  Indexes {
+    id [pk]
+    name [unique]
+  }
+}
+
+Table "tags" {
+  "id" UUID [not null]
+  "name" VARCHAR [not null]
+  "description" VARCHAR
+  "color" VARCHAR
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
+
+  Indexes {
+    id [pk]
+    name [unique]
+  }
+}
+
+Table "users" {
+  "id" UUID [not null]
+  "username" VARCHAR [not null]
+  "display_name" VARCHAR
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
+
+  Indexes {
+    id [pk]
+    username [unique, name: "ix_users_username"]
+  }
+}
+
+Table "attachments" {
+  "id" UUID [not null]
+  "entry_id" UUID [not null]
+  "legacy_id" VARCHAR
+  "name" VARCHAR
+  "description" TEXT
+  "filename" VARCHAR [not null]
+  "mime_type" VARCHAR [not null]
+  "size_bytes" INTEGER [not null]
+  "uri" VARCHAR [not null]
+  "preview_uri" VARCHAR
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
+
+  Indexes {
+    id [pk]
+    entry_id [name: "ix_attachments_entry_id"]
+    legacy_id [name: "ix_attachments_legacy_id"]
+  }
+}
+
+Table "entry_revisions" {
+  "id" UUID [not null]
+  "legacy_id" VARCHAR
+  "entry_id" UUID [not null]
+  "version" INTEGER [not null]
+  "revised_at" TIMESTAMP [not null]
+  "revised_by" UUID [not null]
+  "title" VARCHAR [not null]
+  "content" TEXT [not null]
+  "content_type" VARCHAR [not null]
+  "occurred_at" TIMESTAMP
+  "tag_ids" "UUID[]" [not null]
+  "attachment_ids" "UUID[]" [not null]
+
+  Indexes {
+    id [pk]
+    (entry_id, version) [unique, name: "uq_entry_revision_version"]
+    legacy_id [name: "ix_entry_revisions_legacy_id"]
+    entry_id [name: "ix_entry_revisions_entry_id"]
+  }
+}
+
+Table "entry_tags" {
+  "entry_id" UUID [not null]
+  "tag_id" UUID [not null]
+
+  Indexes {
+    (entry_id, tag_id) [pk]
+  }
+}
+
+Table "experiments" {
+  "id" UUID [not null]
+  "legacy_id" VARCHAR
+  "name" VARCHAR [not null]
+  "description" TEXT
+  "start_time" TIMESTAMP [not null]
+  "end_time" TIMESTAMP
+  "instrument_id" UUID
+  "proposal_id" UUID
+  "logbook_id" UUID
+  "meta" JSONB [not null]
+  "created_at" TIMESTAMP [default: `now()`]
+  "updated_at" TIMESTAMP [default: `now()`]
+
+  Indexes {
+    id [pk]
+    name [unique]
+    legacy_id [name: "ix_experiments_legacy_id"]
+  }
+}
+
+Table "external_links" {
+  "id" UUID [not null]
+  "entry_id" UUID [not null]
+  "system" VARCHAR [not null]
+  "uri" VARCHAR [not null]
+  "meta" JSONB
+
+  Indexes {
+    id [pk]
+    entry_id [name: "ix_external_links_entry_id"]
+  }
+}
+
+Table "logbook_entries" {
+  "entry_id" UUID [not null]
+  "logbook_id" UUID [not null]
+
+  Indexes {
+    (entry_id, logbook_id) [pk]
+  }
+}
+
+Ref:"entries"."id" < "entries"."root_id"
+
+Ref:"entries"."id" < "attachments"."entry_id"
+
+Ref:"entries"."id" < "entry_revisions"."entry_id"
+
+Ref:"entries"."id" < "entry_tags"."entry_id"
+
+Ref:"tags"."id" < "entry_tags"."tag_id"
+
+Ref:"instruments"."id" < "experiments"."instrument_id"
+
+Ref:"logbooks"."id" < "experiments"."logbook_id"
+
+Ref:"entries"."id" < "external_links"."entry_id"
+
+Ref:"entries"."id" < "logbook_entries"."entry_id"
+
+Ref:"logbooks"."id" < "logbook_entries"."logbook_id"
