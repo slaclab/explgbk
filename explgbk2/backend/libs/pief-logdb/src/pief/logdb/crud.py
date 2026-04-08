@@ -120,8 +120,8 @@ def retract_entry(*, session: Session, entry: Entry, retracted_by: UserUUID) -> 
     return entry
 
 
-def get_thread_replies(*, session: Session, root_id: EntryID) -> Sequence[Entry]:
-    return session.exec(select(Entry).where(Entry.root_id == root_id)).all()
+def get_thread_replies(*, session: Session, root_id: EntryID) -> list[Entry]:
+    return list(session.exec(select(Entry).where(Entry.root_id == root_id)).all())
 
 
 def update_entry(*, session: Session, entry: Entry, entry_update: EntryUpdate) -> Entry:
@@ -171,14 +171,14 @@ def create_entry_revision(
     return revision
 
 
-def get_entry_revisions(
-    *, session: Session, entry_id: EntryID
-) -> Sequence[EntryRevision]:
-    return session.exec(
-        select(EntryRevision)
-        .where(EntryRevision.entry_id == entry_id)
-        .order_by(EntryRevision.version)
-    ).all()
+def get_entry_revisions(*, session: Session, entry_id: EntryID) -> list[EntryRevision]:
+    return list(
+        session.exec(
+            select(EntryRevision)
+            .where(EntryRevision.entry_id == entry_id)
+            .order_by(col(EntryRevision.version))
+        ).all()
+    )
 
 
 def create_external_link(
