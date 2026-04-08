@@ -30,7 +30,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Copy only the workspace members that pief-api needs.
 # Omitting pief-streams keeps this image lean.
-COPY ./backend/scripts /app/backend/scripts
 COPY ./backend/libs/pief-models /app/backend/libs/pief-models
 COPY ./backend/libs/pief-logdb /app/backend/libs/pief-logdb
 COPY ./backend/services/pief-api /app/backend/services/pief-api

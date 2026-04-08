@@ -110,7 +110,7 @@ services:
     depends_on:
       mongo-shard-init:
         condition: service_completed_successfully
-    command: bash /app/backend/scripts/prestart.sh
+    command: sh -c "python -m pief.api.backend_pre_start && python -m pief.api.initial_data"
     env_file:
       - .env
     environment:
