@@ -22,6 +22,15 @@ x-backend-env: &backend-env
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?Variable not set}
   SENTRY_DSN: ${SENTRY_DSN}
 
+x-streams-env: &streams-env
+  POSTGRES_SERVER: db
+  POSTGRES_PORT: ${POSTGRES_PORT}
+  POSTGRES_DB: ${POSTGRES_DB}
+  POSTGRES_USER: ${POSTGRES_USER?Variable not set}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?Variable not set}
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  CDC_TOPIC: ${CDC_TOPIC:-elog-v1-cdc-raw}
+
 services:
 
   db:
@@ -108,7 +117,7 @@ services:
     depends_on:
       mongo-shard-init:
         condition: service_completed_successfully
-    command: bash scripts/prestart.sh
+    command: bash /app/backend/scripts/prestart.sh
     env_file:
       - .env
     environment:
@@ -186,6 +195,26 @@ services:
 
       # Enable redirection for HTTP and HTTPS
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
+
+  streams:
+    image: '${DOCKER_IMAGE_STREAMS?Variable not set}:${TAG-latest}'
+    restart: always
+    networks:
+      - default
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      debezium-connector-init:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    environment:
+      <<: *streams-env
+    build:
+      context: .
+      dockerfile: backend/services/pief-streams/Dockerfile
 
   kafka:
     image: apache/kafka:3.8.1

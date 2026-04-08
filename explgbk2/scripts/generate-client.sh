@@ -4,7 +4,7 @@ set -e
 set -x
 
 cd backend
-uv run python -c "import app.main; import json; print(json.dumps(app.main.app.openapi()))" > ../openapi.json
+uv run python -c "import pief.api.main; import json; print(json.dumps(pief.api.main.app.openapi()))" > ../openapi.json
 cd ..
 mv openapi.json frontend/
 # Ensure hook environments have workspace binaries available from the pinned lockfile.

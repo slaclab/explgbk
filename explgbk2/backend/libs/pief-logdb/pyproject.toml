@@ -1,0 +1,29 @@
+[project]
+name = "pief-logdb"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>2.0",
+    "sqlmodel>=0.0.38",
+    "psycopg[binary]>=3.3.3",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.3"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "pief.logdb"
+
+[tool.pyrefly]
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.3.0",
+    "testcontainers[postgres]>=4.14.2",
+]
