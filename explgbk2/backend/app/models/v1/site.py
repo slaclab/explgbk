@@ -12,7 +12,8 @@ Collections covered:
   - logs
 """
 
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
 
 from app.models.v1.base import MongoModel, PyObjectId, UTCDatetime
 
@@ -29,16 +30,31 @@ class InstrumentRole(MongoModel):
     players: list[str] = Field(default_factory=list)
 
 
+class InstrumentParams(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        alias_generator=to_camel,
+        validate_by_name=True,
+        validate_by_alias=True,
+    )
+    num_stations: int
+    elog: str | None = None
+    is_standard: bool | None = None
+    is_mobile: bool | None = None
+    is_location: bool | None = None
+    operator_uid: str | None = None
+
+
 class Instrument(MongoModel):
     """
     site.instruments — _id is the short instrument name (e.g. "AMO").
     """
 
-    id: str = Field(alias="_id")
-    description: str | None = None
-    params: dict[str, str] = Field(default_factory=dict)
-    roles: list[InstrumentRole] = Field(default_factory=list)
-    color: str | None = None
+    id: str = Field(alias="_id")  # done - this is name field in v2 model
+    description: str | None = None  # done
+    params: InstrumentParams  # TODO: this is a weird one, not sure 100% purpose
+    roles: list[InstrumentRole] = Field(default_factory=list)  # TODO
+    color: str | None = None  # TODO: put the color field in "metadata"
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import Field
+from pydantic import AnyUrl, Field
 
 from app.models.v1.base import MongoInt, MongoModel, PyObjectId, UTCDatetime
 
@@ -15,18 +15,24 @@ class ExperimentInfo(MongoModel):
     _id is the experiment name string (e.g. "diadaq13").
     """
 
-    id: str = Field(alias="_id")
-    name: str
-    description: str | None = None
-    instrument: str | None = None
-    contact_info: str | None = None
-    leader_account: str | None = None
-    posix_group: str | None = None
-    data_collection_software: str | None = None
-    params: dict[str, Any] | None = None
-    start_time: UTCDatetime | None = None
-    end_time: UTCDatetime | None = None
-    registration_time: UTCDatetime | None = None
+    # We will keep all of these inside experiment.metadata
+    # in v2
+
+    id: str = Field(alias="_id")  # done
+    name: str  # done
+    description: str | None = None  # done
+    instrument: str | None = None  # done
+    contact_info: str | None = None  # done
+    leader_account: str | None = None  # done
+    posix_group: str | None = None  # done
+    data_collection_software: str | None = None  # done
+    params: dict[str, Any] | None = None  # done
+    start_time: UTCDatetime | None = None  # done
+    end_time: UTCDatetime | None = None  # done
+    registration_time: UTCDatetime | None = None  # done
+    type: str | None = (
+        None  # TODO: seem to be either "" or None, so we shouldn't include in v2
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -39,6 +45,8 @@ class ExperimentRole(MongoModel):
     {exp}.roles — role assignments for experiment members.
     Unlike site.roles, these do NOT have a privileges list — only players.
     """
+
+    # TODO: suck up the experiment roles into an openfga instance
 
     id: PyObjectId = Field(alias="_id")
     app: str
@@ -54,11 +62,11 @@ class ExperimentRole(MongoModel):
 class ElogAttachment(MongoModel):
     """Attachment subdocument embedded in an ElogEntry."""
 
-    id: PyObjectId = Field(alias="_id")
-    name: str
-    type: str  # MIME type, e.g. "image/jpeg"
-    url: str  # reference, e.g. "mongo://ObjectIdHex" or HTTP URL
-    preview_url: str | None = None
+    id: PyObjectId = Field(alias="_id")  # done
+    name: str  # done
+    type: str  # MIME type, e.g. "image/jpeg" # done
+    url: AnyUrl  # reference, e.g. "mongo://ObjectIdHex" or HTTP URL # done
+    preview_url: str | None = None  # done
 
 
 class ElogEntry(MongoModel):
@@ -71,21 +79,33 @@ class ElogEntry(MongoModel):
     - deleted_by / deleted_time are set when an entry is soft-deleted
     """
 
-    id: PyObjectId = Field(alias="_id")
-    relevance_time: UTCDatetime
-    insert_time: UTCDatetime
-    author: str
-    content: str
-    content_type: str = "TEXT"
-    shift: PyObjectId | None = None
-    run_num: int | None = None
-    title: str | None = None
-    tags: list[str] | None = None
-    attachments: list[ElogAttachment] | None = None
-    parent: PyObjectId | None = None
-    root: PyObjectId | None = None
-    deleted_by: str | None = None
-    deleted_time: UTCDatetime | None = None
+    id: PyObjectId = Field(alias="_id")  # done
+    relevance_time: UTCDatetime  # done
+    insert_time: UTCDatetime  # done
+    author: str  # done
+    content: str  # done
+    content_type: str = "TEXT"  # done
+    shift: PyObjectId | None = (
+        None  # TODO: ONLY 1 out of 3,600 entries in my test data have this field
+    )
+    run_num: int | None = (
+        None  # TODO (343 out of 3600 entries have this; should we make it optional in v2?)
+    )
+    title: str | None = None  # done
+    tags: list[str] | None = None  # done
+    attachments: list[ElogAttachment] | None = None  # done
+    parent: PyObjectId | None = None  # done
+    root: PyObjectId | None = None  # done
+    deleted_by: str | None = None  # done
+    deleted_time: UTCDatetime | None = None  # done
+    email_to: list[str] | None = (
+        None  # not putting this in v2 - will handle notifications later
+    )
+    jira_ticket: str | None = (
+        None  # external link field - will handle more robustly in v2
+    )
+    post_to_elogs: list[str] | None = None  # we have as a relationship
+    previous_version: PyObjectId | None = None  # we have history tracking
 
 
 # ---------------------------------------------------------------------------
@@ -103,13 +123,13 @@ class Run(MongoModel):
     """
 
     id: PyObjectId = Field(alias="_id")
-    num: int
-    type: str = ""
-    begin_time: UTCDatetime
-    end_time: UTCDatetime | None = None
-    params: dict[str, Any] = Field(default_factory=dict)
-    editable_params: dict[str, Any] = Field(default_factory=dict)
-    params_modified_time: UTCDatetime | None = None
+    num: int  # TODO
+    type: str = ""  # done, but v2 is strenum
+    begin_time: UTCDatetime  # done
+    end_time: UTCDatetime | None = None  # done
+    params: dict[str, Any] = Field(default_factory=dict)  # done
+    editable_params: dict[str, Any] = Field(default_factory=dict)  # TODO
+    params_modified_time: UTCDatetime | None = None  # TODO
 
 
 # ---------------------------------------------------------------------------
@@ -124,13 +144,13 @@ class Shift(MongoModel):
     """
 
     id: PyObjectId = Field(alias="_id")
-    name: str
-    begin_time: UTCDatetime
-    end_time: UTCDatetime | None = None
-    leader: str | None = None
-    members: list[str] = Field(default_factory=list)
-    description: str | None = None
-    params: dict[str, Any] = Field(default_factory=dict)
+    name: str  # done
+    begin_time: UTCDatetime  # done
+    end_time: UTCDatetime | None = None  # done
+    leader: str | None = None  # done
+    members: list[str] = Field(default_factory=list)  # done
+    description: str | None = None  # done
+    params: dict[str, Any] = Field(default_factory=dict)  # done
 
 
 # ---------------------------------------------------------------------------
@@ -183,6 +203,8 @@ class WorkflowDefinition(MongoModel):
     location: str
     parameters: str | None = None
     run_as_user: str | None = None
+    run_param_name: str | None = None
+    run_param_value: str | None = None
 
 
 # ---------------------------------------------------------------------------
