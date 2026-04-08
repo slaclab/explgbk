@@ -10,7 +10,6 @@ from sqlmodel import Session, select
 from pief.logdb import crud
 from pief.logdb.tables import (
     Attachment,
-    Entry,
     EntryTag,
     ExternalLink,
     LogbookEntry,
@@ -96,7 +95,9 @@ def test_update_entry_bumps_version(session: Session, make_entry) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_create_entry_with_logbook_ids(session: Session, make_entry, make_logbook) -> None:
+def test_create_entry_with_logbook_ids(
+    session: Session, make_entry, make_logbook
+) -> None:
     """Creating an entry with logbook_ids produces LogbookEntry junction rows."""
     lb1 = make_logbook().id
     lb2 = make_logbook().id

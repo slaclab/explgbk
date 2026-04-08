@@ -85,5 +85,3 @@ def test_update_user(session: Session) -> None:
         user_update=UserUpdate(display_name="Updated"),
     )
     assert updated.display_name == "Updated"
-
-
