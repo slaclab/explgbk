@@ -8,6 +8,7 @@ from pydantic import (
     EmailStr,
     HttpUrl,
     MongoDsn,
+    PostgresDsn,
     computed_field,
     model_validator,
 )
@@ -54,6 +55,23 @@ class Settings(BaseSettings):
     SENTRY_DSN: HttpUrl | None = None
     MONGODB_URI: MongoDsn = MongoDsn("mongodb://localhost:27018")
     MONGODB_DB: str = "app"
+    POSTGRES_SERVER: str
+    POSTGRES_PORT: int = 5432
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_DB: str = ""
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:
+        return PostgresDsn.build(
+            scheme="postgresql+psycopg",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD,
+            host=self.POSTGRES_SERVER,
+            port=self.POSTGRES_PORT,
+            path=self.POSTGRES_DB,
+        )
     KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9094"
     CDC_TOPIC: str = "elog-v1-cdc-raw"
 
@@ -74,6 +92,7 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _enforce_non_default_secrets(self) -> Self:
         self._check_default_secret("SECRET_KEY", self.SECRET_KEY)
+        self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)
         return self
 
 
