@@ -1,10 +1,10 @@
-import os
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 import pief.logdb.tables as _tables  # noqa: F401 - registers tables
+from pief.logdb.config.settings import settings as db_settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -17,23 +17,17 @@ if config.config_file_name is not None:
 target_metadata = SQLModel.metadata
 
 
-# TODO: we could probably add a cfg that is specific to the db layer
 def get_url() -> str:
     """Resolve the database URL.
 
     Precedence:
     1. ``sqlalchemy.url`` key set programmatically via ``alembic_config(engine)``.
-    2. Individual ``POSTGRES_*`` environment variables (container / CI).
+    2. ``db_settings`` (reads POSTGRES_* env vars or .env file).
     """
     url = config.get_main_option("sqlalchemy.url")
     if url:
         return url
-    server = os.environ.get("POSTGRES_SERVER", "localhost")
-    port = os.environ.get("POSTGRES_PORT", "5432")
-    user = os.environ.get("POSTGRES_USER", "postgres")
-    password = os.environ.get("POSTGRES_PASSWORD", "")
-    db = os.environ.get("POSTGRES_DB", "app")
-    return f"postgresql+psycopg://{user}:{password}@{server}:{port}/{db}"
+    return str(db_settings.SQLALCHEMY_DATABASE_URI)
 
 
 def run_migrations_offline() -> None:
