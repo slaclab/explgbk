@@ -9,7 +9,6 @@ These types handle both:
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from bson import ObjectId
 from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict
 
 # ---------------------------------------------------------------------------
@@ -18,8 +17,6 @@ from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict
 
 
 def _coerce_object_id(v: Any) -> str:
-    if isinstance(v, ObjectId):
-        return str(v)
     if isinstance(v, dict) and "$oid" in v:
         return str(v["$oid"])
     return str(v)

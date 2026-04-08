@@ -5,9 +5,7 @@ from typing import Annotated, Any, Literal, Self
 from pydantic import (
     AnyUrl,
     BeforeValidator,
-    EmailStr,
     HttpUrl,
-    MongoDsn,
     PostgresDsn,
     computed_field,
     model_validator,
@@ -53,8 +51,7 @@ class Settings(BaseSettings):
 
     PROJECT_NAME: str = "pief-api"
     SENTRY_DSN: HttpUrl | None = None
-    MONGODB_URI: MongoDsn = MongoDsn("mongodb://localhost:27018")
-    MONGODB_DB: str = "app"
+
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "postgres"
@@ -73,8 +70,8 @@ class Settings(BaseSettings):
             path=self.POSTGRES_DB,
         )
 
-    EMAIL_TEST_USER: EmailStr = "test@example.com"
-    FIRST_SUPERUSER: EmailStr = "admin@example.com"
+    # Username of the initial superuser created at startup.
+    FIRST_SUPERUSER: str = "admin"
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
