@@ -6,7 +6,7 @@ up:
 	docker compose up -d --wait --build
 
 test-backend:
-	cd backend && uv run pytest tests/ --cov=app --cov-report=term --cov-report=html
+	cd backend && uv run pytest services/pief-api/tests/ libs/pief-logdb/tests/ --cov=pief --cov-report=term --cov-report=html
 
 
 test-frontend:
