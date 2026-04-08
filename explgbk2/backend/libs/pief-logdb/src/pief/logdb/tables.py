@@ -66,7 +66,7 @@ class DTMixin(CreatedAtMixin, UpdatedAtMixin):
 class LogbookEntry(SQLModel, table=True):
     """Junction table: M:N between entries and logbooks."""
 
-    __tablename__ = "logbook_entries"
+    __tablename__ = "logbook_entries"  # type: ignore[assignment]
 
     entry_id: EntryID = Field(foreign_key="entries.id", primary_key=True)
     logbook_id: LogbookID = Field(foreign_key="logbooks.id", primary_key=True)
@@ -75,7 +75,7 @@ class LogbookEntry(SQLModel, table=True):
 class EntryTag(SQLModel, table=True):
     """Junction table: M:N between entries and tags."""
 
-    __tablename__ = "entry_tags"
+    __tablename__ = "entry_tags"  # type: ignore[assignment]
 
     entry_id: EntryID = Field(foreign_key="entries.id", primary_key=True)
     tag_id: TagID = Field(foreign_key="tags.id", primary_key=True)
@@ -84,7 +84,7 @@ class EntryTag(SQLModel, table=True):
 class Tag(DTMixin, SQLModel, table=True):
     """Tag table — labels for logbook entries."""
 
-    __tablename__ = "tags"
+    __tablename__ = "tags"  # type: ignore[assignment]
 
     # ---- Primary key ----
     id: TagID = Field(default_factory=uuid4, primary_key=True)
@@ -101,7 +101,7 @@ class Tag(DTMixin, SQLModel, table=True):
 class Instrument(DTMixin, SQLModel, table=True):
     """Shell table — populated from Debezium/Kafka CDC pipeline via meta JSONB."""
 
-    __tablename__ = "instruments"
+    __tablename__ = "instruments"  # type: ignore[assignment]
 
     # ---- Primary key ----
     id: InstrumentID = Field(default_factory=uuid4, primary_key=True)
@@ -116,7 +116,7 @@ class Instrument(DTMixin, SQLModel, table=True):
 class Logbook(DTMixin, SQLModel, table=True):
     """Logbook table — one per experiment or instrument."""
 
-    __tablename__ = "logbooks"
+    __tablename__ = "logbooks"  # type: ignore[assignment]
 
     # ---- Primary key ----
     id: LogbookID = Field(default_factory=uuid4, primary_key=True)
@@ -139,7 +139,7 @@ class Logbook(DTMixin, SQLModel, table=True):
 class Experiment(DTMixin, SQLModel, table=True):
     """One row per scientific experiment; maps from v1 {exp_name}.info."""
 
-    __tablename__ = "experiments"
+    __tablename__ = "experiments"  # type: ignore[assignment]
 
     # ---- Primary key ----
     id: ExperimentID = Field(default_factory=uuid4, primary_key=True)
@@ -152,8 +152,12 @@ class Experiment(DTMixin, SQLModel, table=True):
     description: str | None = Field(default=None, sa_type=Text)
 
     # ---- Scheduling ----
-    start_time: datetime = Field(..., sa_type=DateTime(timezone=True))
-    end_time: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+    start_time: datetime = Field(
+        ..., sa_column=Column(DateTime(timezone=True), nullable=False)
+    )
+    end_time: datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True))
+    )
 
     # ---- FKs ----
     instrument_id: InstrumentID | None = Field(
@@ -172,7 +176,7 @@ class Experiment(DTMixin, SQLModel, table=True):
 class User(DTMixin, SQLModel, table=True):
     """Canonical user identity row."""
 
-    __tablename__ = "users"
+    __tablename__ = "users"  # type: ignore[assignment]
 
     # ---- Primary key ----
     # this is for this database
@@ -189,7 +193,7 @@ class User(DTMixin, SQLModel, table=True):
 class Attachment(DTMixin, SQLModel, table=True):
     """Attachment table: 1:N with entries."""
 
-    __tablename__ = "attachments"
+    __tablename__ = "attachments"  # type: ignore[assignment]
 
     # ---- Primary key ----
     id: AttachmentID = Field(default_factory=uuid4, primary_key=True)
@@ -216,7 +220,7 @@ class Attachment(DTMixin, SQLModel, table=True):
 class ExternalLink(SQLModel, table=True):
     """External link table: 1:N with entries."""
 
-    __tablename__ = "external_links"
+    __tablename__ = "external_links"  # type: ignore[assignment]
 
     # ---- Primary key ----
     id: ExternalLinkID = Field(default_factory=uuid4, primary_key=True)
@@ -238,10 +242,10 @@ class ExternalLink(SQLModel, table=True):
     entry: "Entry" = Relationship(back_populates="external_links")
 
 
-class Entry(SQLModel, table=True):
+class Entry(CreatedAtMixin, SQLModel, table=True):
     """Logbook entry table"""
 
-    __tablename__ = "entries"
+    __tablename__ = "entries"  # type: ignore[assignment]
 
     # ---- Primary key ----
     id: EntryID = Field(default_factory=uuid4, primary_key=True)
@@ -251,14 +255,10 @@ class Entry(SQLModel, table=True):
     legacy_id: LegacyMongoID | None = Field(default=None, index=True)
 
     # ---- Timestamps ----
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
-        sa_type=DateTime(timezone=True),
-    )
     # Time the event occurred, as opposed to when it was logged.
     occurred_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
+        sa_column=Column(DateTime(timezone=True)),
     )
 
     # ---- Content ----
@@ -276,7 +276,7 @@ class Entry(SQLModel, table=True):
     retracted_by: UserUUID | None = Field(default=None, foreign_key="users.id")
     retracted_time: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
+        sa_column=Column(DateTime(timezone=True)),
     )
 
     # ---- Threading (self-referencing adjacency list) ----
@@ -303,7 +303,7 @@ class Entry(SQLModel, table=True):
 class EntryRevision(SQLModel, table=True):
     """Snapshot of an entry's mutable fields at a given version."""
 
-    __tablename__ = "entry_revisions"
+    __tablename__ = "entry_revisions"  # type: ignore[assignment]
     __table_args__ = (
         UniqueConstraint("entry_id", "version", name="uq_entry_revision_version"),
     )
@@ -323,7 +323,7 @@ class EntryRevision(SQLModel, table=True):
     # ---- Authorship ----
     revised_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_type=DateTime(timezone=True),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     revised_by: UserUUID = Field(...)
 
@@ -333,13 +333,15 @@ class EntryRevision(SQLModel, table=True):
     content_type: str = Field(...)
     occurred_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
+        sa_column=Column(DateTime(timezone=True)),
     )
 
     # ---- Snapshot of M:N relationships ----
-    tag_ids: list[TagID] = Field(
-        default_factory=list, sa_type=ARRAY(SAUUID(as_uuid=True))
+    tag_ids: list[TagID] | None = Field(
+        default_factory=list,
+        sa_column=Column(ARRAY(SAUUID(as_uuid=True))),
     )
-    attachment_ids: list[AttachmentID] = Field(
-        default_factory=list, sa_type=ARRAY(SAUUID(as_uuid=True))
+    attachment_ids: list[AttachmentID] | None = Field(
+        default_factory=list,
+        sa_column=Column(ARRAY(SAUUID(as_uuid=True))),
     )
