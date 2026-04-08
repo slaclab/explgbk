@@ -16,11 +16,13 @@ Backend, JSON based web API based on OpenAPI: <http://localhost:8000>
 
 Automatic interactive documentation with Swagger UI (from the OpenAPI backend): <http://localhost:8000/docs>
 
-Mongo Express, database web administration: <http://localhost:8080>
+DBGate (Postgres admin UI): <http://localhost:8081>
+
+Mongo Express (MongoDB admin UI): <http://localhost:8080>
 
 Traefik UI, to see how the routes are being handled by the proxy: <http://localhost:8090>
 
-**Note**: The first time you start your stack, it might take a minute for it to be ready. While the backend waits for the database to be ready and configures everything. You can check the logs to monitor it.
+**Note**: The first time you start your stack, it might take a minute for it to be ready. The backend waits for Postgres to be ready, runs Alembic migrations, and seeds the initial superuser before accepting requests. You can check the logs to monitor it.
 
 To check the logs, run (in another terminal):
 
@@ -33,6 +35,53 @@ To check the logs of a specific service, add the name of the service, e.g.:
 ```bash
 docker compose logs backend
 ```
+
+## Database Migrations (Alembic)
+
+Schema is managed entirely by Alembic. Migrations live in:
+
+```
+backend/libs/pief-logdb/src/pief/logdb/alembic/versions/
+```
+
+### Generate a new migration
+
+```bash
+make migration
+# or interactively:
+cd backend && uv run python scripts/gen_migration.py
+```
+
+This spins up a temporary Postgres container via testcontainers, upgrades to `head`, then autogenerates a revision. The migration tests run automatically afterwards.
+
+### Run migration tests
+
+```bash
+make test-migrations
+```
+
+Tests verify that:
+
+* `upgrade head` completes without error
+* No model drift exists between migrations and the ORM metadata
+* All migrations are fully reversible (`downgrade base` → `upgrade head`)
+
+### Regenerate schema artefacts
+
+```bash
+make schema          # writes backend/libs/pief-logdb/artifacts/db.sql and backend/libs/pief-logdb/artifacts/db.dbml
+```
+
+This generates:
+
+1. `backend/libs/pief-logdb/artifacts/db.sql` — PostgreSQL DDL from SQLModel metadata
+2. `backend/libs/pief-logdb/artifacts/db.dbml` — DBML for visualization (e.g. dbdiagram.io)
+
+## Architecture
+
+* **Database**: PostgreSQL (primary store, managed by Alembic)
+* **MongoDB**: present in the stack as the legacy data source for the Debezium → Kafka → PostgreSQL CDC pipeline. It is **not** used by the Python application layer.
+* **Kafka + Debezium**: CDC pipeline that replicates changes from MongoDB into Postgres for the migration bridge.
 
 ## Local Development
 
@@ -64,8 +113,22 @@ And then you can run the local development server for the backend:
 
 ```bash
 cd backend
-fastapi dev app/main.py
+fastapi dev backend/services/pief-api/src/pief/api/main.py
 ```
+
+## The .env file
+
+The `.env` file contains all configuration, generated keys, and passwords.
+
+Key variables:
+
+| Variable | Description |
+|---|---|
+| `FIRST_SUPERUSER` | Username of the initial superuser created at startup (default: `admin`) |
+| `POSTGRES_*` | PostgreSQL connection settings |
+| `SECRET_KEY` | JWT signing secret — change in production |
+
+MongoDB and Kafka are configured separately in `compose.yml` and are not exposed via pief-api settings.
 
 ## Docker Compose in `localhost.explgbk.com`
 
