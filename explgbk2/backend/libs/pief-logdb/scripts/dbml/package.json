@@ -1,0 +1,17 @@
+{
+  "name": "pief-logdb-dbml",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Utility to convert backend/libs/pief-logdb/artifacts/db.sql to backend/libs/pief-logdb/artifacts/db.dbml via @dbml/core",
+  "scripts": {
+    "gen": "ts-node sql_to_dbml.ts"
+  },
+  "dependencies": {
+    "@dbml/core": "^6.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
+  }
+}
