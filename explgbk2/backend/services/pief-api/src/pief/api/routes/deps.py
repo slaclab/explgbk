@@ -67,3 +67,9 @@ def get_current_user(token: TokenDep, session: SessionDep) -> User:
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_current_active_superuser(current_user: CurrentUser) -> User:
+    # Placeholder until authn/authz (Dex + OpenFGA) is implemented.
+    # Currently all authenticated users are treated equally.
+    return current_user
