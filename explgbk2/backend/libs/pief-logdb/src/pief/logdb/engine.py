@@ -1,4 +1,4 @@
-"""SQLModel engine and session factory for pief.logdb.
+"""SQLAlchemy async engine and session factory for pief.logdb.
 
 Uses SQLAlchemy's async engine with psycopg3 (the ``psycopg`` package supports
 both sync and async under the same ``postgresql+psycopg://`` URL scheme).

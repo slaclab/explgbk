@@ -8,13 +8,13 @@ from typing import Any
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
-from sqlmodel import SQLModel
 from testcontainers.postgres import PostgresContainer
 
 from pief.logdb import crud
 from pief.logdb.schemas import EntryCreate, ExperimentCreate, LogbookCreate, UserCreate
 from pief.logdb.tables import Entry, Experiment, Logbook, User
-import pief.logdb.tables as _tables  # noqa: F401 — registers all SQLModel table metadata
+import pief.logdb.tables as _tables  # noqa: F401 — registers all ORM table metadata
+from pief.logdb.tables import Base
 
 POSTGRES_IMAGE = "postgres:17"
 POSTGRES_DRIVER = "psycopg"
@@ -30,7 +30,7 @@ def pg() -> Generator[PostgresContainer, None, None]:
 async def engine(pg: PostgresContainer) -> AsyncGenerator[AsyncEngine, None]:
     eng = create_async_engine(pg.get_connection_url(driver=POSTGRES_DRIVER))
     async with eng.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all)
     yield eng
     await eng.dispose()
 

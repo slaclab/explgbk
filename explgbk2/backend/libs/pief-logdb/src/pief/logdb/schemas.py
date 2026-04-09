@@ -1,11 +1,10 @@
 """Input/output schemas for v2 models.
 
-Non-table SQLModel classes used for API request validation and CRUD input.
-Table definitions live in app.models.v2.db.
+Pydantic schemas used for API request validation and CRUD input.
+Table definitions live in pief.logdb.tables.
 """
 
-from pydantic import AwareDatetime
-from sqlmodel import Field, SQLModel
+from pydantic import AwareDatetime, BaseModel, Field
 
 from pief.logdb.base import (
     AttachmentID,
@@ -22,14 +21,13 @@ from pief.logdb.base import (
 from pief.models.v1.entries import LogbookType
 
 
-class LogbookCreate(SQLModel):
+class LogbookCreate(BaseModel):
     type: LogbookType
     name: str = Field(..., min_length=1)
     description: str | None = None
-    legacy_id: LegacyMongoID | None = None
 
 
-class EntryCreate(SQLModel):
+class EntryCreate(BaseModel):
     author_id: UserUUID
     title: str = Field(..., min_length=1)
     content: str
@@ -44,7 +42,7 @@ class EntryCreate(SQLModel):
     tag_ids: list[TagID] = Field(default_factory=list)
 
 
-class EntryUpdate(SQLModel):
+class EntryUpdate(BaseModel):
     """Fields that can change when editing an entry. Version is bumped automatically."""
 
     title: str | None = None
@@ -54,7 +52,7 @@ class EntryUpdate(SQLModel):
     tag_ids: list[TagID] | None = None
 
 
-class EntryRevisionCreate(SQLModel):
+class EntryRevisionCreate(BaseModel):
     entry_id: EntryID
     version: int
     # Supplying revised_at is for migration backfill only; production callers should leave it None.
@@ -69,14 +67,14 @@ class EntryRevisionCreate(SQLModel):
     attachment_ids: list[AttachmentID] = Field(default_factory=list)
 
 
-class ExternalLinkCreate(SQLModel):
+class ExternalLinkCreate(BaseModel):
     entry_id: EntryID
     system: str = Field(...)
     uri: str
     meta: dict = Field(default_factory=dict)
 
 
-class AttachmentUpdate(SQLModel):
+class AttachmentUpdate(BaseModel):
     """Fields that can be updated on an attachment after async processing."""
 
     preview_uri: str | None = None
@@ -84,7 +82,7 @@ class AttachmentUpdate(SQLModel):
     description: str | None = None
 
 
-class ExperimentCreate(SQLModel):
+class ExperimentCreate(BaseModel):
     name: str = Field(..., min_length=1)
     description: str | None = None
     start_time: AwareDatetime
@@ -96,7 +94,7 @@ class ExperimentCreate(SQLModel):
     legacy_id: LegacyMongoID | None = None
 
 
-class ExperimentUpdate(SQLModel):
+class ExperimentUpdate(BaseModel):
     """Fields that can change during an experiment's lifecycle."""
 
     description: str | None = None
@@ -105,27 +103,27 @@ class ExperimentUpdate(SQLModel):
     meta: dict | None = None
 
 
-class UserCreate(SQLModel):
+class UserCreate(BaseModel):
     username: str = Field(..., min_length=1)
     display_name: str | None = None
 
 
-class UserUpdate(SQLModel):
+class UserUpdate(BaseModel):
     display_name: str | None = None
 
 
-class TagCreate(SQLModel):
+class TagCreate(BaseModel):
     name: str = Field(..., min_length=1)
     description: str | None = None
     color: str | None = None
 
 
-class TagUpdate(SQLModel):
+class TagUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1)
     description: str | None = None
     color: str | None = None
 
 
-class InstrumentCreate(SQLModel):
+class InstrumentCreate(BaseModel):
     legacy_id: LegacyMongoID | None = None
     meta: dict = Field(default_factory=dict)

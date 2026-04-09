@@ -1,8 +1,8 @@
 from datetime import UTC, datetime
 from typing import Any, Literal
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import col, func, select
 
 from pief.logdb.base import (
     EntryID,
@@ -43,7 +43,7 @@ from pief.logdb.schemas import (
 
 
 async def create_user(*, session: AsyncSession, user_in: UserCreate) -> User:
-    user = User.model_validate(user_in)
+    user = User(**user_in.model_dump())
     session.add(user)
     await session.flush()
     await session.refresh(user)
@@ -77,7 +77,8 @@ async def update_user(
     *, session: AsyncSession, user: User, user_update: UserUpdate
 ) -> User:
     update_data = user_update.model_dump(exclude_unset=True)
-    user.sqlmodel_update(update_data)
+    for key, value in update_data.items():
+        setattr(user, key, value)
     session.add(user)
     await session.flush()
     await session.refresh(user)
@@ -86,7 +87,7 @@ async def update_user(
 
 async def create_entry(*, session: AsyncSession, entry_in: EntryCreate) -> Entry:
     entry_data = entry_in.model_dump(exclude={"logbook_ids", "tag_ids"})
-    entry = Entry.model_validate(entry_data)
+    entry = Entry(**entry_data)
     session.add(entry)
     await session.flush()  # get entry.id before creating junction rows
 
@@ -131,7 +132,8 @@ async def update_entry(
     *, session: AsyncSession, entry: Entry, entry_update: EntryUpdate
 ) -> Entry:
     update_data = entry_update.model_dump(exclude_unset=True)
-    entry.sqlmodel_update(update_data)
+    for key, value in update_data.items():
+        setattr(entry, key, value)
     entry.version += 1
     session.add(entry)
     await session.flush()
@@ -146,7 +148,8 @@ async def update_attachment(
     attachment_update: AttachmentUpdate,
 ) -> Attachment:
     update_data = attachment_update.model_dump(exclude_unset=True)
-    attachment.sqlmodel_update(update_data)
+    for key, value in update_data.items():
+        setattr(attachment, key, value)
     session.add(attachment)
     await session.flush()
     await session.refresh(attachment)
@@ -156,7 +159,7 @@ async def update_attachment(
 async def create_logbook(
     *, session: AsyncSession, logbook_in: LogbookCreate
 ) -> Logbook:
-    logbook = Logbook.model_validate(logbook_in)
+    logbook = Logbook(**logbook_in.model_dump())
     session.add(logbook)
     await session.flush()
     await session.refresh(logbook)
@@ -173,10 +176,10 @@ async def create_entry_revision(
     *, session: AsyncSession, revision_in: EntryRevisionCreate
 ) -> EntryRevision:
     data = revision_in.model_dump()
-    # Drop None revised_at so EntryRevision's default_factory fires instead.
+    # Drop None revised_at so EntryRevision's column default fires instead.
     if data.get("revised_at") is None:
         data.pop("revised_at", None)
-    revision = EntryRevision.model_validate(data)
+    revision = EntryRevision(**data)
     session.add(revision)
     await session.flush()
     await session.refresh(revision)
@@ -189,7 +192,7 @@ async def get_entry_revisions(
     result = await session.execute(
         select(EntryRevision)
         .where(EntryRevision.entry_id == entry_id)
-        .order_by(col(EntryRevision.version))
+        .order_by(EntryRevision.version)
     )
     return list(result.scalars().all())
 
@@ -197,7 +200,7 @@ async def get_entry_revisions(
 async def create_external_link(
     *, session: AsyncSession, link_in: ExternalLinkCreate
 ) -> ExternalLink:
-    link = ExternalLink.model_validate(link_in)
+    link = ExternalLink(**link_in.model_dump())
     session.add(link)
     await session.flush()
     await session.refresh(link)
@@ -207,7 +210,7 @@ async def create_external_link(
 async def create_experiment(
     *, session: AsyncSession, experiment_in: ExperimentCreate
 ) -> Experiment:
-    experiment = Experiment.model_validate(experiment_in)
+    experiment = Experiment(**experiment_in.model_dump())
     session.add(experiment)
     await session.flush()
     await session.refresh(experiment)
@@ -243,7 +246,8 @@ async def update_experiment(
     experiment_update: ExperimentUpdate,
 ) -> Experiment:
     update_data = experiment_update.model_dump(exclude_unset=True)
-    experiment.sqlmodel_update(update_data)
+    for key, value in update_data.items():
+        setattr(experiment, key, value)
     session.add(experiment)
     await session.flush()
     await session.refresh(experiment)
@@ -267,10 +271,10 @@ async def list_experiments(
     if instrument_id is not None:
         query = query.where(Experiment.instrument_id == instrument_id)
     _sort_cols: dict[str, Any] = {
-        "name": col(Experiment.name),
-        "start_time": col(Experiment.start_time),
-        "end_time": col(Experiment.end_time),
-        "created_at": col(Experiment.created_at),
+        "name": Experiment.name,
+        "start_time": Experiment.start_time,
+        "end_time": Experiment.end_time,
+        "created_at": Experiment.created_at,
     }
     sort_col = _sort_cols[sort_by]
     query = query.order_by(sort_col.desc() if sort_desc else sort_col)
@@ -289,7 +293,7 @@ async def list_experiment_names(*, session: AsyncSession) -> list[str]:
 
 
 async def create_tag(*, session: AsyncSession, tag_in: TagCreate) -> Tag:
-    tag = Tag.model_validate(tag_in)
+    tag = Tag(**tag_in.model_dump())
     session.add(tag)
     await session.flush()
     await session.refresh(tag)
@@ -307,7 +311,8 @@ async def get_tag_by_name(*, session: AsyncSession, name: str) -> Tag | None:
 
 async def update_tag(*, session: AsyncSession, tag: Tag, tag_update: TagUpdate) -> Tag:
     update_data = tag_update.model_dump(exclude_unset=True)
-    tag.sqlmodel_update(update_data)
+    for key, value in update_data.items():
+        setattr(tag, key, value)
     session.add(tag)
     await session.flush()
     await session.refresh(tag)
@@ -317,7 +322,7 @@ async def update_tag(*, session: AsyncSession, tag: Tag, tag_update: TagUpdate) 
 async def create_instrument(
     *, session: AsyncSession, instrument_in: InstrumentCreate
 ) -> Instrument:
-    instrument = Instrument.model_validate(instrument_in)
+    instrument = Instrument(**instrument_in.model_dump())
     session.add(instrument)
     await session.flush()
     await session.refresh(instrument)

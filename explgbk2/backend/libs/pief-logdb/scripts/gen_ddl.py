@@ -1,4 +1,4 @@
-"""Generate artifacts/db.sql from SQLModel metadata.
+"""Generate artifacts/db.sql from SQLAlchemy ORM metadata.
 
 Emits CREATE TYPE and CREATE TABLE/INDEX DDL for the PostgreSQL dialect
 directly from the ORM models, keeping artifacts/db.sql in sync with the
@@ -13,16 +13,16 @@ from pathlib import Path
 from sqlalchemy import Enum
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.schema import CreateIndex, CreateTable
-from sqlmodel import SQLModel
 
-import pief.logdb.tables as _tables  # noqa: F401 — registers tables on SQLModel.metadata
+import pief.logdb.tables as _tables  # noqa: F401 — registers tables on Base.metadata
+from pief.logdb.tables import Base
 
 ROOT = Path(__file__).parent.parent
 OUTPUT_FILE = ROOT / "artifacts" / "db.sql"
 
 HEADER = """\
 -- PostgreSQL schema for pief-logdb
--- Auto-generated from SQLModel metadata via backend/scripts/gen_ddl.py
+-- Auto-generated from SQLAlchemy ORM metadata via backend/scripts/gen_ddl.py
 -- DO NOT EDIT MANUALLY — run `make schema` to regenerate.
 
 """
@@ -30,7 +30,7 @@ HEADER = """\
 
 def collect_enums() -> dict[str, Enum]:
     seen: dict[str, Enum] = {}
-    for table in SQLModel.metadata.sorted_tables:
+    for table in Base.metadata.sorted_tables:
         for col in table.columns:
             if (
                 isinstance(col.type, Enum)
@@ -48,7 +48,7 @@ def emit_create_type(name: str, enum: Enum) -> str:
 
 def emit_table_ddl(dialect: postgresql.dialect) -> list[str]:
     blocks: list[str] = []
-    for table in SQLModel.metadata.sorted_tables:
+    for table in Base.metadata.sorted_tables:
         ddl = str(CreateTable(table).compile(dialect=dialect)).strip() + ";"
         index_lines = [
             str(CreateIndex(idx).compile(dialect=dialect)).strip() + ";"

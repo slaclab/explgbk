@@ -1,1 +1,1 @@
-"""pief.logdb — SQLModel table definitions, CRUD, and session factory."""
+"""pief.logdb — SQLAlchemy table definitions, CRUD, and session factory."""

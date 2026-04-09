@@ -9,7 +9,6 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import col
 
 from pief.logdb import crud
 from pief.logdb.tables import (
@@ -129,7 +128,7 @@ async def test_create_entry_with_logbook_ids(
     rows = (
         (
             await session.execute(
-                select(LogbookEntry).where(col(LogbookEntry.entry_id) == entry.id)
+                select(LogbookEntry).where(LogbookEntry.entry_id == entry.id)
             )
         )
         .scalars()
@@ -162,11 +161,7 @@ async def test_create_entry_with_tag_ids(
     entry = await make_entry(tag_ids=[t1, t2, t3])
 
     rows = (
-        (
-            await session.execute(
-                select(EntryTag).where(col(EntryTag.entry_id) == entry.id)
-            )
-        )
+        (await session.execute(select(EntryTag).where(EntryTag.entry_id == entry.id)))
         .scalars()
         .all()
     )
@@ -312,7 +307,7 @@ async def test_multiple_external_links_per_entry(
     links = (
         (
             await session.execute(
-                select(ExternalLink).where(col(ExternalLink.entry_id) == entry.id)
+                select(ExternalLink).where(ExternalLink.entry_id == entry.id)
             )
         )
         .scalars()

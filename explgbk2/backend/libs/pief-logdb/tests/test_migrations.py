@@ -5,7 +5,7 @@ from alembic import command
 from sqlalchemy import Engine, create_engine
 from testcontainers.postgres import PostgresContainer
 
-import pief.logdb.tables as _tables  # noqa: F401 — registers all tables in SQLModel.metadata
+import pief.logdb.tables as _tables  # noqa: F401 — registers all tables in Base.metadata
 from pief.logdb.config.alembic import alembic_config
 
 POSTGRES_IMAGE = "postgres:18"

@@ -12,10 +12,11 @@ from alembic import command
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlmodel import Session, select
+from sqlalchemy.orm import Session
+from sqlalchemy import select
 from testcontainers.postgres import PostgresContainer
 
-import pief.logdb.tables as _tables  # noqa: F401 — registers all SQLModel metadata
+import pief.logdb.tables as _tables  # noqa: F401 — registers all ORM table metadata
 from pief.api.core.config import settings
 from pief.api.main import app
 from pief.logdb.config.alembic import alembic_config
@@ -59,9 +60,13 @@ def client(
 
     # Seed the default user using sync ORM.
     with Session(postgres_engine) as session:
-        existing = session.exec(
-            select(User).where(User.username == settings.FIRST_SUPERUSER)
-        ).one_or_none()
+        existing = (
+            session.execute(
+                select(User).where(User.username == settings.FIRST_SUPERUSER)
+            )
+            .scalars()
+            .one_or_none()
+        )
         if not existing:
             session.add(User(username=settings.FIRST_SUPERUSER))
             session.commit()

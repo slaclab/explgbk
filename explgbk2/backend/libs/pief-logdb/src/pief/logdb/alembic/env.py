@@ -2,8 +2,8 @@ from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from sqlmodel import SQLModel
 import pief.logdb.tables as _tables  # noqa: F401 - registers tables
+from pief.logdb.tables import Base
 from pief.logdb.config.settings import settings as db_settings
 
 # this is the Alembic Config object, which provides
@@ -14,7 +14,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = SQLModel.metadata
+target_metadata = Base.metadata
 
 
 def get_url() -> str:

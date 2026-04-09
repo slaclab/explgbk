@@ -4,7 +4,7 @@ import uuid
 
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine
-from sqlmodel import Session
+from sqlalchemy.orm import Session
 
 from pief.api.core.config import settings
 from pief.logdb.tables import User

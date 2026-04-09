@@ -1,4 +1,4 @@
-"""Generate an Alembic migration from SQLModel metadata.
+"""Generate an Alembic migration from SQLAlchemy ORM metadata.
 
 Uses testcontainers to spin up a throwaway Postgres instance, runs all
 existing migrations to head, then autogenerates a new revision.
@@ -14,7 +14,7 @@ from alembic import command
 from sqlalchemy import create_engine
 from testcontainers.postgres import PostgresContainer
 
-import pief.logdb.tables as _tables  # noqa: F401 — registers tables on SQLModel.metadata
+import pief.logdb.tables as _tables  # noqa: F401 — registers tables on Base.metadata
 from pief.logdb.config.alembic import alembic_config
 
 POSTGRES_IMAGE = "postgres:18"
