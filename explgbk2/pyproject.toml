@@ -1,6 +1,9 @@
 [tool.uv.workspace]
 members = ["backend/libs/*", "backend/services/*"]
 
+[tool.pytest]
+asyncio_mode = "auto"
+
 [tool.pyrefly]
 project-includes = [
     "**/*.py*",

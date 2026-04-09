@@ -1,15 +1,18 @@
 """Tests for Instrument shell table, FK hardening, and soft-link fields."""
 
 import uuid
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 import pytest
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from pief.logdb import crud
 from pief.logdb.schemas import (
     InstrumentCreate,
 )
+from pief.logdb.tables import Entry, Experiment
 
 
 # ---------------------------------------------------------------------------
@@ -17,9 +20,9 @@ from pief.logdb.schemas import (
 # ---------------------------------------------------------------------------
 
 
-def test_create_instrument(session: Session) -> None:
+async def test_create_instrument(session: AsyncSession) -> None:
     meta = {"name": "TMO", "facility": "LCLS"}
-    inst = crud.create_instrument(
+    inst = await crud.create_instrument(
         session=session,
         instrument_in=InstrumentCreate(meta=meta),
     )
@@ -28,12 +31,14 @@ def test_create_instrument(session: Session) -> None:
     assert inst.created_at.tzinfo is not None
 
 
-def test_get_instrument(session: Session) -> None:
-    inst = crud.create_instrument(session=session, instrument_in=InstrumentCreate())
-    fetched = crud.get_instrument(session=session, instrument_id=inst.id)
+async def test_get_instrument(session: AsyncSession) -> None:
+    inst = await crud.create_instrument(
+        session=session, instrument_in=InstrumentCreate()
+    )
+    fetched = await crud.get_instrument(session=session, instrument_id=inst.id)
     assert fetched is not None
     assert fetched.id == inst.id
-    missing = crud.get_instrument(session=session, instrument_id=uuid.uuid4())
+    missing = await crud.get_instrument(session=session, instrument_id=uuid.uuid4())
     assert missing is None
 
 
@@ -42,19 +47,24 @@ def test_get_instrument(session: Session) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_experiment_instrument_fk(session: Session, make_experiment) -> None:
+async def test_experiment_instrument_fk(
+    session: AsyncSession,
+    make_experiment: Callable[..., Coroutine[Any, Any, Experiment]],
+) -> None:
     """instrument_id FK to instruments.id is enforced."""
     # Valid FK: real instrument
-    inst = crud.create_instrument(session=session, instrument_in=InstrumentCreate())
-    exp = make_experiment(instrument_id=inst.id)
+    inst = await crud.create_instrument(
+        session=session, instrument_in=InstrumentCreate()
+    )
+    exp = await make_experiment(instrument_id=inst.id)
     assert exp.instrument_id == inst.id
 
     # FK violation: non-existent instrument_id must fail
-    bad_exp = make_experiment()
+    bad_exp = await make_experiment()
     bad_exp.instrument_id = uuid.uuid4()
     session.add(bad_exp)
     with pytest.raises(IntegrityError):
-        session.flush()
+        await session.flush()
 
 
 # ---------------------------------------------------------------------------
@@ -62,22 +72,29 @@ def test_experiment_instrument_fk(session: Session, make_experiment) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_entry_run_id_soft_link(session: Session, make_entry) -> None:
+async def test_entry_run_id_soft_link(
+    session: AsyncSession, make_entry: Callable[..., Coroutine[Any, Any, Entry]]
+) -> None:
     """run_id accepts arbitrary UUID — no FK constraint (external data-catalog)."""
     arbitrary_run_id = uuid.uuid4()
-    entry = make_entry(run_id=arbitrary_run_id)
+    entry = await make_entry(run_id=arbitrary_run_id)
     assert entry.run_id == arbitrary_run_id
 
 
-def test_entry_shift_id_soft_link(session: Session, make_entry) -> None:
+async def test_entry_shift_id_soft_link(
+    session: AsyncSession, make_entry: Callable[..., Coroutine[Any, Any, Entry]]
+) -> None:
     """shift_id accepts arbitrary UUID — no FK constraint (external data-catalog)."""
     arbitrary_shift_id = uuid.uuid4()
-    entry = make_entry(shift_id=arbitrary_shift_id)
+    entry = await make_entry(shift_id=arbitrary_shift_id)
     assert entry.shift_id == arbitrary_shift_id
 
 
-def test_experiment_proposal_id_soft_link(session: Session, make_experiment) -> None:
+async def test_experiment_proposal_id_soft_link(
+    session: AsyncSession,
+    make_experiment: Callable[..., Coroutine[Any, Any, Experiment]],
+) -> None:
     """proposal_id accepts arbitrary UUID — no FK constraint (external data-catalog)."""
     arbitrary_proposal_id = uuid.uuid4()
-    exp = make_experiment(proposal_id=arbitrary_proposal_id)
+    exp = await make_experiment(proposal_id=arbitrary_proposal_id)
     assert exp.proposal_id == arbitrary_proposal_id

@@ -7,18 +7,15 @@ from sqlalchemy import Engine
 from sqlmodel import Session
 
 from pief.api.core.config import settings
-from pief.logdb import crud
-from pief.logdb.schemas import UserCreate
+from pief.logdb.tables import User
 
 API = settings.API_V1_STR
 
 
-def _make_user(session: Session, **kwargs):
-    defaults = {"username": f"user-{uuid.uuid4()}"}
-    user = crud.create_user(
-        session=session,
-        user_in=UserCreate(**{**defaults, **kwargs}),
-    )
+def _make_user(session: Session, **kwargs) -> tuple[uuid.UUID, str]:
+    defaults: dict = {"username": f"user-{uuid.uuid4()}"}
+    user = User(**{**defaults, **kwargs})
+    session.add(user)
     session.commit()
     session.refresh(user)
     return user.id, user.username

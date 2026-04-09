@@ -1,14 +1,16 @@
 """Tests for Logbook and EntryRevision CRUD — uses testcontainers PostgreSQL."""
 
 import uuid
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from pief.logdb import crud
-from pief.logdb.tables import LogbookEntry
+from pief.logdb.tables import Entry, Logbook, LogbookEntry
 from pief.logdb.schemas import EntryRevisionCreate, LogbookCreate
 
 
@@ -17,8 +19,8 @@ from pief.logdb.schemas import EntryRevisionCreate, LogbookCreate
 # ---------------------------------------------------------------------------
 
 
-def test_create_logbook(session: Session) -> None:
-    lb = crud.create_logbook(
+async def test_create_logbook(session: AsyncSession) -> None:
+    lb = await crud.create_logbook(
         session=session,
         logbook_in=LogbookCreate(
             type="experiment",
@@ -34,14 +36,14 @@ def test_create_logbook(session: Session) -> None:
     assert lb.updated_at.tzinfo is not None
 
 
-def test_logbook_name_unique(session: Session) -> None:
+async def test_logbook_name_unique(session: AsyncSession) -> None:
     name = f"unique-{uuid.uuid4()}"
-    crud.create_logbook(
+    await crud.create_logbook(
         session=session, logbook_in=LogbookCreate(type="experiment", name=name)
     )
-    session.flush()
+    await session.flush()
     with pytest.raises(IntegrityError):
-        crud.create_logbook(
+        await crud.create_logbook(
             session=session, logbook_in=LogbookCreate(type="instrument", name=name)
         )
 
@@ -52,19 +54,23 @@ def test_logbook_invalid_type_rejected() -> None:
         LogbookCreate(type="unknown_type", name="x")
 
 
-def test_create_logbook_entry_link(session: Session, make_entry, make_logbook) -> None:
+async def test_create_logbook_entry_link(
+    session: AsyncSession,
+    make_entry: Callable[..., Coroutine[Any, Any, Entry]],
+    make_logbook: Callable[..., Coroutine[Any, Any, Logbook]],
+) -> None:
     """LogbookEntry FK to logbooks.id is enforced."""
-    lb = crud.create_logbook(
+    lb = await crud.create_logbook(
         session=session,
         logbook_in=LogbookCreate(type="instrument", name=f"inst-{uuid.uuid4()}"),
     )
-    entry = make_entry()
+    entry = await make_entry()
 
     # Manually create a LogbookEntry pointing at our real logbook
     le = LogbookEntry(entry_id=entry.id, logbook_id=lb.id)
     session.add(le)
-    session.flush()
-    session.refresh(le)
+    await session.flush()
+    await session.refresh(le)
 
     assert le.entry_id == entry.id
     assert le.logbook_id == lb.id
@@ -73,16 +79,18 @@ def test_create_logbook_entry_link(session: Session, make_entry, make_logbook) -
     bad_le = LogbookEntry(entry_id=entry.id, logbook_id=uuid.uuid4())
     session.add(bad_le)
     with pytest.raises(IntegrityError):
-        session.flush()
+        await session.flush()
 
 
-def test_get_logbook(session: Session, make_logbook) -> None:
+async def test_get_logbook(
+    session: AsyncSession, make_logbook: Callable[..., Coroutine[Any, Any, Logbook]]
+) -> None:
     """get_logbook returns the logbook by id, None for unknown id."""
-    lb = make_logbook()
-    fetched = crud.get_logbook(session=session, logbook_id=lb.id)
+    lb = await make_logbook()
+    fetched = await crud.get_logbook(session=session, logbook_id=lb.id)
     assert fetched is not None
     assert fetched.id == lb.id
-    missing = crud.get_logbook(session=session, logbook_id=uuid.uuid4())
+    missing = await crud.get_logbook(session=session, logbook_id=uuid.uuid4())
     assert missing is None
 
 
@@ -91,10 +99,12 @@ def test_get_logbook(session: Session, make_logbook) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_create_entry_revision(session: Session, make_entry) -> None:
-    entry = make_entry()
+async def test_create_entry_revision(
+    session: AsyncSession, make_entry: Callable[..., Coroutine[Any, Any, Entry]]
+) -> None:
+    entry = await make_entry()
 
-    revision = crud.create_entry_revision(
+    revision = await crud.create_entry_revision(
         session=session,
         revision_in=EntryRevisionCreate(
             entry_id=entry.id,
@@ -112,13 +122,15 @@ def test_create_entry_revision(session: Session, make_entry) -> None:
     assert revision.revised_at.tzinfo is not None
 
 
-def test_get_entry_revisions_ordered(session: Session, make_entry) -> None:
+async def test_get_entry_revisions_ordered(
+    session: AsyncSession, make_entry: Callable[..., Coroutine[Any, Any, Entry]]
+) -> None:
     """get_entry_revisions returns revisions in ascending version order."""
-    entry = make_entry()
+    entry = await make_entry()
     author = uuid.uuid4()
 
     for v in [3, 1, 2]:
-        crud.create_entry_revision(
+        await crud.create_entry_revision(
             session=session,
             revision_in=EntryRevisionCreate(
                 entry_id=entry.id,
@@ -130,18 +142,20 @@ def test_get_entry_revisions_ordered(session: Session, make_entry) -> None:
             ),
         )
 
-    revisions = crud.get_entry_revisions(session=session, entry_id=entry.id)
+    revisions = await crud.get_entry_revisions(session=session, entry_id=entry.id)
     assert len(revisions) == 3
     assert [r.version for r in revisions] == [1, 2, 3]
 
 
-def test_entry_revision_tag_snapshot(session: Session, make_entry) -> None:
+async def test_entry_revision_tag_snapshot(
+    session: AsyncSession, make_entry: Callable[..., Coroutine[Any, Any, Entry]]
+) -> None:
     """tag_ids are stored and retrievable as a JSON array."""
-    entry = make_entry()
+    entry = await make_entry()
     tag1 = uuid.uuid4()
     tag2 = uuid.uuid4()
 
-    revision = crud.create_entry_revision(
+    revision = await crud.create_entry_revision(
         session=session,
         revision_in=EntryRevisionCreate(
             entry_id=entry.id,
@@ -154,5 +168,6 @@ def test_entry_revision_tag_snapshot(session: Session, make_entry) -> None:
         ),
     )
 
+    assert revision.tag_ids is not None
     assert len(revision.tag_ids) == 2
     assert set(revision.tag_ids) == {tag1, tag2}

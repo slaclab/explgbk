@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
-from sqlmodel import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from pief.api.core import security
 from pief.api.core.config import settings
@@ -14,7 +14,7 @@ from pief.logdb import crud
 from pief.logdb.engine import get_session
 from pief.logdb.tables import User
 
-SessionDep = Annotated[Session, Depends(get_session)]
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 # auto_error=False so unauthenticated requests fall through to the fallback below
 reusable_oauth2 = OAuth2PasswordBearer(
@@ -25,11 +25,11 @@ reusable_oauth2 = OAuth2PasswordBearer(
 TokenDep = Annotated[str | None, Depends(reusable_oauth2)]
 
 
-def get_current_user(token: TokenDep, session: SessionDep) -> User:
+async def get_current_user(token: TokenDep, session: SessionDep) -> User:
     # No token — return the first superuser as a temporary default until
     # Dex IDP integration is complete.
     if token is None:
-        user = crud.get_user_by_username(
+        user = await crud.get_user_by_username(
             session=session, username=settings.FIRST_SUPERUSER
         )
         if user:
@@ -60,7 +60,7 @@ def get_current_user(token: TokenDep, session: SessionDep) -> User:
             detail="Could not validate credentials",
         )
 
-    user = crud.get_user_by_username(session=session, username=token_data.sub)
+    user = await crud.get_user_by_username(session=session, username=token_data.sub)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -69,7 +69,7 @@ def get_current_user(token: TokenDep, session: SessionDep) -> User:
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-def get_current_active_superuser(current_user: CurrentUser) -> User:
+async def get_current_active_superuser(current_user: CurrentUser) -> User:
     # Placeholder until authn/authz (Dex + OpenFGA) is implemented.
     # Currently all authenticated users are treated equally.
     return current_user

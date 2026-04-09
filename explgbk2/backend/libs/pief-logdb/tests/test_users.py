@@ -6,18 +6,18 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from pief.logdb import crud
 from pief.logdb.schemas import UserCreate, UserUpdate
 from pief.logdb.tables import User
 
 
-def make_user(session: Session, **kwargs: Any) -> User:
+async def make_user(session: AsyncSession, **kwargs: Any) -> User:
     defaults = {
         "username": f"user-{uuid.uuid4()}",
     }
-    return crud.create_user(
+    return await crud.create_user(
         session=session,
         user_in=UserCreate(**{**defaults, **kwargs}),
     )
@@ -28,20 +28,20 @@ def make_user(session: Session, **kwargs: Any) -> User:
 # ---------------------------------------------------------------------------
 
 
-def test_create_user(session: Session) -> None:
-    user = make_user(session, display_name="Alice")
+async def test_create_user(session: AsyncSession) -> None:
+    user = await make_user(session, display_name="Alice")
     assert user.id is not None
     assert user.display_name == "Alice"
     assert user.created_at.tzinfo is not None
     assert user.updated_at.tzinfo is not None
 
 
-def test_user_username_unique(session: Session) -> None:
+async def test_user_username_unique(session: AsyncSession) -> None:
     username = f"unique-{uuid.uuid4()}"
-    make_user(session, username=username)
-    session.flush()
+    await make_user(session, username=username)
+    await session.flush()
     with pytest.raises(IntegrityError):
-        make_user(session, username=username)
+        await make_user(session, username=username)
 
 
 def test_user_invalid_username_rejected() -> None:
@@ -54,22 +54,25 @@ def test_user_invalid_username_rejected() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_get_user(session: Session) -> None:
-    user = make_user(session)
-    fetched = crud.get_user(session=session, user_id=user.id)
+async def test_get_user(session: AsyncSession) -> None:
+    user = await make_user(session)
+    fetched = await crud.get_user(session=session, user_id=user.id)
     assert fetched is not None
     assert fetched.id == user.id
-    missing = crud.get_user(session=session, user_id=uuid.uuid4())
+    missing = await crud.get_user(session=session, user_id=uuid.uuid4())
     assert missing is None
 
 
-def test_get_user_by_username(session: Session) -> None:
+async def test_get_user_by_username(session: AsyncSession) -> None:
     username = f"named-{uuid.uuid4()}"
-    make_user(session, username=username)
-    result = crud.get_user_by_username(session=session, username=username)
+    await make_user(session, username=username)
+    result = await crud.get_user_by_username(session=session, username=username)
     assert result is not None
     assert result.username == username
-    assert crud.get_user_by_username(session=session, username="no-such-user") is None
+    assert (
+        await crud.get_user_by_username(session=session, username="no-such-user")
+        is None
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -77,9 +80,9 @@ def test_get_user_by_username(session: Session) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_update_user(session: Session) -> None:
-    user = make_user(session, display_name="Original")
-    updated = crud.update_user(
+async def test_update_user(session: AsyncSession) -> None:
+    user = await make_user(session, display_name="Original")
+    updated = await crud.update_user(
         session=session,
         user=user,
         user_update=UserUpdate(display_name="Updated"),

@@ -1,18 +1,20 @@
 """Shared fixtures for tests/sql/."""
 
 import uuid
-from collections.abc import Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from datetime import UTC, datetime
 from typing import Any
 
 import pytest
-from sqlalchemy import Engine
-from sqlmodel import Session, SQLModel, create_engine
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlmodel import SQLModel
 from testcontainers.postgres import PostgresContainer
 
 from pief.logdb import crud
-from pief.logdb.schemas import EntryCreate, ExperimentCreate, LogbookCreate
-from pief.logdb.tables import Entry, Experiment, Logbook
+from pief.logdb.schemas import EntryCreate, ExperimentCreate, LogbookCreate, UserCreate
+from pief.logdb.tables import Entry, Experiment, Logbook, User
+import pief.logdb.tables as _tables  # noqa: F401 — registers all SQLModel table metadata
 
 POSTGRES_IMAGE = "postgres:17"
 POSTGRES_DRIVER = "psycopg"
@@ -24,28 +26,29 @@ def pg() -> Generator[PostgresContainer, None, None]:
         yield container
 
 
-@pytest.fixture(scope="module")
-def engine(pg: PostgresContainer) -> Generator[Engine, None, None]:
-    eng = create_engine(pg.get_connection_url(driver=POSTGRES_DRIVER))
-    SQLModel.metadata.create_all(eng)
+@pytest_asyncio.fixture(scope="module")
+async def engine(pg: PostgresContainer) -> AsyncGenerator[AsyncEngine, None]:
+    eng = create_async_engine(pg.get_connection_url(driver=POSTGRES_DRIVER))
+    async with eng.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
     yield eng
-    eng.dispose()
+    await eng.dispose()
 
 
-@pytest.fixture()
-def session(engine: Engine) -> Generator[Session, None, None]:
-    with Session(engine) as s:
-        with s.begin():
-            nested = s.begin_nested()  # SAVEPOINT
+@pytest_asyncio.fixture()
+async def session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSession(engine) as s:
+        async with s.begin():
+            nested = await s.begin_nested()  # SAVEPOINT
             yield s
-            nested.rollback()
+            await nested.rollback()
 
 
 @pytest.fixture()
-def make_logbook(session: Session) -> Callable[..., Logbook]:
-    def _factory(**kwargs: Any) -> Logbook:
+def make_logbook(session: AsyncSession) -> Callable[..., Coroutine[Any, Any, Logbook]]:
+    async def _factory(**kwargs: Any) -> Logbook:
         defaults: dict[str, Any] = {"type": "experiment", "name": f"lb-{uuid.uuid4()}"}
-        return crud.create_logbook(
+        return await crud.create_logbook(
             session=session,
             logbook_in=LogbookCreate(**{**defaults, **kwargs}),
         )
@@ -54,19 +57,35 @@ def make_logbook(session: Session) -> Callable[..., Logbook]:
 
 
 @pytest.fixture()
+def make_user(session: AsyncSession) -> Callable[..., Coroutine[Any, Any, User]]:
+    async def _factory(**kwargs: Any) -> User:
+        defaults: dict[str, Any] = {"username": f"user-{uuid.uuid4()}"}
+        return await crud.create_user(
+            session=session,
+            user_in=UserCreate(**{**defaults, **kwargs}),
+        )
+
+    return _factory
+
+
+@pytest.fixture()
 def make_entry(
-    session: Session, make_logbook: Callable[..., Logbook]
-) -> Callable[..., Entry]:
-    def _factory(**kwargs: Any) -> Entry:
+    session: AsyncSession,
+    make_logbook: Callable[..., Coroutine[Any, Any, Logbook]],
+    make_user: Callable[..., Coroutine[Any, Any, User]],
+) -> Callable[..., Coroutine[Any, Any, Entry]]:
+    async def _factory(**kwargs: Any) -> Entry:
         if "logbook_ids" not in kwargs:
-            lb = make_logbook()
+            lb = await make_logbook()
             kwargs["logbook_ids"] = [lb.id]
+        if "author_id" not in kwargs:
+            user = await make_user()
+            kwargs["author_id"] = user.id
         defaults: dict[str, Any] = {
-            "author_id": uuid.uuid4(),
             "title": "Test entry",
             "content": "Some content",
         }
-        return crud.create_entry(
+        return await crud.create_entry(
             session=session,
             entry_in=EntryCreate(**{**defaults, **kwargs}),
         )
@@ -75,13 +94,15 @@ def make_entry(
 
 
 @pytest.fixture()
-def make_experiment(session: Session) -> Callable[..., Experiment]:
-    def _factory(**kwargs: Any) -> Experiment:
+def make_experiment(
+    session: AsyncSession,
+) -> Callable[..., Coroutine[Any, Any, Experiment]]:
+    async def _factory(**kwargs: Any) -> Experiment:
         defaults: dict[str, Any] = {
             "name": f"exp-{uuid.uuid4()}",
             "start_time": datetime.now(UTC),
         }
-        return crud.create_experiment(
+        return await crud.create_experiment(
             session=session,
             experiment_in=ExperimentCreate(**{**defaults, **kwargs}),
         )
