@@ -9,68 +9,41 @@ export type ClientOptions = {
  */
 export type ExperimentPublic = {
     /**
+     * Id
+     */
+    id: string;
+    /**
      * Name
      */
     name: string;
     /**
      * Description
      */
-    description?: string | null;
-    /**
-     * Instrument
-     */
-    instrument?: string | null;
-    /**
-     * Contact Info
-     */
-    contact_info?: string | null;
-    /**
-     * Leader Account
-     */
-    leader_account?: string | null;
-    /**
-     * Posix Group
-     */
-    posix_group?: string | null;
-    /**
-     * Params
-     */
-    params?: {
-        [key: string]: unknown;
-    } | null;
+    description: string | null;
     /**
      * Start Time
      */
-    start_time?: string | null;
+    start_time: string;
     /**
      * End Time
      */
-    end_time?: string | null;
+    end_time: string | null;
     /**
-     * Registration Time
+     * Instrument Id
      */
-    registration_time?: string | null;
+    instrument_id: string | null;
     /**
-     * Run Count
+     * Legacy Id
      */
-    run_count?: number;
-    /**
-     * Players
-     */
-    players?: Array<string>;
-    /**
-     * Post Players
-     */
-    post_players?: Array<string>;
-    last_run?: LastRun | null;
-    /**
-     * Id
-     */
-    id: string;
+    legacy_id: string | null;
     /**
      * Created At
      */
-    created_at?: string | null;
+    created_at: string | null;
+    /**
+     * Updated At
+     */
+    updated_at: string | null;
 };
 
 /**
@@ -102,31 +75,13 @@ export type HttpValidationError = {
  */
 export type InstrumentSummary = {
     /**
-     * Instrument
+     * Instrument Id
      */
-    instrument: string;
+    instrument_id: string | null;
     /**
      * Experiment Count
      */
     experiment_count: number;
-};
-
-/**
- * LastRun
- */
-export type LastRun = {
-    /**
-     * Num
-     */
-    num: number;
-    /**
-     * Begin Time
-     */
-    begin_time: string;
-    /**
-     * End Time
-     */
-    end_time?: string | null;
 };
 
 /**
@@ -139,33 +94,30 @@ export type Message = {
     message: string;
 };
 
-export type PydanticObjectId = string;
-
 /**
  * UserPublic
  */
 export type UserPublic = {
     /**
-     * Email
+     * Id
      */
-    email: string;
+    id: string;
     /**
-     * Is Active
+     * Username
      */
-    is_active?: boolean;
+    username: string;
     /**
-     * Is Superuser
+     * Display Name
      */
-    is_superuser?: boolean;
-    /**
-     * Full Name
-     */
-    full_name?: string | null;
-    id: PydanticObjectId;
+    display_name: string | null;
     /**
      * Created At
      */
-    created_at?: string | null;
+    created_at: string | null;
+    /**
+     * Updated At
+     */
+    updated_at: string | null;
 };
 
 /**
@@ -173,21 +125,9 @@ export type UserPublic = {
  */
 export type UserUpdate = {
     /**
-     * Email
+     * Display Name
      */
-    email?: string | null;
-    /**
-     * Is Active
-     */
-    is_active?: boolean | null;
-    /**
-     * Is Superuser
-     */
-    is_superuser?: boolean | null;
-    /**
-     * Full Name
-     */
-    full_name?: string | null;
+    display_name?: string | null;
 };
 
 /**
@@ -195,13 +135,9 @@ export type UserUpdate = {
  */
 export type UserUpdateMe = {
     /**
-     * Full Name
+     * Display Name
      */
-    full_name?: string | null;
-    /**
-     * Email
-     */
-    email?: string | null;
+    display_name?: string | null;
 };
 
 /**
@@ -340,7 +276,10 @@ export type UsersUpdateUserMeResponse = UsersUpdateUserMeResponses[keyof UsersUp
 export type UsersDeleteUserData = {
     body?: never;
     path: {
-        user_id: PydanticObjectId;
+        /**
+         * User Id
+         */
+        user_id: string;
     };
     query?: never;
     url: '/api/v1/users/{user_id}';
@@ -367,7 +306,10 @@ export type UsersDeleteUserResponse = UsersDeleteUserResponses[keyof UsersDelete
 export type UsersReadUserByIdData = {
     body?: never;
     path: {
-        user_id: PydanticObjectId;
+        /**
+         * User Id
+         */
+        user_id: string;
     };
     query?: never;
     url: '/api/v1/users/{user_id}';
@@ -394,7 +336,10 @@ export type UsersReadUserByIdResponse = UsersReadUserByIdResponses[keyof UsersRe
 export type UsersUpdateUserData = {
     body: UserUpdate;
     path: {
-        user_id: PydanticObjectId;
+        /**
+         * User Id
+         */
+        user_id: string;
     };
     query?: never;
     url: '/api/v1/users/{user_id}';
@@ -469,15 +414,15 @@ export type ExperimentsReadExperimentsData = {
         /**
          * Sort By
          */
-        sort_by?: 'name' | 'instrument' | 'leader_account' | 'run_count' | 'start_time' | 'created_at';
+        sort_by?: 'name' | 'start_time' | 'end_time' | 'created_at';
         /**
          * Sort Desc
          */
         sort_desc?: boolean;
         /**
-         * Instrument
+         * Instrument Id
          */
-        instrument?: string | null;
+        instrument_id?: string | null;
     };
     url: '/api/v1/experiments/';
 };

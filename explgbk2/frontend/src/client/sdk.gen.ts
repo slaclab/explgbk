@@ -110,7 +110,7 @@ export class UsersService {
     /**
      * Update User
      *
-     * Update a user.
+     * Update a user (superuser only).
      */
     public static usersUpdateUser<ThrowOnError extends boolean = false>(options: Options<UsersUpdateUserData, ThrowOnError>) {
         return (options.client ?? client).patch<UsersUpdateUserResponses, UsersUpdateUserErrors, ThrowOnError>({
@@ -157,8 +157,7 @@ export class ExperimentsService {
     /**
      * Read Experiments
      *
-     * Retrieve experiments. Superusers see all; others see only experiments
-     * where they are listed as a player.
+     * Retrieve experiments.
      */
     public static experimentsReadExperiments<ThrowOnError extends boolean = false>(options?: Options<ExperimentsReadExperimentsData, ThrowOnError>) {
         return (options?.client ?? client).get<ExperimentsReadExperimentsResponses, ExperimentsReadExperimentsErrors, ThrowOnError>({
@@ -200,7 +199,7 @@ export class ExperimentsService {
     /**
      * Read Experiment
      *
-     * Get experiment by ID (name). Reads directly from the per-experiment database.
+     * Get experiment by ID.
      */
     public static experimentsReadExperiment<ThrowOnError extends boolean = false>(options: Options<ExperimentsReadExperimentData, ThrowOnError>) {
         return (options.client ?? client).get<ExperimentsReadExperimentResponses, ExperimentsReadExperimentErrors, ThrowOnError>({
@@ -230,8 +229,7 @@ export class InstrumentsService {
     /**
      * Read Instruments
      *
-     * Return each distinct non-null instrument together with the number of
-     * experiments the current user can access under that instrument.
+     * Return each distinct instrument_id that has at least one experiment.
      */
     public static instrumentsReadInstruments<ThrowOnError extends boolean = false>(options?: Options<InstrumentsReadInstrumentsData, ThrowOnError>) {
         return (options?.client ?? client).get<InstrumentsReadInstrumentsResponses, unknown, ThrowOnError>({

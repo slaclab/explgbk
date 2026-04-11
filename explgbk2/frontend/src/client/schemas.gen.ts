@@ -2,10 +2,13 @@
 
 export const ExperimentPublicSchema = {
     properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
         name: {
             type: 'string',
-            maxLength: 255,
-            minLength: 1,
             title: 'Name'
         },
         description: {
@@ -19,72 +22,9 @@ export const ExperimentPublicSchema = {
             ],
             title: 'Description'
         },
-        instrument: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Instrument'
-        },
-        contact_info: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Contact Info'
-        },
-        leader_account: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Leader Account'
-        },
-        posix_group: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Posix Group'
-        },
-        params: {
-            anyOf: [
-                {
-                    additionalProperties: true,
-                    type: 'object'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Params'
-        },
         start_time: {
-            anyOf: [
-                {
-                    type: 'string',
-                    format: 'date-time'
-                },
-                {
-                    type: 'null'
-                }
-            ],
+            type: 'string',
+            format: 'date-time',
             title: 'Start Time'
         },
         end_time: {
@@ -99,50 +39,28 @@ export const ExperimentPublicSchema = {
             ],
             title: 'End Time'
         },
-        registration_time: {
+        instrument_id: {
             anyOf: [
                 {
                     type: 'string',
-                    format: 'date-time'
+                    format: 'uuid'
                 },
                 {
                     type: 'null'
                 }
             ],
-            title: 'Registration Time'
+            title: 'Instrument Id'
         },
-        run_count: {
-            type: 'integer',
-            title: 'Run Count',
-            default: 0
-        },
-        players: {
-            items: {
-                type: 'string'
-            },
-            type: 'array',
-            title: 'Players'
-        },
-        post_players: {
-            items: {
-                type: 'string'
-            },
-            type: 'array',
-            title: 'Post Players'
-        },
-        last_run: {
+        legacy_id: {
             anyOf: [
                 {
-                    $ref: '#/components/schemas/LastRun'
+                    type: 'string'
                 },
                 {
                     type: 'null'
                 }
-            ]
-        },
-        id: {
-            type: 'string',
-            title: 'Id'
+            ],
+            title: 'Legacy Id'
         },
         created_at: {
             anyOf: [
@@ -155,12 +73,31 @@ export const ExperimentPublicSchema = {
                 }
             ],
             title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
         }
     },
     type: 'object',
     required: [
+        'id',
         'name',
-        'id'
+        'description',
+        'start_time',
+        'end_time',
+        'instrument_id',
+        'legacy_id',
+        'created_at',
+        'updated_at'
     ],
     title: 'ExperimentPublic'
 } as const;
@@ -203,9 +140,17 @@ export const HTTPValidationErrorSchema = {
 
 export const InstrumentSummarySchema = {
     properties: {
-        instrument: {
-            type: 'string',
-            title: 'Instrument'
+        instrument_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Instrument Id'
         },
         experiment_count: {
             type: 'integer',
@@ -214,42 +159,10 @@ export const InstrumentSummarySchema = {
     },
     type: 'object',
     required: [
-        'instrument',
+        'instrument_id',
         'experiment_count'
     ],
     title: 'InstrumentSummary'
-} as const;
-
-export const LastRunSchema = {
-    properties: {
-        num: {
-            type: 'integer',
-            title: 'Num'
-        },
-        begin_time: {
-            type: 'string',
-            format: 'date-time',
-            title: 'Begin Time'
-        },
-        end_time: {
-            anyOf: [
-                {
-                    type: 'string',
-                    format: 'date-time'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'End Time'
-        }
-    },
-    type: 'object',
-    required: [
-        'num',
-        'begin_time'
-    ],
-    title: 'LastRun'
 } as const;
 
 export const MessageSchema = {
@@ -266,46 +179,27 @@ export const MessageSchema = {
     title: 'Message'
 } as const;
 
-export const PydanticObjectIdSchema = {
-    type: 'string',
-    maxLength: 24,
-    minLength: 24,
-    pattern: '^[0-9a-f]{24}$',
-    example: '5eb7cf5a86d9755df3a6c593'
-} as const;
-
 export const UserPublicSchema = {
     properties: {
-        email: {
+        id: {
             type: 'string',
-            maxLength: 255,
-            format: 'email',
-            title: 'Email'
+            format: 'uuid',
+            title: 'Id'
         },
-        is_active: {
-            type: 'boolean',
-            title: 'Is Active',
-            default: true
+        username: {
+            type: 'string',
+            title: 'Username'
         },
-        is_superuser: {
-            type: 'boolean',
-            title: 'Is Superuser',
-            default: false
-        },
-        full_name: {
+        display_name: {
             anyOf: [
                 {
-                    type: 'string',
-                    maxLength: 255
+                    type: 'string'
                 },
                 {
                     type: 'null'
                 }
             ],
-            title: 'Full Name'
-        },
-        id: {
-            $ref: '#/components/schemas/PydanticObjectId'
+            title: 'Display Name'
         },
         created_at: {
             anyOf: [
@@ -318,64 +212,43 @@ export const UserPublicSchema = {
                 }
             ],
             title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
         }
     },
     type: 'object',
     required: [
-        'email',
-        'id'
+        'id',
+        'username',
+        'display_name',
+        'created_at',
+        'updated_at'
     ],
     title: 'UserPublic'
 } as const;
 
 export const UserUpdateSchema = {
     properties: {
-        email: {
+        display_name: {
             anyOf: [
                 {
-                    type: 'string',
-                    maxLength: 255,
-                    format: 'email'
+                    type: 'string'
                 },
                 {
                     type: 'null'
                 }
             ],
-            title: 'Email'
-        },
-        is_active: {
-            anyOf: [
-                {
-                    type: 'boolean'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Is Active'
-        },
-        is_superuser: {
-            anyOf: [
-                {
-                    type: 'boolean'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Is Superuser'
-        },
-        full_name: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Full Name'
+            title: 'Display Name'
         }
     },
     type: 'object',
@@ -384,30 +257,16 @@ export const UserUpdateSchema = {
 
 export const UserUpdateMeSchema = {
     properties: {
-        full_name: {
+        display_name: {
             anyOf: [
                 {
-                    type: 'string',
-                    maxLength: 255
+                    type: 'string'
                 },
                 {
                     type: 'null'
                 }
             ],
-            title: 'Full Name'
-        },
-        email: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255,
-                    format: 'email'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Email'
+            title: 'Display Name'
         }
     },
     type: 'object',

@@ -3,42 +3,18 @@
 import * as z from 'zod';
 
 /**
- * InstrumentSummary
- */
-export const zInstrumentSummary = z.object({
-    instrument: z.string(),
-    experiment_count: z.int()
-});
-
-/**
- * LastRun
- */
-export const zLastRun = z.object({
-    num: z.int(),
-    begin_time: z.iso.datetime(),
-    end_time: z.iso.datetime().nullish()
-});
-
-/**
  * ExperimentPublic
  */
 export const zExperimentPublic = z.object({
-    name: z.string().min(1).max(255),
-    description: z.string().nullish(),
-    instrument: z.string().nullish(),
-    contact_info: z.string().nullish(),
-    leader_account: z.string().nullish(),
-    posix_group: z.string().nullish(),
-    params: z.record(z.string(), z.unknown()).nullish(),
-    start_time: z.iso.datetime().nullish(),
-    end_time: z.iso.datetime().nullish(),
-    registration_time: z.iso.datetime().nullish(),
-    run_count: z.int().optional().default(0),
-    players: z.array(z.string()).optional(),
-    post_players: z.array(z.string()).optional(),
-    last_run: zLastRun.nullish(),
-    id: z.string(),
-    created_at: z.iso.datetime().nullish()
+    id: z.uuid(),
+    name: z.string(),
+    description: z.string().nullable(),
+    start_time: z.iso.datetime(),
+    end_time: z.iso.datetime().nullable(),
+    instrument_id: z.uuid().nullable(),
+    legacy_id: z.string().nullable(),
+    created_at: z.iso.datetime().nullable(),
+    updated_at: z.iso.datetime().nullable()
 });
 
 /**
@@ -50,42 +26,43 @@ export const zExperimentsPublic = z.object({
 });
 
 /**
+ * InstrumentSummary
+ */
+export const zInstrumentSummary = z.object({
+    instrument_id: z.uuid().nullable(),
+    experiment_count: z.int()
+});
+
+/**
  * Message
  */
 export const zMessage = z.object({
     message: z.string()
 });
 
-export const zPydanticObjectId = z.string().length(24).regex(/^[0-9a-f]{24}$/);
-
 /**
  * UserPublic
  */
 export const zUserPublic = z.object({
-    email: z.email().max(255),
-    is_active: z.boolean().optional().default(true),
-    is_superuser: z.boolean().optional().default(false),
-    full_name: z.string().max(255).nullish(),
-    id: zPydanticObjectId,
-    created_at: z.iso.datetime().nullish()
+    id: z.uuid(),
+    username: z.string(),
+    display_name: z.string().nullable(),
+    created_at: z.iso.datetime().nullable(),
+    updated_at: z.iso.datetime().nullable()
 });
 
 /**
  * UserUpdate
  */
 export const zUserUpdate = z.object({
-    email: z.email().max(255).nullish(),
-    is_active: z.boolean().nullish(),
-    is_superuser: z.boolean().nullish(),
-    full_name: z.string().max(255).nullish()
+    display_name: z.string().nullish()
 });
 
 /**
  * UserUpdateMe
  */
 export const zUserUpdateMe = z.object({
-    full_name: z.string().max(255).nullish(),
-    email: z.email().max(255).nullish()
+    display_name: z.string().nullish()
 });
 
 /**
@@ -164,7 +141,7 @@ export const zUsersUpdateUserMeResponse = zUserPublic;
 export const zUsersDeleteUserData = z.object({
     body: z.never().optional(),
     path: z.object({
-        user_id: zPydanticObjectId
+        user_id: z.uuid()
     }),
     query: z.never().optional()
 });
@@ -177,7 +154,7 @@ export const zUsersDeleteUserResponse = zMessage;
 export const zUsersReadUserByIdData = z.object({
     body: z.never().optional(),
     path: z.object({
-        user_id: zPydanticObjectId
+        user_id: z.uuid()
     }),
     query: z.never().optional()
 });
@@ -190,7 +167,7 @@ export const zUsersReadUserByIdResponse = zUserPublic;
 export const zUsersUpdateUserData = z.object({
     body: zUserUpdate,
     path: z.object({
-        user_id: zPydanticObjectId
+        user_id: z.uuid()
     }),
     query: z.never().optional()
 });
@@ -234,14 +211,12 @@ export const zExperimentsReadExperimentsData = z.object({
         limit: z.int().optional().default(100),
         sort_by: z.enum([
             'name',
-            'instrument',
-            'leader_account',
-            'run_count',
             'start_time',
+            'end_time',
             'created_at'
         ]).optional(),
         sort_desc: z.boolean().optional().default(false),
-        instrument: z.string().nullish()
+        instrument_id: z.uuid().nullish()
     }).optional()
 });
 
@@ -264,7 +239,7 @@ export const zExperimentsCreateExperimentResponse = zExperimentPublic;
 export const zExperimentsDeleteExperimentData = z.object({
     body: z.never().optional(),
     path: z.object({
-        id: z.string()
+        id: z.uuid()
     }),
     query: z.never().optional()
 });
@@ -277,7 +252,7 @@ export const zExperimentsDeleteExperimentResponse = zMessage;
 export const zExperimentsReadExperimentData = z.object({
     body: z.never().optional(),
     path: z.object({
-        id: z.string()
+        id: z.uuid()
     }),
     query: z.never().optional()
 });
@@ -290,7 +265,7 @@ export const zExperimentsReadExperimentResponse = zExperimentPublic;
 export const zExperimentsUpdateExperimentData = z.object({
     body: z.never().optional(),
     path: z.object({
-        id: z.string()
+        id: z.uuid()
     }),
     query: z.never().optional()
 });

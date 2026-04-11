@@ -1,14 +1,17 @@
 from datetime import UTC, datetime
 from typing import Any, Literal
 
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from pief.logdb.base import (
     EntryID,
     ExperimentID,
     InstrumentID,
     LogbookID,
+    RunID,
     TagID,
     UserUUID,
 )
@@ -25,6 +28,7 @@ from pief.logdb.tables import (
     Tag,
     User,
 )
+from pief.models.v1.entries import LogbookType
 from pief.logdb.schemas import (
     AttachmentUpdate,
     EntryCreate,
@@ -131,14 +135,112 @@ async def get_thread_replies(*, session: AsyncSession, root_id: EntryID) -> list
 async def update_entry(
     *, session: AsyncSession, entry: Entry, entry_update: EntryUpdate
 ) -> Entry:
-    update_data = entry_update.model_dump(exclude_unset=True)
+    update_data = entry_update.model_dump(exclude_unset=True, exclude={"tag_ids"})
     for key, value in update_data.items():
         setattr(entry, key, value)
+    if entry_update.tag_ids is not None:
+        await session.execute(sa_delete(EntryTag).where(EntryTag.entry_id == entry.id))
+        for tag_id in entry_update.tag_ids:
+            session.add(EntryTag(entry_id=entry.id, tag_id=tag_id))
     entry.version += 1
     session.add(entry)
     await session.flush()
     await session.refresh(entry)
     return entry
+
+
+async def get_entry_full(*, session: AsyncSession, entry_id: EntryID) -> Entry | None:
+    result = await session.execute(
+        select(Entry)
+        .where(Entry.id == entry_id)
+        .options(
+            selectinload(Entry.logbooks),
+            selectinload(Entry.tags),
+            selectinload(Entry.attachments),
+            selectinload(Entry.external_links),
+        )
+    )
+    return result.scalars().first()
+
+
+async def get_thread_replies_full(
+    *, session: AsyncSession, root_id: EntryID
+) -> list[Entry]:
+    result = await session.execute(
+        select(Entry)
+        .where(Entry.root_id == root_id)
+        .options(
+            selectinload(Entry.logbooks),
+            selectinload(Entry.tags),
+            selectinload(Entry.attachments),
+            selectinload(Entry.external_links),
+        )
+    )
+    return list(result.scalars().all())
+
+
+async def list_logbooks(
+    *,
+    session: AsyncSession,
+    skip: int = 0,
+    limit: int = 100,
+    type: LogbookType | None = None,
+) -> tuple[list[Logbook], int]:
+    query = select(Logbook)
+    if type is not None:
+        query = query.where(Logbook.type == type)
+    count_result = await session.execute(
+        select(func.count()).select_from(query.subquery())
+    )
+    count = count_result.scalar_one()
+    result = await session.execute(query.offset(skip).limit(limit))
+    return list(result.scalars().all()), count
+
+
+async def list_tags(
+    *, session: AsyncSession, skip: int = 0, limit: int = 100
+) -> tuple[list[Tag], int]:
+    count_result = await session.execute(select(func.count()).select_from(Tag))
+    count = count_result.scalar_one()
+    result = await session.execute(select(Tag).offset(skip).limit(limit))
+    return list(result.scalars().all()), count
+
+
+async def list_logbook_entries(
+    *,
+    session: AsyncSession,
+    logbook_id: LogbookID,
+    skip: int = 0,
+    limit: int = 100,
+    tag_id: TagID | None = None,
+    run_id: RunID | None = None,
+) -> tuple[list[Entry], int]:
+    query = (
+        select(Entry)
+        .join(LogbookEntry, LogbookEntry.entry_id == Entry.id)
+        .where(LogbookEntry.logbook_id == logbook_id)
+    )
+    if tag_id is not None:
+        query = query.join(EntryTag, EntryTag.entry_id == Entry.id).where(
+            EntryTag.tag_id == tag_id
+        )
+    if run_id is not None:
+        query = query.where(Entry.run_id == run_id)
+    count_result = await session.execute(
+        select(func.count()).select_from(query.subquery())
+    )
+    count = count_result.scalar_one()
+    result = await session.execute(
+        query.offset(skip)
+        .limit(limit)
+        .options(
+            selectinload(Entry.logbooks),
+            selectinload(Entry.tags),
+            selectinload(Entry.attachments),
+            selectinload(Entry.external_links),
+        )
+    )
+    return list(result.scalars().all()), count
 
 
 async def update_attachment(

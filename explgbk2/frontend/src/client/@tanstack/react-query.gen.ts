@@ -160,7 +160,7 @@ export const usersReadUserByIdOptions = (options: Options<UsersReadUserByIdData>
 /**
  * Update User
  *
- * Update a user.
+ * Update a user (superuser only).
  */
 export const usersUpdateUserMutation = (options?: Partial<Options<UsersUpdateUserData>>): UseMutationOptions<UsersUpdateUserResponse, AxiosError<UsersUpdateUserError>, Options<UsersUpdateUserData>> => {
     const mutationOptions: UseMutationOptions<UsersUpdateUserResponse, AxiosError<UsersUpdateUserError>, Options<UsersUpdateUserData>> = {
@@ -219,8 +219,7 @@ export const experimentsReadExperimentsQueryKey = (options?: Options<Experiments
 /**
  * Read Experiments
  *
- * Retrieve experiments. Superusers see all; others see only experiments
- * where they are listed as a player.
+ * Retrieve experiments.
  */
 export const experimentsReadExperimentsOptions = (options?: Options<ExperimentsReadExperimentsData>) => queryOptions<ExperimentsReadExperimentsResponse, AxiosError<ExperimentsReadExperimentsError>, ExperimentsReadExperimentsResponse, ReturnType<typeof experimentsReadExperimentsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -278,7 +277,7 @@ export const experimentsReadExperimentQueryKey = (options: Options<ExperimentsRe
 /**
  * Read Experiment
  *
- * Get experiment by ID (name). Reads directly from the per-experiment database.
+ * Get experiment by ID.
  */
 export const experimentsReadExperimentOptions = (options: Options<ExperimentsReadExperimentData>) => queryOptions<ExperimentsReadExperimentResponse, AxiosError<ExperimentsReadExperimentError>, ExperimentsReadExperimentResponse, ReturnType<typeof experimentsReadExperimentQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -317,8 +316,7 @@ export const instrumentsReadInstrumentsQueryKey = (options?: Options<Instruments
 /**
  * Read Instruments
  *
- * Return each distinct non-null instrument together with the number of
- * experiments the current user can access under that instrument.
+ * Return each distinct instrument_id that has at least one experiment.
  */
 export const instrumentsReadInstrumentsOptions = (options?: Options<InstrumentsReadInstrumentsData>) => queryOptions<InstrumentsReadInstrumentsResponse, AxiosError<DefaultError>, InstrumentsReadInstrumentsResponse, ReturnType<typeof instrumentsReadInstrumentsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

@@ -1,0 +1,703 @@
+model: |
+  model
+    schema 1.1
+
+  type user
+
+  type system
+    relations
+      define admin: [user]
+
+  # facility maps to a physical site (e.g. LCLS, CryoEM, UED).
+  # Combines CoAct facility roles with logbook site-wide roles.
+  type facility
+    relations
+      define parent_system: [system]
+      define admin: admin from parent_system
+      # --- CoAct roles ---
+      define czar: [user]
+      define member: [user]
+      define serviceaccount: [user]
+      define can_manage: czar or admin
+      define can_view: member or can_manage
+      # --- Logbook site-wide roles ---
+      # siteadmin: full admin including config_edit; system admins are siteadmin everywhere
+      define siteadmin: [user] or admin
+      # labpersonnel: full operational access to all experiments; siteadmins are also labpersonnel
+      define labpersonnel: [user] or siteadmin
+      # poc: site-level Point-of-Contact/coordinator with ops + feedback + config access
+      define poc: [user]
+      # poweruser: can create/manage experiment scheduling but not read logbook content
+      define poweruser: [user]
+      # daqoperator: DAQ-specific role for switching and ops dashboard
+      define daqoperator: [user]
+      # --- Site-level computed permissions (non-experiment-scoped) ---
+      define can_create_experiment: labpersonnel or poweruser
+      define can_create_instrument: labpersonnel
+      define can_edit_config: siteadmin or poc or labpersonnel
+
+  # repo is a CoAct allocation/proposal - maps 1:1 to an experiment via posix_group.
+  # Members are synced as experiment collaborators (Writers).
+  type repo
+    relations
+      define facility: [facility]
+      define principal: [user]
+      define leader: [user]
+      define member: [user]
+      define can_manage: leader or principal or can_manage from facility
+      define can_view: member or can_manage
+
+  # instrument is an LCLS beamline/instrument (AMO, XPP, CXI, etc.).
+  # instrument-level roles apply to all experiments running on that instrument.
+  type instrument
+    relations
+      define facility: [facility]
+      # poc: instrument Point-of-Contact; facility-level poc is also instrument poc
+      define poc: [user] or poc from facility
+      # editor: instrument staff who can edit/delete all entries on this instrument
+      define editor: [user] or poc
+      # manager: instrument staff who can manage groups on all experiments on this instrument
+      define manager: [user] or poc
+      # Inherited facility roles (propagated to experiments via instrument tuple)
+      define labpersonnel: labpersonnel from facility
+      define daqoperator: daqoperator from facility
+      define poweruser: poweruser from facility
+      define siteadmin: siteadmin from facility
+
+  # experiment corresponds to an explgbk experiment (e.g. xpp101265525).
+  #
+  # Role inheritance:
+  #   - CoAct repo roles propagate via the `repo` relation:
+  #       repo:principal → manager, repo:leader → editor, repo:member → writer
+  #   - Instrument/facility global roles propagate via the `instrument` relation.
+  #   - RESTRICTED experiments: omit the `instrument` tuple to block global role inheritance.
+  #     Only per-experiment roles (reader/writer/editor/manager) and repo-linked roles apply.
+  type experiment
+    relations
+      define instrument: [instrument]
+      define repo: [repo]
+      # --- Per-experiment roles ---
+      define reader: [user]
+      define writer: [user] or member from repo
+      define editor: [user] or leader from repo or editor from instrument
+      define manager: [user] or principal from repo or manager from instrument
+      # --- Global roles inherited via instrument (absent for restricted experiments) ---
+      define labpersonnel: labpersonnel from instrument
+      define daqoperator: daqoperator from instrument
+      define poweruser: poweruser from instrument
+      define poc: poc from instrument
+      define siteadmin: siteadmin from instrument
+      # --- Computed permissions (map to explgbk privilege names) ---
+      # read: all experiment roles + poc + labpersonnel
+      define can_read: reader or writer or editor or manager or poc or labpersonnel
+      # post: writer and above
+      define can_post: writer or editor or manager or poc or labpersonnel
+      # edit: editor and above
+      define can_edit: editor or manager or poc or labpersonnel
+      # delete: editor and above
+      define can_delete: editor or manager or poc or labpersonnel
+      # manage_groups: experiment member list management
+      define can_manage_groups: manager or poc or labpersonnel
+      # switch: change current run/experiment (DAQ operation)
+      define can_switch: daqoperator or poweruser or poc or labpersonnel
+      # ops_page: access operational dashboard
+      define can_ops_page: daqoperator or poc or labpersonnel
+      # feedback_read/write: POC feedback system (instrument POC + labpersonnel only)
+      define can_feedback_read: poc or labpersonnel
+      define can_feedback_write: poc or labpersonnel
+      # config_edit: edit experiment/instrument config
+      define can_config_edit: siteadmin or poc
+      # experiment_edit: modify experiment metadata (PI/manager + powerusers + labpersonnel)
+      define can_experiment_edit: manager or poweruser or labpersonnel
+      # experiment_delete: archive/delete an experiment
+      define can_experiment_delete: labpersonnel or siteadmin
+
+tuples:
+
+  # ── System level ──────────────────────────────────────────────────────────
+  - user: user:yee
+    relation: admin
+    object: system:coact
+
+  # ── facility:lcls ─ CoAct roles ───────────────────────────────────────────
+  - user: system:coact
+    relation: parent_system
+    object: facility:lcls
+  - user: user:wilko
+    relation: czar
+    object: facility:lcls
+  - user: user:eve
+    relation: member
+    object: facility:lcls
+  - user: user:dave
+    relation: serviceaccount
+    object: facility:lcls
+
+  # ── facility:lcls ─ Logbook site-wide roles ───────────────────────────────
+  - user: user:mshankar
+    relation: siteadmin
+    object: facility:lcls
+  - user: user:wilko
+    relation: labpersonnel
+    object: facility:lcls
+  - user: user:evans
+    relation: poc
+    object: facility:lcls
+  - user: user:rixopr
+    relation: daqoperator
+    object: facility:lcls
+  - user: user:snelson
+    relation: poweruser
+    object: facility:lcls
+
+  # ── facility:rubin ─ no czar assigned (isolation tests) ───────────────────
+  - user: system:coact
+    relation: parent_system
+    object: facility:rubin
+
+  # ── repo:lcls-project-1 ── principal=bob, leader=carol, member=alice ──────
+  - user: facility:lcls
+    relation: facility
+    object: repo:lcls-project-1
+  - user: user:bob
+    relation: principal
+    object: repo:lcls-project-1
+  - user: user:carol
+    relation: leader
+    object: repo:lcls-project-1
+  - user: user:alice
+    relation: member
+    object: repo:lcls-project-1
+
+  # ── repo:lcls-project-2 ── separate repo for isolation tests ─────────────
+  - user: facility:lcls
+    relation: facility
+    object: repo:lcls-project-2
+  - user: user:frank
+    relation: principal
+    object: repo:lcls-project-2
+
+  # ── instrument:xpp ── XPP beamline at LCLS ────────────────────────────────
+  - user: facility:lcls
+    relation: facility
+    object: instrument:xpp
+  - user: user:sboutet
+    relation: poc
+    object: instrument:xpp
+  - user: user:xppopr
+    relation: editor
+    object: instrument:xpp
+
+  # ── experiment:xpp101 ── normal (non-restricted) experiment ──────────────
+  # instrument tuple present → global roles inherit
+  - user: instrument:xpp
+    relation: instrument
+    object: experiment:xpp101
+  # repo:lcls-project-1 → bob=manager, carol=editor, alice=writer
+  - user: repo:lcls-project-1
+    relation: repo
+    object: experiment:xpp101
+  - user: user:public_reader
+    relation: reader
+    object: experiment:xpp101
+
+  # ── experiment:restricted-exp ── restricted experiment ────────────────────
+  # NO instrument tuple → labpersonnel/poc/instrument roles are blocked
+  # repo link preserved → CoAct members still get access
+  - user: repo:lcls-project-1
+    relation: repo
+    object: experiment:restricted-exp
+  - user: user:alice
+    relation: writer
+    object: experiment:restricted-exp
+
+tests:
+
+  # ════════════════════════════════════════════════════════════════════════
+  # CoAct tests (preserved)
+  # ════════════════════════════════════════════════════════════════════════
+
+  - name: System admin (yee) can manage all facilities and repos
+    check:
+      - user: user:yee
+        object: facility:lcls
+        assertions:
+          admin: true
+          can_manage: true
+          can_view: true
+      - user: user:yee
+        object: repo:lcls-project-1
+        assertions:
+          principal: false
+          leader: false
+          member: false
+          can_manage: true
+          can_view: true
+      - user: user:yee
+        object: facility:rubin
+        assertions:
+          admin: true
+          can_manage: true
+
+  - name: Facility czar (wilko) can manage their facility and all repos in it
+    check:
+      - user: user:wilko
+        object: facility:lcls
+        assertions:
+          czar: true
+          admin: false
+          can_manage: true
+          can_view: true
+      - user: user:wilko
+        object: repo:lcls-project-1
+        assertions:
+          principal: false
+          leader: false
+          member: false
+          can_manage: true
+          can_view: true
+      - user: user:wilko
+        object: repo:lcls-project-2
+        assertions:
+          can_manage: true
+
+  - name: Repo principal (bob) can manage their repo but not the facility
+    check:
+      - user: user:bob
+        object: repo:lcls-project-1
+        assertions:
+          principal: true
+          leader: false
+          member: false
+          can_manage: true
+          can_view: true
+      - user: user:bob
+        object: facility:lcls
+        assertions:
+          czar: false
+          can_manage: false
+          can_view: false
+      - user: user:bob
+        object: repo:lcls-project-2
+        assertions:
+          principal: false
+          can_manage: false
+          can_view: false
+
+  - name: Repo leader (carol) can manage their repo but not the facility
+    check:
+      - user: user:carol
+        object: repo:lcls-project-1
+        assertions:
+          leader: true
+          principal: false
+          member: false
+          can_manage: true
+          can_view: true
+      - user: user:carol
+        object: facility:lcls
+        assertions:
+          czar: false
+          can_manage: false
+          can_view: false
+      - user: user:carol
+        object: repo:lcls-project-2
+        assertions:
+          leader: false
+          can_manage: false
+          can_view: false
+
+  - name: Repo member (alice) can only view their repo
+    check:
+      - user: user:alice
+        object: repo:lcls-project-1
+        assertions:
+          member: true
+          principal: false
+          leader: false
+          can_manage: false
+          can_view: true
+      - user: user:alice
+        object: facility:lcls
+        assertions:
+          can_manage: false
+          can_view: false
+      - user: user:alice
+        object: repo:lcls-project-2
+        assertions:
+          member: false
+          can_view: false
+
+  - name: Facility member (eve) can view the facility but not manage it
+    check:
+      - user: user:eve
+        object: facility:lcls
+        assertions:
+          member: true
+          czar: false
+          can_manage: false
+          can_view: true
+      - user: user:eve
+        object: repo:lcls-project-1
+        assertions:
+          can_manage: false
+          can_view: false
+
+  - name: Service account (dave) has no implicit permissions
+    check:
+      - user: user:dave
+        object: facility:lcls
+        assertions:
+          serviceaccount: true
+          can_manage: false
+          can_view: false
+      - user: user:dave
+        object: repo:lcls-project-1
+        assertions:
+          can_manage: false
+          can_view: false
+
+  - name: Facility czar isolation (wilko has no access to facility:rubin)
+    check:
+      - user: user:wilko
+        object: facility:rubin
+        assertions:
+          czar: false
+          can_manage: false
+          can_view: false
+
+  # ════════════════════════════════════════════════════════════════════════
+  # Logbook site-wide role tests
+  # ════════════════════════════════════════════════════════════════════════
+
+  - name: System admin (yee) is siteadmin and labpersonnel on all facilities
+    check:
+      - user: user:yee
+        object: facility:lcls
+        assertions:
+          siteadmin: true
+          labpersonnel: true
+          can_create_experiment: true
+          can_create_instrument: true
+          can_edit_config: true
+      - user: user:yee
+        object: facility:rubin
+        assertions:
+          siteadmin: true
+          labpersonnel: true
+
+  - name: SiteAdmin (mshankar) has full site permissions including config
+    check:
+      - user: user:mshankar
+        object: facility:lcls
+        assertions:
+          siteadmin: true
+          labpersonnel: true
+          can_create_experiment: true
+          can_create_instrument: true
+          can_edit_config: true
+
+  - name: LabPersonnel (wilko) has broad site permissions but is not siteadmin
+    check:
+      - user: user:wilko
+        object: facility:lcls
+        assertions:
+          labpersonnel: true
+          siteadmin: false
+          can_create_experiment: true
+          can_create_instrument: true
+          can_edit_config: true
+
+  - name: Site POC (evans) can edit config but not create experiments or instruments
+    check:
+      - user: user:evans
+        object: facility:lcls
+        assertions:
+          poc: true
+          labpersonnel: false
+          siteadmin: false
+          can_edit_config: true
+          can_create_experiment: false
+          can_create_instrument: false
+
+  - name: PowerUser (snelson) can create experiments but not instruments or config
+    check:
+      - user: user:snelson
+        object: facility:lcls
+        assertions:
+          poweruser: true
+          labpersonnel: false
+          siteadmin: false
+          can_create_experiment: true
+          can_create_instrument: false
+          can_edit_config: false
+
+  - name: DAQOperator (rixopr) has no site-level creation permissions
+    check:
+      - user: user:rixopr
+        object: facility:lcls
+        assertions:
+          daqoperator: true
+          labpersonnel: false
+          can_create_experiment: false
+          can_create_instrument: false
+
+  # ════════════════════════════════════════════════════════════════════════
+  # CoAct repo → experiment role mapping (normal experiment)
+  # ════════════════════════════════════════════════════════════════════════
+
+  - name: CoAct repo principal (bob) is experiment manager with full CRUD + manage_groups
+    check:
+      - user: user:bob
+        object: experiment:xpp101
+        assertions:
+          manager: true
+          editor: false
+          writer: false
+          reader: false
+          can_read: true
+          can_post: true
+          can_edit: true
+          can_delete: true
+          can_manage_groups: true
+          can_experiment_edit: true
+
+  - name: CoAct repo leader (carol) is experiment editor with CRUD but not manage_groups
+    check:
+      - user: user:carol
+        object: experiment:xpp101
+        assertions:
+          editor: true
+          manager: false
+          writer: false
+          reader: false
+          can_read: true
+          can_post: true
+          can_edit: true
+          can_delete: true
+          can_manage_groups: false
+          can_experiment_edit: false
+
+  - name: CoAct repo member (alice) is experiment writer - read + post only
+    check:
+      - user: user:alice
+        object: experiment:xpp101
+        assertions:
+          writer: true
+          editor: false
+          manager: false
+          reader: false
+          can_read: true
+          can_post: true
+          can_edit: false
+          can_delete: false
+          can_manage_groups: false
+
+  - name: Direct reader (public_reader) can only read
+    check:
+      - user: user:public_reader
+        object: experiment:xpp101
+        assertions:
+          reader: true
+          writer: false
+          editor: false
+          manager: false
+          can_read: true
+          can_post: false
+          can_edit: false
+          can_delete: false
+
+  # ════════════════════════════════════════════════════════════════════════
+  # Instrument-level role propagation to experiments
+  # ════════════════════════════════════════════════════════════════════════
+
+  - name: Instrument POC (sboutet) has full access to xpp experiments including feedback and ops
+    check:
+      - user: user:sboutet
+        object: instrument:xpp
+        assertions:
+          poc: true
+      - user: user:sboutet
+        object: experiment:xpp101
+        assertions:
+          poc: true
+          can_read: true
+          can_post: true
+          can_edit: true
+          can_delete: true
+          can_manage_groups: true
+          can_switch: true
+          can_ops_page: true
+          can_feedback_read: true
+          can_feedback_write: true
+          can_config_edit: true
+
+  - name: Facility POC (evans) inherits poc on instrument and all its experiments
+    check:
+      - user: user:evans
+        object: instrument:xpp
+        assertions:
+          poc: true
+      - user: user:evans
+        object: experiment:xpp101
+        assertions:
+          poc: true
+          can_read: true
+          can_post: true
+          can_edit: true
+          can_delete: true
+          can_manage_groups: true
+          can_feedback_read: true
+          can_feedback_write: true
+          can_config_edit: true
+
+  - name: Instrument editor (xppopr) has read/post/edit/delete but not manage_groups or feedback
+    check:
+      - user: user:xppopr
+        object: instrument:xpp
+        assertions:
+          editor: true
+          poc: false
+      - user: user:xppopr
+        object: experiment:xpp101
+        assertions:
+          editor: true
+          can_read: true
+          can_post: true
+          can_edit: true
+          can_delete: true
+          can_manage_groups: false
+          can_feedback_read: false
+          can_feedback_write: false
+
+  # ════════════════════════════════════════════════════════════════════════
+  # Global site role propagation to experiments (via instrument)
+  # ════════════════════════════════════════════════════════════════════════
+
+  - name: LabPersonnel (wilko) has full access to all experiments on all instruments
+    check:
+      - user: user:wilko
+        object: experiment:xpp101
+        assertions:
+          labpersonnel: true
+          can_read: true
+          can_post: true
+          can_edit: true
+          can_delete: true
+          can_manage_groups: true
+          can_switch: true
+          can_ops_page: true
+          can_feedback_read: true
+          can_feedback_write: true
+          can_experiment_edit: true
+          can_experiment_delete: true
+
+  - name: SiteAdmin (mshankar) has full access plus config_edit and experiment_delete
+    check:
+      - user: user:mshankar
+        object: experiment:xpp101
+        assertions:
+          siteadmin: true
+          labpersonnel: true
+          can_read: true
+          can_edit: true
+          can_manage_groups: true
+          can_config_edit: true
+          can_experiment_delete: true
+
+  - name: DAQOperator (rixopr) can switch and ops_page but cannot read logbook content
+    check:
+      - user: user:rixopr
+        object: experiment:xpp101
+        assertions:
+          daqoperator: true
+          can_switch: true
+          can_ops_page: true
+          can_read: false
+          can_post: false
+          can_edit: false
+          can_manage_groups: false
+          can_experiment_edit: false
+
+  - name: PowerUser (snelson) can switch and experiment_edit but cannot read logbook content
+    check:
+      - user: user:snelson
+        object: experiment:xpp101
+        assertions:
+          poweruser: true
+          can_switch: true
+          can_experiment_edit: true
+          can_read: false
+          can_post: false
+          can_edit: false
+          can_manage_groups: false
+          can_ops_page: false
+
+  # ════════════════════════════════════════════════════════════════════════
+  # Restricted experiment tests - no instrument tuple
+  # ════════════════════════════════════════════════════════════════════════
+
+  - name: Restricted experiment - labpersonnel and poc have NO access (instrument tuple absent)
+    check:
+      - user: user:wilko
+        object: experiment:restricted-exp
+        assertions:
+          labpersonnel: false
+          can_read: false
+          can_post: false
+          can_edit: false
+          can_manage_groups: false
+      - user: user:evans
+        object: experiment:restricted-exp
+        assertions:
+          poc: false
+          can_read: false
+      - user: user:sboutet
+        object: experiment:restricted-exp
+        assertions:
+          poc: false
+          can_read: false
+      - user: user:rixopr
+        object: experiment:restricted-exp
+        assertions:
+          daqoperator: false
+          can_switch: false
+
+  - name: Restricted experiment - direct writer (alice) retains write access
+    check:
+      - user: user:alice
+        object: experiment:restricted-exp
+        assertions:
+          writer: true
+          can_read: true
+          can_post: true
+          can_edit: false
+          can_delete: false
+
+  - name: Restricted experiment - CoAct repo roles still apply (bob=manager, carol=editor)
+    check:
+      - user: user:bob
+        object: experiment:restricted-exp
+        assertions:
+          manager: true
+          can_read: true
+          can_post: true
+          can_edit: true
+          can_delete: true
+          can_manage_groups: true
+      - user: user:carol
+        object: experiment:restricted-exp
+        assertions:
+          editor: true
+          can_read: true
+          can_edit: true
+          can_manage_groups: false
+
+  - name: Cross-instrument isolation - xpp POC (sboutet) has no access to restricted or unrelated experiments
+    check:
+      - user: user:sboutet
+        object: experiment:restricted-exp
+        assertions:
+          poc: false
+          can_read: false
+          can_edit: false
