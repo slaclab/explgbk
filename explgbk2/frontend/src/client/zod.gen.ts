@@ -3,19 +3,11 @@
 import * as z from 'zod';
 
 /**
- * ItemCreate
+ * InstrumentSummary
  */
-export const zItemCreate = z.object({
-    title: z.string().min(1).max(255),
-    description: z.string().max(255).nullish()
-});
-
-/**
- * ItemUpdate
- */
-export const zItemUpdate = z.object({
-    title: z.string().min(1).max(255).nullish(),
-    description: z.string().max(255).nullish()
+export const zInstrumentSummary = z.object({
+    instrument: z.string(),
+    experiment_count: z.int()
 });
 
 /**
@@ -65,25 +57,6 @@ export const zMessage = z.object({
 });
 
 export const zPydanticObjectId = z.string().length(24).regex(/^[0-9a-f]{24}$/);
-
-/**
- * ItemPublic
- */
-export const zItemPublic = z.object({
-    title: z.string().min(1).max(255),
-    description: z.string().max(255).nullish(),
-    id: zPydanticObjectId,
-    owner_id: zPydanticObjectId,
-    created_at: z.iso.datetime().nullish()
-});
-
-/**
- * ItemsPublic
- */
-export const zItemsPublic = z.object({
-    data: z.array(zItemPublic),
-    count: z.int()
-});
 
 /**
  * UserPublic
@@ -240,70 +213,6 @@ export const zUtilsHealthCheckData = z.object({
  */
 export const zUtilsHealthCheckResponse = z.boolean();
 
-export const zItemsReadItemsData = z.object({
-    body: z.never().optional(),
-    path: z.never().optional(),
-    query: z.object({
-        skip: z.int().optional().default(0),
-        limit: z.int().optional().default(100)
-    }).optional()
-});
-
-/**
- * Successful Response
- */
-export const zItemsReadItemsResponse = zItemsPublic;
-
-export const zItemsCreateItemData = z.object({
-    body: zItemCreate,
-    path: z.never().optional(),
-    query: z.never().optional()
-});
-
-/**
- * Successful Response
- */
-export const zItemsCreateItemResponse = zItemPublic;
-
-export const zItemsDeleteItemData = z.object({
-    body: z.never().optional(),
-    path: z.object({
-        id: zPydanticObjectId
-    }),
-    query: z.never().optional()
-});
-
-/**
- * Successful Response
- */
-export const zItemsDeleteItemResponse = zMessage;
-
-export const zItemsReadItemData = z.object({
-    body: z.never().optional(),
-    path: z.object({
-        id: zPydanticObjectId
-    }),
-    query: z.never().optional()
-});
-
-/**
- * Successful Response
- */
-export const zItemsReadItemResponse = zItemPublic;
-
-export const zItemsUpdateItemData = z.object({
-    body: zItemUpdate,
-    path: z.object({
-        id: zPydanticObjectId
-    }),
-    query: z.never().optional()
-});
-
-/**
- * Successful Response
- */
-export const zItemsUpdateItemResponse = zItemPublic;
-
 export const zExperimentsReadExperimentNamesData = z.object({
     body: z.never().optional(),
     path: z.never().optional(),
@@ -322,7 +231,17 @@ export const zExperimentsReadExperimentsData = z.object({
     path: z.never().optional(),
     query: z.object({
         skip: z.int().optional().default(0),
-        limit: z.int().optional().default(100)
+        limit: z.int().optional().default(100),
+        sort_by: z.enum([
+            'name',
+            'instrument',
+            'leader_account',
+            'run_count',
+            'start_time',
+            'created_at'
+        ]).optional(),
+        sort_desc: z.boolean().optional().default(false),
+        instrument: z.string().nullish()
     }).optional()
 });
 
@@ -380,3 +299,16 @@ export const zExperimentsUpdateExperimentData = z.object({
  * Successful Response
  */
 export const zExperimentsUpdateExperimentResponse = zExperimentPublic;
+
+export const zInstrumentsReadInstrumentsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Instruments-Read Instruments
+ *
+ * Successful Response
+ */
+export const zInstrumentsReadInstrumentsResponse = z.array(zInstrumentSummary);

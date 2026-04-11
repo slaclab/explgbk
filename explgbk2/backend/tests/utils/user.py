@@ -1,6 +1,6 @@
 from app import crud
 from app.core import security
-from app.models import User, UserCreate
+from app.models.user import User, UserCreate
 from tests.utils.utils import random_email
 
 

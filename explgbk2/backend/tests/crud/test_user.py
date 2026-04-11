@@ -1,7 +1,7 @@
 from fastapi.encoders import jsonable_encoder
 
 from app import crud
-from app.models import User, UserCreate, UserUpdate
+from app.models.user import User, UserCreate, UserUpdate
 from tests.utils.utils import random_email
 
 

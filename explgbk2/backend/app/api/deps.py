@@ -7,10 +7,15 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
+from pymongo import AsyncMongoClient
 
 from app.core import security
 from app.core.config import settings
-from app.models import TokenPayload, User
+from app.core.db import get_mongo_client
+from app.models.common import TokenPayload
+from app.models.user import User
+
+MongoClientDep = Annotated[AsyncMongoClient, Depends(get_mongo_client)]
 
 # auto_error=False so unauthenticated requests fall through to the fallback below
 reusable_oauth2 = OAuth2PasswordBearer(

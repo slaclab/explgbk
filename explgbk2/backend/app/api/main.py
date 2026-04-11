@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 
-from app.api.routes import items, users, utils
+from app.api.routes import experiments, instruments, users, utils
 
 api_router = APIRouter()
 api_router.include_router(users.router)
 api_router.include_router(utils.router)
-api_router.include_router(items.router)
+api_router.include_router(experiments.router)
+api_router.include_router(instruments.router)

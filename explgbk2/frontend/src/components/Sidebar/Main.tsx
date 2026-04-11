@@ -1,4 +1,4 @@
-import { Link as RouterLink, useRouterState } from "@tanstack/react-router"
+import { Link as RouterLink, useMatch } from "@tanstack/react-router"
 import type { LucideIcon } from "lucide-react"
 
 import {
@@ -20,10 +20,30 @@ interface MainProps {
   items: Item[]
 }
 
+function SidebarNavItem({
+  item,
+  onMenuClick,
+}: {
+  item: Item
+  onMenuClick: () => void
+}) {
+  const match = useMatch({ from: item.path as never, shouldThrow: false })
+  const isActive = match != null
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton tooltip={item.title} isActive={isActive} asChild>
+        <RouterLink to={item.path} onClick={onMenuClick}>
+          <item.icon />
+          <span>{item.title}</span>
+        </RouterLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
 export function Main({ items }: MainProps) {
   const { isMobile, setOpenMobile } = useSidebar()
-  const router = useRouterState()
-  const currentPath = router.location.pathname
 
   const handleMenuClick = () => {
     if (isMobile) {
@@ -35,24 +55,13 @@ export function Main({ items }: MainProps) {
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => {
-            const isActive = currentPath === item.path
-
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  tooltip={item.title}
-                  isActive={isActive}
-                  asChild
-                >
-                  <RouterLink to={item.path} onClick={handleMenuClick}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </RouterLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )
-          })}
+          {items.map((item) => (
+            <SidebarNavItem
+              key={item.title}
+              item={item}
+              onMenuClick={handleMenuClick}
+            />
+          ))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

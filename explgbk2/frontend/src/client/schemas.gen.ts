@@ -201,134 +201,23 @@ export const HTTPValidationErrorSchema = {
     title: 'HTTPValidationError'
 } as const;
 
-export const ItemCreateSchema = {
+export const InstrumentSummarySchema = {
     properties: {
-        title: {
+        instrument: {
             type: 'string',
-            maxLength: 255,
-            minLength: 1,
-            title: 'Title'
+            title: 'Instrument'
         },
-        description: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Description'
-        }
-    },
-    type: 'object',
-    required: [
-        'title'
-    ],
-    title: 'ItemCreate'
-} as const;
-
-export const ItemPublicSchema = {
-    properties: {
-        title: {
-            type: 'string',
-            maxLength: 255,
-            minLength: 1,
-            title: 'Title'
-        },
-        description: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Description'
-        },
-        id: {
-            $ref: '#/components/schemas/PydanticObjectId'
-        },
-        owner_id: {
-            $ref: '#/components/schemas/PydanticObjectId'
-        },
-        created_at: {
-            anyOf: [
-                {
-                    type: 'string',
-                    format: 'date-time'
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Created At'
-        }
-    },
-    type: 'object',
-    required: [
-        'title',
-        'id',
-        'owner_id'
-    ],
-    title: 'ItemPublic'
-} as const;
-
-export const ItemUpdateSchema = {
-    properties: {
-        title: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255,
-                    minLength: 1
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Title'
-        },
-        description: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Description'
-        }
-    },
-    type: 'object',
-    title: 'ItemUpdate'
-} as const;
-
-export const ItemsPublicSchema = {
-    properties: {
-        data: {
-            items: {
-                $ref: '#/components/schemas/ItemPublic'
-            },
-            type: 'array',
-            title: 'Data'
-        },
-        count: {
+        experiment_count: {
             type: 'integer',
-            title: 'Count'
+            title: 'Experiment Count'
         }
     },
     type: 'object',
     required: [
-        'data',
-        'count'
+        'instrument',
+        'experiment_count'
     ],
-    title: 'ItemsPublic'
+    title: 'InstrumentSummary'
 } as const;
 
 export const LastRunSchema = {

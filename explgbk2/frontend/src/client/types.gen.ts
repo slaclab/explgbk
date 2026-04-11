@@ -98,65 +98,17 @@ export type HttpValidationError = {
 };
 
 /**
- * ItemCreate
+ * InstrumentSummary
  */
-export type ItemCreate = {
+export type InstrumentSummary = {
     /**
-     * Title
+     * Instrument
      */
-    title: string;
+    instrument: string;
     /**
-     * Description
+     * Experiment Count
      */
-    description?: string | null;
-};
-
-/**
- * ItemPublic
- */
-export type ItemPublic = {
-    /**
-     * Title
-     */
-    title: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-    id: PydanticObjectId;
-    owner_id: PydanticObjectId;
-    /**
-     * Created At
-     */
-    created_at?: string | null;
-};
-
-/**
- * ItemUpdate
- */
-export type ItemUpdate = {
-    /**
-     * Title
-     */
-    title?: string | null;
-    /**
-     * Description
-     */
-    description?: string | null;
-};
-
-/**
- * ItemsPublic
- */
-export type ItemsPublic = {
-    /**
-     * Data
-     */
-    data: Array<ItemPublic>;
-    /**
-     * Count
-     */
-    count: number;
+    experiment_count: number;
 };
 
 /**
@@ -484,146 +436,6 @@ export type UtilsHealthCheckResponses = {
 
 export type UtilsHealthCheckResponse = UtilsHealthCheckResponses[keyof UtilsHealthCheckResponses];
 
-export type ItemsReadItemsData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Skip
-         */
-        skip?: number;
-        /**
-         * Limit
-         */
-        limit?: number;
-    };
-    url: '/api/v1/items/';
-};
-
-export type ItemsReadItemsErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ItemsReadItemsError = ItemsReadItemsErrors[keyof ItemsReadItemsErrors];
-
-export type ItemsReadItemsResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemsPublic;
-};
-
-export type ItemsReadItemsResponse = ItemsReadItemsResponses[keyof ItemsReadItemsResponses];
-
-export type ItemsCreateItemData = {
-    body: ItemCreate;
-    path?: never;
-    query?: never;
-    url: '/api/v1/items/';
-};
-
-export type ItemsCreateItemErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ItemsCreateItemError = ItemsCreateItemErrors[keyof ItemsCreateItemErrors];
-
-export type ItemsCreateItemResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemPublic;
-};
-
-export type ItemsCreateItemResponse = ItemsCreateItemResponses[keyof ItemsCreateItemResponses];
-
-export type ItemsDeleteItemData = {
-    body?: never;
-    path: {
-        id: PydanticObjectId;
-    };
-    query?: never;
-    url: '/api/v1/items/{id}';
-};
-
-export type ItemsDeleteItemErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ItemsDeleteItemError = ItemsDeleteItemErrors[keyof ItemsDeleteItemErrors];
-
-export type ItemsDeleteItemResponses = {
-    /**
-     * Successful Response
-     */
-    200: Message;
-};
-
-export type ItemsDeleteItemResponse = ItemsDeleteItemResponses[keyof ItemsDeleteItemResponses];
-
-export type ItemsReadItemData = {
-    body?: never;
-    path: {
-        id: PydanticObjectId;
-    };
-    query?: never;
-    url: '/api/v1/items/{id}';
-};
-
-export type ItemsReadItemErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ItemsReadItemError = ItemsReadItemErrors[keyof ItemsReadItemErrors];
-
-export type ItemsReadItemResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemPublic;
-};
-
-export type ItemsReadItemResponse = ItemsReadItemResponses[keyof ItemsReadItemResponses];
-
-export type ItemsUpdateItemData = {
-    body: ItemUpdate;
-    path: {
-        id: PydanticObjectId;
-    };
-    query?: never;
-    url: '/api/v1/items/{id}';
-};
-
-export type ItemsUpdateItemErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ItemsUpdateItemError = ItemsUpdateItemErrors[keyof ItemsUpdateItemErrors];
-
-export type ItemsUpdateItemResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemPublic;
-};
-
-export type ItemsUpdateItemResponse = ItemsUpdateItemResponses[keyof ItemsUpdateItemResponses];
-
 export type ExperimentsReadExperimentNamesData = {
     body?: never;
     path?: never;
@@ -654,6 +466,18 @@ export type ExperimentsReadExperimentsData = {
          * Limit
          */
         limit?: number;
+        /**
+         * Sort By
+         */
+        sort_by?: 'name' | 'instrument' | 'leader_account' | 'run_count' | 'start_time' | 'created_at';
+        /**
+         * Sort Desc
+         */
+        sort_desc?: boolean;
+        /**
+         * Instrument
+         */
+        instrument?: string | null;
     };
     url: '/api/v1/experiments/';
 };
@@ -781,3 +605,21 @@ export type ExperimentsUpdateExperimentResponses = {
 };
 
 export type ExperimentsUpdateExperimentResponse = ExperimentsUpdateExperimentResponses[keyof ExperimentsUpdateExperimentResponses];
+
+export type InstrumentsReadInstrumentsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/instruments/';
+};
+
+export type InstrumentsReadInstrumentsResponses = {
+    /**
+     * Response Instruments-Read Instruments
+     *
+     * Successful Response
+     */
+    200: Array<InstrumentSummary>;
+};
+
+export type InstrumentsReadInstrumentsResponse = InstrumentsReadInstrumentsResponses[keyof InstrumentsReadInstrumentsResponses];

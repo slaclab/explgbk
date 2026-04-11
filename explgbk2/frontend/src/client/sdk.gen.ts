@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ExperimentsCreateExperimentData, ExperimentsCreateExperimentResponses, ExperimentsDeleteExperimentData, ExperimentsDeleteExperimentErrors, ExperimentsDeleteExperimentResponses, ExperimentsReadExperimentData, ExperimentsReadExperimentErrors, ExperimentsReadExperimentNamesData, ExperimentsReadExperimentNamesResponses, ExperimentsReadExperimentResponses, ExperimentsReadExperimentsData, ExperimentsReadExperimentsErrors, ExperimentsReadExperimentsResponses, ExperimentsUpdateExperimentData, ExperimentsUpdateExperimentErrors, ExperimentsUpdateExperimentResponses, ItemsCreateItemData, ItemsCreateItemErrors, ItemsCreateItemResponses, ItemsDeleteItemData, ItemsDeleteItemErrors, ItemsDeleteItemResponses, ItemsReadItemData, ItemsReadItemErrors, ItemsReadItemResponses, ItemsReadItemsData, ItemsReadItemsErrors, ItemsReadItemsResponses, ItemsUpdateItemData, ItemsUpdateItemErrors, ItemsUpdateItemResponses, UsersDeleteUserData, UsersDeleteUserErrors, UsersDeleteUserMeData, UsersDeleteUserMeResponses, UsersDeleteUserResponses, UsersReadUserByIdData, UsersReadUserByIdErrors, UsersReadUserByIdResponses, UsersReadUserMeData, UsersReadUserMeResponses, UsersReadUsersData, UsersReadUsersErrors, UsersReadUsersResponses, UsersUpdateUserData, UsersUpdateUserErrors, UsersUpdateUserMeData, UsersUpdateUserMeErrors, UsersUpdateUserMeResponses, UsersUpdateUserResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
+import type { ExperimentsCreateExperimentData, ExperimentsCreateExperimentResponses, ExperimentsDeleteExperimentData, ExperimentsDeleteExperimentErrors, ExperimentsDeleteExperimentResponses, ExperimentsReadExperimentData, ExperimentsReadExperimentErrors, ExperimentsReadExperimentNamesData, ExperimentsReadExperimentNamesResponses, ExperimentsReadExperimentResponses, ExperimentsReadExperimentsData, ExperimentsReadExperimentsErrors, ExperimentsReadExperimentsResponses, ExperimentsUpdateExperimentData, ExperimentsUpdateExperimentErrors, ExperimentsUpdateExperimentResponses, InstrumentsReadInstrumentsData, InstrumentsReadInstrumentsResponses, UsersDeleteUserData, UsersDeleteUserErrors, UsersDeleteUserMeData, UsersDeleteUserMeResponses, UsersDeleteUserResponses, UsersReadUserByIdData, UsersReadUserByIdErrors, UsersReadUserByIdResponses, UsersReadUserMeData, UsersReadUserMeResponses, UsersReadUsersData, UsersReadUsersErrors, UsersReadUsersResponses, UsersUpdateUserData, UsersUpdateUserErrors, UsersUpdateUserMeData, UsersUpdateUserMeErrors, UsersUpdateUserMeResponses, UsersUpdateUserResponses, UtilsHealthCheckData, UtilsHealthCheckResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -139,86 +139,6 @@ export class UtilsService {
     }
 }
 
-export class ItemsService {
-    /**
-     * Read Items
-     *
-     * Retrieve items.
-     */
-    public static itemsReadItems<ThrowOnError extends boolean = false>(options?: Options<ItemsReadItemsData, ThrowOnError>) {
-        return (options?.client ?? client).get<ItemsReadItemsResponses, ItemsReadItemsErrors, ThrowOnError>({
-            responseType: 'json',
-            security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/',
-            ...options
-        });
-    }
-    
-    /**
-     * Create Item
-     *
-     * Create new item.
-     */
-    public static itemsCreateItem<ThrowOnError extends boolean = false>(options: Options<ItemsCreateItemData, ThrowOnError>) {
-        return (options.client ?? client).post<ItemsCreateItemResponses, ItemsCreateItemErrors, ThrowOnError>({
-            responseType: 'json',
-            security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Delete Item
-     *
-     * Delete an item.
-     */
-    public static itemsDeleteItem<ThrowOnError extends boolean = false>(options: Options<ItemsDeleteItemData, ThrowOnError>) {
-        return (options.client ?? client).delete<ItemsDeleteItemResponses, ItemsDeleteItemErrors, ThrowOnError>({
-            responseType: 'json',
-            security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/{id}',
-            ...options
-        });
-    }
-    
-    /**
-     * Read Item
-     *
-     * Get item by ID.
-     */
-    public static itemsReadItem<ThrowOnError extends boolean = false>(options: Options<ItemsReadItemData, ThrowOnError>) {
-        return (options.client ?? client).get<ItemsReadItemResponses, ItemsReadItemErrors, ThrowOnError>({
-            responseType: 'json',
-            security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/{id}',
-            ...options
-        });
-    }
-    
-    /**
-     * Update Item
-     *
-     * Update an item.
-     */
-    public static itemsUpdateItem<ThrowOnError extends boolean = false>(options: Options<ItemsUpdateItemData, ThrowOnError>) {
-        return (options.client ?? client).put<ItemsUpdateItemResponses, ItemsUpdateItemErrors, ThrowOnError>({
-            responseType: 'json',
-            security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/{id}',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-}
-
 export class ExperimentsService {
     /**
      * Read Experiment Names
@@ -301,6 +221,23 @@ export class ExperimentsService {
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/experiments/{id}',
+            ...options
+        });
+    }
+}
+
+export class InstrumentsService {
+    /**
+     * Read Instruments
+     *
+     * Return each distinct non-null instrument together with the number of
+     * experiments the current user can access under that instrument.
+     */
+    public static instrumentsReadInstruments<ThrowOnError extends boolean = false>(options?: Options<InstrumentsReadInstrumentsData, ThrowOnError>) {
+        return (options?.client ?? client).get<InstrumentsReadInstrumentsResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/instruments/',
             ...options
         });
     }

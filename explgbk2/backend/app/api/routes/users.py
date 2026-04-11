@@ -5,15 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app import crud
 from app.api.deps import CurrentUser, get_current_active_superuser
-from app.models import (
-    Item,
-    Message,
-    User,
-    UserPublic,
-    UsersPublic,
-    UserUpdate,
-    UserUpdateMe,
-)
+from app.models.common import Message
+from app.models.user import User, UserPublic, UsersPublic, UserUpdate, UserUpdateMe
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -69,7 +62,6 @@ async def delete_user_me(current_user: CurrentUser) -> Any:
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
-    await Item.find(Item.owner_id == current_user.id).delete()
     await current_user.delete()
     return Message(message="User deleted successfully")
 
@@ -130,6 +122,5 @@ async def delete_user(current_user: CurrentUser, user_id: PydanticObjectId) -> M
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
 
-    await Item.find(Item.owner_id == user.id).delete()
     await user.delete()
     return Message(message="User deleted successfully")
