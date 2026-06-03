@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-import datetime
+from datetime import datetime, timedelta, timezone
 
 from queue import Queue
 
@@ -133,4 +133,26 @@ def generateArpToken(userid, experiment_name, token_duration_in_mins=10):
         raise Exception("Please specify the ARP private key in the environment variable WFLOW_TRIG_ARP_PRIVATE_KEY")
     with open(os.environ["WFLOW_TRIG_ARP_PRIVATE_KEY"], "rb") as f:
         private_key = f.read()
-    return jwt.encode({"user": userid, "experiment_name": experiment_name, "expires": (datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(minutes=token_duration_in_mins)).timestamp()}, private_key, algorithm="RS256")
+
+    # This is a straight copy from the PCDS token service.
+    # Once we deploy the logbook onto k8s, replace with a call to the token service instead of generating the token here.
+
+    payload = {
+        "iss": "PCDS",
+        "sub": userid,
+        "exp": (
+            datetime.now(tz=timezone.utc)
+            + timedelta(minutes=token_duration_in_mins)
+        ).timestamp(),
+        "iat": datetime.now(tz=timezone.utc).timestamp(),
+        "name": userid,
+    }
+    if experiment_name:
+        payload["scp"] = experiment_name
+
+    return jwt.encode(
+        payload,
+        private_key,
+        algorithm="RS256",
+        headers={"kid": "PCDS_ARP"},
+    )
