@@ -1626,10 +1626,12 @@ def svc_get_files_for_run(experiment_name, run_num):
     return JSONEncoder().encode({"success": True, "value": get_experiment_files_for_run(experiment_name, rnum)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/files_for_live_mode", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/current_files_for_live_mode", methods=["GET"])
 def svc_get_files_for_run_for_live_mode(experiment_name, run_num):
     """
     Get a minimal set of information for psana live mode.
     Return only the path information for only the xtc/xtc2 files in the xtc folder ( and not it's children ).
+    The current_files_for_live_mode endpoint is there for folks that want to bypass the cached response.
     """
     try:
         rnum = int(run_num)
@@ -1638,12 +1640,14 @@ def svc_get_files_for_run_for_live_mode(experiment_name, run_num):
     return JSONEncoder().encode({"success": True, "value": get_experiment_files_for_run_for_live_mode(experiment_name, rnum)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/files_for_live_mode_at_location", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/<run_num>/current_files_for_live_mode_at_location", methods=["GET"])
 def svc_get_files_for_run_for_live_mode_at_location(experiment_name, run_num):
     """
     Similar to files_for_live_mode.
     In addition to the list of files, we accept a location and add a boolean as to whether we think the file is located there.
     Also include some info on when the run closed etc.
     The relies on the integration with the data mover/file migration messages being processed correctly and updated external to the logbook
+    The current_files_for_live_mode_at_location endpoint is there for folks that want to bypass the cached response.
     """
     try:
         rnum = int(run_num)
@@ -1660,12 +1664,14 @@ def svc_get_files_for_run_for_live_mode_at_location(experiment_name, run_num):
     return JSONEncoder().encode({"success": True, "value": get_experiment_files_for_run_for_live_mode_at_location(experiment_name, rnum, location)})
 
 @explgbk_blueprint.route("/lgbk/<experiment_name>/ws/files_for_live_mode_at_location", methods=["GET"])
+@explgbk_blueprint.route("/lgbk/<experiment_name>/ws/current_files_for_live_mode_at_location", methods=["GET"])
 def svc_get_files_for_live_mode_at_location(experiment_name):
     """
     Similar to files_for_live_mode_for_run except for all runs.
     In addition to the list of files, we accept a location and add a boolean as to whether we think the file is located there.
     Also include some info on when the run closed etc.
     The relies on the integration with the data mover/file migration messages being processed correctly and updated external to the logbook
+    The current_files_for_live_mode_at_location endpoint is there for folks that want to bypass the cached response.
     """
     location = request.args.get("location", None)
     if not location:
