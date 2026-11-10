@@ -22,17 +22,16 @@ __author__ = 'mshankar@slac.stanford.edu'
 # Application context.
 app = None
 
-MONGODB_HOST=os.environ.get('MONGODB_HOST', "localhost")
-MONGODB_PORT=int(os.environ.get('MONGODB_PORT', 27017))
-MONGODB_HOSTS=os.environ.get("MONGODB_HOSTS", None)
-if not MONGODB_HOSTS:
-    MONGODB_HOSTS = MONGODB_HOST + ":" + str(MONGODB_PORT)
-MONGODB_URL=os.environ.get("MONGODB_URL", None)
-if not MONGODB_URL:
-    MONGODB_URL = "mongodb://" + MONGODB_HOSTS + "/admin"
 
-MONGODB_USERNAME=os.environ['MONGODB_USERNAME']
-MONGODB_PASSWORD=os.environ['MONGODB_PASSWORD']
+secrets = {}
+for sk in [ "MONGODB_URL", "ROLEDB_URL" ]:
+    if os.path.exists(f"secrets/{sk}"):
+        logger.debug("Found secret file for key: %s", sk)
+        with open(f"secrets/{sk}", "r") as f:
+            secrets[sk] = f.read()
+    else:
+        if sk in os.environ:
+            secrets[sk] = os.environ[sk]
 
 
 # This identifies the current deployment site.
@@ -51,14 +50,25 @@ QUESTIONNAIRE_URL = os.environ.get("QUESTIONNAIRE_WS_URL", None)
 PREVIEW_PREFIX = os.environ.get('PREVIEW_PREFIX', '../../..')
 PREVIEW_PREFIX_SHARED_SECRET = os.environ.get('PREVIEW_PREFIX_SHARED_SECRET', "SLACExpLgBk")
 
+MONGODB_URL=secrets.get("MONGODB_URL", None)
+if not MONGODB_URL:
+    print("Please use the enivironment variable MONGODB_URL to configure the database connection for the questionnaire.")
+
+logbookclient = MongoClient(host=MONGODB_URL, tz_aware=True, read_preference=ReadPreference.PRIMARY_PREFERRED)
 
 # Set up the security manager
-mongorolereaderclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True, read_preference=ReadPreference.SECONDARY_PREFERRED)
+roledbclient = logbookclient
+ROLEDB_URL=secrets.get("ROLEDB_URL", None)
+if ROLEDB_URL:
+    print("Using a different database for the roles")
+    roledbclient = MongoClient(host=ROLEDB_URL, tz_aware=True, read_preference=ReadPreference.SECONDARY_PREFERRED)
+else:
+    print("Using the same database for the roles")
+
 usergroups = UserGroups()
-roleslookup = MongoDBRoles(mongorolereaderclient, usergroups)
+roleslookup = MongoDBRoles(roledbclient, usergroups)
 security = FlaskAuthnz(roleslookup, "LogBook")
 
-logbookclient = MongoClient(host=MONGODB_URL, username=MONGODB_USERNAME, password=MONGODB_PASSWORD, tz_aware=True, read_preference=ReadPreference.PRIMARY_PREFERRED)
 
 local_kafka_events = Queue()
 
