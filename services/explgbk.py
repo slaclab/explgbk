@@ -726,7 +726,8 @@ def svc_lookup_experiment_in_URAWI():
     urawi_doc = get_ques_proposal_details(experiment_name, run_period, proposal_id)
     if urawi_doc and urawi_doc.get("URAWI", {}) and urawi_doc["URAWI"].get("proposalNo", None):
         urawi_doc.get("URAWI", {}).pop("proposalAbstract", None)
-        urawi_doc.get("UPS", {}).pop("Proposal_Abstract", None)
+        if "UPS" in urawi_doc and urawi_doc["UPS"] and "Proposal_Abstract" in urawi_doc["UPS"]:
+            urawi_doc["UPS"].pop("Proposal_Abstract", None)
         return jsonify({'success': True, "value": urawi_doc})
     return jsonify({'success': False})
 

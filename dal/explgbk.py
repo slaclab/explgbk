@@ -23,8 +23,9 @@ from bson import ObjectId
 # This (g) should be the only import from Flask; we use this as a thread local context variable.
 from flask import g
 
-from context import logbookclient, instrument_scientists_run_table_defintions, security, usergroups, imagestoreurl, \
-    MAX_ATTACHMENT_SIZE, QUESTIONNAIRE_URL, LOGBOOK_SITE
+from context import logbookclient, instrument_scientists_run_table_defintions, \
+    security, usergroups, imagestoreurl, generateArpToken, \
+    MAX_ATTACHMENT_SIZE, QUESTIONNAIRE_URL, QUESTIONNAIRE_AUTH_USER, LOGBOOK_SITE
 from dal.run_control import get_current_run, start_run, end_run, is_run_closed
 from dal.imagestores import parseImageStoreURL
 from dal.utils import escape_chars_for_mongo, reverse_escape_chars_for_mongo
@@ -2065,11 +2066,9 @@ def questionnaire_cache_refresh(experiment_name):
     if not questionnaire_proposal_id:
         logger.warning("We need a PNR in the experiment info for a cache refresh")
         return
-    additionalAuthToken = os.environ.get("QUESTIONNAIRE_AUTH", None)
-    if not additionalAuthToken:
-        raise Exception("Please specify the auth token for the questionnaire")
-    prts = additionalAuthToken.split("=")
-    cresp = requests.get(f"{thequesurl}/refresh_cache", params={"proposal_id": questionnaire_proposal_id}, auth=HTTPBasicAuth(prts[0], prts[1]))
+    token = generateArpToken(QUESTIONNAIRE_AUTH_USER, experiment_name)
+    
+    cresp = requests.get(f"{thequesurl}/refresh_cache", params={"proposal_id": questionnaire_proposal_id}, headers={"Authorization": f"Bearer {token}"})
     try:
         cresp.raise_for_status()
     except:
@@ -2118,11 +2117,8 @@ def get_ques_proposal_details(experiment_name, run_period=None, proposal_id=None
 
             proposal_url = f"{thequesurl}/run{questionnaire_run_period}/{questionnaire_proposal_id}/entire"
             logger.info("Getting questionnaire data for proposal using %s", proposal_url)
-            additionalAuthToken = os.environ.get("QUESTIONNAIRE_AUTH", None)
-            if not additionalAuthToken:
-                raise Exception("Please specify the auth token for the questionnaire")
-            prts = additionalAuthToken.split("=")
-            resp = requests.get(proposal_url, auth=HTTPBasicAuth(prts[0], prts[1]), verify=False)
+            token = generateArpToken(QUESTIONNAIRE_AUTH_USER, experiment_name)
+            resp = requests.get(proposal_url, headers={"Authorization": f"Bearer {token}"})
             resp.raise_for_status()
             ques_doc = resp.json()
             if LOGBOOK_SITE in ["LCLS", "TestFac"]:

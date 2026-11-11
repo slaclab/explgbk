@@ -40,9 +40,10 @@ for sk in [ "MONGODB_URL", "ROLEDB_URL" ]:
 LOGBOOK_SITE = os.environ.get('LOGBOOK_SITE', 'test')
 
 # Use this information to get proposal information from the questionnaire.
-# This is typically a ws-auth endpoint
-# The userid and password for basic auth are passed in using QUESTIONNAIRE_AUTH
+# This is a JWT endpoint and we use a user with global read only privileges
 QUESTIONNAIRE_URL = os.environ.get("QUESTIONNAIRE_WS_URL", None)
+QUESTIONNAIRE_AUTH_USER = os.environ.get("QUESTIONNAIRE_AUTH_USER", "psdatrdr")
+
 
 # Support for serving previews from the web server. Previews can get quite large and having python serve them is sometimes not practical.
 # Add run parms using ws/ext_preview. This preview_prefix will then be prepended to the path to serve the image.
