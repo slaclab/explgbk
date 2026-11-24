@@ -27,7 +27,7 @@ let mdltypes = {
     "enum": (parentElem, paramdef, currval) => {
         let tempelem = document.createElement("div"), label =_.get(paramdef, "label", paramdef["param_name"]), required = _.get(paramdef, "required", false) ? '<span class="pl-1 text-danger lbl-req">*</span>' : "", tooltip = _.get(paramdef, "description", label);
         let optionsstr = paramdef["options"].map((optiondef) => { 
-            let selected = (optiondef["value"] === currval) ? "selected" : ""; 
+            let selected = enumValueMatches(optiondef["value"], currval) ? "selected" : "";
             return `<option value="${optiondef["value"]}" ${selected}>${optiondef["label"]}</option>`
         }).join("");
         tempelem.innerHTML = `<div class="row" title="${tooltip}" data-lgp-name="${paramdef["id"]}"><label class="col-4 col-form-label">${label}${required}</label><div class="col-8"><select class="form-select ss_select cp_value" ss_validate="enum"><option></option>${optionsstr}</select></div></div>`;
@@ -49,11 +49,26 @@ let mdltypes = {
     },
 }
 
+// A <select> only holds strings. Match option values by their string form, and treat
+// numerically equal values as the same, so a stored 1, "1" or "1.0" all select the option 1.
+function enumValueMatches(optval, currval) {
+    if(_.isNil(currval) || currval === "") return false;
+    if(String(optval) === String(currval)) return true;
+    const isnum = (v) => (_.isNumber(v) || (_.isString(v) && v.trim() !== "")) && !_.isNaN(_.toNumber(v));
+    return isnum(optval) && isnum(currval) && _.toNumber(optval) === _.toNumber(currval);
+}
+
 let elem2val = {
     "bool": (elem) => { return elem.querySelector(".cp_value").checked },
     "int": (elem) => { return  _.toInteger(elem.querySelector(".cp_value").value) },
     "float": (elem) => { return _.toNumber(elem.querySelector(".cp_value").value)},
-    "enum": (elem) => { return elem.querySelector(".cp_value").value },
+    // Return the option's value as defined (e.g. the number 1), not the select's string.
+    "enum": (elem, paramdef) => {
+        const selval = elem.querySelector(".cp_value").value;
+        if(selval === "") return selval;
+        const opt = _.find(_.get(paramdef, "options", []), (o) => String(o["value"]) === selval);
+        return _.isNil(opt) ? selval : opt["value"];
+    },
     "string": (elem) => { return elem.querySelector(".cp_value").value },
 }
 
@@ -142,7 +157,7 @@ export class LgbkCustomModalParams {
             if(!_.isNil(par)) {
                 let pname = par.getAttribute("data-lgp-name");
                 let paramdef = this.paramnm2def[pname];
-                let pval = elem2val[_.get(paramdef, "param_type", "string")](par);
+                let pval = elem2val[_.get(paramdef, "param_type", "string")](par, paramdef);
                 console.log("Parameter " + paramdef["param_name"] + " changed to " + pval);
                 _.set(thedocument, paramdef["param_name"], pval);
                 showhidedependents();
@@ -156,7 +171,7 @@ export class LgbkCustomModalParams {
         let validated = _.every(Array.from(modalElem.querySelectorAll('[data-lgp-name]')).map((elem) => {
             let attrname = elem.getAttribute("data-lgp-name"), paramdef = this.paramnm2def[attrname];
             if(_.isNil(paramdef)) return true;
-            let val = elem2val[paramdef["param_type"]](elem);
+            let val = elem2val[paramdef["param_type"]](elem, paramdef);
             if(_.isNil(val) || val === "") {
                 if(_.get(paramdef, "required", false)) {
                     let label =_.get(paramdef, "label", paramdef["param_name"])
