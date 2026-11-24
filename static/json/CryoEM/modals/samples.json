@@ -25,7 +25,7 @@
         "param_type": "string",
         "label": "Dependent 1",
         "tab": "Imaging",
-        "showwhen": { "imaging_method": "tomography" } 
+        "showwhen": { "params.imaging_method": "tomography" }
       },
       {
         "param_name": "params.imaging_software",
@@ -73,7 +73,7 @@
         "required": true,
         "param_type": "float",
         "label": "Angstrom per Pixel",
-        "description": "This should be the /pix at the physical pixel not at the super resolution pixel.",
+        "description": "This should be the Å/pix at the physical pixel not at the super resolution pixel.",
         "tab": "Imaging"
       },
       {
@@ -81,15 +81,15 @@
         "required": true,
         "param_type": "float",
         "label": "Dose per Frame",
-        "description": "Dose given as e-/2/frame",
+        "description": "Dose given as e-/Å2/frame",
         "tab": "Imaging"
       },
       {
         "param_name": "params.total_dose",
         "required": true,
         "param_type": "float",
-        "label": "Total Dose",
-        "description": "Total dose for each micrograph. Note that for tomography this is total dose per tilt angle. Units are e-/2/micrograph.",
+        "label": "Total Dose (e/Å2)",
+        "description": "Total dose for each micrograph. Note that for tomography this is total dose per tilt angle. Units are e-/Å2/micrograph.",
         "tab": "Imaging"
       },
       {
@@ -113,8 +113,14 @@
         "required": true,
         "param_type": "enum",
         "options": [
-          "0",
-          "1"
+          {
+            "label": "Yes",
+            "value": 1
+          },
+          {
+            "label": "No",
+            "value": 0
+          }
         ],
         "label": "Phase Plate",
         "description": "Are phase plates used for data collection?",
@@ -125,19 +131,21 @@
         "required": false,
         "param_type": "float",
         "label": "Particle Size",
-        "description": "Diameter of the particle, given in , which is used for the particle picking step of the automated processing pipeline.",
+        "description": "Diameter of the particle, given in Å, which is used for the particle picking step of the automated processing pipeline.",
         "tab": "Data"
       },
       {
         "param_name": "params.objective_aperture/inserted",
         "required": false,
         "param_type": "bool",
+        "label": "Objective Aperture Inserted",
         "tab": "Data"
       },
       {
         "param_name": "params.objective_aperture/size",
         "required": false,
         "param_type": "float",
+        "label": "Objective Aperture Size (µm)",
         "tab": "Data"
       },
       {
@@ -261,26 +269,10 @@
         "showwhen": { "params.imaging_method": "tomography" } 
       },
       {
-        "param_name": "params.total_dose",
-        "required": true,
-        "param_type": "string",
-        "label": "Total Dose (e/Å2)",
-        "tab": "SPA",
-        "showwhen": { "experiment.type": "SPA" } 
-      },
-      {
         "param_name": "params.total_frames",
         "required": true,
         "param_type": "string",
         "label": "Total Frames",
-        "tab": "SPA",
-        "showwhen": { "experiment.type": "SPA" } 
-      },
-      {
-        "param_name": "params.exposure_time",
-        "required": true,
-        "param_type": "string",
-        "label": "Exposure Time (s)",
         "tab": "SPA",
         "showwhen": { "experiment.type": "SPA" } 
       },
@@ -297,14 +289,6 @@
         "required": true,
         "param_type": "string",
         "label": "Pixel Size (Å)",
-        "tab": "SPA",
-        "showwhen": { "experiment.type": "SPA" } 
-      },
-      {
-        "param_name": "params.phase_plate",
-        "required": true,
-        "param_type": "string",
-        "label": "Phase Plate",
         "tab": "SPA",
         "showwhen": { "experiment.type": "SPA" } 
       },
