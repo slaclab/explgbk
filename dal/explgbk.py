@@ -1800,7 +1800,9 @@ def validate_with_modal_params(modal_type, business_obj):
         return theobj.get(nameparts[-1], None)
 
     for required_param in [ x["param_name"] for x in modal_defs["params"] if x.get("required", False) ]:
-        if not __get_nested_attr__(business_obj, required_param):
+        # Only a missing or empty value is missing; 0 (e.g. "No" in a 1/0 enum) is a valid answer.
+        reqval = __get_nested_attr__(business_obj, required_param)
+        if reqval is None or reqval == "":
             logger.error("Missing %s in %s", required_param, business_obj)
             return False, "One of the required parameters {} was not specified".format(required_param)
     for num_param in [ x["param_name"] for x in modal_defs["params"] if x.get("param_type", "string") in ["int", "float"] ]:

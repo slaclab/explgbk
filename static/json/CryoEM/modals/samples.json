@@ -57,11 +57,11 @@
         "options": [
           {
             "label": "Yes",
-            "value": "1.0"
+            "value": 1
           },
           {
             "label": "No",
-            "value": "0.0"
+            "value": 0
           }
         ],
         "label": "Super Resolution",
@@ -155,11 +155,11 @@
         "options": [
           {
             "label": "Yes",
-            "value": "1.0"
+            "value": 1
           },
           {
             "label": "No",
-            "value": "0.0"
+            "value": 0
           }
         ],
         "label": "Enable automated preprocessing pipeline?",
@@ -184,11 +184,11 @@
         "options": [
           {
             "label": "Yes",
-            "value": "1.0"
+            "value": 1
           },
           {
             "label": "No",
-            "value": "0.0"
+            "value": 0
           }
         ],
         "label": "Output aligned stack?",
@@ -209,11 +209,11 @@
         "options": [
           {
             "label": "Yes",
-            "value": "1.0"
+            "value": 1
           },
           {
             "label": "No",
-            "value": "0.0"
+            "value": 0
           }
         ],
         "label": "Enable particle picking?",
